@@ -2,53 +2,45 @@
 
 {% block body %}
 	<div class="jumbotron text-center">
-	    	<div class="row">
-				<div class="col-md-6 col-md-offset-3">
-					<div class="panel panel-login">
-						<div class="panel-heading">
-							<div class="row">
-								<div class="col-xs-6">
-									<a href="/login" class="active" id="login-form-link">Login</a>
-								</div>
-								<div class="col-xs-6">
-									<a href="/register" id="register-form-link">Register</a>
-								</div>
+    	<div class="row">
+			<div class="col-md-6 col-md-offset-3">
+				<div class="panel panel-login">
+					<div class="panel-heading">
+						<div class="row">
+							<div class="col-xs-6">
+								<a href="/login" class="active" id="login-form-link">Login</a>
 							</div>
+							<div class="col-xs-6">
+								<a href="/register" id="register-form-link">Register</a>
+							</div>
+						</div>
 							<hr>
 						</div>
 						<div class="panel-body">
-							<div class="row">
-								<div class="col-lg-12">
-									<form id="register-form" action="#" method="post" role="form" style="display: block;">
-										<div class="form-group">
-											<input type="text" name="firstname" id="firstname" tabindex="1" class="form-control" placeholder="First Name" value="">
-										</div>
-										<div class="form-group">
-											<input type="text" name="lastname" id="firstname" tabindex="1" class="form-control" placeholder="Last Name" value="">
-										</div>
-										<div class="form-group">
-											<input type="text" name="username" id="username" tabindex="1" class="form-control" placeholder="Username" value="">
-										</div>
-										<div class="form-group">
-											<input type="email" name="email" id="email" tabindex="1" class="form-control" placeholder="Email Address" value="">
-										</div>
-										<div class="form-group">
-											<input type="password" name="password" id="password" tabindex="2" class="form-control" placeholder="Password">
-										</div>
-										<div class="form-group">
-											<div class="row">
-												<div class="col-sm-6 col-sm-offset-3">
-													<input type="submit" name="register-submit" id="register-submit" tabindex="4" class="form-control btn btn-default" value="Register Now">
-												</div>
-											</div>
-										</div>
-									</form>
+							<form method="post" action="">
+								{% from "includes/_formhelpers.html" import render_field %}
+								<div class="form-group">
+									{{render_field(form.firstname, class_="form-control")}}
 								</div>
-							</div>
+								<div class="form-group">
+									{{render_field(form.lastname, class_="form-control")}}
+								</div>
+								<div class="form-group">
+									{{render_field(form.username, class_="form-control")}}
+								</div>
+								<div class="form-group">
+									{{render_field(form.email, class_="form-control")}}
+								</div>
+								<div class="form-group">
+									{{render_field(form.password, class_="form-control")}}
+								</div>
+								<p><input type="submit" class="btn btn-primary" value="Register"></p>
+							</form>
 						</div>
 					</div>
 				</div>
 			</div>
-		</div>}
+		</div>
+	</div>
 
-{% endblock 	%}
+{% endblock %}
