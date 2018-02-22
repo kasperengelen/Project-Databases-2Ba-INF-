@@ -11,9 +11,9 @@ class RegisterForm(Form):
     email = StringField('Email', [validators.Length(min=6, max=50)])
     password = PasswordField('Password', [
         validators.DataRequired(),
-        validators.EqualTo('confirm', message='Passwords do not match')
+        validators.EqualTo('confirmpwd', message='Passwords do not match')
     ])
-    confirm = PasswordField('Confirm Password')
+    confirmpwd = PasswordField('Confirm Password')
 
 class LoginForm(Form):
     email = StringField('Email', [validators.Length(min=6, max=50)])
@@ -31,6 +31,8 @@ def login():
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     form = RegisterForm(request.form)
+    if request.method == 'POST' and form.validate():
+        return render_template('register.html')
     return render_template('register.html', form = form)
 
 if __name__ == '__main__':
