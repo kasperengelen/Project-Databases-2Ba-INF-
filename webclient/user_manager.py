@@ -2,6 +2,7 @@
 
 
 
+
 class UserRegisterForm(Form):
 	pass
 
