@@ -24,13 +24,12 @@ class DBConnection:
 class DBConnectionWrapper:
     """Internal wrapper class that wraps a cursor and a connection into one."""
 
-    def __init__(self, cursor, connection):
+    def __init__(self, connection, cursor):
         self.__cursor = cursor
         self.__connection = connection
 
-    def execute(self, query, args=None):
-        """Execute a query, for the syntax please refer to the psycopg2 docs."""
-        self.__cursor.execute(query, args)
+    def cursor(self):
+        return self.__cursor
 
     def commit():
         """Commit changes, for the syntax please refer to the psycopg2 docs."""
