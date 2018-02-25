@@ -8,17 +8,17 @@ class DBConnection:
 
     def __enter__(self):
         # open connection
-        self.__connection = psycopg2.connect("dbname='{}', user='{}', host='{}', password='{}'".format("ProjectDB18",
-                                                                                                       "DBAdmin",
+        self.__connection = psycopg2.connect("dbname='{}' user='{}' host='{}' password='{}'".format("ProjectDB18",
+                                                                                                       "dbadmin",
                                                                                                        "localhost",
                                                                                                        "AdminPass123"))
 
-        return DBConnectionWrapper(self.__connection, self.__connection.cursor)
+        return DBConnectionWrapper(self.__connection, self.__connection.cursor())
 
-    def __exit__(self):
+    def __exit__(self, exc_type, exc_value, traceback):
         # terminate connection
+        self.__connection.cursor().close()
         self.__connection.close()
-        self.__connection.cursor.close()
 
 
 class DBConnectionWrapper:

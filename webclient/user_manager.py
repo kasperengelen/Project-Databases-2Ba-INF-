@@ -5,6 +5,8 @@ from flask import render_template, request
 from wtforms import StringField, PasswordField, validators
 from flask_wtf import FlaskForm
 from wtforms.validators import Length, InputRequired, Email, EqualTo, DataRequired
+from db_wrapper import DBConnection
+
 
 class UserRegisterForm(FlaskForm):
     """Class that represents a user registration form. The form has the following fields:
@@ -40,6 +42,9 @@ class UserLoginForm(FlaskForm):
 
 def login_user(request_data):
     login_form = UserLoginForm(request_data.form)
+
+    with DBConnection() as db_connection:
+        i = 6
 
     # validate the data supplied by the form.
     if request_data.method == 'POST' and login_form.validate():
