@@ -1,0 +1,5 @@
+DBNAME = ProjectDB18
+USER = DBAdmin
+PASS = AdminPass123
+HOST = localhost of 127.0.0.1
+PORT = standaardpoort

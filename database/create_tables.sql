@@ -1,5 +1,3 @@
-CREATE DATABASE 
-
 CREATE TABLE user_accounts(
     userid        SERIAL,
     fname         VARCHAR(255) NOT NULL,
