@@ -4,7 +4,9 @@ import psycopg2
 
 class DBConnection:
     """Class that represents a DB connection. The class implements
-    a context manager that automatically opens and closes a DB connection."""
+    a context manager that automatically opens and closes a DB connection.
+    USAGE: just do "with DBConnection() as db_connection:" and you can use the 
+    connection in the enclosing scope."""
 
     def __enter__(self):
         # open connection
