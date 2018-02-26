@@ -4,7 +4,9 @@ import psycopg2
 
 class DBConnection:
     """Class that represents a DB connection. The class implements
-    a context manager that automatically opens and closes a DB connection."""
+    a context manager that automatically opens and closes a DB connection.
+    USAGE: just do "with DBConnection() as db_connection:" and you can use the 
+    connection in the enclosing scope."""
 
     def __enter__(self):
         # open connection
@@ -24,13 +26,12 @@ class DBConnection:
 class DBConnectionWrapper:
     """Internal wrapper class that wraps a cursor and a connection into one."""
 
-    def __init__(self, cursor, connection):
+    def __init__(self, connection, cursor):
         self.__cursor = cursor
         self.__connection = connection
 
-    def execute(self, query, args=None):
-        """Execute a query, for the syntax please refer to the psycopg2 docs."""
-        self.__cursor.execute(query, args)
+    def cursor(self):
+        return self.__cursor
 
     def commit():
         """Commit changes, for the syntax please refer to the psycopg2 docs."""
