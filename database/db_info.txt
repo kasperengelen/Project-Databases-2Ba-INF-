@@ -1,5 +1,5 @@
-DBNAME = ProjectDB18
+DBNAME = projectdb18
 USER = dbadmin
 PASS = AdminPass123
 HOST = localhost of 127.0.0.1
-PORT = standaardpoort
+PORT = standaardpoort (parameter niet specifieren)
