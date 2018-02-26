@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, request
+from flask import Flask, flash, render_template, redirect, request
 import user_manager
 
 

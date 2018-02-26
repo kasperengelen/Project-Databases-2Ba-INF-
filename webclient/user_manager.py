@@ -1,7 +1,7 @@
 # file that contains all code for managing users: registration, editing, etc.
 # SOURCE: wtforms documentation, stackoverflow and https://www.youtube.com/watch?v=zRwy8gtgJ1A&list=PLillGF-RfqbbbPz6GSEM9hLQObuQjNoj_&index=1
 
-from flask import render_template, request, url_for, session, redirect
+from flask import render_template, flash, request, url_for, session, redirect
 from wtforms import StringField, PasswordField, validators
 from flask_wtf import FlaskForm
 from wtforms.validators import Length, InputRequired, Email, EqualTo, DataRequired
@@ -67,7 +67,7 @@ def login_user(request_data):
                     session["user_id"] = user_id
                     session["logged_in"] = True
                     
-                    flash("You are now logged in.")
+                    flash("You are now logged in.", category="message")
 
                     return redirect(url_for("/"))
 
