@@ -1,4 +1,4 @@
-from flask import Flask, flash, render_template, redirect, request
+from flask import Flask, flash, render_template, redirect, request, url_for, session
 import user_manager
 
 
@@ -22,8 +22,11 @@ def register():
 
 @app.route('/logout')
 def logout():
-	flash('You are now logged out')
-	return render_template('index.html')
+    session["user_id"] = None
+    session["logged_in"] = False
+
+    flash(message="You are now logged out", category="success")
+    return redirect(url_for("index"))
 
 if __name__ == '__main__':
     app.run(debug=True)
