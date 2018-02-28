@@ -18,6 +18,7 @@
             </div>
             <div class="panel-body">
               <form method="post" action="">
+                {{ form.csrf_token }}
                 {% from "includes/_formhelpers.html" import render_field %}
                 <div class="form-group">
                   {{render_field(form.firstname, class_="form-control")}}

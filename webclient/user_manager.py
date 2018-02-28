@@ -48,40 +48,43 @@ def login_user(request_data):
     login_form = UserLoginForm(request_data.form)
 
     # validate the data supplied by the form.
-    if request_data.method == 'POST' and login_form.validate():
-        # the data is valid
+    if request_data.method == 'POST': # There was POST data
+        if login_form.validate(): # The data supplied by the form was valid
 
-        # check if the user exists in the database and if the
-        # password checks out
-        with DBConnection() as db_connection:
-            db_connection.cursor().execute("SELECT * FROM user_accounts WHERE email = %s;", [login_form.email.data])
-            result = db_connection.cursor().fetchone() # we fetch the first and max only tuple
+            # check if the user exists in the database and if the
+            # password checks out
+            with DBConnection() as db_connection:
+                db_connection.cursor().execute("SELECT * FROM user_accounts WHERE email = %s;", [login_form.email.data])
+                result = db_connection.cursor().fetchone() # we fetch the first and max only tuple
 
-            if result is not None:
-                # user exists
-                user_id = result[0] # the user identifier
-                real_password_hash = result[4] # the real password
+                if result is not None: # there is a user with the email address
 
-                if sha256_crypt.verify(login_form.password.data, real_password_hash):
-                    # password checks out
-                    session["user_id"] = user_id
-                    session["logged_in"] = True
-                    
-                    flash("You are now logged in.", category="message")
+                    user_id = result[0] # the user identifier
+                    real_password_hash = result[4] # the real password
 
-                    return redirect(url_for("/"))
+                    if sha256_crypt.verify(login_form.password.data, real_password_hash): # the entered password is correct
+                        session["user_id"] = user_id
+                        session["logged_in"] = True
+                        
+                        flash("You are now logged in.", category="message")
 
-                else:
-                    # password does not match
-                    flash(message="Specified password is invalid.", category="error")
+                        return redirect(url_for("index"))
+                    else: # the password is not correct
+                        flash(message="Specified password is invalid.", category="error")
+                        return render_template('login.html', form = login_form)
+                    #ENDIF
+
+                else: # there is no user with the specified email address
+                    flash(message="Specified e-mail address does not belong to an existing user.", category="error")
                     return render_template('login.html', form = login_form)
+                # ENDIF
 
-            else:
-                # user does not exist
-                flash(message="Specified e-mail address does not belong to an existing user.", category="error")
-                return render_template('login.html', form = login_form)
-
-    return render_template('login.html', form = login_form)
+            # ENDWITH
+        else: # the form data was invalid
+            return render_template('login.html', form = login_form)
+    else: # The page was opened without form data
+        return render_template('login.html', form = login_form)
+# END FUNCTION
 
 def register_user(request_data):
     """Given the specified request data received from a POST or GET request, this will try to register
@@ -90,31 +93,42 @@ def register_user(request_data):
     register_form = UserRegisterForm(request_data.form)
 
     # validate the data supplied by the form.
-    if request_data.method == 'POST' and register_form.validate():
-        # the data is valid
+    if request_data.method == 'POST': # There was POST data
+        if register_form.validate(): # The data supplied by the form was valid
+            # Validated Post data -> try to register user
 
-        # check if there is already a user with the specified email
-        with DBConnection() as db_connection:
-            db_connection.cursor().execute("SELECT * FROM user_accounts WHERE email = %s;", [register_form.email.data])
-            result = db_connection.cursor().fetchone() # we fetch the first
+            # CHECK if there is already a user with the specified email
+            with DBConnection() as db_connection:
+                db_connection.cursor().execute("SELECT * FROM user_accounts WHERE email = %s;", [register_form.email.data])
+                result = db_connection.cursor().fetchone() # we fetch the first
 
-            # there are users with the specified 
-            if result is not None:
-                flash(message="Error, specified e-mail address already in use.", category="error")
-                return render_template('register.html',  form = register_form)
+                # there are users with the specified email --> error
+                if result is not None:
+                    flash(message="Specified e-mail address already in use.", category="error")
+                    return render_template('register.html',  form = register_form)
+                #ENDIF
+            #ENDWITH
 
-        # retrieve new values from form
-        fname = register_form.firstname.data
-        lname = register_form.lastname.data
-        email = register_form.email.data
-        password = sha256_crypt.hash(register_form.password.data)
+            # RETRIEVE data from form
+            fname = register_form.firstname.data
+            lname = register_form.lastname.data
+            email = register_form.email.data
+            password = sha256_crypt.hash(register_form.password.data)
 
-        with DBConnection() as db_connection:
-            db_connection.cursor().execute("INSERT INTO user_accounts(fname, lname, email, passwd) VALUES (%s, %s, %s, %s);", [fname, lname, email, password])
-            db_connection.commit()
+            # REGISTER user data into database
+            with DBConnection() as db_connection:
+                db_connection.cursor().execute("INSERT INTO user_accounts(fname, lname, email, passwd) VALUES (%s, %s, %s, %s);", [fname, lname, email, password])
+                db_connection.commit()
+            #ENDWITH
 
-        flash(message="You are now registered as a user.", category="message")
+            # notify user that the registration is complete
+            flash(message="You are now registered as a user.", category="message")
 
-        return redirect(url_for("login"))
+            return redirect(url_for("login"))
+        else: # The data supplied by the form was not valid.
+            return render_template('register.html',  form = register_form)
+        #ENDIF
+    else: # The page was opened without form data
+        return render_template('register.html',  form = register_form)
+# END FUNCTION
 
-    return render_template('register.html',  form = register_form)

@@ -10,7 +10,7 @@ class DBConnection:
 
     def __enter__(self):
         # open connection
-        self.__connection = psycopg2.connect("dbname='{}' user='{}' host='{}' password='{}'".format("ProjectDB18",
+        self.__connection = psycopg2.connect("dbname='{}' user='{}' host='{}' password='{}'".format("projectdb18",
                                                                                                        "dbadmin",
                                                                                                        "localhost",
                                                                                                        "AdminPass123"))
@@ -33,7 +33,7 @@ class DBConnectionWrapper:
     def cursor(self):
         return self.__cursor
 
-    def commit():
+    def commit(self):
         """Commit changes, for the syntax please refer to the psycopg2 docs."""
         self.__connection.commit()
 
