@@ -122,7 +122,7 @@ def register_user(request_data):
             #ENDWITH
 
             # notify user that the registration is complete
-            flash(message="You are now registered as a user.", category="message")
+            flash(message="You are now registered as a user.", category="success")
 
             return redirect(url_for("login"))
         else: # The data supplied by the form was not valid.
