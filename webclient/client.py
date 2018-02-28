@@ -20,5 +20,10 @@ def login():
 def register():
     return user_manager.register_user(request)
 
+@app.route('/logout')
+def logout():
+	flash('You are now logged out')
+	return render_template('index.html')
+
 if __name__ == '__main__':
     app.run(debug=True)
