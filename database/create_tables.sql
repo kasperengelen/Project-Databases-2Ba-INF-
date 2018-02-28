@@ -23,5 +23,7 @@ CREATE TABLE set_permissions(
     permission_type VARCHAR(255),
 
     PRIMARY KEY(userid, setid),
-    CHECK(permission_type IN ('admin', 'write', 'read'))
+    CHECK(permission_type IN ('admin', 'write', 'read')),
+    FOREIGN KEY(userid) REFERENCES(user_accounts),
+    FOREIGN KEY(setid) REFERENCES(datasets)
 );
