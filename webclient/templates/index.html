@@ -1,10 +1,17 @@
 {% extends 'layout.html' %}
 
+
 {% block body %}
+	
+	{% if session.logged_in %}
+		<div class="jumbotron text-center">
+			<h2>Getting Started</h2>
+		</div>
+	{% else %}
+		<div class="jumbotron text-center">
+			<h2>Welcome</h2>
+			<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Praesent quis ipsum dignissim, ornare tortor vitae, porttitor est. Vestibulum molestie dapibus rhoncus. Sed at quam ac justo maximus maximus. Phasellus sagittis tellus ornare enim ultricies, in vehicula ante semper. Donec vehicula, augue eu sodales mattis, ante libero aliquet enim, sagittis congue justo metus non nisl. Praesent ac velit sed dui placerat mollis in at lectus. In pretium mauris eget eros lobortis, et fermentum nunc malesuada. Maecenas ante sapien, tempor eu fringilla ac, maximus vel ligula. Cras ligula dolor, condimentum et eros nec, efficitur semper libero. Suspendisse tempus purus vitae convallis lacinia. Pellentesque sed auctor odio. Aenean malesuada, sem nec vehicula malesuada, lectus lacus fermentum massa, at egestas dolor mauris ut nulla.</p>
+		</div>
+	{% endif %}
 
-	<div class="jumbotron text-center">
-		<h2>Home</h2>
-		<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Praesent quis ipsum dignissim, ornare tortor vitae, porttitor est. Vestibulum molestie dapibus rhoncus. Sed at quam ac justo maximus maximus. Phasellus sagittis tellus ornare enim ultricies, in vehicula ante semper. Donec vehicula, augue eu sodales mattis, ante libero aliquet enim, sagittis congue justo metus non nisl. Praesent ac velit sed dui placerat mollis in at lectus. In pretium mauris eget eros lobortis, et fermentum nunc malesuada. Maecenas ante sapien, tempor eu fringilla ac, maximus vel ligula. Cras ligula dolor, condimentum et eros nec, efficitur semper libero. Suspendisse tempus purus vitae convallis lacinia. Pellentesque sed auctor odio. Aenean malesuada, sem nec vehicula malesuada, lectus lacus fermentum massa, at egestas dolor mauris ut nulla.</p>
-	</div>
-
-{% endblock %} 
+{% endblock %}
