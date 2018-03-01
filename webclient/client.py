@@ -28,5 +28,17 @@ def logout():
     flash(message="You are now logged out", category="success")
     return redirect(url_for("index"))
 
+@app.route('/user/profile/')
+def profile_self():
+    pass
+
+@app.route('/user/profile/<int:user_id>')
+def profile_other():
+    pass
+
+@app.route('/user/edit/')
+def edit_userdata():
+    pass
+
 if __name__ == '__main__':
     app.run(debug=True)
