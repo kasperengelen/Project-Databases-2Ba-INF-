@@ -46,7 +46,7 @@ def profile_other():
 @app.route('/user/edit/')
 def edit_userdata():
     """This page lets a user edit its own personal information."""
-    pass
+    return render_template('user_edit.html')
 
 @app.route('/result')
 def result():

@@ -1,0 +1,46 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+	
+	{% if session.logged_in %}
+		<div class="jumbotron text-center" style="padding: 5px">
+			<h2>Edit Profile</h2>
+		</div>
+		<div class="jumbotron text-center" style="padding: 5px">
+
+    		<div class="jumbotron text-left">
+
+	    		<div class="panel-body">
+	              <form method="post" action="">
+	                {{ form.csrf_token }}
+	                {% from "includes/_formhelpers.html" import render_field %}
+	                <div class="form-group">
+	                	{{render_field(form.firstname, class_="form-control")}}
+	                </div>
+	                <div class="form-group">
+	                  	{{render_field(form.lastname, class_="form-control")}}
+	                </div>
+	                <div class="form-group">
+	                  	{{render_field(form.email, class_="form-control")}}
+	                </div>
+	                <div class="form-group">
+	                  	{{render_field(form.password, class_="form-control")}}
+	                </div>
+	                <div class="form-group">
+	                  	{{render_field(form.passwordconfirm, class_="form-control")}}
+	                </div>
+	                <p><input type="submit" class="btn btn-primary" value="Register"></p>
+	              </form>
+	            </div>
+
+    		</div>
+     	</div>
+
+     {% else %}
+     	<div class="jumbotron text-center" style="padding: 5px">
+     		<p>Please login to see your profile</p>
+     	</div>
+
+	{% endif %}
+
+{% endblock %}

@@ -3,19 +3,34 @@
 {% block body %}
 	
 	{% if session.logged_in %}
-		<div class="jumbotron text-center">
-    		<h2>Personal Data</h2>
+		<div class="jumbotron text-center" style="padding: 5px">
+			<h2>My Profile</h2>
+		</div>
+		<div class="jumbotron text-center" style="padding: 5px">
+    		
 
     		<div class="jumbotron text-left">
+    			<div class="pull-right" style="padding-right: 15px">
+    				<a href="/user/edit" class="btn btn-primary">Edit</a>
+    			</div>
     			<ul type="disc">
-    				<li><p>First Name: {{ firstname }}</p></li>
-    				<li><p>Last Name: {{ lastname }}</p></li>
+    				<li><p>Name: {{ firstname }} {{ lastname }}</p></li>
     				<li><p>Email: {{ email }}</p></li>
+    				</br>
+    				<li><p>Register Date: {{ date }}</p></li>
     			</ul>
+
+
 
 
     		</div>
      	</div>
+
+     {% else %}
+     	<div class="jumbotron text-center" style="padding: 5px">
+     		<p>Please login to see your profile</p>
+     	</div>
+
 	{% endif %}
 
 {% endblock %}
