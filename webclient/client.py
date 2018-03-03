@@ -38,7 +38,7 @@ def profile_other():
 
 @app.route('/user/edit/')
 def edit_userdata():
-    pass
+    return render_template('user_edit.html')
 
 @app.route('/result')
 def result():
