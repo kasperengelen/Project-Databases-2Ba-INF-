@@ -19,7 +19,6 @@ class UserInformation:
 
     def __init__(self, user_id, firstname, lastname, email, register_date):
         """Constructor that specifies each field."""
-
         self.user_id = user_id
         self.firstname = firstname
         self.lastname = lastname
@@ -233,8 +232,11 @@ def register_user(request_data):
 # END FUNCTION
 
 def view_user(request_data, user_id):
+    """Returns a view profile page for the specified user if the user exists, otherwise
+    this returns an error page."""
     try:
         user_data = UserInformation.from_id(user_id)
         return render_template('user_profile.html', user_data = user_data)
     except RuntimeError as err:
         return render_template('error.html', message = "Specified user not found.")
+# END FUNCTION
