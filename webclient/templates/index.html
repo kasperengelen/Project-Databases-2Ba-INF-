@@ -6,6 +6,10 @@
 	{% if session.logged_in %}
 		<div class="jumbotron text-center">
 			<h2>Getting Started</h2>
+			<div>
+ 				<label for="files" class="btn btn-success">Select Files</label>
+ 				<input id="files" style="visibility:hidden;" type="file">
+			</div>
 		</div>
 	{% else %}
 		<div class="jumbotron text-center">
