@@ -16,25 +16,91 @@ import utils
 
 class UserInformation:
     """Class that contains information about a user."""
-    def __init__(self, user_id, email, firstname, lastname, register_date):
-        """Constructor based on individual data fields. Note: Register_data contains the timestamp retrieved from SQL"""
+
+    def __init__(self, user_id, firstname, lastname, email, register_date):
+        """Constructor that specifies each field."""
+
         self.user_id = user_id
-        self.email = email
         self.firstname = firstname
         self.lastname = lastname
+        self.email = email
+        self.register_date = register_date
+    # ENDMETHOD
 
-        self.register_date = {
-            "Y": None,
-            "M": None,
-            "D": None,
+    @staticmethod
+    def from_id(self, id):
+        """Returns a UserInformation object containing information about the user with the specified id.
 
-            "hr": None,
-            "min": None,
-            "sec": None
-        }
+        Raises RuntimeError if there is no user with the specified id.
+        """
+
+        with DBConnection() as db_connection:
+            db_connection.cursor().execute("SELECT * FROM user_accounts WHERE id = %s;", [id])
+            result = db_connection.cursor().fetchone() # we fetch the first and max only tuple
+
+            if result is None: # if the user witht the specified email doesn't exist
+                raise RuntimeError("No user with the specified id exists.")
+
+            return UserInformation(int(result[0]), 
+                                    str(result[1]), 
+                                    str(result[2]),
+                                    str(result[3]),
+                                    utils.sql_time_to_dict(str(result[5])))
+        # ENDWITH
+    # ENDMETHOD
+
+    @staticmethod
+    def from_email_and_pass(self, email, password_candidate):
+        """Returns a UserInformation object containing information about the user
+        with the specified email and password.
+
+        Raises RuntimeError if there is no user with the specified email, or if the password is false.
+        """
+
+        with DBConnection() as db_connection:
+            db_connection.cursor().execute("SELECT * FROM user_accounts WHERE email = %s;", [email])
+            result = db_connection.cursor().fetchone() # we fetch the first and max only tuple
+
+            if result is None: # if the user witht the specified email doesn't exist
+                raise RuntimeError("No user with the specified email exists.")
+
+            correct_password_hash = result[4]
+
+            if not sha256_crypt.verify(password_candidate, correct_password_hash):
+                raise RuntimeError("Invalid password.")
+
+            return UserInformation(int(result[0]), 
+                                    str(result[1]), 
+                                    str(result[2]),
+                                    str(result[3]),
+                                    utils.sql_time_to_dict(str(result[5])))
+        # ENDWITH
+
+    @staticmethod
+    def from_email(self, email):
+        """Returns a UserInformation object containing information about the user
+        with the specified email.
+
+        Raises RuntimeError if there is no user with the specified email.
+        """
+
+        with DBConnection() as db_connection:
+            db_connection.cursor().execute("SELECT * FROM user_accounts WHERE email = %s;", [email])
+            result = db_connection.cursor().fetchone() # we fetch the first and max only tuple
+
+            if result is None: # if the user witht the specified email doesn't exist
+                raise RuntimeError("No user with the specified email exists.")
+
+            return UserInformation(int(result[0]), 
+                                    str(result[1]), 
+                                    str(result[2]),
+                                    str(result[3]),
+                                    utils.sql_time_to_dict(str(result[5])))
+        # ENDWITH
     # ENDMETHOD
 
     def toJson(self):
+        """Convert the data inside the object to a JSON-comptabile dict."""
         return {
             "user_id": self.user_id,
             "email": self.email,
@@ -50,26 +116,6 @@ class UserInformation:
                 "sec": self.register_date['sec']
             }
         }
-
-    def __init__(self, email, password_candidate):
-        """Constructor based on an email address and a password. The constructor will retrieve the other data from the DB"""
-        with DBConnection() as db_connection:
-            db_connection.cursor().execute("SELECT * FROM user_accounts WHERE email = %s;", [email])
-            result = db_connection.cursor().fetchone() # we fetch the first and max only tuple
-
-            if result is None: # if the user witht the specified email and password doesn't exist
-                raise RuntimeError("No user with the specified email exists.")
-
-            correct_password_hash = result[4]
-
-            if not sha256_crypt.verify(password_candidate, correct_password_hash):
-                raise RuntimeError("Invalid password.")
-
-            self.user_id = int(result[0])
-            self.firstname = str(result[1])
-            self.lastname = str(result[2])
-            self.email = str(result[3])
-            self.register_date = utils.sql_time_to_dict(str(result[5]))
     # ENDMETHOD
 # ENDCLASS
 
@@ -120,7 +166,7 @@ def login_user(request_data):
             # password checks out
             with DBConnection() as db_connection:
                 try:
-                    user_data = UserInformation(login_form.email.data, login_form.password.data)
+                    user_data = UserInformation.from_email_and_pass(login_form.email.data, login_form.password.data)
                     session['logged_in'] = True
                     session['user_data'] = user_data
 
@@ -183,7 +229,12 @@ def register_user(request_data):
         #ENDIF
     else: # The page was opened without form data
         return render_template('register.html',  form = register_form)
+    # ENDIF
 # END FUNCTION
 
-
-
+def view_user(request_data, user_id):
+    try:
+        user_data = UserInformation.from_id(user_id)
+        return render_template('user_profile.html', user_data = user_data)
+    except RuntimeError as err:
+        return render_template('error.html', message = "Specified user not found.")
