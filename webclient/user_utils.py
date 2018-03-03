@@ -1,4 +1,8 @@
-# file that contains all code for managing users: registration, editing, etc.
+# file that contains all code for users:
+#   Login
+#   Registration
+#   Edit information
+#   View information
 # SOURCE: wtforms documentation, stackoverflow and https://www.youtube.com/watch?v=zRwy8gtgJ1A&list=PLillGF-RfqbbbPz6GSEM9hLQObuQjNoj_&index=1
 
 from flask import render_template, flash, request, url_for, session, redirect
@@ -7,6 +11,67 @@ from flask_wtf import FlaskForm
 from wtforms.validators import Length, InputRequired, Email, EqualTo, DataRequired
 from db_wrapper import DBConnection
 from passlib.hash import sha256_crypt
+import utils
+
+
+class UserInformation:
+    """Class that contains information about a user."""
+    def __init__(self, user_id, email, firstname, lastname, register_date):
+        """Constructor based on individual data fields. Note: Register_data contains the timestamp retrieved from SQL"""
+        self.user_id = user_id
+        self.email = email
+        self.firstname = firstname
+        self.lastname = lastname
+
+        self.register_date = {
+            "Y": None,
+            "M": None,
+            "D": None,
+
+            "hr": None,
+            "min": None,
+            "sec": None
+        }
+    # ENDMETHOD
+
+    def toJson(self):
+        return {
+            "user_id": self.user_id,
+            "email": self.email,
+            "firstname": self.firstname,
+            "lastname": self.lastname,
+            "register_date": {
+                "Y": self.register_date['Y'],
+                "M": self.register_date['M'],
+                "D": self.register_date['D'],
+
+                "hr": self.register_date['hr'],
+                "min": self.register_date['min'],
+                "sec": self.register_date['sec']
+            }
+        }
+
+    def __init__(self, email, password_candidate):
+        """Constructor based on an email address and a password. The constructor will retrieve the other data from the DB"""
+        with DBConnection() as db_connection:
+            db_connection.cursor().execute("SELECT * FROM user_accounts WHERE email = %s;", [email])
+            result = db_connection.cursor().fetchone() # we fetch the first and max only tuple
+
+            if result is None: # if the user witht the specified email and password doesn't exist
+                raise RuntimeError("No user with the specified email exists.")
+
+            correct_password_hash = result[4]
+
+            if not sha256_crypt.verify(password_candidate, correct_password_hash):
+                raise RuntimeError("Invalid password.")
+
+            self.user_id = int(result[0])
+            self.firstname = str(result[1])
+            self.lastname = str(result[2])
+            self.email = str(result[3])
+            self.register_date = utils.sql_time_to_dict(str(result[5]))
+    # ENDMETHOD
+# ENDCLASS
 
 
 class UserRegisterForm(FlaskForm):
@@ -28,7 +93,7 @@ class UserRegisterForm(FlaskForm):
                                           EqualTo('passwordconfirm', message="Passwords do not match."),
                                           Length(min=6, max=50, message="Password needs to be between 6 and 50 characters long.")])
     passwordconfirm = PasswordField('Confirm Password')
-
+# ENDCLASS
 
 class UserLoginForm(FlaskForm):
     """Class that represents a user login form. The form has a email field,
@@ -39,7 +104,7 @@ class UserLoginForm(FlaskForm):
                                   Email(message="The supplied email address is not of a valid format."),
                                   Length(min=6, max=70, message="Email ")])
     password = PasswordField('Password', [DataRequired()])
-
+# ENDCLASS
 
 def login_user(request_data):
     """Given the specified request data received from a POST or GET request, this will try to login
@@ -54,36 +119,24 @@ def login_user(request_data):
             # check if the user exists in the database and if the
             # password checks out
             with DBConnection() as db_connection:
-                db_connection.cursor().execute("SELECT * FROM user_accounts WHERE email = %s;", [login_form.email.data])
-                result = db_connection.cursor().fetchone() # we fetch the first and max only tuple
+                try:
+                    user_data = UserInformation(login_form.email.data, login_form.password.data)
+                    session['logged_in'] = True
+                    session['user_data'] = user_data
 
-                if result is not None: # there is a user with the email address
-
-                    user_id = result[0] # the user identifier
-                    real_password_hash = result[4] # the real password 
-
-                    if sha256_crypt.verify(login_form.password.data, real_password_hash): # the entered password is correct
-                        session["user_id"] = user_id
-                        session["logged_in"] = True
-                        
-                        flash("You are now logged in.", category="success")
-
-                        return redirect(url_for("index"))
-                    else: # the password is not correct
-                        flash(message="Specified password is invalid.", category="error")
-                        return render_template('login.html', form = login_form)
-                    #ENDIF
-
-                else: # there is no user with the specified email address
-                    flash(message="Specified e-mail address does not belong to an existing user.", category="error")
+                    return redirect(url_for("index"))
+                    
+                except RuntimeError as err:
+                    flash(message="Specified email and password combination is invalid.", category="error")
                     return render_template('login.html', form = login_form)
-                # ENDIF
-
+                # ENDTRY
             # ENDWITH
         else: # the form data was invalid
             return render_template('login.html', form = login_form)
+        # ENDIF
     else: # The page was opened without form data
         return render_template('login.html', form = login_form)
+    # ENDIF
 # END FUNCTION
 
 def register_user(request_data):
@@ -131,4 +184,6 @@ def register_user(request_data):
     else: # The page was opened without form data
         return render_template('register.html',  form = register_form)
 # END FUNCTION
+
+
 
