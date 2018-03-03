@@ -30,7 +30,7 @@ def logout():
 
 @app.route('/user/profile/')
 def profile_self():
-    pass
+    return render_template('user_profile.html')
 
 @app.route('/user/profile/<int:user_id>')
 def profile_other():
@@ -39,6 +39,10 @@ def profile_other():
 @app.route('/user/edit/')
 def edit_userdata():
     pass
+
+@app.route('/result')
+def result():
+    render_template('result.html')
 
 if __name__ == '__main__':
     app.run(debug=True)

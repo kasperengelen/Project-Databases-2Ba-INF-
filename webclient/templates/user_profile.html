@@ -1,0 +1,21 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+	
+	{% if session.logged_in %}
+		<div class="jumbotron text-center">
+    		<h2>Personal Data</h2>
+
+    		<div class="jumbotron text-left">
+    			<ul type="disc">
+    				<li><p>First Name: {{ firstname }}</p></li>
+    				<li><p>Last Name: {{ lastname }}</p></li>
+    				<li><p>Email: {{ email }}</p></li>
+    			</ul>
+
+
+    		</div>
+     	</div>
+	{% endif %}
+
+{% endblock %}

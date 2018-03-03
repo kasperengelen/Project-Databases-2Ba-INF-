@@ -60,13 +60,13 @@ def login_user(request_data):
                 if result is not None: # there is a user with the email address
 
                     user_id = result[0] # the user identifier
-                    real_password_hash = result[4] # the real password
+                    real_password_hash = result[4] # the real password 
 
                     if sha256_crypt.verify(login_form.password.data, real_password_hash): # the entered password is correct
                         session["user_id"] = user_id
                         session["logged_in"] = True
                         
-                        flash("You are now logged in.", category="message")
+                        flash("You are now logged in.", category="success")
 
                         return redirect(url_for("index"))
                     else: # the password is not correct
