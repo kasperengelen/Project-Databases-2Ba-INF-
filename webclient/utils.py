@@ -29,11 +29,3 @@ def sql_time_to_dict(sql_date_string):
         "sec": sec,
         "sec_full": sec_full
     }
-
-
-class CustomJSONEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, user_utils.UserInformation):
-            return obj.toJson()
-
-        return super().default(obj)

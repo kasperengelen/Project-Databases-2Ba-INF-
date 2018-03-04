@@ -8,7 +8,6 @@ app.config.update(dict(
     SECRET_KEY = "\xbf\xcf\xde\xee\xe8\xc1\x8c\\\xfd\xe6\\!t^(\x1c/\xc6l\xe1,\xc9#\xd7",
     WTF_CSRF_SECRET_KEY = "Uei\xc2&\x8a\x18.H\x87\xc5\x1d\xd1\xc8\xc3\xcf\xe5\xfft_\x8c:\x03r"
 ))
-app.json_encoder = utils.CustomJSONEncoder
 
 @app.route('/')
 def index():
@@ -36,17 +35,38 @@ def logout():
 @app.route('/user/profile/')
 def profile_self():
     """View the profile of the user who is logged in."""
-    return user_utils.view_user(request, session['user_data'].user_id)
+    return user_utils.view_user(request, session['user_data']['user_id'])
 
-@app.route('/user/profile/<int:user_id>/')
+@app.route('/user/profile/<int:user_id>')
 def profile_other(user_id):
     """View the profile of other users."""
     return user_utils.view_user(request, user_id)
 
-@app.route('/user/edit/')
+@app.route('/user/edit/', methods=['GET', 'POST'])
 def edit_userdata():
-    """This page lets a user edit its own personal information."""
-    return render_template('user_edit.html')
+    return user_utils.edit_user(request)
+
+@app.route('/dataset/list')
+def list_datasets():
+    """Returns a list of datasets"""
+    pass
+
+@app.route('/dataset/<int:dataset_id>/view')
+def view_dataset(set_id):
+    """Returns information about the dataset with the specified id. If 
+    there is no dataset with the specified id, an error page is returned."""
+    pass
+
+@app.route('/dataset/<int:dataset_id>/manage')
+def manage_dataset(set_id):
+    """Manage the dataset with the specified id. If 
+    there is no dataset with the specified id, an error page is returned."""
+    pass
+
+@app.route('/dataset/create')
+def create_dataset():
+    """Create a new dataset."""
+    pass
 
 @app.route('/result/')
 def result():

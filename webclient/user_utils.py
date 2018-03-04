@@ -27,14 +27,14 @@ class UserInformation:
     # ENDMETHOD
 
     @staticmethod
-    def from_id(self, id):
+    def from_id(id):
         """Returns a UserInformation object containing information about the user with the specified id.
 
         Raises RuntimeError if there is no user with the specified id.
         """
 
         with DBConnection() as db_connection:
-            db_connection.cursor().execute("SELECT * FROM user_accounts WHERE id = %s;", [id])
+            db_connection.cursor().execute("SELECT * FROM user_accounts WHERE userid = %s;", [id])
             result = db_connection.cursor().fetchone() # we fetch the first and max only tuple
 
             if result is None: # if the user witht the specified email doesn't exist
@@ -49,7 +49,7 @@ class UserInformation:
     # ENDMETHOD
 
     @staticmethod
-    def from_email_and_pass(self, email, password_candidate):
+    def from_email_and_pass(email, password_candidate):
         """Returns a UserInformation object containing information about the user
         with the specified email and password.
 
@@ -76,7 +76,7 @@ class UserInformation:
         # ENDWITH
 
     @staticmethod
-    def from_email(self, email):
+    def from_email(email):
         """Returns a UserInformation object containing information about the user
         with the specified email.
 
@@ -98,7 +98,7 @@ class UserInformation:
         # ENDWITH
     # ENDMETHOD
 
-    def toJson(self):
+    def toDict(self):
         """Convert the data inside the object to a JSON-comptabile dict."""
         return {
             "user_id": self.user_id,
@@ -151,6 +151,23 @@ class UserLoginForm(FlaskForm):
     password = PasswordField('Password', [DataRequired()])
 # ENDCLASS
 
+class UserEditForm(FlaskForm):
+    """Class that represents a form used to update user information."""
+    firstname = StringField('Firstname', [InputRequired(message="Firstname is required."),
+                                          Length(min=1, max=50, message="Firstname should contain between 1 and 50 characters.")])
+    lastname = StringField('Lastname', [InputRequired(message="Lastname is required."),
+                                        Length(min=1, max=50, message="Lastname should contain between 1 and 50 characters.")])
+    email = StringField('Email', [InputRequired(message="Email address is required."),
+                                  Email(message="The supplied email address is not of a valid format."),
+                                  Length(min=6, max=70, message="Email address should contain between 1 and 50 characters.")])
+    password = PasswordField('Password', [InputRequired("Password is required."),
+                                          EqualTo('passwordconfirm', message="Passwords do not match."),
+                                          Length(min=6, max=50, message="Password needs to be between 6 and 50 characters long.")])
+    passwordconfirm = PasswordField('Confirm Password')
+
+
+
+
 def login_user(request_data):
     """Given the specified request data received from a POST or GET request, this will try to login
     a user with the data contained in the request. If no data is present in the request, this will return
@@ -167,7 +184,7 @@ def login_user(request_data):
                 try:
                     user_data = UserInformation.from_email_and_pass(login_form.email.data, login_form.password.data)
                     session['logged_in'] = True
-                    session['user_data'] = user_data
+                    session['user_data'] = user_data.toDict()
 
                     return redirect(url_for("index"))
                     
@@ -236,7 +253,58 @@ def view_user(request_data, user_id):
     this returns an error page."""
     try:
         user_data = UserInformation.from_id(user_id)
-        return render_template('user_profile.html', user_data = user_data)
+        return render_template('user_profile.html', user_data = user_data.toDict())
     except RuntimeError as err:
         return render_template('error.html', message = "Specified user not found.")
+# END FUNCTION
+
+def edit_user(request_data):
+    """Returns a page for editing the logged in user."""
+    # retrieve user data
+
+    # create form
+    edit_form = UserEditForm(request_data.form)
+
+    if request_data.method == 'POST': # There was POST data
+        if edit_form.validate(): # data was validated
+            # retrieve current user id
+            cur_user_id = session['user_data']['user_id']
+
+            # retrieve data from form
+            fname = edit_form.firstname.data
+            lname = edit_form.lastname.data
+            email = edit_form.email.data
+            new_password_hash = sha256_crypt.hash(edit_form.password.data) # encrypt the password
+
+            with DBConnection() as db_conn:
+                # the email must remain unique, if there is a user with a different user_id and the same email as the one
+                # specified, this is invalid
+                db_conn.cursor().execute("SELECT * FROM user_accounts WHERE email = %s AND userid != %s;", [edit_form.email.data, cur_user_id])
+                result = db_conn.cursor().fetchone()
+
+                if result is not None: # email already in use
+                    flash(message='Specified e-mail address already in use.', category='error')
+                else: # updata info
+                    db_conn.cursor().execute("UPDATE user_accounts SET fname = %s, lname = %s, email = %s, passwd = %s WHERE userid = %s;",
+                                             [fname, lname, email, new_password_hash, cur_user_id])
+                    db_conn.commit()
+                    flash(message='Information updated.')
+                    user_data = UserInformation.from_id(session['user_data']['user_id'])
+                    session['user_data'] = user_data.toDict()
+                # ENDIF
+            # ENDWITH
+        # ENDIF
+    else: # There was no POST data
+        # retrieve data from DB
+        user_data = UserInformation.from_id(session['user_data']['user_id'])
+
+        # fill form
+        edit_form.firstname.data = user_data.firstname
+        edit_form.lastname.data = user_data.lastname
+        edit_form.email.data = user_data.email
+        edit_form.password.data = ''
+        edit_form.passwordconfirm.data = ''
+    # ENDIF
+
+    return render_template('user_edit.html', form = edit_form)
 # END FUNCTION
