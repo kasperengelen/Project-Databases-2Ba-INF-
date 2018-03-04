@@ -12,6 +12,7 @@ from wtforms.validators import Length, InputRequired, Email, EqualTo, DataRequir
 from db_wrapper import DBConnection
 from passlib.hash import sha256_crypt
 import utils
+from functools import wraps
 
 
 class UserInformation:
