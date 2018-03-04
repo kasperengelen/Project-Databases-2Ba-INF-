@@ -4,7 +4,7 @@ project_opgave_2018.pdf
 
 ### Python ###
 # Byte-compiled / optimized / DLL files
-#__pycache__/
+__pycache__/
 *.py[cod]
 *$py.class
 
