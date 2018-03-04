@@ -308,3 +308,17 @@ def edit_user(request_data):
 
     return render_template('user_edit.html', form = edit_form)
 # END FUNCTION
+
+# SOURCE: https://docs.python.org/2/library/functools.html
+def require_login(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        if 'logged_in' in session and session['logged_in']:
+            return func(*args, **kwargs)
+        else:
+            flash(message='Please log in to view this content.', category='warning')
+            return redirect(url_for('login'))
+    return wrapper
+# END FUNCTION
+
+

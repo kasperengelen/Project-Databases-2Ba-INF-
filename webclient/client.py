@@ -24,6 +24,7 @@ def register():
     return user_utils.register_user(request)
 
 @app.route('/logout/')
+@user_utils.require_login
 def logout():
     """Callback for the logout page. This simply overrides the session variables"""
     session["user_id"] = None
@@ -33,42 +34,50 @@ def logout():
     return redirect(url_for("index"))
 
 @app.route('/user/profile/')
+@user_utils.require_login
 def profile_self():
     """View the profile of the user who is logged in."""
     return user_utils.view_user(request, session['user_data']['user_id'])
 
 @app.route('/user/profile/<int:user_id>')
+@user_utils.require_login
 def profile_other(user_id):
     """View the profile of other users."""
     return user_utils.view_user(request, user_id)
 
 @app.route('/user/edit/', methods=['GET', 'POST'])
+@user_utils.require_login
 def edit_userdata():
     return user_utils.edit_user(request)
 
 @app.route('/dataset/list')
+@user_utils.require_login
 def list_datasets():
     """Returns a list of datasets"""
     pass
 
 @app.route('/dataset/<int:dataset_id>/view')
+@user_utils.require_login
 def view_dataset(set_id):
     """Returns information about the dataset with the specified id. If 
     there is no dataset with the specified id, an error page is returned."""
     pass
 
 @app.route('/dataset/<int:dataset_id>/manage')
+@user_utils.require_login
 def manage_dataset(set_id):
     """Manage the dataset with the specified id. If 
     there is no dataset with the specified id, an error page is returned."""
     pass
 
 @app.route('/dataset/create')
+@user_utils.require_login
 def create_dataset():
     """Create a new dataset."""
     pass
 
 @app.route('/result/')
+@user_utils.require_login
 def result():
     """???"""
     render_template('result.html')
