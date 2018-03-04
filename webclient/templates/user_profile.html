@@ -14,15 +14,11 @@
     				<a href="/user/edit" class="btn btn-primary">Edit</a>
     			</div>
     			<ul type="disc">
-    				<li><p>Name: {{ firstname }} {{ lastname }}</p></li>
-    				<li><p>Email: {{ email }}</p></li>
+    				<li><p>Name: {{ user_data.firstname }} {{ user_data.lastname }}</p></li>
+    				<li><p>Email: {{ user_data.email }}</p></li>
     				</br>
-    				<li><p>Register Date: {{ date }}</p></li>
+    				<li><p>Register Date: {{ user_data.register_date }}</p></li>
     			</ul>
-
-
-
-
     		</div>
      	</div>
 
