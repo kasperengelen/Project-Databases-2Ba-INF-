@@ -1,5 +1,6 @@
 from flask import Flask, flash, render_template, redirect, request, url_for, session
 import user_utils
+import dataset_utils
 from db_wrapper import DBConnection
 import utils
 
@@ -54,13 +55,7 @@ def edit_userdata():
 @user_utils.require_login
 def list_datasets():
     """Returns a list of datasets"""
-    dataset_list = []
-
-    # RETRIEVE FROM DATASET
-
-    # PUT IN LIST
-
-    return render_template('dataset_list.html', setlist = dataset_list)
+    return dataset_utils.list_dataset(request)
 
 @app.route('/dataset/<int:dataset_id>/view')
 @user_utils.require_login
@@ -87,12 +82,6 @@ def manage_dataset(set_id):
     # FILL FORM WITH CURRENT DATA
 
     return render_template('manage_dataset.html')
-
-@app.route('/dataset/<int:dataset_id>/upload')
-@user_utils.require_login
-def upload_data(set_id):
-    """Upload data to the specified data set"""
-    pass
 
 @app.route('/dataset/create')
 @user_utils.require_login
