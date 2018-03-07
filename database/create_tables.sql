@@ -1,4 +1,5 @@
-CREATE TABLE user_accounts(
+-- Table for keeping track of users
+CREATE TABLE user_accounts (
     userid        SERIAL,
     fname         VARCHAR(255) NOT NULL,
     lname         VARCHAR(255) NOT NULL,
@@ -9,6 +10,7 @@ CREATE TABLE user_accounts(
     PRIMARY KEY(userid)
 );
 
+-- table that keeps track of datasets
 CREATE TABLE datasets (
     setid         SERIAL,
     setname       VARCHAR(255) NOT NULL,
@@ -17,7 +19,18 @@ CREATE TABLE datasets (
     PRIMARY KEY(setid)
 );
 
-CREATE TABLE set_permissions(
+-- table that links tables to datasets
+CREATE TABLE tables (
+    tablename VARCHAR(255) UNIQUE, -- Formaat: setid_nr
+    displayname VARCHAR(255) UNIQUE, -- bepaald door gebruiker
+    setid INTEGER,
+
+    PRIMARY KEY(tablename, setid),
+    FOREIGN KEY (setid) REFERENCES datasets(setid)
+);
+
+-- table that links users to datasets
+CREATE TABLE set_permissions (
     userid          INTEGER,
     setid           INTEGER,
     permission_type VARCHAR(255),
@@ -27,3 +40,4 @@ CREATE TABLE set_permissions(
     FOREIGN KEY(userid) REFERENCES user_accounts(userid),
     FOREIGN KEY(setid) REFERENCES datasets(setid)
 );
+
