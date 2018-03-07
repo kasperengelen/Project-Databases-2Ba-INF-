@@ -60,7 +60,7 @@ def list_datasets():
 
     # PUT IN LIST
 
-    render_template('dataset_list.html', setlist = dataset_list)
+    return render_template('dataset_list.html', setlist = dataset_list)
 
 @app.route('/dataset/<int:dataset_id>/view')
 @user_utils.require_login
@@ -86,7 +86,7 @@ def manage_dataset(set_id):
 
     # FILL FORM WITH CURRENT DATA
 
-    render_template('manage_dataset.html')
+    return render_template('manage_dataset.html')
 
 @app.route('/dataset/<int:dataset_id>/upload')
 @user_utils.require_login

@@ -1,13 +1,15 @@
 {% extends 'layout.html' %}
 
 {% block body %}
-	
+	<div class="jumbotron text-center">
+		<h2>Datasets</h2>
+	</div>
 	<div class="jumbotron text-center">
 		<ul type="disc">
-			{% with datasets = {{ setlist }} %}
+			{% with datasets = setlist %}
 				{% if datasets %}
 					{% for dataset in datasets %}
-					<li><a href="/dataset/{{ dataset.setid }}/view"><p>Setname: {{ dataset.displayName }}</p></a></li>
+						<li><a href="/dataset/{{ dataset.setid }}/view"><p>Setname: {{ dataset.displayName }}</p></a></li>
 					{% endfor %}
 				{% endif %}
 			{% endwith %}
