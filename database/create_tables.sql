@@ -22,7 +22,7 @@ CREATE TABLE datasets (
 -- table that links tables to datasets
 CREATE TABLE tables (
     tablename VARCHAR(255) UNIQUE, -- Formaat: setid_nr
-    displayname VARCHAR(255) UNIQUE, -- bepaald door gebruiker
+    displayname VARCHAR(255) NOT NULL, -- bepaald door gebruiker
     setid INTEGER,
 
     PRIMARY KEY(tablename, setid),
