@@ -12,13 +12,12 @@ CREATE TABLE user_accounts (
 
 -- table that keeps track of datasets
 CREATE TABLE datasets (
-    setid         	INTEGER,
+    setid         	SERIAL,
     setname       	VARCHAR(255) NOT NULL,
 	description		VARCHAR(255) NOT NULL,
-	tablename		VARCHAR(255) NOT NULL,
     creation_data 	TIMESTAMP    DEFAULT now(),
 
-    PRIMARY KEY(setid, tablename)
+    PRIMARY KEY(setid)
 );
 
 -- table that links tables to datasets
@@ -28,7 +27,7 @@ CREATE TABLE tables (
     displayname VARCHAR(255) NOT NULL,
     
     PRIMARY KEY(tableid, setid),
-    FOREIGN KEY (setid) REFERENCES datasets(setid)
+    FOREIGN KEY (setid) REFERENCES datasets(setid) ON DELETE CASCADE
 );
 
 -- table that links users to datasets
@@ -39,6 +38,5 @@ CREATE TABLE set_permissions (
 
     PRIMARY KEY(userid, setid),
     CHECK(permission_type IN ('admin', 'write', 'read')),
-    FOREIGN KEY(userid) REFERENCES user_accounts(userid)
+    FOREIGN KEY(userid) REFERENCES user_accounts(userid) ON DELETE CASCADE
 );
-

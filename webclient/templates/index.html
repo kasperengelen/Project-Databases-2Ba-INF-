@@ -1,21 +1,25 @@
 {% extends 'layout.html' %}
 
-
 {% block body %}
 	
 	{% if session.logged_in %}
-		<div class="jumbotron text-center" style="padding: 5px">
+		<div class="jumbotron text-center">
 			<h2>Getting Started</h2>
 		</div>
-		<div class="jumbotron text-center">
-			<p>Choose Files</p>
-			<div>
- 				<label for="files" class="btn btn-primary">Select Files</label>
- 				<input id="files" style="visibility:hidden;" type="file">
+		<div>
+			<div class="jumbotron text-center col-sm-6" style="padding-top: 2%">
+				<h3>Existing Datasets</h3>
+				</br>
+				<a href="/dataset/list" class="btn btn-primary">Datasets</a>
+			</div>
+			<div class="jumbotron text-center col-sm-6" style="padding-top: 2%">
+				<h3>Create New Dataset</h3>
+				</br>
+				<a href="#" class="btn btn-primary">New Dataset</a>
 			</div>
 		</div>
 	{% else %}
-		<div class="jumbotron text-center" style="padding: 5px">
+		<div class="jumbotron text-center">
 			<h2>Welcome</h2>
 		</div>
 
