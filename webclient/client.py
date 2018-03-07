@@ -62,36 +62,20 @@ def list_datasets():
 def view_dataset(set_id):
     """Returns information about the dataset with the specified id. If 
     there is no dataset with the specified id, an error page is returned."""
-
-    # TABLES with data
-
-    # RETURN DATA
-
-    pass
+    return dataset_utils.view_dataset(request, set_id)
 
 @app.route('/dataset/<int:dataset_id>/manage')
 @user_utils.require_login
 def manage_dataset(set_id):
     """Manage the dataset with the specified id. If 
     there is no dataset with the specified id, an error page is returned."""
-
-    # FORM
-
-    # POST? -> check data and update
-
-    # FILL FORM WITH CURRENT DATA
-
-    return render_template('manage_dataset.html')
+    return dataset_utils.manage_dataset(request, set_id)
 
 @app.route('/dataset/create')
 @user_utils.require_login
 def create_dataset():
     """Create a new dataset."""
-
-
-
-    
-    pass
+    return dataset_utils.create_dataset(request)
 
 @app.route('/result/')
 @user_utils.require_login
