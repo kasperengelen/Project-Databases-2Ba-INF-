@@ -54,13 +54,24 @@ def edit_userdata():
 @user_utils.require_login
 def list_datasets():
     """Returns a list of datasets"""
-    pass
+    dataset_list = []
+
+    # RETRIEVE FROM DATASET
+
+    # PUT IN LIST
+
+    render_template('dataset_list.html', setlist = dataset_list)
 
 @app.route('/dataset/<int:dataset_id>/view')
 @user_utils.require_login
 def view_dataset(set_id):
     """Returns information about the dataset with the specified id. If 
     there is no dataset with the specified id, an error page is returned."""
+
+    # TABLES with data
+
+    # RETURN DATA
+
     pass
 
 @app.route('/dataset/<int:dataset_id>/manage')
@@ -68,12 +79,29 @@ def view_dataset(set_id):
 def manage_dataset(set_id):
     """Manage the dataset with the specified id. If 
     there is no dataset with the specified id, an error page is returned."""
+
+    # FORM
+
+    # POST? -> check data and update
+
+    # FILL FORM WITH CURRENT DATA
+
+    render_template('manage_dataset.html')
+
+@app.route('/dataset/<int:dataset_id>/upload')
+@user_utils.require_login
+def upload_data(set_id):
+    """Upload data to the specified data set"""
     pass
 
 @app.route('/dataset/create')
 @user_utils.require_login
 def create_dataset():
     """Create a new dataset."""
+
+
+
+    
     pass
 
 @app.route('/result/')
