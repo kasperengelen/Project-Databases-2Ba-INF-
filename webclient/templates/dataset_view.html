@@ -3,8 +3,9 @@
 {% block body %}
 	
 	<div class="jumbotron text-center">
-		<h2>Dataset: {{ set.displayName }} <a href="/dataset/{{ set.setid }}/manage"><span class="glyphicon glyphicon-pencil"></span></a></h2>
+		<h2>Dataset: {{ dataset.displayName }} <a href="/dataset/{{ dataset.setid }}/manage"><span class="glyphicon glyphicon-pencil"></span></a>
 		<p>Description: {{ set.description }}</p>
+		</h2>
 	</div>
 
 {% endblock %}

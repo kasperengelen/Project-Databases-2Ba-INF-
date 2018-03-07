@@ -5,7 +5,7 @@
 #   View information
 # SOURCE: wtforms documentation, stackoverflow and https://www.youtube.com/watch?v=zRwy8gtgJ1A&list=PLillGF-RfqbbbPz6GSEM9hLQObuQjNoj_&index=1
 
-from flask import render_template, flash, request, url_for, session, redirect
+from flask import render_template, flash, request, url_for, session, redirect, abort
 from wtforms import StringField, PasswordField, validators
 from flask_wtf import FlaskForm
 from wtforms.validators import Length, InputRequired, Email, EqualTo, DataRequired
@@ -256,7 +256,7 @@ def view_user(request_data, user_id):
         user_data = UserInformation.from_id(user_id)
         return render_template('user_profile.html', user_data = user_data.toDict())
     except RuntimeError as err:
-        return render_template('error.html', message = "Specified user not found.")
+        abort(404)
 # END FUNCTION
 
 def edit_user(request_data):
