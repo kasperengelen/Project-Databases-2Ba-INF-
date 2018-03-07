@@ -1,24 +1,46 @@
 # file that contains all code related datasets.
 
-from flask import render_template, flash, request, url_for, session, redirect
+from flask import render_template, flash, request, url_for, session, redirect, abort
 from wtforms import StringField, PasswordField, validators
 from flask_wtf import FlaskForm
 from wtforms.validators import Length, InputRequired, Email, EqualTo, DataRequired
 from db_wrapper import DBConnection
 from passlib.hash import sha256_crypt
 
-def view_dataset(request_data):
+class CreateDatasetFrom(FlaskForm):
+    name = StringField("Dataset name", [InputRequired(message="Name is required.")])
+
+    description = TextAreaField("Description", [Length(min=0, max=256, message="Description can contain max 256 characters.")])
+
+def view_dataset(request_data, set_id):
     """Given a specified ID, return a page that contains
     information about the dataset."""
 
     # retrieve information about the dataset
+    with DBConnection as db_conn:
+        db_conn.cursor().execute("SELECT * FROM datasets WHERE setid = %s", [set_id])
+        result = db_conn.cursor().fetchone()
 
-    return render_template('dataset_view.html', dataset = dataset)
+        if result is not None:
+            dataset = {
+                "id":          result[0],
+                "displayName": result[1],
+                "description": result[2] 
+            }
+
+            return render_template('dataset_view.html', dataset = dataset)
+        else:
+            abort(404)
+        # ENDIF
+    # ENDWITH
+# ENDFUNCTION
 
 def create_dataset(request_data):
     """Returns a page where a new dataset can be created.
     The current logged in user will be made administrator
     of the new dataset."""
+
+    # CREATE FORM
 
     return render_template('dataset_create.html')
 
