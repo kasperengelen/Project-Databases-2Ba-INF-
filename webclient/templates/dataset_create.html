@@ -1,0 +1,27 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+	
+	<div class="jumbotron text-center">
+			<h2>Getting Started</h2>
+		</div>
+		<div>
+			<div class="jumbotron text-center col-sm-6" style="padding-top: 2%; height: 250px">
+				<h3>Dataset Name</h3>
+				</br>
+				</br>
+				<p>Enter setname</p>
+			</div>
+			<div class="jumbotron text-center col-sm-6" style="padding-top: 2%; height: 250px">
+				<h3>Upload File</h3>
+				</br>
+				</br>
+				<div>
+					<label for="files" class="btn btn-primary">Select Files</label>
+					<input id="files" style="visibility: hidden" type="file">
+				</div>
+				<p>Allowed extensions: .csv, .zip, .dump</p>
+			</div>
+		</div>
+
+{% endblock %}

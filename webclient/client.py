@@ -101,8 +101,7 @@ def create_dataset():
 
 
 
-    
-    pass
+    return render_template('dataset_create.html')
 
 @app.route('/result/')
 @user_utils.require_login
