@@ -17,7 +17,7 @@ def view_dataset(request_data, set_id):
     information about the dataset."""
 
     # retrieve information about the dataset
-    with DBConnection as db_conn:
+    with DBConnection() as db_conn:
         db_conn.cursor().execute("SELECT * FROM datasets WHERE setid = %s", [set_id])
         result = db_conn.cursor().fetchone()
 
@@ -46,17 +46,20 @@ def create_dataset(request_data):
     if request_data.method == 'POST': # there was submitted data
         if form.validate(): # submitted data is valid
             with DBConnection() as db_conn:
+                # INSERT DATA INTO DB
                 db_conn.cursor().execute("INSERT INTO datasets(setname, description) VALUES (%s, %s) RETURNING setid;", [form.name.data, form.description.data])
                 db_conn.commit()
-                print(db_conn.fetchone())
+
+                # retrieve ID
+                set_id = db_conn.cursor().fetchone()[0]
+
+                # SET PERMISSIONS
+                db_conn.cursor().execute("INSERT INTO set_permissions(userid, setid, permission_type) VALUES (%s, %s, 'admin');", [session['user_data']['user_id'], set_id])
+                db_conn.commit()
             # ENDWITH
 
-            # retrieve ID
-            set_id = None
-
-
             flash(message="The dataset was created.", category="success")
-            return redirect(url_for('/dataset/' + set_id + '/view/'))
+            return redirect(url_for('view_dataset', dataset_id=set_id))
 
         else: # there are invalid fields
             return render_template('dataset_create.html', form=form)
@@ -79,6 +82,7 @@ def list_dataset(request_data):
         # iterate over datasets
         for dataset in results:
             setid        = dataset[0]
+            print(setid)
             display_name = dataset[1]
             description  = dataset[2]
 

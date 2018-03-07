@@ -57,21 +57,21 @@ def list_datasets():
     """Returns a list of datasets"""
     return dataset_utils.list_dataset(request)
 
-@app.route('/dataset/<int:dataset_id>/view')
+@app.route('/dataset/<int:dataset_id>/view/')
 @user_utils.require_login
-def view_dataset(set_id):
+def view_dataset(dataset_id):
     """Returns information about the dataset with the specified id. If 
     there is no dataset with the specified id, an error page is returned."""
-    return dataset_utils.view_dataset(request, set_id)
+    return dataset_utils.view_dataset(request, dataset_id)
 
-@app.route('/dataset/<int:dataset_id>/manage')
+@app.route('/dataset/<int:dataset_id>/manage/', methods=['GET', 'POST'])
 @user_utils.require_login
 def manage_dataset(set_id):
     """Manage the dataset with the specified id. If 
     there is no dataset with the specified id, an error page is returned."""
     return dataset_utils.manage_dataset(request, set_id)
 
-@app.route('/dataset/create')
+@app.route('/dataset/create', methods=['GET', 'POST'])
 @user_utils.require_login
 def create_dataset():
     """Create a new dataset."""

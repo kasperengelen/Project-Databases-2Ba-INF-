@@ -9,7 +9,7 @@
 			{% with datasets = setlist %}
 				{% if datasets %}
 					{% for dataset in datasets %}
-						<li><a href="/dataset/{{ dataset.setid }}/view"><p>Setname: {{ dataset.displayName }}</p></a></li>
+						<li><a href="/dataset/{{ dataset.id }}/view"><p>Setname: {{ dataset.displayName }}</p></a></li>
 					{% endfor %}
 				{% else %}
 					<p>No existing datasets</p>

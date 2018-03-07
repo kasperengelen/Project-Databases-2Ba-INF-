@@ -14,12 +14,13 @@
 				<form method="post" action="">
 				{{ form.csrf_token }}
 					<div class="form-group">
-				  		{{render_field(form.setname, class_="form-control")}}
+				  		{{render_field(form.name, class_="form-control")}}
 					</div>
 					<div class="form-group">
-						{{render_field(form.setdescription, class_="form-control", id="larger")}}
+						{{render_field(form.description, class_="form-control", id="larger")}}
+                    </div>
+                    <p><input type="submit" class="btn btn-primary" value="Create"></p>
 				</form>
-				<p>Enter setname</p>
 			</div>
 			<div class="jumbotron text-center col-sm-6" style="padding-top: 2%; height: 250px">
 				<h3>Upload File</h3>
