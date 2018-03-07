@@ -1,7 +1,7 @@
 # file that contains all code related datasets.
 
 from flask import render_template, flash, request, url_for, session, redirect, abort
-from wtforms import StringField, PasswordField, validators
+from wtforms import StringField, PasswordField, validators, TextAreaField
 from flask_wtf import FlaskForm
 from wtforms.validators import Length, InputRequired, Email, EqualTo, DataRequired
 from db_wrapper import DBConnection
