@@ -1,7 +1,7 @@
 # file that contains all code related datasets.
 
 from flask import render_template, flash, request, url_for, session, redirect, abort
-from wtforms import StringField, PasswordField, validators
+from wtforms import StringField, PasswordField, validators, TextAreaField
 from flask_wtf import FlaskForm
 from wtforms.validators import Length, InputRequired, Email, EqualTo, DataRequired
 from db_wrapper import DBConnection
@@ -45,7 +45,7 @@ def create_dataset(request_data):
 
     if request_data.method == 'POST': # there was submitted data
         if form.validate(): # submitted data is valid
-            with DBConnection() db_conn:
+            with DBConnection() as db_conn:
                 db_conn.cursor().execute("INSERT INTO datasets(setname, description) VALUES (%s, %s) RETURNING setid;", [form.name.data, form.description.data])
                 db_conn.commit()
                 print(db_conn.fetchone())
