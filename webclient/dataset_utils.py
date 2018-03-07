@@ -41,8 +41,30 @@ def create_dataset(request_data):
     of the new dataset."""
 
     # CREATE FORM
+    form = CreateDatasetFrom(request_data.form)
 
-    return render_template('dataset_create.html')
+    if request_data.method == 'POST': # there was submitted data
+        if form.validate(): # submitted data is valid
+            with DBConnection() db_conn:
+                db_conn.cursor().execute("INSERT INTO datasets(setname, description) VALUES (%s, %s) RETURNING setid;", [form.name.data, form.description.data])
+                db_conn.commit()
+                print(db_conn.fetchone())
+            # ENDWITH
+
+            # retrieve ID
+            set_id = None
+
+
+            flash(message="The dataset was created.", category="success")
+            return redirect(url_for('/dataset/' + set_id + '/view/'))
+
+        else: # there are invalid fields
+            return render_template('dataset_create.html', form=form)
+        # ENDIF
+    else: # no submitted data
+        return render_template('dataset_create.html', form=form)
+    # ENDIF
+# ENDFUNCTION
 
 def list_dataset(request_data):
     """Returns a page that lists all datasets associated

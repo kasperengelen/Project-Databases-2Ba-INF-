@@ -15,16 +15,16 @@ CREATE TABLE datasets (
     setid         	SERIAL,
     setname       	VARCHAR(255) NOT NULL,
 	description		VARCHAR(255) NOT NULL,
-    creation_data 	TIMESTAMP    DEFAULT now(),
+    creation_date 	TIMESTAMP    DEFAULT now(),
 
     PRIMARY KEY(setid)
 );
 
 -- table that links tables to datasets
 CREATE TABLE tables (
-    tableid SERIAL UNIQUE,
-    setid INTEGER,
-    displayname VARCHAR(255) NOT NULL,
+    tableid        SERIAL       UNIQUE,
+    setid          INTEGER,
+    displayname    VARCHAR(255) NOT NULL,
     
     PRIMARY KEY(tableid, setid),
     FOREIGN KEY (setid) REFERENCES datasets(setid) ON DELETE CASCADE
@@ -32,9 +32,9 @@ CREATE TABLE tables (
 
 -- table that links users to datasets
 CREATE TABLE set_permissions (
-    userid          INTEGER,
-    setid           INTEGER,
-    permission_type VARCHAR(255),
+    userid            INTEGER,
+    setid             INTEGER,
+    permission_type   VARCHAR(255),
 
     PRIMARY KEY(userid, setid),
     CHECK(permission_type IN ('admin', 'write', 'read')),
