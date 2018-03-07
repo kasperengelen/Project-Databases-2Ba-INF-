@@ -10,6 +10,15 @@
 				<h3>Dataset Name</h3>
 				</br>
 				</br>
+				{% from "includes/_formhelpers.html" import render_field %}
+				<form method="post" action="">
+				{{ form.csrf_token }}
+					<div class="form-group">
+				  		{{render_field(form.setname, class_="form-control")}}
+					</div>
+					<div class="form-group">
+						{{render_field(form.setdescription, class_="form-control", id="larger")}}
+				</form>
 				<p>Enter setname</p>
 			</div>
 			<div class="jumbotron text-center col-sm-6" style="padding-top: 2%; height: 250px">
