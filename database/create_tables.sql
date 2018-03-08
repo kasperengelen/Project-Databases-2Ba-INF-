@@ -22,15 +22,6 @@ CREATE TABLE SYSTEM.datasets (
     PRIMARY KEY(setid)
 );
 
--- table that links tables to datasets
-CREATE TABLE SYSTEM.tables (
-    tableid        SERIAL       UNIQUE,
-    setid          INTEGER,
-    displayname    VARCHAR(255) NOT NULL,
-    
-    PRIMARY KEY(tableid, setid),
-    FOREIGN KEY (setid) REFERENCES SYSTEM.datasets(setid) ON DELETE CASCADE
-);
 
 -- table that links users to datasets
 CREATE TABLE SYSTEM.set_permissions (
