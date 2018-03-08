@@ -31,7 +31,8 @@ CREATE TABLE SYSTEM.set_permissions (
 
     PRIMARY KEY(userid, setid),
     CHECK(permission_type IN ('admin', 'write', 'read')),
-    FOREIGN KEY(userid) REFERENCES SYSTEM.user_accounts(userid) ON DELETE CASCADE
+    FOREIGN KEY(userid) REFERENCES SYSTEM.user_accounts(userid) ON DELETE CASCADE,
+    FOREIGN KEY(setid) REFERENCES SYSTEM.datasets(setid) ON DELETE CASCADE
 );
 
 --TRIGGER to delete all the data if the admin is deleted (needs to be modified for more than 1 admin)
