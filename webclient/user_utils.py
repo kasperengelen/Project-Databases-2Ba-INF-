@@ -35,7 +35,7 @@ class UserInformation:
         """
 
         with DBConnection() as db_connection:
-            db_connection.cursor().execute("SELECT * FROM user_accounts WHERE userid = %s;", [id])
+            db_connection.cursor().execute("SELECT * FROM SYSTEM.user_accounts WHERE userid = %s;", [id])
             result = db_connection.cursor().fetchone() # we fetch the first and max only tuple
 
             if result is None: # if the user witht the specified email doesn't exist
@@ -58,7 +58,7 @@ class UserInformation:
         """
 
         with DBConnection() as db_connection:
-            db_connection.cursor().execute("SELECT * FROM user_accounts WHERE email = %s;", [email])
+            db_connection.cursor().execute("SELECT * FROM SYSTEM.user_accounts WHERE email = %s;", [email])
             result = db_connection.cursor().fetchone() # we fetch the first and max only tuple
 
             if result is None: # if the user witht the specified email doesn't exist
@@ -85,7 +85,7 @@ class UserInformation:
         """
 
         with DBConnection() as db_connection:
-            db_connection.cursor().execute("SELECT * FROM user_accounts WHERE email = %s;", [email])
+            db_connection.cursor().execute("SELECT * FROM SYSTEM.user_accounts WHERE email = %s;", [email])
             result = db_connection.cursor().fetchone() # we fetch the first and max only tuple
 
             if result is None: # if the user witht the specified email doesn't exist
@@ -215,7 +215,7 @@ def register_user(request_data):
 
             # CHECK if there is already a user with the specified email
             with DBConnection() as db_connection:
-                db_connection.cursor().execute("SELECT * FROM user_accounts WHERE email = %s;", [register_form.email.data])
+                db_connection.cursor().execute("SELECT * FROM SYSTEM.user_accounts WHERE email = %s;", [register_form.email.data])
                 result = db_connection.cursor().fetchone() # we fetch the first
 
                 # there are users with the specified email --> error
@@ -233,7 +233,7 @@ def register_user(request_data):
 
             # REGISTER user data into database
             with DBConnection() as db_connection:
-                db_connection.cursor().execute("INSERT INTO user_accounts(fname, lname, email, passwd) VALUES (%s, %s, %s, %s);", [fname, lname, email, password])
+                db_connection.cursor().execute("INSERT INTO SYSTEM.user_accounts(fname, lname, email, passwd) VALUES (%s, %s, %s, %s);", [fname, lname, email, password])
                 db_connection.commit()
             #ENDWITH
 
@@ -280,13 +280,13 @@ def edit_user(request_data):
             with DBConnection() as db_conn:
                 # the email must remain unique, if there is a user with a different user_id and the same email as the one
                 # specified, this is invalid
-                db_conn.cursor().execute("SELECT * FROM user_accounts WHERE email = %s AND userid != %s;", [edit_form.email.data, cur_user_id])
+                db_conn.cursor().execute("SELECT * FROM SYSTEM.user_accounts WHERE email = %s AND userid != %s;", [edit_form.email.data, cur_user_id])
                 result = db_conn.cursor().fetchone()
 
                 if result is not None: # email already in use
                     flash(message='Specified e-mail address already in use.', category='error')
                 else: # updata info
-                    db_conn.cursor().execute("UPDATE user_accounts SET fname = %s, lname = %s, email = %s, passwd = %s WHERE userid = %s;",
+                    db_conn.cursor().execute("UPDATE SYSTEM.user_accounts SET fname = %s, lname = %s, email = %s, passwd = %s WHERE userid = %s;",
                                              [fname, lname, email, new_password_hash, cur_user_id])
                     db_conn.commit()
                     flash(message='Information updated.')

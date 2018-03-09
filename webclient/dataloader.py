@@ -69,10 +69,10 @@ class DataLoader:
 
         with DBConnection() as db_conn:
             # insert dataset entry for the current dataset
-            db_conn.cursor().execute("INSERT INTO datasets (setname, description) VALUES (%s, %s)", [self.setname, self.description])
+            db_conn.cursor().execute("INSERT INTO SYSTEM.datasets (setname, description) VALUES (%s, %s)", [self.setname, self.description])
 
             # get the last created setid (the highest), this is the setid of the curent set
-            db_conn.cursor().execute("SELECT MAX(setid) FROM datasets")
+            db_conn.cursor().execute("SELECT MAX(setid) FROM SYSTEM.datasets")
             setid = db_conn.cursor().fetchone()[0]
 
             # insert a table entry for every dataframe

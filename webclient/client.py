@@ -87,7 +87,7 @@ def result():
 def debug_page():
     """Debug page for testing stuff"""
     with DBConnection() as db_conn:
-        db_conn.cursor().execute('SELECT * FROM user_accounts LIMIT 1');
+        db_conn.cursor().execute('SELECT * FROM SYSTEM.user_accounts LIMIT 1');
         result = db_conn.cursor().fetchone()
         date = result[-1]
 
