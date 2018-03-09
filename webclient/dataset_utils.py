@@ -97,8 +97,18 @@ def list_dataset(request_data):
     return render_template('dataset_list.html', setlist = dataset_list)
 # ENDFUNCTION
 
-def manage_dataset(request_data):
+def manage_dataset(request_data, set_id):
     """Returns a page where the name and the permissions
     for a dataset can be edited."""
 
+    # form
+    #   name
+    #   description
+
     return render_template('dataset_manage.html')
+
+def edit_perms_dataset(request_data, set_id):
+    """Returns a page where the name and the permissions for
+    a dataset can be edited."""
+
+    pass
