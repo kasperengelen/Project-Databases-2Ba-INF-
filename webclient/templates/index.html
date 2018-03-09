@@ -3,7 +3,7 @@
 {% block body %}
 	
 	{% if session.logged_in %}
-		<div class="jumbotron text-center">
+		<div class="jumbotron text-center col-sm-12" style="padding: 1%">
 			<h2>Getting Started</h2>
 		</div>
 		<div>
@@ -12,14 +12,14 @@
 				</br>
 				<a href="/dataset/list" class="btn btn-primary">View Datasets</a>
 			</div>
-			<div class="jumbotron text-center col-sm-6" style="padding-top: 2%">
-				<h3>Create New Dataset</h3>
+			<div class="jumbotron text-center col-sm-6" style="padding-top: 2%;">
+				<h3>Create Dataset</h3>
 				</br>
 				<a href="/dataset/create" class="btn btn-primary">New Dataset</a>
 			</div>
 		</div>
 	{% else %}
-		<div class="jumbotron text-center">
+		<div class="jumbotron text-center"  style="padding: 1%">
 			<h2>Welcome</h2>
 		</div>
 
