@@ -110,7 +110,8 @@ def manage_dataset(request_data, set_id):
 def edit_perms_dataset(request_data, set_id):
     """Returns a page where the name and the permissions for
     a dataset can be edited."""
-    pass
+    
+    return render_template('dataset_permissions.html')
 
 def add_user_dataset(request_data, set_id):
     """Callback that adds the user contained in

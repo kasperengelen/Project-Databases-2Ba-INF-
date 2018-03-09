@@ -77,12 +77,12 @@ def edit_perms_dataset(dataset_id):
     """Return a page with which user permissions can be altered."""
     return dataset_utils.edit_perms_dataset(request, dataset_id)
 
-@app.route('dataset/<int:dataset_id>/add_user', methods=['POST'])
+@app.route('/dataset/<int:dataset_id>/add_user', methods=['POST'])
 @user_utils.require_login
 def add_user_dataset(dataset_id):
     return dataset_utils.add_user_dataset(request, dataset_id)
 
-@app.route('dataset/<int:dataset_id>/remove_user', methods=['POST'])
+@app.route('/dataset/<int:dataset_id>/remove_user', methods=['POST'])
 @user_utils.require_login
 def add_user_dataset(dataset_id):
     return dataset_utils.add_user_dataset(request, dataset_id)
