@@ -110,7 +110,80 @@ def manage_dataset(request_data, set_id):
 def edit_perms_dataset(request_data, set_id):
     """Returns a page where the name and the permissions for
     a dataset can be edited."""
-
-    
-
     pass
+
+def add_user_dataset(request_data, set_id):
+    """Callback that adds the user contained in
+    the POST data from the specified dataset."""
+
+    if not request_data.form.permission_type in ['read', 'write', 'admin']:
+        flash("Invalid permission type: '" + request_data.form.permission_type + "'")
+        return redirect(url_for('edit_perms_dataset'))
+
+    with DBConnection() as db_conn:
+        # retrieve user id from email
+        user_data = UserInformation.from_email(request_data.form.email)
+
+        ## check if user exists ##
+        db_conn.cursor().execute("SELECT * FROM SYSTEM.user_accounts WHERE email=%s", [request_data.form.email])
+        result = db_conn.cursor().fetchone()
+        if result is None:
+            flash(message="User with specified email address does not exist.", category="error")
+            return redirect(url_for('edit_perms_dataset'))
+        # ENDIF
+
+        ## check if permission already exists for user ##
+        user_data = UserInformation.from_email(request_data.form.email)
+        db_conn.cursor().execute("SELECT * FROM SYSTEM.set_permissions WHERE userid=%s AND setid=%s", [user_data.user_id, set_id])
+        result = db_conn.cursor().fetchone()
+
+        if result is not None:
+            flash(message="Specified user already had permissions for specified data set.", category="error")
+            return redirect(url_for('edit_perms_dataset'))
+        # ENDIF
+
+        ## add permission ##
+        db_conn.cursor().execute("INSERT INTO SYSTEM.set_permissions(userid, setid, permission_type) VALUES (%s, %s, %s);", [user_data.user_id, set_id, request_data.form.permission_type])
+        result = db_conn.commit()
+
+    return redirect(url_for('edit_perms_dataset'))
+
+def remove_user_dataset(request_data, set_id):
+    """Callback that removes the user contained in
+    the POST data from the specified dataset."""
+
+    if not request_data.form.permission_type in ['read', 'write', 'admin']:
+        flash("Invalid permission type: '" + request_data.form.permission_type + "'")
+        return redirect(url_for('edit_perms_dataset'))
+    
+    with DBConnection() as db_conn:
+        # retrieve user id from email
+        user_data = UserInformation.from_email(request_data.form.email)
+        
+        ## check that user does not edit own permissions ##
+        if user_data.user_id == session['user_data']['user_id']:
+            flash(message="User cannot remove itself from data set.")
+
+        ## check if user exists ##
+        db_conn.cursor().execute("SELECT * FROM SYSTEM.user_accounts WHERE email=%s", [request_data.form.email])
+        result = db_conn.cursor().fetchone()
+        if result is None:
+            flash(message="User with specified email address does not exist.", category="error")
+            return redirect(url_for('edit_perms_dataset'))
+        # ENDIF
+
+        ## check if permission already exists for user ##
+        user_data = UserInformation.from_email(request_data.form.email)
+        db_conn.cursor().execute("SELECT * FROM SYSTEM.set_permissions WHERE userid=%s AND setid=%s AND permission_type=%s", [user_data.user_id, set_id, request_data.form.permission_type])
+        result = db_conn.cursor().fetchone()
+
+        if result is None:
+            flash(message="Specified user does not have the specified permissions for the specified data set.", category="error")
+            return redirect(url_for('edit_perms_dataset'))
+        # ENDIF
+
+        ## remove permission ##
+        db_conn.cursor().execute("DELETE FROM SYSTEM.set_permissions WHERE userid=%s AND setid=%s", [user_data.user_id, request_data.form.permission_type])
+
+    return redirect(url_for('edit_perms_dataset'))
+
