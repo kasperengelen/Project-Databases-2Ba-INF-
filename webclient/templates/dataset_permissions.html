@@ -12,6 +12,19 @@
 			</br>
 		</div>
 
+		<div>
+			{% from "includes/_formhelpers.html" import render_field %}
+			<form method="post" action="/dataset/{{ setid }}/add_user">
+			{{ form.csrf_token }}
+			<div class="form-group">
+				{{render_field(form.email, class_="form-control")}}
+			</div>
+			<div class="form-group">
+				{{render_field(form.permission_type, class_="form-control")}}
+			<p><input type="submit" class="btn btn-primary" value="Add User"></p>
+			</form>
+		</div>
+
 		<table>
 			<tr>
 				<th>Name</th>
@@ -22,14 +35,14 @@
 			
 			{% with user_list = admin_list + write_list + read_list %}
 				{% for user in user_list %}
-				<tr>
-					<td>{{ user.firstname }} {{ user.lastname }}</td>
-					<td>{{ user.email }}</td>
-					<td>{{ user.permission_type }}</td>
-					<td><form method="post" action="/dataset/{{ user.user_id }}/remove_user">
-						<label for="remove" class="glyphicon glyphicon-remove"></label>
-						<input id="remove" style="visibility: hidden" type="submit"></td>
-				</tr>
+					<tr>
+						<td>{{ user.firstname }} {{ user.lastname }}</td>
+						<td>{{ user.email }}</td>
+						<td>{{ user.permission_type }}</td>
+						<td><form method="post" action="/dataset/{{ user.user_id }}/remove_user">
+							<label for="remove" class="glyphicon glyphicon-remove"></label>
+							<input id="remove" style="visibility: hidden" type="submit"></td>
+					</tr>
 				{% endfor %}
 			{% endwith %}
 			
