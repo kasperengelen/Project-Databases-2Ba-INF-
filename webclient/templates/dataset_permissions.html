@@ -1,0 +1,43 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+
+	<div class="jumbotron text-center" style="padding: 1%;">
+		<h2>Permissions</h2>
+	</div>
+
+	<div class="jumbotron col-sm-12">
+		<div class="text-center">
+			<h3>Add/Remove User</h3>
+			</br>
+		</div>
+
+		<table>
+			<tr>
+				<th>Name</th>
+				<th>Email</th>
+				<th>Permission</th>
+				<th>Remove</th>
+			</tr>
+			
+			{% with user_list = admin_list + write_list + read_list %}
+				{% for user in user_list %}
+				<tr>
+					<td>{{ user.firstname }} {{ user.lastname }}</td>
+					<td>{{ user.email }}</td>
+					<td>{{ user.permission_type }}</td>
+					<td><form method="post" action="/dataset/{{ user.user_id }}/remove_user">
+						<label for="remove" class="glyphicon glyphicon-remove"></label>
+						<input id="remove" style="visibility: hidden" type="submit"></td>
+				</tr>
+				{% endfor %}
+			{% endwith %}
+			
+		</table>
+	</div>
+
+
+
+
+	</div>
+{% endblock %}

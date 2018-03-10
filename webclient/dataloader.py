@@ -7,7 +7,7 @@ from db_wrapper import DBConnection
 from sqlalchemy import create_engine
 
 
-class DataLoader(object):
+class DataLoader:
 
     def __init__(self, filename, setname, description):
         self.engine = create_engine("postgresql://dbadmin:AdminPass123@localhost/projectdb18")
@@ -26,7 +26,7 @@ class DataLoader(object):
             self.__unzip(self.filename)
 
         else:
-            raise ValueError("file type not suported")
+            raise ValueError("file type not supported")
 
     def __csv(self, filename):
         df = pd.read_csv(filename)
@@ -67,23 +67,19 @@ class DataLoader(object):
 
     def to_database(self):
 
-        timestamp = str(datetime.datetime.now())
-        # insert a table entry for every dataframe
         with DBConnection() as db_conn:
-            # get the highest setid and increment by 1 to get the new setid
-            db_conn.cursor().execute("SELECT MAX(setid) FROM datasets")
+            # insert dataset entry for the current dataset
+            db_conn.cursor().execute("INSERT INTO SYSTEM.datasets (setname, description) VALUES (%s, %s)", [self.setname, self.description])
+
+            # get the last created setid (the highest), this is the setid of the curent set
+            db_conn.cursor().execute("SELECT MAX(setid) FROM SYSTEM.datasets")
             setid = db_conn.cursor().fetchone()[0]
-            if setid is None:
-                setid = 0
-            else:
-                setid += 1
 
-
+            # insert a table entry for every dataframe
             for i in range(len(self.dataframes)):
                 # create the table name by using the setid and the table name
                 tablename = str(setid) + "/" + self.dataframes[i].name
-                db_conn.cursor().execute("INSERT INTO datasets (setid, setname, tablename, description, creation_data)"
-                                        "VALUES (%s, %s, %s, %s, %s)", [setid, self.setname, tablename, self.description, timestamp])
+                db_conn.cursor().execute("INSERT INTO tables (setid, displayname) VALUES (%s, %s)", [setid, tablename])
 
                 # insert the current dataframe into the database
                 self.dataframes[i].to_sql(tablename, self.engine, if_exists="fail")

@@ -1,4 +1,8 @@
 project_opgave_2018.pdf
+.idea
+webclient/test_csv.csv
+webclient/test_csv_x.csv
+webclient/test_csv.zip
 
 # Created by https://www.gitignore.io/api/python,sublimetext
 

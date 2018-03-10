@@ -4,16 +4,29 @@
     <title>Data Cleaner</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    
+
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
     <script type="text/javascript" src="https://code.jquery.com/jquery.min.js"></script>
     <script type="text/javascript" src="http://getbootstrap.com/2.3.2/assets/js/bootstrap.js"></script>
 
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        td, th {
+          font-size: 15px;
+            text-align: left;
+            padding: 8px;
+        }
+      </style>
+    
   </head>
-  <body>
+  <body>    
     {% include "includes/_navbar.html" %}
 
-    <div class="container" >
+    <div class="container-fluid" style="padding: 65px;">
         {% include "includes/_messages.html" %}
         {% block body %}{% endblock %}
     </div>

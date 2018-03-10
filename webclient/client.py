@@ -1,5 +1,6 @@
 from flask import Flask, flash, render_template, redirect, request, url_for, session
 import user_utils
+import dataset_utils
 from db_wrapper import DBConnection
 import utils
 
@@ -54,44 +55,43 @@ def edit_userdata():
 @user_utils.require_login
 def list_datasets():
     """Returns a list of datasets"""
-    pass
+    return dataset_utils.list_dataset(request)
 
-@app.route('/dataset/<int:dataset_id>/view')
+@app.route('/dataset/<int:dataset_id>/view/')
 @user_utils.require_login
-def view_dataset(set_id):
+def view_dataset(dataset_id):
     """Returns information about the dataset with the specified id. If 
     there is no dataset with the specified id, an error page is returned."""
-    pass
+    return dataset_utils.view_dataset(request, dataset_id)
 
-@app.route('/dataset/<int:dataset_id>/manage')
+@app.route('/dataset/<int:dataset_id>/manage/', methods=['GET', 'POST'])
 @user_utils.require_login
-def manage_dataset(set_id):
+def manage_dataset(dataset_id):
     """Manage the dataset with the specified id. If 
     there is no dataset with the specified id, an error page is returned."""
-    pass
+    return dataset_utils.manage_dataset(request, dataset_id)
 
-@app.route('/dataset/create')
+@app.route('/dataset/<int:dataset_id>/permissions')
+@user_utils.require_login
+def edit_perms_dataset(dataset_id):
+    """Return a page with which user permissions can be altered."""
+    return dataset_utils.edit_perms_dataset(request, dataset_id)
+
+@app.route('/dataset/<int:dataset_id>/add_user', methods=['POST'])
+@user_utils.require_login
+def add_user_dataset(dataset_id):
+    return dataset_utils.add_user_dataset(request, dataset_id)
+
+@app.route('/dataset/<int:dataset_id>/remove_user', methods=['POST'])
+@user_utils.require_login
+def remove_user_dataset(dataset_id):
+    return dataset_utils.remove_user_dataset(request, dataset_id)
+
+@app.route('/dataset/create', methods=['GET', 'POST'])
 @user_utils.require_login
 def create_dataset():
     """Create a new dataset."""
-    pass
-
-@app.route('/result/')
-@user_utils.require_login
-def result():
-    """???"""
-    render_template('result.html')
-
-@app.route('/debug/')
-def debug_page():
-    """Debug page for testing stuff"""
-    with DBConnection() as db_conn:
-        db_conn.cursor().execute('SELECT * FROM user_accounts LIMIT 1');
-        result = db_conn.cursor().fetchone()
-        date = result[-1]
-
-        print(date)
-    return str(date)
+    return dataset_utils.create_dataset(request)
 
 #################################################### ERROR HANDLING PAGES ####################################################
 @app.errorhandler(403)

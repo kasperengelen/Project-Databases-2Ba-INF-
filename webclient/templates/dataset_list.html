@@ -1,0 +1,28 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+	<div class="jumbotron text-center" style="padding: 1%">
+		<h2>Datasets</h2>
+	</div>
+	<div class="jumbotron">
+
+		<table>
+		{% with datasets = setlist %}
+			{% if datasets %}
+				<tr>
+					<th>Dataset</th>
+					<th>Description</th>
+				</tr>
+				{% for dataset in datasets %}
+					<tr>
+						<td><a href="/dataset/{{ dataset.id }}/view">{{ dataset.displayName }}</a></td>
+						<td>{{ dataset.description }}</td>
+					</tr>					
+				{% endfor %}
+			{% else %}
+				<p>No existing datasets</p>
+			{% endif %}
+		{% endwith %}
+		</table>
+	</div>
+{% endblock %}

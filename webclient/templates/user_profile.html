@@ -3,22 +3,30 @@
 {% block body %}
 	
 	{% if session.logged_in %}
-		<div class="jumbotron text-center" style="padding: 5px">
+		<div class="jumbotron text-center" style="padding: 1%">
 			<h2>My Profile</h2>
 		</div>
-		<div class="jumbotron text-center" style="padding: 5px">
+		<div class="jumbotron text-center">
     		
 
     		<div class="jumbotron text-left">
-    			<div class="pull-right" style="padding-right: 15px">
+    			<div class="pull-right text-center">
     				<a href="/user/edit" class="btn btn-primary">Edit</a>
     			</div>
-    			<ul type="disc">
-    				<li><p>Name: {{ user_data.firstname }} {{ user_data.lastname }}</p></li>
-    				<li><p>Email: {{ user_data.email }}</p></li>
-    				</br>
-    				<li><p>Register Date: {{ user_data.register_date }}</p></li>
-    			</ul>
+    			<table style="width: 100%">
+                    <tr>
+                        <th>Name</th>
+    				    <td>{{ user_data.firstname }} {{ user_data.lastname }}</td>
+                    </tr>
+                    <tr>
+    				    <th>Email</th>
+                        <td>{{ user_data.email }}</td>
+    				</tr>
+                    <tr>
+                        <th>Register Date</th>
+                        <td>{{ user_data.register_date.D }}-{{ user_data.register_date.M }}-{{ user_data.register_date.Y }}</td>
+                    </tr>
+    			</table>
     		</div>
      	</div>
 
