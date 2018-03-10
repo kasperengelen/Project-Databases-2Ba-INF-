@@ -84,8 +84,8 @@ def add_user_dataset(dataset_id):
 
 @app.route('/dataset/<int:dataset_id>/remove_user', methods=['POST'])
 @user_utils.require_login
-def add_user_dataset(dataset_id):
-    return dataset_utils.add_user_dataset(request, dataset_id)
+def remove_user_dataset(dataset_id):
+    return dataset_utils.remove_user_dataset(request, dataset_id)
 
 @app.route('/dataset/create', methods=['GET', 'POST'])
 @user_utils.require_login
