@@ -166,9 +166,6 @@ class UserEditForm(FlaskForm):
                                           Length(min=6, max=50, message="Password needs to be between 6 and 50 characters long.")])
     passwordconfirm = PasswordField('Confirm Password')
 
-
-
-
 def login_user(request_data):
     """Given the specified request data received from a POST or GET request, this will try to login
     a user with the data contained in the request. If no data is present in the request, this will return

@@ -7,7 +7,7 @@ from wtforms.validators import Length, InputRequired, Email, EqualTo, DataRequir
 from db_wrapper import DBConnection
 from passlib.hash import sha256_crypt
 
-class CreateDatasetFrom(FlaskForm):
+class DatasetForm(FlaskForm):
     name = StringField("Dataset name", [InputRequired(message="Name is required.")])
 
     description = TextAreaField("Description", [Length(min=0, max=256, message="Description can contain max 256 characters.")])
@@ -41,7 +41,7 @@ def create_dataset(request_data):
     of the new dataset."""
 
     # CREATE FORM
-    form = CreateDatasetFrom(request_data.form)
+    form = DatasetForm(request_data.form)
 
     if request_data.method == 'POST': # there was submitted data
         if form.validate(): # submitted data is valid
@@ -101,17 +101,98 @@ def manage_dataset(request_data, set_id):
     """Returns a page where the name and the permissions
     for a dataset can be edited."""
 
-    # form
-    #   name
-    #   description
+    # CREATE FORM
+    form = DatasetForm(request_data.form)
 
-    return render_template('dataset_manage.html')
+    if request_data.method == 'POST': # there was formd data
+        if form.validate(): # form data was valid
+            pass
+        else: # form data was invalid
+            return render_template('dataset_manage.html', form = form)
+    else: # no form data
+        # fill form with current data
+
+        return render_template('dataset_manage.html', form = form)
+    # ENDIF
+# ENDFUNCTION
 
 def edit_perms_dataset(request_data, set_id):
     """Returns a page where the name and the permissions for
     a dataset can be edited."""
     
-    return render_template('dataset_permissions.html')
+    # 'user_id', 'firstname', 'lastname', 'email', 'permission_type'
+
+    ## retrieve admins ##
+    with DBConnection() as db_conn:
+        # join permissions and users and filter only the permissions that are related to the specified data set.
+        db_conn.cursor().execute("SELECT UserAccs.userid, UserAccs.fname, UserAccs.lname, UserAccs.email, Perms.permission_type"
+                                        "FROM SYSTEM.user_accounts AS UserAccs"
+                                        "INNER JOIN SYSTEM.set_permissions AS Perms"
+                                        "ON UserAccs.userid = Perms.userid WHERE setid=%s AND permission_type='admin'", [set_id])
+
+        results = db_conn.cursor().fetchall()
+
+        admin_list = []
+
+        for result in results:
+            admin_list.append({
+                "user_id":         result[0],
+                "firstname":       result[1],
+                "lastname":        result[2],
+                "email":           result[3],
+                "permission_type": result[4]
+            })
+        # ENDFOR
+    # ENDWITH
+
+    ## retrieve write perms ##
+    with DBConnection() as db_conn:
+        # join permissions and users and filter only the permissions that are related to the specified data set.
+        db_conn.cursor().execute("SELECT UserAccs.userid, UserAccs.fname, UserAccs.lname, UserAccs.email, Perms.setid, Perms.permission_type"
+                                        "FROM SYSTEM.user_accounts AS UserAccs"
+                                        "INNER JOIN SYSTEM.set_permissions AS Perms"
+                                        "ON UserAccs.userid = Perms.userid WHERE setid=%s AND permission_type='write'", [set_id])
+
+        results = db_conn.cursor().fetchall()
+
+        write_list = []
+
+        for result in results:
+            write_list.append({
+                "user_id":         result[0],
+                "firstname":       result[1],
+                "lastname":        result[2],
+                "email":           result[3],
+                "permission_type": result[4]
+            })
+        # ENDFOR
+    # ENDWITH
+
+    ## retrieve read perms ##
+    with DBConnection() as db_conn:
+        # join permissions and users and filter only the permissions that are related to the specified data set.
+        db_conn.cursor().execute("SELECT UserAccs.userid, UserAccs.fname, UserAccs.lname, UserAccs.email, Perms.setid, Perms.permission_type"
+                                        "FROM SYSTEM.user_accounts AS UserAccs"
+                                        "INNER JOIN SYSTEM.set_permissions AS Perms"
+                                        "ON UserAccs.userid = Perms.userid WHERE setid=%s AND permission_type='read'", [set_id])
+
+        results = db_conn.cursor().fetchall()
+
+        read_list = []
+
+        for result in results:
+            read_list.append({
+                "user_id":         result[0],
+                "firstname":       result[1],
+                "lastname":        result[2],
+                "email":           result[3],
+                "permission_type": result[4]
+            })
+        # ENDFOR
+    # ENDWITH
+
+    return render_template('dataset_permissions.html', admin_list = admin_list, read_list = read_list, write_list = write_list)
+# ENDFUNCTION
 
 def add_user_dataset(request_data, set_id):
     """Callback that adds the user contained in

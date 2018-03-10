@@ -22,7 +22,6 @@ CREATE TABLE SYSTEM.datasets (
     PRIMARY KEY(setid)
 );
 
-
 -- table that links users to datasets
 CREATE TABLE SYSTEM.set_permissions (
     userid            INTEGER,
