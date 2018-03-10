@@ -22,16 +22,6 @@ CREATE TABLE SYSTEM.datasets (
     PRIMARY KEY(setid)
 );
 
--- table that links tables to datasets
-CREATE TABLE SYSTEM.tables (
-    tableid        SERIAL       UNIQUE,
-    setid          INTEGER,
-    displayname    VARCHAR(255) NOT NULL,
-    
-    PRIMARY KEY(tableid, setid),
-    FOREIGN KEY (setid) REFERENCES SYSTEM.datasets(setid) ON DELETE CASCADE
-);
-
 -- table that links users to datasets
 CREATE TABLE SYSTEM.set_permissions (
     userid            INTEGER,
@@ -40,7 +30,8 @@ CREATE TABLE SYSTEM.set_permissions (
 
     PRIMARY KEY(userid, setid),
     CHECK(permission_type IN ('admin', 'write', 'read')),
-    FOREIGN KEY(userid) REFERENCES SYSTEM.user_accounts(userid) ON DELETE CASCADE
+    FOREIGN KEY(userid) REFERENCES SYSTEM.user_accounts(userid) ON DELETE CASCADE,
+    FOREIGN KEY(setid) REFERENCES SYSTEM.datasets(setid) ON DELETE CASCADE
 );
 
 --TRIGGER to delete all the data if the admin is deleted (needs to be modified for more than 1 admin)
