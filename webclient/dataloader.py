@@ -1,9 +1,8 @@
-import pandas as pd
 import zipfile
 import os
 import shutil
-import datetime
 from db_wrapper import DBConnection
+
 
 class DataLoader:
 
@@ -58,7 +57,7 @@ class DataLoader:
             for i in range(header.count(self.sep) + 1):
                 column_names.append("column" + str(i))
 
-        # extract dataframe name
+        # extract table name
         tablename = filename.replace(".csv", "")
 
         query = "CREATE TABLE " + tablename + "("
