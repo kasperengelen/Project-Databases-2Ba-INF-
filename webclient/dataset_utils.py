@@ -76,7 +76,7 @@ def list_dataset(request_data):
     dataset_list = []
 
     with DBConnection() as db_conn:
-        db_conn.cursor().execute("SELECT * FROM SYSTEM.datasets WHERE setid IN (SELECT setid FROM set_permissions WHERE userid = %s);", [session['user_data']['user_id']])
+        db_conn.cursor().execute("SELECT * FROM SYSTEM.datasets WHERE setid IN (SELECT setid FROM SYSTEM.set_permissions WHERE userid = %s);", [session['user_data']['user_id']])
         results = db_conn.cursor().fetchall()
 
         # iterate over datasets
