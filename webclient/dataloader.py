@@ -4,39 +4,78 @@ import os
 import shutil
 import datetime
 from db_wrapper import DBConnection
-from sqlalchemy import create_engine
-
 
 class DataLoader:
 
-    def __init__(self, filename, setname, description):
-        self.engine = create_engine("postgresql://dbadmin:AdminPass123@localhost/projectdb18")
-        self.filename = filename
-        self.setname = setname
-        self.description = description
-        self.dataframes = []
+    def __init__(self, filename, setname, description, header=False, sep=','):
+        """
+        :param header: True if the first line in the csv file contains the column names
+        :param sep: The separator character for csv files
+        """
+        self.header = header
+        self.sep = sep
 
-        if self.filename.endswith(".csv"):
-            self.__csv(self.filename)
+        with DBConnection() as db_conn:
+            # insert dataset entry for the current dataset
+            db_conn.cursor().execute("INSERT INTO SYSTEM.datasets (setname, description) VALUES (%s, %s) RETURNING setid;",
+                                     [setname, description])
 
-        elif self.filename.endswith(".dump"):
-            self.__dump(self.filename)
+            # get the setid of the current set
+            self.setid = db_conn.cursor().fetchone()[0]
+            print(self.setid)
 
-        elif self.filename.endswith(".zip"):
-            self.__unzip(self.filename)
+            # create new schema with name setid
+            db_conn.cursor().execute("CREATE SCHEMA \"{}\";".format(self.setid))
+            db_conn.commit()
 
-        else:
-            raise ValueError("file type not supported")
+        try:
+            if filename.endswith(".csv"):
+                self.__csv(filename)
+
+            elif filename.endswith(".zip"):
+                self.__unzip(filename)
+
+            elif filename.endswith(".dump"):
+                # doesn't work yet
+                self.cancel()
+
+            else:
+                raise ValueError("file type not supported")
+
+        except:
+            self.cancel()
+            raise
 
     def __csv(self, filename):
-        df = pd.read_csv(filename)
+        column_names = []
+        # read first line for table info
+        with open(filename) as csv:
+            header = csv.readline()
+
+        if self.header:
+            column_names = [x.strip() for x in header.split(self.sep)]
+        else:
+            for i in range(header.count(self.sep) + 1):
+                column_names.append("column" + str(i))
 
         # extract dataframe name
         tablename = filename.replace(".csv", "")
-        # set the table name
-        df.name = tablename
 
-        self.dataframes.append(df)
+        query = "CREATE TABLE " + tablename + "("
+        for column in column_names:
+            query += column + " VARCHAR, "
+        query = query[:-2] + ");"
+
+        with DBConnection() as db_conn:
+            db_conn.cursor().execute("SET search_path TO {};".format(self.setid))
+            db_conn.cursor().execute(query)
+            csv = open(filename, 'r')
+            db_conn.cursor().copy_from(csv, tablename, sep=self.sep)
+            # if the first line in the csv contained the names of the columns, that row has to be deleted from the table
+            if self.header:
+                db_conn.cursor().execute("DELETE FROM " + tablename + " WHERE ctid "
+                                    "IN (SELECT ctid FROM " + tablename + " LIMIT 1);")
+            db_conn.commit()
 
     def __dump(self, filename):
         return
@@ -58,36 +97,16 @@ class DataLoader:
         # delete the temporary folder
         shutil.rmtree(".unzip_temp")
 
-    def join_tables(self, table1, table2, join_columns):
-        # the first dataframe becomes the merged dataframe
-        self.dataframes[table1] = pd.merge(self.dataframes[table1], self.dataframes[table2], on=join_columns)
-        # the second dataframe is not needed anymore and is deleted
-        del self.dataframes[table2]
+    def join_tables(self, table1, table2, columns):
+        # not implemented yet
+        return
 
-
-    def to_database(self):
-
+    def cancel(self):
         with DBConnection() as db_conn:
-            # insert dataset entry for the current dataset
-            db_conn.cursor().execute("INSERT INTO datasets (setname, description) VALUES (%s, %s)", [self.setname, self.description])
-
-            # get the last created setid (the highest), this is the setid of the curent set
-            db_conn.cursor().execute("SELECT MAX(setid) FROM datasets")
-            setid = db_conn.cursor().fetchone()[0]
-
-            # insert a table entry for every dataframe
-            for i in range(len(self.dataframes)):
-                # create the table name by using the setid and the table name
-                tablename = str(setid) + "/" + self.dataframes[i].name
-                db_conn.cursor().execute("INSERT INTO tables (setid, displayname) VALUES (%s, %s)", [setid, tablename])
-
-                # insert the current dataframe into the database
-                self.dataframes[i].to_sql(tablename, self.engine, if_exists="fail")
-
-
+            db_conn.cursor().execute("DROP SCHEMA \"" + str(self.setid) + "\" CASCADE;")
+            db_conn.cursor().execute("DELETE FROM SYSTEM.datasets AS d WHERE d.setid = %s;", [self.setid])
             db_conn.commit()
 
 
 if __name__ == "__main__":
-    test = DataLoader("test_csv.zip", "test", "a test dataset")
-    test.to_database()
+    test = DataLoader("test_csv.zip", "zip", "zippy")
