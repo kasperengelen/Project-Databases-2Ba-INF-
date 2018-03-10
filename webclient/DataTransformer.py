@@ -120,6 +120,39 @@ class DataTransformer:
             self.__convert_numeric(internal_ref, attribute, to_type)
 
 
+    #In case that change_attribute_type fails due to elements that can't be converted
+    #this method will force the conversion by deleting the rows containing problematic elemants
+    def force_attribute_type(self, setname, tablename, attribute, to_type, data_format="", new_name=""):
+        if self.replace is False:
+            internal_ref = self.get_internal_reference(setname, tablename)
+        else:
+            internal_ref = self.get_internal_reference(setname, new_name)
+        
+        pattern = ""
+        if to_type == 'INTEGER':
+            pattern = '^[-+]?[0-9]+$'
+            
+        elif to_type == 'FLOAT':
+            pattern = '^[-+.]?[0-9]+[.]?[e]?[-+]?[0-9]*$'
+
+        else:
+            #This is going to be very tough to express....
+            return None
+
+        with DBConnection() as db_conn:
+            db_conn.cursor().execute(sql.SQL("DELETE FROM {}.{} WHERE ({} !~ %s )").format(sql.Identifier(internal_ref[0]), sql.Identifier(internal_ref[1]),
+                                                                                         sql.Identifier(attribute)), [pattern])
+            db_conn.commit();
+
+        if self.replace is False:
+            self.change_attribute_type(setname, tablename, attribute, to_type, data_format, new_name)
+        else:
+            #The first call of change_attribute_type already created a new table which is a copy of (tablename)
+            #But we don't want to copy this table once again, only overwrite it
+            self.replace = True
+            self.change_attribute_type(setname, new_name, attribute, to_type, data_format, new_name)
+
+
 
 
 
@@ -133,11 +166,12 @@ class DataTransformer:
             db_conn.cursor().execute(sql.SQL("UPDATE {}.{} SET  {} = %s WHERE {} = %s").format(sql.Identifier(internal_ref[0]), sql.Identifier(internal_ref[1]),
                                                                                                sql.Identifier(attribute), sql.Identifier(attribute)), (replacement, value))
             db_conn.commit()
+
         
         
 
 if __name__ == '__main__':
     dt = DataTransformer(1, False)
     #print(dt.get_internal_reference("etherdelta", "employees"))dt.delete_attribute("etherdelta", "clients", "stupid")
-    dt.change_attribute_type('etherdelta', 'clients2', 'clientnumber', 'VARCHAR(255)', '', 'clients3')
+    dt.force_attribute_type('etherdelta', 'clients2', 'clientnumber', 'INTEGER', '', 'clients2')
     #dt.delete_attribute('etherdelta', 'clients2', 'fname')
