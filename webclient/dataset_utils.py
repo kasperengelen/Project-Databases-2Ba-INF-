@@ -125,10 +125,10 @@ def edit_perms_dataset(request_data, set_id):
     ## retrieve admins ##
     with DBConnection() as db_conn:
         # join permissions and users and filter only the permissions that are related to the specified data set.
-        db_conn.cursor().execute("SELECT UserAccs.userid, UserAccs.fname, UserAccs.lname, UserAccs.email, Perms.permission_type"
-                                        "FROM SYSTEM.user_accounts AS UserAccs"
-                                        "INNER JOIN SYSTEM.set_permissions AS Perms"
-                                        "ON UserAccs.userid = Perms.userid WHERE setid=%s AND permission_type='admin'", [set_id])
+        db_conn.cursor().execute("SELECT UserAccs.userid, UserAccs.fname, UserAccs.lname, UserAccs.email, Perms.permission_type "
+                                        "FROM SYSTEM.user_accounts AS UserAccs "
+                                        "INNER JOIN SYSTEM.set_permissions AS Perms "
+                                        "ON UserAccs.userid = Perms.userid WHERE setid=%s AND permission_type='admin'; ", [set_id])
 
         results = db_conn.cursor().fetchall()
 
@@ -148,10 +148,10 @@ def edit_perms_dataset(request_data, set_id):
     ## retrieve write perms ##
     with DBConnection() as db_conn:
         # join permissions and users and filter only the permissions that are related to the specified data set.
-        db_conn.cursor().execute("SELECT UserAccs.userid, UserAccs.fname, UserAccs.lname, UserAccs.email, Perms.setid, Perms.permission_type"
-                                        "FROM SYSTEM.user_accounts AS UserAccs"
-                                        "INNER JOIN SYSTEM.set_permissions AS Perms"
-                                        "ON UserAccs.userid = Perms.userid WHERE setid=%s AND permission_type='write'", [set_id])
+        db_conn.cursor().execute("SELECT UserAccs.userid, UserAccs.fname, UserAccs.lname, UserAccs.email, Perms.setid, Perms.permission_type "
+                                        "FROM SYSTEM.user_accounts AS UserAccs "
+                                        "INNER JOIN SYSTEM.set_permissions AS Perms "
+                                        "ON UserAccs.userid = Perms.userid WHERE setid=%s AND permission_type='write'; ", [set_id])
 
         results = db_conn.cursor().fetchall()
 
@@ -171,10 +171,10 @@ def edit_perms_dataset(request_data, set_id):
     ## retrieve read perms ##
     with DBConnection() as db_conn:
         # join permissions and users and filter only the permissions that are related to the specified data set.
-        db_conn.cursor().execute("SELECT UserAccs.userid, UserAccs.fname, UserAccs.lname, UserAccs.email, Perms.setid, Perms.permission_type"
-                                        "FROM SYSTEM.user_accounts AS UserAccs"
-                                        "INNER JOIN SYSTEM.set_permissions AS Perms"
-                                        "ON UserAccs.userid = Perms.userid WHERE setid=%s AND permission_type='read'", [set_id])
+        db_conn.cursor().execute("SELECT UserAccs.userid, UserAccs.fname, UserAccs.lname, UserAccs.email, Perms.setid, Perms.permission_type "
+                                        "FROM SYSTEM.user_accounts AS UserAccs "
+                                        "INNER JOIN SYSTEM.set_permissions AS Perms "
+                                        "ON UserAccs.userid = Perms.userid WHERE setid=%s AND permission_type='read'; ", [set_id])
 
         results = db_conn.cursor().fetchall()
 
