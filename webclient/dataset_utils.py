@@ -32,6 +32,7 @@ def view_dataset_home(request_data, set_id):
     # ENDWITH
 
     ## retrieve list of tables
+    table_list = ["abc"]
 
     return render_template('dataset_view_home.html', 
                                 dataset_info = dataset_info, 
