@@ -37,7 +37,7 @@ class EnumCheck:
         self.message = message
         self.choises = choises
 
-    def __call__(form, field):
+    def __call__(self, form, field):
         if field.data not in self.choises:
             raise ValidationError(self.message)
 
