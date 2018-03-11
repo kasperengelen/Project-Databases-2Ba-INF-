@@ -296,8 +296,7 @@ def remove_user_dataset(request_data, set_id):
         # ENDIF
 
         ## check if permission already exists for user ##
-        user_data = UserInformation.from_email(form.email.data)
-        db_conn.cursor().execute("SELECT * FROM SYSTEM.set_permissions WHERE userid=%s AND setid=%s AND permission_type=%s", [user_data.user_id, set_id, form.permission_type.data])
+        db_conn.cursor().execute("SELECT * FROM SYSTEM.set_permissions WHERE userid=(SELECT userid FROM SYSTEM.user_accounts WHERE email=%s) AND setid=%s AND permission_type=%s", [form.email.data, set_id, form.permission_type.data])
         result = db_conn.cursor().fetchone()
 
         if result is None:
@@ -306,7 +305,7 @@ def remove_user_dataset(request_data, set_id):
         # ENDIF
 
         ## remove permission ##
-        db_conn.cursor().execute("DELETE FROM SYSTEM.set_permissions WHERE userid=%s AND setid=%s", [user_data.user_id, form.permission_type.data])
+        db_conn.cursor().execute("DELETE FROM SYSTEM.set_permissions WHERE userid=(SELECT userid FROM SYSTEM.user_accounts WHERE email=%s) AND setid=%s AND permission_type=%s", [form.email.data, set_id, form.permission_type.data])
     # ENDWITH
 
     return redirect(url_for('edit_perms_dataset', dataset_id=set_id))
