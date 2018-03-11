@@ -170,6 +170,8 @@ def edit_perms_dataset(request_data, set_id):
             # fill with data
             delete_admin_form.email.data = result[3]
             delete_admin_form.permission_type.data = result[4]
+
+            admin_list.append(delete_admin_form)
         # ENDFOR
     # ENDWITH
 
@@ -192,6 +194,8 @@ def edit_perms_dataset(request_data, set_id):
             # fill with data
             delete_write_form.email.data = result[3]
             delete_write_form.permission_type.data = result[4]
+
+            write_list.append(delete_write_form)
         # ENDFOR
     # ENDWITH
 
@@ -214,6 +218,8 @@ def edit_perms_dataset(request_data, set_id):
             # fill with data
             delete_read_form.email.data = result[3]
             delete_read_form.permission_type.data = result[4]
+
+            read_list.append(delete_read_form)
         # ENDFOR
     # ENDWITH
 
