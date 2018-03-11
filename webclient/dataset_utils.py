@@ -309,7 +309,12 @@ def remove_user_dataset(request_data, set_id):
         # ENDIF
 
         ## remove permission ##
-        db_conn.cursor().execute("DELETE FROM SYSTEM.set_permissions WHERE userid=(SELECT userid FROM SYSTEM.user_accounts WHERE email=%s) AND setid=%s AND permission_type=%s", [form.email.data, set_id, form.permission_type.data])
+        db_conn.cursor().execute("DELETE FROM SYSTEM.set_permissions WHERE "
+                                    "userid=(SELECT userid FROM SYSTEM.user_accounts WHERE email=%s) "
+                                    "AND setid=%s "
+                                    "AND permission_type=%s;", 
+                                                [form.email.data, set_id, form.permission_type.data])
+        db_conn.commit()
     # ENDWITH
 
     return redirect(url_for('edit_perms_dataset', dataset_id=set_id))
