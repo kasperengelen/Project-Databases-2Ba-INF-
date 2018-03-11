@@ -1,7 +1,7 @@
 # file that contains all code related datasets.
 
 from flask import render_template, flash, request, url_for, session, redirect, abort
-from wtforms import StringField, PasswordField, validators, TextAreaField
+from wtforms import StringField, PasswordField, validators, TextAreaField, SelectField
 from flask_wtf import FlaskForm
 from wtforms.validators import Length, InputRequired, Email, EqualTo, DataRequired
 from db_wrapper import DBConnection
@@ -127,7 +127,7 @@ class AddUserForm(FlaskForm):
     """Form to give a user permission to alter the dataset."""
     email = StringField('Email', [
         InputRequired(message="Email is required."),
-        Email(message="The supplied email address is not valid.")
+        Email(message="The supplied email address is not valid."),
         Length(min=6, max=70, message="Email address should contain between 1 and 50 characters.")
     ])
 
@@ -136,9 +136,10 @@ class AddUserForm(FlaskForm):
 
 class RemoveUserForm(FlaskForm):
     """Form to revoke a user's permission to alter the dataset."""
-    email = StringField('Email', render_kw={'readonly': True}, [])
-    permission_type = SelectField('Permission Type', render_kw={'readonly': True}, 
-                            [EnumCheck(message="Invalid permission type.", choises=['read', 'write', 'admin'])])
+    email = StringField('Email', [], render_kw={'readonly': True})
+    permission_type = SelectField('Permission Type', 
+                                        [EnumCheck(message="Invalid permission type.", choises=['read', 'write', 'admin'])],
+                                        render_kw={'readonly': True})
 # ENDCLASS
 
 def edit_perms_dataset(request_data, set_id):
