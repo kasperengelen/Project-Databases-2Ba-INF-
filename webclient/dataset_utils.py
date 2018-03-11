@@ -217,7 +217,7 @@ def edit_perms_dataset(request_data, set_id):
         # ENDFOR
     # ENDWITH
 
-    return render_template('dataset_permissions.html', admin_list = admin_list, read_list = read_list, write_list = write_list)
+    return render_template('dataset_permissions.html', form = form_add_user, admin_list = admin_list, read_list = read_list, write_list = write_list)
 # ENDFUNCTION
 
 def add_user_dataset(request_data, set_id):
