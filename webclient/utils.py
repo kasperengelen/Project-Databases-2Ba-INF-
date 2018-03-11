@@ -1,6 +1,6 @@
 # file for various utility functions
 
-import wtforms.validators.ValidationError
+from wtforms.validators import ValidationError
 import user_utils
 
 def sql_time_to_dict(sql_date_string):
