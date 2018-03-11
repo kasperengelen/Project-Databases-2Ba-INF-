@@ -7,7 +7,6 @@ from sqlalchemy import create_engine
 class DataTransformer:
 
     def __init__(self, userid, replace = True):
-        self.engine = create_engine("postgresql://dbadmin:AdminPass123@localhost/projectdb18")
         self.userid = userid
         self.replace = replace
 
