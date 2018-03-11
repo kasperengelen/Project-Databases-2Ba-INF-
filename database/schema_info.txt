@@ -1,0 +1,17 @@
+EXAMPLE WITH SCHEMA NAMED "1":
+
+1. CREATION OF SCHEMA:
+
+	CREATE SCHEMA "1";
+
+2. LOAD DUMP FILE:
+
+	SET search_path TO 1;
+	SHOW search_path; (for testing)
+	\i <path for dump file>
+
+3. EXTRAS:
+	\dn (show all schemas)
+	\dt schema. (show all tables for schema)
+	SELECT * FROM "1".table (VIEW TABLE "table" IN SCHEMA "1")
+

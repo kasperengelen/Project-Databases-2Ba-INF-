@@ -1,11 +1,19 @@
 {% extends 'layout.html' %}
 
 {% block body %}
-	
-	<div class="jumbotron text-center">
-		<h2>Dataset: {{ dataset.displayName }} <a href="/dataset/{{ dataset.id }}/manage"><span class="glyphicon glyphicon-pencil"></span></a>
-		<p>Description: {{ dataset.description }}</p>
-		</h2>
+	<div class="jumbotron text-center" style="padding: 1%">
+		<div class="pull-right">
+			<a href="/dataset/{{ dataset.id }}/manage" class="btn btn-primary">Manage</a>
+			</br>
+			</br>
+			<a href="/dataset/{{ dataset.id }}/permissions" class="btn btn-primary">Permissions</a>
+		</div>
+			<h2>Dataset: {{ dataset.displayName }}</h2>
+			<p>Description: {{ dataset.description }}</p>
+	</div>    		
+
+    <div class="jumbotron text-left">
+		
 	</div>
 
 {% endblock %}
