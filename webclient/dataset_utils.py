@@ -137,7 +137,7 @@ class AddUserForm(FlaskForm):
 class RemoveUserForm(FlaskForm):
     """Form to revoke a user's permission to alter the dataset."""
     email = StringField('Email', [], render_kw={'readonly': True})
-    permission_type = SelectField('Permission Type', 
+    permission_type = Stringfield('Permission Type', 
                                         [EnumCheck(message="Invalid permission type.", choises=['read', 'write', 'admin'])],
                                         render_kw={'readonly': True})
 # ENDCLASS
