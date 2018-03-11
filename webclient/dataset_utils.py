@@ -230,32 +230,32 @@ def add_user_dataset(request_data, set_id):
     # validate form
     if not form.validate():
         flash(message="Invalid form, please check email and permission type.", category="error")
-        return redirect(url_for('edit_perms_dataset'))
+        return redirect(url_for('edit_perms_dataset', dataset_id=set_id))
 
     with DBConnection() as db_conn:
         ## check if user exists ##
-        db_conn.cursor().execute("SELECT * FROM SYSTEM.user_accounts WHERE email=%s", [request_data.form.email])
+        db_conn.cursor().execute("SELECT * FROM SYSTEM.user_accounts WHERE email=%s", [form.email.data])
         result = db_conn.cursor().fetchone()
         if result is None:
             flash(message="User with specified email address does not exist.", category="error")
-            return redirect(url_for('edit_perms_dataset'))
+            return redirect(url_for('edit_perms_dataset', dataset_id=set_id))
         # ENDIF
 
         ## check if permission already exists for user ##
-        db_conn.cursor().execute("SELECT * FROM SYSTEM.set_permissions WHERE userid=(SELECT userid FROM SYSTEM.user_accounts WHERE email=%s) AND setid=%s", [request_data.email, set_id])
+        db_conn.cursor().execute("SELECT * FROM SYSTEM.set_permissions WHERE userid=(SELECT userid FROM SYSTEM.user_accounts WHERE email=%s) AND setid=%s", [form.email.data, set_id])
         result = db_conn.cursor().fetchone()
 
         if result is not None:
             flash(message="Specified user already has permissions for specified data set.", category="error")
-            return redirect(url_for('edit_perms_dataset'))
+            return redirect(url_for('edit_perms_dataset', dataset_id=set_id))
         # ENDIF
 
         ## add permission ##
-        db_conn.cursor().execute("INSERT INTO SYSTEM.set_permissions(userid, setid, permission_type) VALUES ((SELECT userid FROM SYSTEM.user_accounts WHERE email=%s), %s, %s);", [request_data.email, set_id, request_data.form.permission_type])
+        db_conn.cursor().execute("INSERT INTO SYSTEM.set_permissions(userid, setid, permission_type) VALUES ((SELECT userid FROM SYSTEM.user_accounts WHERE email=%s), %s, %s);", [form.email.data, set_id, form.permission_type.data])
         result = db_conn.commit()
     # ENDWITH
 
-    return redirect(url_for('edit_perms_dataset'))
+    return redirect(url_for('edit_perms_dataset', dataset_id=set_id))
 # ENDFUNCTION
 
 def remove_user_dataset(request_data, set_id):
@@ -267,38 +267,38 @@ def remove_user_dataset(request_data, set_id):
 
     # validate
     if not form.validate():
-        return redirect(url_for('edit_perms_dataset'))
+        return redirect(url_for('edit_perms_dataset', dataset_id=set_id))
     # ENDIF
 
     with DBConnection() as db_conn:
         # retrieve user id from email
-        user_data = UserInformation.from_email(request_data.form.email)
+        user_data = UserInformation.from_email(form.email.data)
         
         ## check that user does not edit own permissions ##
         if user_data.user_id == session['user_data']['user_id']:
-            return redirect(url_for('edit_perms_dataset'))
+            return redirect(url_for('edit_perms_dataset', dataset_id=set_id))
         # ENDIF
 
         ## check if user exists ##
-        db_conn.cursor().execute("SELECT * FROM SYSTEM.user_accounts WHERE email=%s", [request_data.form.email])
+        db_conn.cursor().execute("SELECT * FROM SYSTEM.user_accounts WHERE email=%s", [form.email.data])
         result = db_conn.cursor().fetchone()
         if result is None:
-            return redirect(url_for('edit_perms_dataset'))
+            return redirect(url_for('edit_perms_dataset', dataset_id=set_id))
         # ENDIF
 
         ## check if permission already exists for user ##
-        user_data = UserInformation.from_email(request_data.form.email)
-        db_conn.cursor().execute("SELECT * FROM SYSTEM.set_permissions WHERE userid=%s AND setid=%s AND permission_type=%s", [user_data.user_id, set_id, request_data.form.permission_type])
+        user_data = UserInformation.from_email(form.email.data)
+        db_conn.cursor().execute("SELECT * FROM SYSTEM.set_permissions WHERE userid=%s AND setid=%s AND permission_type=%s", [user_data.user_id, set_id, form.permission_type.data])
         result = db_conn.cursor().fetchone()
 
         if result is None:
-            return redirect(url_for('edit_perms_dataset'))
+            return redirect(url_for('edit_perms_dataset', dataset_id=set_id))
         # ENDIF
 
         ## remove permission ##
-        db_conn.cursor().execute("DELETE FROM SYSTEM.set_permissions WHERE userid=%s AND setid=%s", [user_data.user_id, request_data.form.permission_type])
+        db_conn.cursor().execute("DELETE FROM SYSTEM.set_permissions WHERE userid=%s AND setid=%s", [user_data.user_id, form.permission_type.data])
     # ENDWITH
 
-    return redirect(url_for('edit_perms_dataset'))
+    return redirect(url_for('edit_perms_dataset', dataset_id=set_id))
 # ENDFUNCTION
 
