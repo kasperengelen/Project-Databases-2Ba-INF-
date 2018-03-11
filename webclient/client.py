@@ -34,16 +34,15 @@ def logout():
     flash(message="You are now logged out", category="success")
     return redirect(url_for("index"))
 
-@app.route('/user/profile/')
-@user_utils.require_login
-def profile_self():
-    """View the profile of the user who is logged in."""
-    return user_utils.view_user(request, session['user_data']['user_id'])
-
+@app.route('/user/profile/', defaults = {'user_id': None})
 @app.route('/user/profile/<int:user_id>')
 @user_utils.require_login
 def profile_other(user_id):
     """View the profile of other users."""
+
+    if user_id is None:
+        user_id = session['user_data']['user_id']
+
     return user_utils.view_user(request, user_id)
 
 @app.route('/user/edit/', methods=['GET', 'POST'])
@@ -59,10 +58,18 @@ def list_datasets():
 
 @app.route('/dataset/<int:dataset_id>/view/')
 @user_utils.require_login
-def view_dataset(dataset_id):
-    """Returns information about the dataset with the specified id. If 
-    there is no dataset with the specified id, an error page is returned."""
-    return dataset_utils.view_dataset(request, dataset_id)
+def view_dataset_home(dataset_id):
+    """Given a specified ID, return a page that contains
+    information about the dataset. This page does not specify
+    information contained in the tables of the dataset."""
+    return dataset_utils.view_dataset_home(request, dataset_id)
+
+@app.route('/dataset/<int:dataset_id>/view/<string:tablename>')
+@user_utils.require_login
+def view_dataset_table(dataset_id, tablename):
+    """ Given the id of a dataset and the identifier of a table
+    of that dataset this returns the data contained in that dataset."""
+    return dataset_utils.view_dataset_table(request, dataset_id, tablename)
 
 @app.route('/dataset/<int:dataset_id>/manage/', methods=['GET', 'POST'])
 @user_utils.require_login

@@ -14,25 +14,39 @@ class DatasetForm(FlaskForm):
 
     description = TextAreaField("Description", [Length(min=0, max=256, message="Description can contain max 256 characters.")])
 
-def view_dataset(request_data, set_id):
+def view_dataset_home(request_data, set_id):
     """Given a specified ID, return a page that contains
-    information about the dataset."""
+    information about the dataset. This page does not specify
+    information contained in the tables of the dataset."""
 
+    ## retrieve basic information
     with DBConnection() as db_conn:
-        # retrieve data
         db_conn.cursor().execute("SELECT * FROM SYSTEM.datasets WHERE setid = %s", [set_id])
         result = db_conn.cursor().fetchone()
 
-        # pass data to dict
-        dataset = {
+        dataset_info = {
             "id":          result[0],
             "displayName": result[1],
             "description": result[2] 
         }
+    # ENDWITH
 
-        return render_template('dataset_view.html', dataset = dataset)
+    ## retrieve list of tables
+
+    return render_template('dataset_view_home.html', 
+                                dataset_info = dataset_info, 
+                                table_list = table_list)
     # ENDWITH
 # ENDFUNCTION
+
+def view_dataset_table(request_data, set_id, tablename):
+    """ Given the id of a dataset and the identifier of a table
+    of that dataset this returns the data contained in that dataset."""
+
+    return render_template('dataset_view_table.html', 
+                                dataset_info = dataset_info, 
+                                page_indices = page_indices, 
+                                table_data   = table_data)
 
 def create_dataset(request_data):
     """Returns a page where a new dataset can be created.
@@ -156,7 +170,7 @@ def edit_perms_dataset(request_data, set_id):
         db_conn.cursor().execute("SELECT UserAccs.userid, UserAccs.fname, UserAccs.lname, UserAccs.email, Perms.permission_type "
                                         "FROM SYSTEM.user_accounts AS UserAccs "
                                         "INNER JOIN SYSTEM.set_permissions AS Perms "
-                                        "ON UserAccs.userid = Perms.userid WHERE setid=%s AND permission_type='admin' AND userid <> %s; ", [set_id, session['user_data']['user_id']])
+                                        "ON UserAccs.userid = Perms.userid WHERE setid=%s AND permission_type='admin' AND UserAccs.userid <> %s; ", [set_id, session['user_data']['user_id']])
 
         results = db_conn.cursor().fetchall()
 
@@ -182,7 +196,7 @@ def edit_perms_dataset(request_data, set_id):
         db_conn.cursor().execute("SELECT UserAccs.userid, UserAccs.fname, UserAccs.lname, UserAccs.email, Perms.permission_type "
                                         "FROM SYSTEM.user_accounts AS UserAccs "
                                         "INNER JOIN SYSTEM.set_permissions AS Perms "
-                                        "ON UserAccs.userid = Perms.userid WHERE setid=%s AND permission_type='write'; ", [set_id])
+                                        "ON UserAccs.userid = Perms.userid WHERE setid=%s AND permission_type='write' AND UserAccs.userid <> %s; ", [set_id, session['user_data']['user_id']])
 
         results = db_conn.cursor().fetchall()
 
@@ -207,7 +221,7 @@ def edit_perms_dataset(request_data, set_id):
         db_conn.cursor().execute("SELECT UserAccs.userid, UserAccs.fname, UserAccs.lname, UserAccs.email, Perms.permission_type "
                                         "FROM SYSTEM.user_accounts AS UserAccs "
                                         "INNER JOIN SYSTEM.set_permissions AS Perms "
-                                        "ON UserAccs.userid = Perms.userid WHERE setid=%s AND permission_type='read'; ", [set_id])
+                                        "ON UserAccs.userid = Perms.userid WHERE setid=%s AND permission_type='read' AND UserAccs.userid <> %s; ", [set_id, session['user_data']['user_id']])
 
         results = db_conn.cursor().fetchall()
 
