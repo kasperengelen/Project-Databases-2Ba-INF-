@@ -277,11 +277,9 @@ def remove_user_dataset(request_data, set_id):
     # ENDIF
 
     with DBConnection() as db_conn:
-        # retrieve user id from email
-        user_data = UserInformation.from_email(form.email.data)
-        
         ## check that user does not edit own permissions ##
-        if user_data.user_id == session['user_data']['user_id']:
+
+        if form.email.data == session['user_data']['email']:
             flash(message="User cannot remove itself from dataset.")
             return redirect(url_for('edit_perms_dataset', dataset_id=set_id))
         # ENDIF

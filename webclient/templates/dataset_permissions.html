@@ -42,8 +42,7 @@
 							<td>{{ user.permission_type.data }}</td>
 							<td>{% from "includes/_formhelpers.html" import render_field %}
 								<form method="post" action="/dataset/{{ setid }}/remove_user">
-								{{ form.csrf_token }}
-								{{render_field(form.hidden_tag, class_="form-control")}}
+								{{ user.hidden_tag() }}
 								<label for="remove" class="glyphicon glyphicon-remove"></label>
 								<input id="remove" style="visibility: hidden" type="submit"></form></td>
 						</tr>
