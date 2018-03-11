@@ -34,7 +34,7 @@
 					<tr>
 						<th>Email</th>
 						<th>Permission</th>
-						<th>Remove</th>
+						<th></th>
 					</tr>
 					{% for user in user_list %}
 						<tr>
@@ -43,8 +43,8 @@
 							<td>{% from "includes/_formhelpers.html" import render_field %}
 								<form method="post" action="/dataset/{{ setid }}/remove_user" name="remove">
 								{{ user.hidden_tag() }}
-								<label for="remove" class="glyphicon glyphicon-remove"></label>
-								<input id="remove" style="visibility: hidden" type="submit"></form></td>
+								<label for="remove{{ user.userid.data }}" class="glyphicon glyphicon-remove"></label>
+								<input id="remove{{ user.userid.data }}" style="visibility: hidden;" type="submit"></form></td>
 						</tr>
 					{% endfor %}
 				{% else %}

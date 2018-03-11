@@ -137,6 +137,7 @@ class AddUserForm(FlaskForm):
 
 class RemoveUserForm(FlaskForm):
     """Form to revoke a user's permission to alter the dataset."""
+    userid = HiddenField('UserID')
     email = HiddenField('Email', [Email()])
     permission_type = HiddenField('Permission Type', [EnumCheck(message="Invalid permission type.", choises=['read', 'write', 'admin'])])
 # ENDCLASS
@@ -167,6 +168,7 @@ def edit_perms_dataset(request_data, set_id):
             delete_admin_form = RemoveUserForm()
 
             # fill with data
+            delete_admin_form.userid.data = result[0]
             delete_admin_form.email.data = result[3]
             delete_admin_form.permission_type.data = result[4]
 
@@ -191,6 +193,7 @@ def edit_perms_dataset(request_data, set_id):
             delete_write_form = RemoveUserForm()
 
             # fill with data
+            delete_write_form.userid.data = result[0]
             delete_write_form.email.data = result[3]
             delete_write_form.permission_type.data = result[4]
 
@@ -215,6 +218,7 @@ def edit_perms_dataset(request_data, set_id):
             delete_read_form = RemoveUserForm()
 
             # fill with data
+            delete_read_form.userid.data = result[0]
             delete_read_form.email.data = result[3]
             delete_read_form.permission_type.data = result[4]
 
