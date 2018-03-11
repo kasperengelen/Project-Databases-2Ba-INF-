@@ -14,36 +14,42 @@
 
 		<div>
 			{% from "includes/_formhelpers.html" import render_field %}
-			<form method="post" action="/dataset/{{ setid }}/add_user">
+			<form method="post" action="/dataset/{{ setid }}/add_user" name="add">
 			{{ form.csrf_token }}
-			<div class="form-group">
+			<div class="form-group" style="width: 40%; display: inline-block;">
 				{{render_field(form.email, class_="form-control")}}
 			</div>
-			<div class="form-group">
+			<div class="form-group" style="width: 20%; display: inline-block;">
 				{{render_field(form.permission_type, class_="form-control")}}
-			<p><input type="submit" class="btn btn-primary" value="Add User"></p>
+			</div>
+			<div style="display: inline-block;">
+				<p><input id="add" type="submit" class="btn btn-primary" value="Add User" ></p>
+			</div>
 			</form>
 		</div>
 
-		<table>
-			<tr>
-				<th>Name</th>
-				<th>Email</th>
-				<th>Permission</th>
-				<th>Remove</th>
-			</tr>
-			
+		<table>			
 			{% with user_list = admin_list + write_list + read_list %}
-				{% for user in user_list %}
+				{% if user_list %}
 					<tr>
-						<td>{{ user.firstname }} {{ user.lastname }}</td>
-						<td>{{ user.email }}</td>
-						<td>{{ user.permission_type }}</td>
-						<td><form method="post" action="/dataset/{{ user.user_id }}/remove_user">
-							<label for="remove" class="glyphicon glyphicon-remove"></label>
-							<input id="remove" style="visibility: hidden" type="submit"></td>
+						<th>Email</th>
+						<th>Permission</th>
+						<th></th>
 					</tr>
-				{% endfor %}
+					{% for user in user_list %}
+						<tr>
+							<td>{{ user.email.data }}</td>
+							<td>{{ user.permission_type.data }}</td>
+							<td>{% from "includes/_formhelpers.html" import render_field %}
+								<form method="post" action="/dataset/{{ setid }}/remove_user" name="remove">
+								{{ user.hidden_tag() }}
+								<label for="remove{{ user.userid.data }}" class="glyphicon glyphicon-remove"></label>
+								<input id="remove{{ user.userid.data }}" style="visibility: hidden;" type="submit"></form></td>
+						</tr>
+					{% endfor %}
+				{% else %}
+					<p>no users</p>
+				{% endif %}
 			{% endwith %}
 			
 		</table>

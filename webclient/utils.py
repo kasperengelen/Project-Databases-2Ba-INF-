@@ -1,5 +1,6 @@
 # file for various utility functions
-import json
+
+from wtforms.validators import ValidationError
 import user_utils
 
 def sql_time_to_dict(sql_date_string):
@@ -29,3 +30,19 @@ def sql_time_to_dict(sql_date_string):
         "sec": sec,
         "sec_full": sec_full
     }
+
+
+class EnumCheck:
+    def __init__(self, message="", choises=[]):
+        self.message = message
+        self.choises = choises
+
+    def __call__(self, form, field):
+        if field.data not in self.choises:
+            raise ValidationError(self.message)
+
+
+class Logger:
+    @staticmethod
+    def log(message):
+        print("[ERROR] " + message)
