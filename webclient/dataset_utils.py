@@ -282,7 +282,7 @@ def remove_user_dataset(request_data, set_id):
         if form.email.data == session['user_data']['email']:
             print(form.email.data)
             print(session['user_data']['email'])
-            flash(message="User cannot remove itself from dataset.")
+            flash(message="User cannot remove itself from dataset.", category="error")
             Logger.log("'remove_user_dataset(request_data, set_id)': Cannot remove self.")
             return redirect(url_for('edit_perms_dataset', dataset_id=set_id))
         # ENDIF
