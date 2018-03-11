@@ -156,7 +156,7 @@ def edit_perms_dataset(request_data, set_id):
         db_conn.cursor().execute("SELECT UserAccs.userid, UserAccs.fname, UserAccs.lname, UserAccs.email, Perms.permission_type "
                                         "FROM SYSTEM.user_accounts AS UserAccs "
                                         "INNER JOIN SYSTEM.set_permissions AS Perms "
-                                        "ON UserAccs.userid = Perms.userid WHERE setid=%s AND permission_type='admin'; ", [set_id])
+                                        "ON UserAccs.userid = Perms.userid WHERE setid=%s AND permission_type='admin' AND userid <> %s; ", [set_id, session['user_data']['user_id']])
 
         results = db_conn.cursor().fetchall()
 
