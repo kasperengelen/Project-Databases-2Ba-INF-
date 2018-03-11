@@ -7,6 +7,7 @@ from wtforms.validators import Length, InputRequired, Email, EqualTo, DataRequir
 from db_wrapper import DBConnection
 from passlib.hash import sha256_crypt
 from utils import EnumCheck
+from utils import Logger
 
 class DatasetForm(FlaskForm):
     name = StringField("Dataset name", [InputRequired(message="Name is required."), Length(min=6, max=64, message="Name must be between 6 and 64 characters long.")])
@@ -273,6 +274,7 @@ def remove_user_dataset(request_data, set_id):
 
     # validate
     if not form.validate():
+        Logger.log("'remove_user_dataset(request_data, set_id)': Form not valid.")
         return redirect(url_for('edit_perms_dataset', dataset_id=set_id))
     # ENDIF
 
@@ -282,6 +284,7 @@ def remove_user_dataset(request_data, set_id):
         
         ## check that user does not edit own permissions ##
         if user_data.user_id == session['user_data']['user_id']:
+            flash(message="User cannot remove itself from dataset.")
             return redirect(url_for('edit_perms_dataset', dataset_id=set_id))
         # ENDIF
 
@@ -289,6 +292,7 @@ def remove_user_dataset(request_data, set_id):
         db_conn.cursor().execute("SELECT * FROM SYSTEM.user_accounts WHERE email=%s", [form.email.data])
         result = db_conn.cursor().fetchone()
         if result is None:
+            Logger.log("'remove_user_dataset(request_data, set_id)': User with email does not exist.")
             return redirect(url_for('edit_perms_dataset', dataset_id=set_id))
         # ENDIF
 
@@ -298,6 +302,7 @@ def remove_user_dataset(request_data, set_id):
         result = db_conn.cursor().fetchone()
 
         if result is None:
+            Logger.log("'remove_user_dataset(request_data, set_id)': No permissions to remove.")
             return redirect(url_for('edit_perms_dataset', dataset_id=set_id))
         # ENDIF
 

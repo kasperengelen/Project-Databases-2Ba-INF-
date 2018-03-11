@@ -42,3 +42,7 @@ class EnumCheck:
             raise ValidationError(self.message)
 
 
+class Logger:
+    @staticmethod
+    def log(message):
+        print("[ERROR] " + message)
