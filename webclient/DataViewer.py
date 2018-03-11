@@ -8,15 +8,6 @@ class DataViewer:
         self.engine = self.engine = create_engine("postgresql://dbadmin:AdminPass123@localhost/projectdb18")
         self.maxrows = None
 
-        
-    #Given a setid this method returns a list of all the tables within this dataset
-    def get_tablenames(self, setid):
-        sql_query = "SELECT table_name FROM information_schema.tables WHERE table_schema = '%s'" % str(setid)
-        query_result = pd.read_sql(sql_query, self.engine)
-        tablenames = query_result['table_name'].tolist()
-        return tablenames
-        
-    
     #Given a a number of rows to display this functions returns a list of possible page indices.
     def get_page_indices(self, setid, tablename, display_nr, page_nr=1):
         count_query  = "SELECT COUNT(*) FROM \"%s\".\"%s\"" % (setid, tablename)
@@ -82,6 +73,6 @@ class DataViewer:
 
 if __name__ == '__main__':
     dv = DataViewer()
-    lol = dv.get_tablenames(1)
-    print(lol)
+    string = dv.is_in_range(4, 'tmp', 202, 250)
+    print(string)
     
