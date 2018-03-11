@@ -7,28 +7,19 @@ from sqlalchemy import create_engine
 class DataTransformer:
 
     def __init__(self, userid, replace = True):
-        self.engine = create_engine("postgresql://dbadmin:AdminPass123@localhost/projectdb18")
         self.userid = userid
         self.replace = replace
 
     """Extra option to check whether deleting the attribute will destroy integrity constraints.
     Checks for other constraints is possible as well"""
-    def __integrity_check(self, tablename, setname):
+    def __integrity_check(self, tablename, setid):
         #implemented in secret file
         pass
 
 
-    #Get the internal reference for the table of (setname). This returns a pair (id, name)
-    def get_internal_reference(self, setname, tablename):
-        with DBConnection() as db_conn:
-            #Get the internal reference for the table of (setname) with name (tablename)
-            db_conn.cursor().execute("SELECT setid FROM SYSTEM.datasets WHERE setname = %s AND SYSTEM.datasets.setid = ANY"
-                                     " (ARRAY (SELECT setid FROM SYSTEM.user_accounts JOIN SYSTEM.set_permissions ON"
-                                     " SYSTEM.user_accounts.userid = SYSTEM.set_permissions.userid"
-                                     " WHERE permission_type <> 'read' AND set_permissions.userid = %s))", (setname, self.userid))
-            table_id = db_conn.cursor().fetchone()[0]
-            db_conn.commit()
-            return (str(table_id), tablename)
+    #Get the internal reference for the table of (setid) and (tablename). This returns a pair (id, name)
+    def get_internal_reference(self, setid, tablename):
+            return (str(setid), tablename)
 
     #In case the transformation has to result in a new table, we copy the existing one
     def copy_table(self, internal_ref, new_name):
@@ -41,9 +32,9 @@ class DataTransformer:
 
         
     #Delete an attribute of a table
-    def delete_attribute(self, setname, tablename, attribute, new_name=""):
+    def delete_attribute(self, setid, tablename, attribute, new_name=""):
         with DBConnection() as db_conn:
-            internal_ref = self.get_internal_reference(setname, tablename)
+            internal_ref = self.get_internal_reference(setid, tablename)
             if self.replace is False:
                 internal_ref = self.copy_table(internal_ref, new_name)
             #Since this is a query generated out of own data, we can use string interpolation without SQL injection problems.
@@ -54,8 +45,8 @@ class DataTransformer:
 
 
     #Returns a list of supported types to convert to given a data_type
-    def get_conversion_options(self,  setname, tablename, attribute):
-        data_type = self.get_attribute_type(setname, tablename, attribute)
+    def get_conversion_options(self,  setid, tablename, attribute):
+        data_type = self.get_attribute_type(setid, tablename, attribute)
         options = { 'character varying' : ['CHAR(255)', 'INTEGER', 'FLOAT', 'DATE', 'TIME', 'TIMESTAMP'],
                     'character'         : ['VARCHAR(255)', 'INTEGER', 'FLOAT', 'DATE', 'TIME', 'TIMESTAMP'],
                     'integer'           : ['CHAR(255)', 'VARCHAR(255)', 'FLOAT'],
@@ -68,9 +59,9 @@ class DataTransformer:
         return options.setdefault(data_type, [])
 
     #Return the postgres data type of an attribute
-    def get_attribute_type(self, setname, tablename, attribute):
+    def get_attribute_type(self, setid, tablename, attribute):
         with DBConnection() as db_conn:
-            internal_ref = self.get_internal_reference(setname, tablename)
+            internal_ref = self.get_internal_reference(setid, tablename)
             db_conn.cursor().execute(sql.SQL("SELECT pg_typeof({}) FROM {}.{}").format(sql.Identifier(attribute), sql.Identifier(internal_ref[0]),
                                                                                        sql.Identifier(internal_ref[1])))
             return (db_conn.cursor().fetchone()[0], internal_ref)
@@ -87,16 +78,19 @@ class DataTransformer:
 
     #Conversion of a character type (VARCHAR and CHAR)
     def __convert_character(self, internal_ref, attribute, to_type, data_format):
-        patterns = { 'CHAR(255)'    : '',
-                     'VARCHAR(255)' : '',
+        patterns = { 
                      'INTEGER'      : 'INTEGER USING %s::integer%s',
                      'FLOAT'        : 'FLOAT USING %s::float%s',
                      'DATE'         : 'DATE USING to_date(\"%s\" , %s)',
                      'TIME'         : 'TIME USING to_timestamp(\"%s\", %s)::time',
                      'TIMESTAMP'    : 'TIMESTAMP USING to_timestamp(\"%s\", %s)'
                      }
-        temp = patterns[to_type]
-        casting_var = temp % (attribute, data_format)
+        temp = patterns.setdefault(to_type, '')
+        if temp == '':
+            casting_var = to_type
+        else:
+            casting_var = temp % (attribute, data_format)
+            
         sql_query = "ALTER TABLE \"%s\".\"%s\" ALTER COLUMN \"%s\" TYPE " % (internal_ref[0], internal_ref[1], attribute)
         sql_query += casting_var
         with DBConnection() as db_conn:
@@ -108,8 +102,8 @@ class DataTransformer:
                 
 
     #Change the attribute type, if the data follows a specific format like TIMESTAMP provide it as well.
-    def change_attribute_type(self, setname, tablename, attribute, to_type, data_format="", new_name=""):
-        cur_type, internal_ref  = self.get_attribute_type(setname, tablename, attribute)
+    def change_attribute_type(self, setid, tablename, attribute, to_type, data_format="", new_name=""):
+        cur_type, internal_ref  = self.get_attribute_type(setid, tablename, attribute)
         if self.replace is False:
             internal_ref = self.copy_table(internal_ref, new_name)
         
@@ -122,11 +116,11 @@ class DataTransformer:
 
     #In case that change_attribute_type fails due to elements that can't be converted
     #this method will force the conversion by deleting the rows containing problematic elemants
-    def force_attribute_type(self, setname, tablename, attribute, to_type, data_format="", new_name=""):
-        if self.replace is False:
-            internal_ref = self.get_internal_reference(setname, tablename)
+    def force_attribute_type(self, setid, tablename, attribute, to_type, data_format="", new_name=""):
+        if self.replace is True:
+            internal_ref = self.get_internal_reference(setid, tablename)
         else:
-            internal_ref = self.get_internal_reference(setname, new_name)
+            internal_ref = self.get_internal_reference(setid, new_name)
         
         pattern = ""
         if to_type == 'INTEGER':
@@ -144,20 +138,20 @@ class DataTransformer:
                                                                                          sql.Identifier(attribute)), [pattern])
             db_conn.commit();
 
-        if self.replace is False:
-            self.change_attribute_type(setname, tablename, attribute, to_type, data_format, new_name)
+        if self.replace is True:
+            self.change_attribute_type(setid, tablename, attribute, to_type, data_format, new_name)
         else:
             #The first call of change_attribute_type already created a new table which is a copy of (tablename)
             #But we don't want to copy this table once again, only overwrite it
             self.replace = True
-            self.change_attribute_type(setname, new_name, attribute, to_type, data_format, new_name)
+            self.change_attribute_type(setid, new_name, attribute, to_type, data_format, new_name)
 
 
 
 
 
-    def find_and_replace(self, setname, tablename, attribute, value, replacement, new_name=""):
-        cur_type, internal_ref  = self.get_attribute_type(setname, tablename, attribute)
+    def find_and_replace(self, setid, tablename, attribute, value, replacement, new_name=""):
+        cur_type, internal_ref  = self.get_attribute_type(setid, tablename, attribute)
         if self.replace is False:
             internal_ref = self.copy_table(internal_ref, new_name)
 
@@ -171,7 +165,9 @@ class DataTransformer:
         
 
 if __name__ == '__main__':
-    dt = DataTransformer(1, False)
+    dt = DataTransformer(1, True)
     #print(dt.get_internal_reference("etherdelta", "employees"))dt.delete_attribute("etherdelta", "clients", "stupid")
-    dt.force_attribute_type('etherdelta', 'clients2', 'clientnumber', 'INTEGER', '', 'clients2')
-    #dt.delete_attribute('etherdelta', 'clients2', 'fname')
+    dt.force_attribute_type(1, 'clients5', 'clientnumber', 'INTEGER', '', '')
+    #dt.change_attribute_type(1, 'clients2', 'clientnumber', 'VARCHAR(255)', '', 'clients5')
+    #dt.find_and_replace(1, 'clients5', 'clientnumber', '332', 'probleem')
+    print("SUCCES!")
