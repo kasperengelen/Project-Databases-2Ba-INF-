@@ -58,7 +58,11 @@ class DataLoader:
                 column_names.append("column" + str(i))
 
         # extract table name
-        tablename = filename.replace(".csv", "")
+        tablename = os.path.basename(filename.replace(".csv", ""))
+
+        # raise error if the table name contains a period, this is to prevent sql injections
+        if tablename.count('.'):
+            raise ValueError("Table names are not allowed to contain periods.")
 
         query = "CREATE TABLE " + tablename + "("
         for column in column_names:
