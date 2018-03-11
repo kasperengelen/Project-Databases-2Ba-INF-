@@ -14,7 +14,7 @@
 
 		<div>
 			{% from "includes/_formhelpers.html" import render_field %}
-			<form method="post" action="/dataset/{{ setid }}/add_user">
+			<form method="post" action="/dataset/{{ setid }}/add_user" name="add">
 			{{ form.csrf_token }}
 			<div class="form-group" style="width: 40%; display: inline-block;">
 				{{render_field(form.email, class_="form-control")}}
@@ -23,7 +23,7 @@
 				{{render_field(form.permission_type, class_="form-control")}}
 			</div>
 			<div style="display: inline-block;">
-				<p><input type="submit" class="btn btn-primary" value="Add User" ></p>
+				<p><input id="add" type="submit" class="btn btn-primary" value="Add User" ></p>
 			</div>
 			</form>
 		</div>
@@ -41,7 +41,7 @@
 							<td>{{ user.email.data }}</td>
 							<td>{{ user.permission_type.data }}</td>
 							<td>{% from "includes/_formhelpers.html" import render_field %}
-								<form method="post" action="/dataset/{{ setid }}/remove_user">
+								<form method="post" action="/dataset/{{ setid }}/remove_user" name="remove">
 								{{ user.hidden_tag() }}
 								<label for="remove" class="glyphicon glyphicon-remove"></label>
 								<input id="remove" style="visibility: hidden" type="submit"></form></td>
