@@ -1,7 +1,7 @@
 # file that contains all code related datasets.
 
 from flask import render_template, flash, request, url_for, session, redirect, abort
-from wtforms import StringField, PasswordField, validators, TextAreaField, SelectField
+from wtforms import StringField, PasswordField, validators, TextAreaField, SelectField, HiddenField
 from flask_wtf import FlaskForm
 from wtforms.validators import Length, InputRequired, Email, EqualTo, DataRequired
 from db_wrapper import DBConnection
@@ -137,10 +137,8 @@ class AddUserForm(FlaskForm):
 
 class RemoveUserForm(FlaskForm):
     """Form to revoke a user's permission to alter the dataset."""
-    email = StringField('Email', [], render_kw={'readonly': True})
-    permission_type = StringField('Permission Type', 
-                                        [EnumCheck(message="Invalid permission type.", choises=['read', 'write', 'admin'])],
-                                        render_kw={'readonly': True})
+    email = HiddenField('Email', [Email()])
+    permission_type = HiddenField('Permission Type', [EnumCheck(message="Invalid permission type.", choises=['read', 'write', 'admin'])])
 # ENDCLASS
 
 def edit_perms_dataset(request_data, set_id):
