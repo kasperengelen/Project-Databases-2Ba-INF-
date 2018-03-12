@@ -1,7 +1,7 @@
 {% extends 'layout.html' %}
 
 {% block body %}
-	<div class="jumbotron" style="padding: 1%">
+	<div class="jumbotron text-center" style="padding: 1%">
 		<div class="pull-left">
 			<a href="/dataset/{{ dataset_info.id }}/view/{{ table_name }}/transform" class="btn btn-primary">Transform</a>
 		</div>
@@ -18,14 +18,13 @@
 		</div>
 	</div>    		
 
-    <div class="jumbotron">
-    	<div class="text-center" style="padding: 0px">
+    <div class="jumbotron" style="padding: 1%;">
+    	<div class="text-center">
     		{% for index in page_indices %}
 				<p style="display: inline-block;"><a href="/dataset/{{ dataset_info.id }}/view/{{ table_name }}/{{ index }}">
 					{{ index }}</a></p>	
     		{% endfor %}
-    	</div>    		
-
+    	</div>
 		<div class="pull-right">
 			<input type="text" id="input" placeholder="Search Page No" style="border-style: solid; border-width: 1px; border-radius: 3px;"/>
 			<button onclick="page_search()"><i class="glyphicon glyphicon-search"></i></button>

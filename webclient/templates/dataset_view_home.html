@@ -17,10 +17,14 @@
 			<table>
 				<tr>
 					<th>Tables</th>
+					<th></th>
+					<th></th>
 				</tr>
 				<tr>	
 					{% for table in table_list %}
-					<td><a href="/dataset/{{ dataset_info.id }}/view/{{ table }}">{{ table }}</a></td>
+					<td>{{ table }}</td>
+					<td><a href="/dataset/{{ dataset_info.id }}/view/{{ table }}">View</a></td>
+					<td><a href="/dataset/{{ dataset_info.id }}/transform/{{ table }}">Transform</a></td>
 					{% endfor %}
 				</tr>
 			</table>
