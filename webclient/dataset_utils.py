@@ -32,8 +32,10 @@ def view_dataset_home(request_data, set_id):
         }
     # ENDWITH
 
+    dv = DataViewer()
+
     ## retrieve list of tables
-    table_list = ["abc"]
+    table_list = db.get_tablenames(set_id)
 
     return render_template('dataset_view_home.html', 
                                 dataset_info = dataset_info, 
@@ -41,14 +43,33 @@ def view_dataset_home(request_data, set_id):
     # ENDWITH
 # ENDFUNCTION
 
-def view_dataset_table(request_data, set_id, tablename):
-    """ Given the id of a dataset and the identifier of a table
+def view_dataset_table(request_data, set_id, tablename, page_nr):
+    """ Given the id of a dataset, the identifier of a table and a page_nr
     of that dataset this returns the data contained in that dataset."""
+
+    dv = DataViewer()
+
+    ## retrieve basic information
+    with DBConnection() as db_conn:
+        db_conn.cursor().execute("SELECT * FROM SYSTEM.datasets WHERE setid = %s", [set_id])
+        result = db_conn.cursor().fetchone()
+
+        dataset_info = {
+            "id":          result[0],
+            "displayName": result[1],
+            "description": result[2] 
+        }
+    # ENDWITH
+
+    page_indices = dv.get_page_indices(set_id, tablename, 50, page_nr)
+
+    table_data = dv.render_table(set_id, tablename, page_nr, 50)
 
     return render_template('dataset_view_table.html', 
                                 dataset_info = dataset_info, 
                                 page_indices = page_indices, 
                                 table_data   = table_data)
+# ENDFUNCTION
 
 def create_dataset(request_data):
     """Returns a page where a new dataset can be created.
