@@ -64,12 +64,13 @@ def view_dataset_home(dataset_id):
     information contained in the tables of the dataset."""
     return dataset_utils.view_dataset_home(request, dataset_id)
 
-@app.route('/dataset/<int:dataset_id>/view/<string:tablename>')
+@app.route('/dataset/<int:dataset_id>/view/<string:tablename>', defaults={'page_nr':1})
+@app.route('/dataset/<int:dataset_id>/view/<string:tablename>/<int:page_nr>')
 @user_utils.require_login
-def view_dataset_table(dataset_id, tablename):
+def view_dataset_table(dataset_id, tablename, page_nr):
     """ Given the id of a dataset and the identifier of a table
     of that dataset this returns the data contained in that dataset."""
-    return dataset_utils.view_dataset_table(request, dataset_id, tablename)
+    return dataset_utils.view_dataset_table(request, dataset_id, tablename, page_nr)
 
 @app.route('/dataset/<int:dataset_id>/manage/', methods=['GET', 'POST'])
 @user_utils.require_login

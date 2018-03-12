@@ -8,6 +8,7 @@ from db_wrapper import DBConnection
 from passlib.hash import sha256_crypt
 from utils import EnumCheck
 from utils import Logger
+from DataViewer import DataViewer
 
 class DatasetForm(FlaskForm):
     name = StringField("Dataset name", [InputRequired(message="Name is required."), Length(min=6, max=64, message="Name must be between 6 and 64 characters long.")])
@@ -31,8 +32,10 @@ def view_dataset_home(request_data, set_id):
         }
     # ENDWITH
 
+    dv = DataViewer()
+
     ## retrieve list of tables
-    table_list = ["abc"]
+    table_list = dv.get_tablenames(set_id)
 
     return render_template('dataset_view_home.html', 
                                 dataset_info = dataset_info, 
@@ -40,14 +43,41 @@ def view_dataset_home(request_data, set_id):
     # ENDWITH
 # ENDFUNCTION
 
-def view_dataset_table(request_data, set_id, tablename):
-    """ Given the id of a dataset and the identifier of a table
+def view_dataset_table(request_data, set_id, tablename, page_nr):
+    """ Given the id of a dataset, the identifier of a table and a page_nr
     of that dataset this returns the data contained in that dataset."""
+
+
+
+    dv = DataViewer()
+
+    if not dv.is_in_range(set_id, tablename, page_nr, 50):
+        flash(message="Page out of range.", category="error")
+        return redirect(url_for('view_dataset_home', dataset_id=set_id))
+
+    ## retrieve basic information
+    with DBConnection() as db_conn:
+        db_conn.cursor().execute("SELECT * FROM SYSTEM.datasets WHERE setid = %s", [set_id])
+        result = db_conn.cursor().fetchone()
+
+        dataset_info = {
+            "id":          result[0],
+            "displayName": result[1],
+            "description": result[2] 
+        }
+    # ENDWITH
+
+    page_indices = dv.get_page_indices(set_id, tablename, 50, page_nr)
+
+    table_data = dv.render_table(set_id, tablename, page_nr, 50)
 
     return render_template('dataset_view_table.html', 
                                 dataset_info = dataset_info, 
                                 page_indices = page_indices, 
-                                table_data   = table_data)
+                                table_data   = table_data,
+                                table_name = tablename,
+                                current_page = page_nr)
+# ENDFUNCTION
 
 def create_dataset(request_data):
     """Returns a page where a new dataset can be created.
@@ -116,7 +146,7 @@ def manage_dataset(request_data, set_id):
     if request_data.method == 'POST' and form.validate: # there was form data
         if form.validate(): # form data was valid
             with DBConnection() as db_conn:
-                db_conn.cursor("UPDATE SYSTEM.datasets SET setname = %s, description = %s WHERE setid = %s;", 
+                db_conn.cursor().execute("UPDATE SYSTEM.datasets SET setname = %s, description = %s WHERE setid = %s;", 
                                     [form.name.data, form.description.data, set_id])
                 db_conn.commit()
 
