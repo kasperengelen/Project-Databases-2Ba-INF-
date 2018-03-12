@@ -138,7 +138,7 @@ def manage_dataset(request_data, set_id):
     if request_data.method == 'POST' and form.validate: # there was form data
         if form.validate(): # form data was valid
             with DBConnection() as db_conn:
-                db_conn.cursor("UPDATE SYSTEM.datasets SET setname = %s, description = %s WHERE setid = %s;", 
+                db_conn.cursor().execute("UPDATE SYSTEM.datasets SET setname = %s, description = %s WHERE setid = %s;", 
                                     [form.name.data, form.description.data, set_id])
                 db_conn.commit()
 
