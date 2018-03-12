@@ -15,7 +15,8 @@
     <div class="jumbotron">
     	<div class="text-center">
     		{% for index in page_indices %}
-    			<p style="display: inline-block;"><a href="/dataset/{{ dataset_info.id }}/view/{{ table_name }}/{{ index }}">{{ index }}</a></p>
+				<p style="display: inline-block;"><a href="/dataset/{{ dataset_info.id }}/view/{{ table_name }}/{{ index }}">
+					{{ index }}</a></p>	
     		{% endfor %}
     	</div>
 		<div class="pull-right">
