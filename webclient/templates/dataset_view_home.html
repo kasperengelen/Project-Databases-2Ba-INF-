@@ -9,21 +9,22 @@
 			<a href="/dataset/{{ dataset_info.id }}/permissions" class="btn btn-primary">Permissions</a>
 		</div>
 			<h2>Dataset: {{ dataset_info.displayName }}</h2>
-			<p>Description: {{ dataset_info.description }}</p>
+			<p>{{ dataset_info.description }}</p>
 	</div>    		
 
     <div class="jumbotron">
-		<div class="pull-right">
-			<input type="text" id="input" style="border-style: solid; border-width: 1px; border-radius: 3px;"/>
-			<button onclick="page_search()"><i class="glyphicon glyphicon-search"></i></button>
-			
-			<script type="text/javascript">
-			function page_search(){
-			    window.location.href = '/dataset/1/' + document.getElementById('input').value;
-			 }
-			</script>
+		<div>
+			<table>
+				<tr>
+					<th>Tables</th>
+				</tr>
+				<tr>	
+					{% for table in table_list %}
+					<td><a href="/dataset/{{ dataset_info.id }}/view/{{ table }}">{{ table }}</a></td>
+					{% endfor %}
+				</tr>
+			</table>
 		</div>
-	</div>
 
 
 {% endblock %}

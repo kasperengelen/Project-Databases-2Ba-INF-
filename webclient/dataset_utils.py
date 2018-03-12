@@ -68,7 +68,9 @@ def view_dataset_table(request_data, set_id, tablename, page_nr):
     return render_template('dataset_view_table.html', 
                                 dataset_info = dataset_info, 
                                 page_indices = page_indices, 
-                                table_data   = table_data)
+                                table_data   = table_data,
+                                table_name = tablename,
+                                current_page = page_nr)
 # ENDFUNCTION
 
 def create_dataset(request_data):
