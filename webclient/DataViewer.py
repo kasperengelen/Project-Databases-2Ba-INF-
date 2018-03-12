@@ -5,7 +5,7 @@ import math
 class DataViewer:
 
     def __init__(self):
-        self.engine = self.engine = create_engine("postgresql://dbadmin:AdminPass123@localhost/projectdb18")
+        self.engine = self.engine = create_engine("postgresql://hmtbpols:yIje-2zT-zF0YyJywkAy57h6ob3ZnoV2@baasu.db.elephantsql.com/hmtbpols")
         self.maxrows = None
 
         
@@ -15,6 +15,12 @@ class DataViewer:
         query_result = pd.read_sql(sql_query, self.engine)
         tablenames = query_result['table_name'].tolist()
         return tablenames
+
+
+    def get_attributes(self, setid, tablename):
+        SQL_query = "SELECT * FROM \"%s\".\"%s\" LIMIT 1" % (str(setid), tablename)
+        data_frame = pd.read_sql(SQL_query, self.engine)
+        return data_frame.columns.values.tolist()
         
     
     #Given a a number of rows to display this functions returns a list of possible page indices.
@@ -82,6 +88,7 @@ class DataViewer:
 
 if __name__ == '__main__':
     dv = DataViewer()
-    lol = dv.get_tablenames(1)
+    #lol = dv.get_tablenames(1)
+    lol = dv.get_attributes(1, 'clients3')
     print(lol)
     
