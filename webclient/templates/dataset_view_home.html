@@ -1,0 +1,30 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+	<div class="jumbotron text-center" style="padding: 1%">
+		<div class="pull-right">
+			<a href="/dataset/{{ dataset_info.id }}/manage" class="btn btn-primary">Manage</a>
+			</br>
+			</br>
+			<a href="/dataset/{{ dataset_info.id }}/permissions" class="btn btn-primary">Permissions</a>
+		</div>
+			<h2>Dataset: {{ dataset_info.displayName }}</h2>
+			<p>{{ dataset_info.description }}</p>
+	</div>    		
+
+    <div class="jumbotron">
+		<div>
+			<table>
+				<tr>
+					<th>Tables</th>
+				</tr>
+				<tr>	
+					{% for table in table_list %}
+					<td><a href="/dataset/{{ dataset_info.id }}/view/{{ table }}">{{ table }}</a></td>
+					{% endfor %}
+				</tr>
+			</table>
+		</div>
+
+
+{% endblock %}
