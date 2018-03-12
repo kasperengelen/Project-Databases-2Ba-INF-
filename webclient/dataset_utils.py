@@ -47,7 +47,13 @@ def view_dataset_table(request_data, set_id, tablename, page_nr):
     """ Given the id of a dataset, the identifier of a table and a page_nr
     of that dataset this returns the data contained in that dataset."""
 
+
+
     dv = DataViewer()
+
+    if not dv.is_in_range(set_id, tablename, page_nr, 50):
+        flash(message="Page out of range.", category="error")
+        return redirect(url_for('view_dataset_home', dataset_id=set_id))
 
     ## retrieve basic information
     with DBConnection() as db_conn:
