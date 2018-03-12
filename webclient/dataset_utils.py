@@ -8,6 +8,7 @@ from db_wrapper import DBConnection
 from passlib.hash import sha256_crypt
 from utils import EnumCheck
 from utils import Logger
+from DataViewer import DataViewer
 
 class DatasetForm(FlaskForm):
     name = StringField("Dataset name", [InputRequired(message="Name is required."), Length(min=6, max=64, message="Name must be between 6 and 64 characters long.")])
