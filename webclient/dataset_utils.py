@@ -35,7 +35,7 @@ def view_dataset_home(request_data, set_id):
     dv = DataViewer()
 
     ## retrieve list of tables
-    table_list = db.get_tablenames(set_id)
+    table_list = dv.get_tablenames(set_id)
 
     return render_template('dataset_view_home.html', 
                                 dataset_info = dataset_info, 
