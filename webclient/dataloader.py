@@ -6,13 +6,11 @@ from db_wrapper import DBConnection
 
 class DataLoader:
 
-    def __init__(self, filename, setname, description, header=False, sep=','):
+    def __init__(self, filename, setname, description, header=False):
         """
         :param header: True if the first line in the csv file contains the column names
-        :param sep: The separator character for csv files
         """
         self.header = header
-        self.sep = sep
 
         with DBConnection() as db_conn:
             # insert dataset entry for the current dataset
@@ -52,9 +50,12 @@ class DataLoader:
             header = csv.readline()
 
         if self.header:
-            column_names = [x.strip() for x in header.split(self.sep)]
+            column_names = [x.strip() for x in header.split(',')]
+            # replace spaces with underscores
+            for i in range(len(column_names)):
+                column_names[i] = column_names[i].replace(" ", "_")
         else:
-            for i in range(header.count(self.sep) + 1):
+            for i in range(header.count(',') + 1):
                 column_names.append("column" + str(i))
 
         # extract table name
@@ -73,7 +74,7 @@ class DataLoader:
             db_conn.cursor().execute("SET search_path TO {};".format(self.setid))
             db_conn.cursor().execute(query)
             csv = open(filename, 'r')
-            db_conn.cursor().copy_from(csv, tablename, sep=self.sep)
+            db_conn.cursor().copy_from(csv, tablename, sep=',')
             # if the first line in the csv contained the names of the columns, that row has to be deleted from the table
             if self.header:
                 db_conn.cursor().execute("DELETE FROM " + tablename + " WHERE ctid "
