@@ -5,7 +5,7 @@ import math
 class DataViewer:
 
     def __init__(self):
-        self.engine = self.engine = create_engine("postgresql://hmtbpols:yIje-2zT-zF0YyJywkAy57h6ob3ZnoV2@baasu.db.elephantsql.com/hmtbpols")
+        self.engine = self.engine = create_engine("postgresql://dbadmin:AdminPass123@localhost/projectdb18")
         self.maxrows = None
 
         
