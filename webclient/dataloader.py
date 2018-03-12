@@ -1,9 +1,8 @@
-import pandas as pd
 import zipfile
 import os
 import shutil
-import datetime
 from db_wrapper import DBConnection
+
 
 class DataLoader:
 
@@ -58,8 +57,12 @@ class DataLoader:
             for i in range(header.count(self.sep) + 1):
                 column_names.append("column" + str(i))
 
-        # extract dataframe name
-        tablename = filename.replace(".csv", "")
+        # extract table name
+        tablename = os.path.basename(filename.replace(".csv", ""))
+
+        # raise error if the table name contains a period, this is to prevent sql injections
+        if tablename.count('.'):
+            raise ValueError("Table names are not allowed to contain periods.")
 
         query = "CREATE TABLE " + tablename + "("
         for column in column_names:
