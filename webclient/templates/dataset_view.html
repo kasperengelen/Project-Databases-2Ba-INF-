@@ -20,8 +20,15 @@
 				</tr>
 			</table>
 		</div>
+		
 		<div class="pull-right">
-			Searchbar
+			<input type="text" id="input" style="border-style: solid; border-width: 1px; border-radius: 3px;"/>
+			<button onclick="page_search()"><i class="glyphicon glyphicon-search"></i></button>
+			<script type="text/javascript">
+			function page_search(){
+			    window.location.href = '/dataset/1/' + document.getElementById('input').value;
+			 }
+			</script>
 		</div>
 
 
