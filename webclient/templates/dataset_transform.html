@@ -3,7 +3,7 @@
 {% block body %}
 	<div class="jumbotron text-center" style="padding: 1%">
 		<div class="pull-left">
-			<a href="/dataset/{{ dataset_info.id }}/view/{{ table_name }}/transform" class="btn btn-primary">Transform</a>
+			<a href="/dataset/{{ dataset_info.id }}/view/{{ table_name }}" class="btn btn-primary">View</a>
 		</div>
 		<div class="pull-right text-center">
 			<a href="/dataset/{{ dataset_info.id }}/manage" class="btn btn-primary">Manage</a>
@@ -18,16 +18,17 @@
 		</div>
 	</div>    		
 
-    <div class="jumbotron" style="padding: 1%;">
-    	<div class="text-center">
+    <div class="jumbotron">
+    	<div class="text-center" style="padding: 0px">
     		{% for index in page_indices %}
 				<p style="display: inline-block;"><a href="/dataset/{{ dataset_info.id }}/view/{{ table_name }}/{{ index }}">
 					{{ index }}</a></p>	
     		{% endfor %}
-    	</div>
+    	</div>    		
+
 		<div class="pull-right">
 			<input type="text" id="input" placeholder="Search Page No" style="border-style: solid; border-width: 1px; border-radius: 3px;"/>
-			<button onclick="page_search()"><i class="glyphicon glyphicon-search"></i></button>
+			<button onclick="page_search()"><i class="glyphicon glyphicon-arrow-right"></i></button>
 
 			<script type="text/javascript">
 			function page_search(){
@@ -35,11 +36,11 @@
 			 }
 			</script>
 		</div>
-	</div>
+	</div>	
 
-	<div class="jumbotron">
+	<div class="jumbotron" style="padding: 1%;">
 		{% from "includes/_formhelpers.html" import render_field %}
-		<form method="post" action="/dataset/{{ dataset_info.id }}/transform/{{ table_name }}/deleteattr">
+		<form method="post" action="/dataset/{{ dataset_info.id }}/transform/{{ table_name }}/findreplace">
 		{{ findrepl_form.csrf_token }}
 		<div class="form-group" style="width: 30%; display: inline-block;">
 			{{render_field(findrepl_form.search, class_="form-control")}}
@@ -48,13 +49,15 @@
 			{{render_field(findrepl_form.replacement, class_="form-control")}}  
 		</div>
 		<p style="display: inline-block;"><input type="submit" id="findrepl" class="btn btn-primary" value="Find & Replace"></p>
+		</form>
 
-		<form method="post" action="/dataset/{{ dataset_info.id }}/transform/{{ table_name }}/findreplace">
+		<form method="post" action="/dataset/{{ dataset_info.id }}/transform/{{ table_name }}/deleteattr">
 		{{ delete_form.csrf_token }}
 		<div class="form-group" style="width: 30%; display: inline-block;">
 			{{render_field(delete_form.select_attr, class_="form-control")}}
 		</div>
 		<p style="display: inline-block;"><input type="submit" id="delete" class="btn btn-primary" value="Delete Attribute"></p>
+		</form>
 	</div>	
 
 	<div class="text-center">
