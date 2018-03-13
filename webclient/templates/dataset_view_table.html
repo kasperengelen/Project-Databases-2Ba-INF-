@@ -3,7 +3,7 @@
 {% block body %}
 	<div class="jumbotron" style="padding: 1%">
 		<div class="pull-left">
-			<a href="/dataset/{{ dataset_info.id }}/view/{{ table_name }}/transform" class="btn btn-primary">Transform</a>
+			<a href="/dataset/{{ dataset_info.id }}/transform/{{ table_name }}" class="btn btn-primary">Transform</a>
 		</div>
 		<div class="pull-right text-center">
 			<a href="/dataset/{{ dataset_info.id }}/manage" class="btn btn-primary">Manage</a>
@@ -28,7 +28,7 @@
 
 		<div class="pull-right">
 			<input type="text" id="input" placeholder="Search Page No" style="border-style: solid; border-width: 1px; border-radius: 3px;"/>
-			<button onclick="page_search()"><i class="glyphicon glyphicon-search"></i></button>
+			<button onclick="page_search()"><i class="glyphicon glyphicon-arrow-right"></i></button>
 
 			<script type="text/javascript">
 			function page_search(){

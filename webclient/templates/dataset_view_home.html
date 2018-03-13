@@ -15,18 +15,21 @@
     <div class="jumbotron">
 		<div>
 			<table>
-				<tr>
-					<th>Tables</th>
-					<th></th>
-					<th></th>
-				</tr>
-				<tr>	
+				{% if table_list %}
+					<tr>
+						<th>Table</th>
+						<th></th>
+						<th></th>
+					</tr>
+					<tr>
+
 					{% for table in table_list %}
 					<td>{{ table }}</td>
 					<td><a href="/dataset/{{ dataset_info.id }}/view/{{ table }}">View</a></td>
 					<td><a href="/dataset/{{ dataset_info.id }}/transform/{{ table }}">Transform</a></td>
 					{% endfor %}
-				</tr>
+					</tr>
+				{% endif %}
 			</table>
 		</div>
 

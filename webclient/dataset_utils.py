@@ -9,9 +9,10 @@ from passlib.hash import sha256_crypt
 from utils import EnumCheck
 from utils import Logger
 from DataViewer import DataViewer
+from DataTransformer import DataTransformer
 
 class DatasetForm(FlaskForm):
-    name = StringField("Dataset name", [InputRequired(message="Name is required."), Length(min=6, max=64, message="Name must be between 6 and 64 characters long.")])
+    name = StringField("Dataset name", [InputRequired(message="Name is required."), Length(min=2, max=64, message="Name must be between 6 and 64 characters long.")])
 
     description = TextAreaField("Description", [Length(min=0, max=256, message="Description can contain max 256 characters.")])
 
@@ -78,6 +79,113 @@ def view_dataset_table(request_data, set_id, tablename, page_nr):
                                 table_name = tablename,
                                 current_page = page_nr)
 # ENDFUNCTION
+
+########################################################################################## TIJDELIJK ##########################################################################################
+
+class FindReplaceForm(FlaskForm):
+    select_attr = SelectField('Attribute', choices=[])
+    search = StringField('Search', [InputRequired(message="Input is required.")])
+    replacement = StringField('Replacement', [InputRequired(message="Input is required.")])
+
+class DeleteAttrForm(FlaskForm):
+    select_attr = SelectField('Attribute', choices=[])
+
+def transform_dataset_table(request_data, set_id, tablename, page_nr):
+    """Given the id of a dataset, the name of a table and a page nr,
+    this returns a page on which data can be transformed."""
+    
+    ## Find Replace ##
+    # create form
+    findrepl_form = FindReplaceForm()
+
+    ## Delete Attribute ##
+    deleteattr_form = DeleteAttrForm()
+
+    # set attribute values
+    dv = DataViewer()
+
+    # set possible attribues
+    attrs = dv.get_attributes(set_id, tablename)
+    findrepl_form.select_attr.choices = [(attrname, attrname) for attrname in attrs]
+    deleteattr_form.select_attr.choices = [(attrname, attrname) for attrname in attrs]
+
+    ## retrieve information about table ##
+    if not dv.is_in_range(set_id, tablename, page_nr, 50):
+        flash(message="Page out of range.", category="error")
+        return redirect(url_for('view_dataset_home', dataset_id=set_id))
+
+    ## retrieve basic information
+    with DBConnection() as db_conn:
+        db_conn.cursor().execute("SELECT * FROM SYSTEM.datasets WHERE setid = %s", [set_id])
+        result = db_conn.cursor().fetchone()
+
+        dataset_info = {
+            "id":          result[0],
+            "displayName": result[1],
+            "description": result[2] 
+        }
+    # ENDWITH
+
+    page_indices = dv.get_page_indices(set_id, tablename, 50, page_nr)
+
+    table_data = dv.render_table(set_id, tablename, page_nr, 50)
+
+    return render_template('dataset_transform.html', 
+                                                dataset_info = dataset_info,
+                                                page_indices = page_indices,
+                                                table_data = table_data,
+                                                table_name = tablename,
+                                                delete_form = deleteattr_form,
+                                                findrepl_form = findrepl_form)
+# ENDFUNCTION
+
+def transform_delete_attr(request_data, set_id, tablename):
+    
+    dv = DataViewer()
+
+    form = DeleteAttrForm(request_data.form)
+    
+    # set possible attributes
+    attrs = dv.get_attributes(set_id, tablename)
+    form.select_attr.choices = [(attrname, attrname) for attrname in attrs]
+
+    if not form.validate():
+        Logger.log("Invalid form")
+        return redirect(url_for('transform_dataset_table', dataset_id=set_id, tablename=tablename, page_nr=1))
+
+    dt = DataTransformer(session['user_data']['user_id'])
+
+    dt.delete_attribute(set_id, tablename, form.select_attr.data)
+    flash(message="Attribute deleted.", category="success")
+
+    return redirect(url_for('transform_dataset_table', dataset_id=set_id, tablename=tablename, page_nr=1))
+# ENDFUNCTION
+
+def transform_findreplace(request_data, set_id, tablename):
+
+    dv = DataViewer()
+
+    form = FindReplaceForm(request_data.form)
+
+    # set possible attributes
+    attrs = dv.get_attributes(set_id, tablename)
+    form.select_attr.choices = [(attrname, attrname) for attrname in attrs]
+
+    if not form.validate():
+        Logger.log("Invalid form")
+        return redirect(url_for('transform_dataset_table', dataset_id=set_id, tablename=tablename, page_nr=1))
+
+    dt = DataTransformer(session['user_data']['user_id'])
+    try:
+        dt.find_and_replace(set_id, tablename, form.select_attr.data, form.search.data, form.replacement.data)
+        flash(message="Find and replace successfull.", category="success")
+    except:
+        flash(message="No matches found.", category="error")
+
+    return redirect(url_for('transform_dataset_table', dataset_id=set_id, tablename=tablename, page_nr=1))
+# ENDFUNCTION
+
+########################################################################################## TIJDELIJK ##########################################################################################
 
 def create_dataset(request_data):
     """Returns a page where a new dataset can be created.
