@@ -83,6 +83,7 @@ def view_dataset_table(request_data, set_id, tablename, page_nr):
 ########################################################################################## TIJDELIJK ##########################################################################################
 
 class FindReplaceForm(FlaskForm):
+    select_attr = SelectField('Attribute', choices=[])
     search = StringField('Search', [InputRequired(message="Input is required.")])
     replacement = StringField('Replacement', [InputRequired(message="Input is required.")])
 
@@ -105,6 +106,7 @@ def transform_dataset_table(request_data, set_id, tablename, page_nr):
 
     # set possible attribues
     attrs = dv.get_attributes(set_id, tablename)
+    findrepl_form.select_attr.choices = [(attrname, attrname) for attrname in attrs]
     deleteattr_form.select_attr.choices = [(attrname, attrname) for attrname in attrs]
 
     ## retrieve information about table ##
@@ -166,6 +168,9 @@ def transform_delete_attr(request_data, set_id, tablename):
 # ENDFUNCTION
 
 def transform_findreplace(request_data, set_id, tablename):
+
+    form = FindReplaceForm(request_data.form)
+
 
 
     return redirect(url_for('transform_dataset_table', dataset_id=set_id, tablename=tablename, page_nr=1))
