@@ -105,7 +105,7 @@ def transform_dataset_table(request_data, set_id, tablename, page_nr):
 
     # set possible attribues
     attrs = dv.get_attributes(set_id, tablename)
-    deleteattr.select_attr.data.choices = [(attrname, attrname) for attrname in attrs]
+    deleteattr_form.select_attr.choices = [(attrname, attrname) for attrname in attrs]
 
     ## retrieve information about table ##
     if not dv.is_in_range(set_id, tablename, page_nr, 50):
@@ -134,7 +134,7 @@ def transform_dataset_table(request_data, set_id, tablename, page_nr):
                                                 table_data = table_data,
                                                 table_name = tablename,
                                                 delete_form = deleteattr_form,
-                                                findreplace_form = findrepl_form)
+                                                findrepl_form = findrepl_form)
 # ENDFUNCTION
 
 def transform_delete_attr(request_data, set_id, tablename):
