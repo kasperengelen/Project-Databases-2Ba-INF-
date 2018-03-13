@@ -178,8 +178,8 @@ def transform_findreplace(request_data, set_id, tablename):
     dt = DataTransformer(session['user_data']['user_id'])
     try:
         dt.find_and_replace(set_id, tablename, form.select_attr.data, form.search.data, form.replacement.data)
-        flash(message="Find and replace successfull.", category="error")
-    catch:
+        flash(message="Find and replace successfull.", category="success")
+    except:
         flash(message="No matches found.", category="error")
 
     return redirect(url_for('transform_dataset_table', dataset_id=set_id, tablename=tablename, page_nr=1))
