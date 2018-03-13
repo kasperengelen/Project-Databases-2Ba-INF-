@@ -72,6 +72,24 @@ def view_dataset_table(dataset_id, tablename, page_nr):
     of that dataset this returns the data contained in that dataset."""
     return dataset_utils.view_dataset_table(request, dataset_id, tablename, page_nr)
 
+@app.route('/dataset/<int:dataset_id>/transform/<string:tablename>', defaults={'page_nr':1})
+@app.route('/dataset/<int:dataset_id>/transform/<string:tablename>/<int:page_nr>')
+@user_utils.require_login
+def transform_dataset_table(dataset_id, tablename, page_nr):
+    """Given the id of a dataset, the name of a table and a page nr,
+    this returns a page on which data can be transformed."""
+    return dataset_utils.transform_dataset_table(request, dataset_id, tablename, page_nr)
+
+@app.route('/dataset/<int:dataset_id>/transform/<string:tablename>/deleteattr')
+def transform_delete_attr(dataset_id, tablename):
+    """Callback for POST requests to delete an attribute from a table."""
+    return dataset_utils.transform_delete_attr(request, dataset_id, tablename)
+
+@app.route('/dataset/<int:dataset_id>/transform/<string:tablename>/findreplace')
+def transform_findreplace(dataset_id, tablename):
+    """Callback for POST request to find and replace values in the table."""
+    return dataset_utils.transform_findreplace(request, dataset_id, tablename)
+
 @app.route('/dataset/<int:dataset_id>/manage/', methods=['GET', 'POST'])
 @user_utils.require_login
 def manage_dataset(dataset_id):
