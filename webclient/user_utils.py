@@ -184,6 +184,7 @@ def login_user(request_data):
                     session['logged_in'] = True
                     session['user_data'] = user_data.toDict()
 
+                    flash(message="You are now logged in.", category="success")
                     return redirect(url_for("index"))
                     
                 except RuntimeError as err:
