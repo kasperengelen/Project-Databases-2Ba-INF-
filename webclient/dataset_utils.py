@@ -145,18 +145,12 @@ def transform_delete_attr(request_data, set_id, tablename):
 
     form = DeleteAttrForm(request_data.form)
     
-    # set possible attribues
+    # set possible attributes
     attrs = dv.get_attributes(set_id, tablename)
     form.select_attr.choices = [(attrname, attrname) for attrname in attrs]
 
     if not form.validate():
         Logger.log("Invalid form")
-        return redirect(url_for('transform_dataset_table', dataset_id=set_id, tablename=tablename, page_nr=1))
-
-    
-
-    if not form.select_attr.data in dv.get_attributes(set_id, tablename):
-        Logger.log("Invalid attribute name.")
         return redirect(url_for('transform_dataset_table', dataset_id=set_id, tablename=tablename, page_nr=1))
 
     dt = DataTransformer(session['user_data']['user_id'])
@@ -169,9 +163,24 @@ def transform_delete_attr(request_data, set_id, tablename):
 
 def transform_findreplace(request_data, set_id, tablename):
 
+    dv = DataViewer()
+
     form = FindReplaceForm(request_data.form)
 
+    # set possible attributes
+    attrs = dv.get_attributes(set_id, tablename)
+    form.select_attr.choices = [(attrname, attrname) for attrname in attrs]
 
+    if not form.validate():
+        Logger.log("Invalid form")
+        return redirect(url_for('transform_dataset_table', dataset_id=set_id, tablename=tablename, page_nr=1))
+
+    dt = DataTransformer(session['user_data']['user_id'])
+    try:
+        dt.find_and_replace(set_id, tablename, form.select_attr.data, form.search.data, form.replacement.data)
+        flash(message="Find and replace successfull.", category="error")
+    catch:
+        flash(message="No matches found.", category="error")
 
     return redirect(url_for('transform_dataset_table', dataset_id=set_id, tablename=tablename, page_nr=1))
 # ENDFUNCTION
