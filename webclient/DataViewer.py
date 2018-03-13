@@ -67,7 +67,7 @@ class DataViewer:
             table_size = query_result.iat[0, 0]
             self.maxrows = table_size
             
-        if((page_nr - 1) * nr_rows > self.maxrows):
+        if((page_nr - 1) * nr_rows >= self.maxrows):
             return False
         else:
             return True
