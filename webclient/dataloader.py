@@ -153,5 +153,5 @@ if __name__ == "__main__":
     test = DataLoader()
     test.create_new("zip", "zippy")
     # test.use_existing(0)
-    test.read_file("test_csv.zip", True)
+    test.read_file("test_csv.csv", True)
     test.end()

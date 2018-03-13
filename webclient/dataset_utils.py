@@ -139,17 +139,25 @@ def transform_dataset_table(request_data, set_id, tablename, page_nr):
 
 def transform_delete_attr(request_data, set_id, tablename):
     
-    form = DeleteAttrForm(request_data.form)
-
-    if not form.validate():
-        return redirect(url_for('transform_dataset_table', dataset_id=set_id, tablename=tablename, page_nr=1))
-
     dv = DataViewer()
 
-    if not form.select_attr.data in dv.get_attributes(set_id, tablename):
+    form = DeleteAttrForm(request_data.form)
+    
+    # set possible attribues
+    attrs = dv.get_attributes(set_id, tablename)
+    form.select_attr.choices = [(attrname, attrname) for attrname in attrs]
+
+    if not form.validate():
+        Logger.log("Invalid form")
         return redirect(url_for('transform_dataset_table', dataset_id=set_id, tablename=tablename, page_nr=1))
 
-    dt = DataTransformer()
+    
+
+    if not form.select_attr.data in dv.get_attributes(set_id, tablename):
+        Logger.log("Invalid attribute name.")
+        return redirect(url_for('transform_dataset_table', dataset_id=set_id, tablename=tablename, page_nr=1))
+
+    dt = DataTransformer(session['user_data']['user_id'])
 
     dt.delete_attribute(set_id, tablename, form.select_attr.data)
     flash(message="Attribute deleted.", category="success")
