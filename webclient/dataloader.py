@@ -2,6 +2,7 @@ import zipfile
 import os
 import shutil
 import psycopg2
+import re
 from db_wrapper import DBConnection
 
 
@@ -15,9 +16,11 @@ class DataLoader:
         self.tables = []
         # true if the first batch of files still has to be read
         self.first_batch = None
+        self.new_dataset = None
 
     def create_new(self, setname, description):
         self.first_batch = True
+        self.new_dataset = True
 
         with DBConnection() as db_conn:
             # insert dataset entry for the current dataset
@@ -34,8 +37,10 @@ class DataLoader:
 
     def use_existing(self, setid):
         self.first_batch = False
+        self.new_dataset = False
 
         found = None
+
         with DBConnection() as db_conn:
             db_conn.cursor().execute("SELECT EXISTS (SELECT TRUE FROM SYSTEM.datasets WHERE setid = %s);", [setid])
             found = db_conn.cursor().fetchone()[0]
@@ -51,28 +56,44 @@ class DataLoader:
 
         try:
             if filename.endswith(".csv"):
-                try:
-                    self.__csv(filename)
-                except psycopg2.ProgrammingError:
-                    print("Didn't read file " + filename)
+                self.__csv(filename)
 
             elif filename.endswith(".zip"):
                 self.__unzip(filename)
 
-            elif filename.endswith(".dump"):
+            elif filename.endswith(".dump") or filename.endswith(".sql"):
                 # doesn't work yet
-                self.__cancel()
+                self.__dump(filename)
 
             else:
                 raise ValueError("file type not supported")
 
         except:
-            if self.first_batch: self.__cancel()
+            # if no file was read successfully and no table exists in the dataset, delete the dataset
+            self.end()
             raise
 
+        # if at least 1 file was read successfully, first_batch is not true anymore
+        if len(self.tables):
+            self.first_batch = False
+
     def end(self):
-        if len(self.tables) == 0:
-            self.__cancel()
+        # if no file was read successfully and no table exists in the dataset, delete the dataset
+        if self.first_batch and len(self.tables) == 0:
+            self.cancel()
+        else:
+            with DBConnection() as db_conn:
+                if self.new_dataset:
+                    # create the backup schema
+                    db_conn.cursor().execute("CREATE SCHEMA original_{};".format(self.setid))
+
+                db_conn.cursor().execute("SET search_path TO original_{};".format(self.setid))
+
+                # copy all tables to the backup schema
+                for table in self.tables:
+                    db_conn.cursor().execute("SELECT * INTO {} FROM \"{}\".{}".format(table, self.setid, table))
+
+                db_conn.commit()
 
     def __csv(self, filename):
         column_names = []
@@ -116,7 +137,43 @@ class DataLoader:
             db_conn.commit()
 
     def __dump(self, filename):
-        return
+        # make a copy in case an error occurs
+        temp_tables = self.tables
+
+        with DBConnection() as db_conn:
+            """
+            Set up so that if an error accurs in the file, everything is ignored and nothing is commited
+            to the database
+            """
+            try:
+                with open(filename, 'r') as dump:
+                    for command in dump.read().strip().split(';'):
+
+                        if re.search("CREATE TABLE.*\(.*\)", command, re.DOTALL | re.IGNORECASE):
+                            # check for periods in table name, this is to prevent SQL injections
+                            if command.split()[2].count('.'):
+                                raise ValueError("Table names are not allowed to contain periods.")
+
+                            db_conn.cursor().execute("SET search_path TO {};".format(self.setid))
+                            db_conn.cursor().execute(command.replace("\n", ""))
+                            db_conn.commit()
+
+                            self.tables.append(command.split()[2])
+
+                        elif re.search("INSERT INTO.*", command, re.DOTALL | re.IGNORECASE):
+                            # check for periods in table name, this is to prevent SQL injections
+                            if command.split()[2].count('.'):
+                                raise ValueError("Table names are not allowed to contain periods.")
+
+                            db_conn.cursor().execute("SET search_path TO {};".format(self.setid))
+                            db_conn.cursor().execute(command.replace("\n", ""))
+                            db_conn.commit()
+                db_conn.commit()
+            except:
+                # all tables that were created should be removed from self.tables
+                self.tables = temp_tables
+                raise
+
 
     def __unzip(self, filename):
         # unzip the file
@@ -138,7 +195,7 @@ class DataLoader:
         # delete the temporary folder
         shutil.rmtree(".unzip_temp")
 
-    def __cancel(self):
+    def cancel(self):
         with DBConnection() as db_conn:
             db_conn.cursor().execute("DROP SCHEMA \"" + str(self.setid) + "\" CASCADE;")
             db_conn.cursor().execute("DELETE FROM SYSTEM.datasets AS d WHERE d.setid = %s;", [self.setid])
@@ -151,7 +208,8 @@ class DataLoader:
 
 if __name__ == "__main__":
     test = DataLoader()
-    test.create_new("zip", "zippy")
-    # test.use_existing(0)
-    test.read_file("test_csv.csv", True)
+    test.create_new("demo", "dataset for the demo")
+    # test.use_existing(52)
+    # test.read_file("Demo.zip", True)
+    test.read_file("load_departments.dump", True)
     test.end()
