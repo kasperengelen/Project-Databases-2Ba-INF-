@@ -5,7 +5,7 @@
 #   View information
 # SOURCE: wtforms documentation, stackoverflow and https://www.youtube.com/watch?v=zRwy8gtgJ1A&list=PLillGF-RfqbbbPz6GSEM9hLQObuQjNoj_&index=1
 
-from flask import render_template, flash, request, url_for, session, redirect, abort
+from flask import render_template, flash, request, url_for, session, redirect, abort, Blueprint
 from wtforms import StringField, PasswordField, validators
 from flask_wtf import FlaskForm
 from wtforms.validators import Length, InputRequired, Email, EqualTo, DataRequired
@@ -14,6 +14,19 @@ from passlib.hash import sha256_crypt
 import utils
 from functools import wraps
 
+# SOURCE: https://docs.python.org/2/library/functools.html
+def require_login(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        if 'logged_in' in session and session['logged_in']:
+            return func(*args, **kwargs)
+        else:
+            flash(message='Please log in to view this content.', category='warning')
+            return redirect(url_for('login'))
+    return wrapper
+# END FUNCTION
+
+################################################ FORMS ################################################
 
 class UserInformation:
     """Class that contains information about a user."""
@@ -30,7 +43,6 @@ class UserInformation:
     @staticmethod
     def from_id(id):
         """Returns a UserInformation object containing information about the user with the specified id.
-
         Raises RuntimeError if there is no user with the specified id.
         """
 
@@ -119,7 +131,6 @@ class UserInformation:
     # ENDMETHOD
 # ENDCLASS
 
-
 class UserRegisterForm(FlaskForm):
     """Class that represents a user registration form. The form has the following fields:
     Firstname and lastname fiels. These need to be between 1 and 50 characters long. Both are required.
@@ -165,15 +176,31 @@ class UserEditForm(FlaskForm):
                                           EqualTo('passwordconfirm', message="Passwords do not match."),
                                           Length(min=6, max=50, message="Password needs to be between 6 and 50 characters long.")])
     passwordconfirm = PasswordField('Confirm Password')
+# ENDCLASS
 
-def login_user(request_data):
+################################################ CALLBACKS ################################################
+
+user_pages = Blueprint('user_pages', __name__)
+
+@user_pages.route('/logout/', methods=['GET', 'POST'])
+@require_login
+def logout_user():
+    """Page that destroys the current session when visited."""
+    session["user_data"] = None
+    session["logged_in"] = False
+    flash(message="You are now logged out", category="success")
+    return redirect(url_for("index"))
+# ENDFUNCTION
+
+@user_pages.route('/login/', methods=['GET', 'POST'])
+def login_user():
     """Given the specified request data received from a POST or GET request, this will try to login
     a user with the data contained in the request. If no data is present in the request, this will return
     the login page."""
-    login_form = UserLoginForm(request_data.form)
+    login_form = UserLoginForm(request.form)
 
     # validate the data supplied by the form.
-    if request_data.method == 'POST': # There was POST data
+    if request.method == 'POST': # There was POST data
         if login_form.validate(): # The data supplied by the form was valid
 
             # check if the user exists in the database and if the
@@ -200,14 +227,15 @@ def login_user(request_data):
     # ENDIF
 # END FUNCTION
 
-def register_user(request_data):
+@user_pages.route('/register/', methods=['GET', 'POST'])
+def register_user():
     """Given the specified request data received from a POST or GET request, this will try to register
     a user with the data contained in the request. If no data is present in the request, this will return
     the register page."""
-    register_form = UserRegisterForm(request_data.form)
+    register_form = UserRegisterForm(request.form)
 
     # validate the data supplied by the form.
-    if request_data.method == 'POST': # There was POST data
+    if request.method == 'POST': # There was POST data
         if register_form.validate(): # The data supplied by the form was valid
             # Validated Post data -> try to register user
 
@@ -247,7 +275,10 @@ def register_user(request_data):
     # ENDIF
 # END FUNCTION
 
-def view_user(request_data, user_id):
+@user_pages.route('/user/profile/', defaults = {'user_id': None})
+@user_pages.route('/user/profile/<int:user_id>')
+@require_login
+def view_user(user_id):
     """Returns a view profile page for the specified user if the user exists, otherwise
     this returns an error page."""
     try:
@@ -257,14 +288,15 @@ def view_user(request_data, user_id):
         abort(404)
 # END FUNCTION
 
-def edit_user(request_data):
-    """Returns a page for editing the logged in user."""
-    # retrieve user data
+@user_pages.route('/user/edit/', methods=['GET', 'POST'])
+@require_login
+def edit_user():
+    """Returns a page for editing the information of the logged in user."""
 
     # create form
-    edit_form = UserEditForm(request_data.form)
+    edit_form = UserEditForm(request.form)
 
-    if request_data.method == 'POST': # There was POST data
+    if request.method == 'POST': # There was POST data
         if edit_form.validate(): # data was validated
             # retrieve current user id
             cur_user_id = session['user_data']['user_id']
@@ -308,16 +340,6 @@ def edit_user(request_data):
     return render_template('user_edit.html', form = edit_form)
 # END FUNCTION
 
-# SOURCE: https://docs.python.org/2/library/functools.html
-def require_login(func):
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        if 'logged_in' in session and session['logged_in']:
-            return func(*args, **kwargs)
-        else:
-            flash(message='Please log in to view this content.', category='warning')
-            return redirect(url_for('login'))
-    return wrapper
-# END FUNCTION
+
 
 

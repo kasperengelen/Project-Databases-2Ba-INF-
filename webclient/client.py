@@ -4,120 +4,21 @@ import dataset_utils
 from db_wrapper import DBConnection
 import utils
 
+from dataset_utils import dataset_pages
+from user_utils import user_pages
+
 app = Flask(__name__)
 app.config.update(dict(
     SECRET_KEY = "\xbf\xcf\xde\xee\xe8\xc1\x8c\\\xfd\xe6\\!t^(\x1c/\xc6l\xe1,\xc9#\xd7",
     WTF_CSRF_SECRET_KEY = "Uei\xc2&\x8a\x18.H\x87\xc5\x1d\xd1\xc8\xc3\xcf\xe5\xfft_\x8c:\x03r"
 ))
 
+app.register_blueprint(dataset_pages)
+app.register_blueprint(user_pages)
+
 @app.route('/')
 def index():
     return render_template('index.html')
-
-@app.route('/login/', methods=['GET', 'POST'])
-def login():
-    """Callback for the login page."""
-    return user_utils.login_user(request)
-
-@app.route('/register/', methods=['GET', 'POST'])
-def register():
-    """Callback for the register page. This is used to create new users."""
-    return user_utils.register_user(request)
-
-@app.route('/logout/')
-@user_utils.require_login
-def logout():
-    """Callback for the logout page. This simply overrides the session variables"""
-    session["user_id"] = None
-    session["logged_in"] = False
-
-    flash(message="You are now logged out", category="success")
-    return redirect(url_for("index"))
-
-@app.route('/user/profile/', defaults = {'user_id': None})
-@app.route('/user/profile/<int:user_id>')
-@user_utils.require_login
-def profile_other(user_id):
-    """View the profile of other users."""
-
-    if user_id is None:
-        user_id = session['user_data']['user_id']
-
-    return user_utils.view_user(request, user_id)
-
-@app.route('/user/edit/', methods=['GET', 'POST'])
-@user_utils.require_login
-def edit_userdata():
-    return user_utils.edit_user(request)
-
-@app.route('/dataset/list')
-@user_utils.require_login
-def list_datasets():
-    """Returns a list of datasets"""
-    return dataset_utils.list_dataset(request)
-
-@app.route('/dataset/<int:dataset_id>/view/')
-@user_utils.require_login
-def view_dataset_home(dataset_id):
-    """Given a specified ID, return a page that contains
-    information about the dataset. This page does not specify
-    information contained in the tables of the dataset."""
-    return dataset_utils.view_dataset_home(request, dataset_id)
-
-@app.route('/dataset/<int:dataset_id>/view/<string:tablename>', defaults={'page_nr':1})
-@app.route('/dataset/<int:dataset_id>/view/<string:tablename>/<int:page_nr>')
-@user_utils.require_login
-def view_dataset_table(dataset_id, tablename, page_nr):
-    """ Given the id of a dataset and the identifier of a table
-    of that dataset this returns the data contained in that dataset."""
-    return dataset_utils.view_dataset_table(request, dataset_id, tablename, page_nr)
-
-@app.route('/dataset/<int:dataset_id>/transform/<string:tablename>', defaults={'page_nr':1})
-@app.route('/dataset/<int:dataset_id>/transform/<string:tablename>/<int:page_nr>')
-@user_utils.require_login
-def transform_dataset_table(dataset_id, tablename, page_nr):
-    """Given the id of a dataset, the name of a table and a page nr,
-    this returns a page on which data can be transformed."""
-    return dataset_utils.transform_dataset_table(request, dataset_id, tablename, page_nr)
-
-@app.route('/dataset/<int:dataset_id>/transform/<string:tablename>/deleteattr', methods=['POST'])
-def transform_delete_attr(dataset_id, tablename):
-    """Callback for POST requests to delete an attribute from a table."""
-    return dataset_utils.transform_delete_attr(request, dataset_id, tablename)
-
-@app.route('/dataset/<int:dataset_id>/transform/<string:tablename>/findreplace', methods=['POST'])
-def transform_findreplace(dataset_id, tablename):
-    """Callback for POST request to find and replace values in the table."""
-    return dataset_utils.transform_findreplace(request, dataset_id, tablename)
-
-@app.route('/dataset/<int:dataset_id>/manage/', methods=['GET', 'POST'])
-@user_utils.require_login
-def manage_dataset(dataset_id):
-    """Manage the dataset with the specified id. If 
-    there is no dataset with the specified id, an error page is returned."""
-    return dataset_utils.manage_dataset(request, dataset_id)
-
-@app.route('/dataset/<int:dataset_id>/permissions')
-@user_utils.require_login
-def edit_perms_dataset(dataset_id):
-    """Return a page with which user permissions can be altered."""
-    return dataset_utils.edit_perms_dataset(request, dataset_id)
-
-@app.route('/dataset/<int:dataset_id>/add_user', methods=['POST'])
-@user_utils.require_login
-def add_user_dataset(dataset_id):
-    return dataset_utils.add_user_dataset(request, dataset_id)
-
-@app.route('/dataset/<int:dataset_id>/remove_user', methods=['POST'])
-@user_utils.require_login
-def remove_user_dataset(dataset_id):
-    return dataset_utils.remove_user_dataset(request, dataset_id)
-
-@app.route('/dataset/create', methods=['GET', 'POST'])
-@user_utils.require_login
-def create_dataset():
-    """Create a new dataset."""
-    return dataset_utils.create_dataset(request)
 
 #################################################### ERROR HANDLING PAGES ####################################################
 @app.errorhandler(403)

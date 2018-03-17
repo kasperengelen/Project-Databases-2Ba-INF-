@@ -1,29 +1,70 @@
 # file that contains all code related datasets.
 
-from flask import render_template, flash, request, url_for, session, redirect, abort
+from flask import render_template, flash, request, url_for, session, redirect, abort, Blueprint
 from wtforms import StringField, PasswordField, validators, TextAreaField, SelectField, HiddenField
 from flask_wtf import FlaskForm
 from wtforms.validators import Length, InputRequired, Email, EqualTo, DataRequired
 from db_wrapper import DBConnection
 from passlib.hash import sha256_crypt
-from utils import EnumCheck
-from utils import Logger
+from utils import EnumCheck, Logger
+import user_utils
 from DataViewer import DataViewer
 from DataTransformer import DataTransformer
 
+########################################### FORM CLASSES ###########################################
+
 class DatasetForm(FlaskForm):
+    """Form that queries the user for the metadata of a dataset."""
     name = StringField("Dataset name", [InputRequired(message="Name is required."), Length(min=2, max=64, message="Name must be between 6 and 64 characters long.")])
-
     description = TextAreaField("Description", [Length(min=0, max=256, message="Description can contain max 256 characters.")])
+# ENDCLASS
 
-def view_dataset_home(request_data, set_id):
+class FindReplaceForm(FlaskForm):
+    """Form for the search and replace transformation."""
+    select_attr = SelectField('Attribute', choices=[])
+    search = StringField('Search', [InputRequired(message="Input is required.")])
+    replacement = StringField('Replacement', [InputRequired(message="Input is required.")])
+# ENDCLASS
+
+class DeleteAttrForm(FlaskForm):
+    """Form for the delete attribute/column transformation."""
+    select_attr = SelectField('Attribute', choices=[])
+# ENDCLASS
+
+class AddUserForm(FlaskForm):
+    """Form to give a user permission to alter the dataset."""
+    email = StringField('Email', [
+        InputRequired(message="Email is required."),
+        Email(message="The supplied email address is not valid."),
+        Length(min=6, max=70, message="Email address should contain between 1 and 50 characters.")
+    ])
+    permission_type = SelectField('Permission Type', choices=[('admin', 'Admin'),('write', 'Write'),('read', 'Read')])
+# ENDCLASS
+
+class RemoveUserForm(FlaskForm):
+    """Form to revoke a user's permission to alter the dataset."""
+    userid = HiddenField('UserID')
+    email = HiddenField('Email', [Email()])
+    permission_type = HiddenField('Permission Type', [EnumCheck(message="Invalid permission type.", choises=['read', 'write', 'admin'])])
+# ENDCLASS
+
+########################################### CALLBACKS ###########################################
+
+# create blueprint for this module
+dataset_pages = Blueprint('dataset_pages', __name__)
+
+@dataset_pages.route('/dataset/<int:dataset_id>/')
+@user_utils.require_login
+def view_dataset_home(dataset_id):
     """Given a specified ID, return a page that contains
     information about the dataset. This page does not specify
     information contained in the tables of the dataset."""
 
+    dv = DataViewer()
+
     ## retrieve basic information
     with DBConnection() as db_conn:
-        db_conn.cursor().execute("SELECT * FROM SYSTEM.datasets WHERE setid = %s", [set_id])
+        db_conn.cursor().execute("SELECT * FROM SYSTEM.datasets WHERE setid = %s", [dataset_id])
         result = db_conn.cursor().fetchone()
 
         dataset_info = {
@@ -33,10 +74,10 @@ def view_dataset_home(request_data, set_id):
         }
     # ENDWITH
 
-    dv = DataViewer()
+    #dataset_info = dv.get_info(dataset_id)
 
     ## retrieve list of tables
-    table_list = dv.get_tablenames(set_id)
+    table_list = dv.get_tablenames(dataset_id)
 
     return render_template('dataset_view_home.html', 
                                 dataset_info = dataset_info, 
@@ -44,51 +85,10 @@ def view_dataset_home(request_data, set_id):
     # ENDWITH
 # ENDFUNCTION
 
-def view_dataset_table(request_data, set_id, tablename, page_nr):
-    """ Given the id of a dataset, the identifier of a table and a page_nr
-    of that dataset this returns the data contained in that dataset."""
-
-    dv = DataViewer()
-
-    if not dv.is_in_range(set_id, tablename, page_nr, 50):
-        flash(message="Page out of range.", category="error")
-        return redirect(url_for('view_dataset_home', dataset_id=set_id))
-
-    ## retrieve basic information
-    with DBConnection() as db_conn:
-        db_conn.cursor().execute("SELECT * FROM SYSTEM.datasets WHERE setid = %s", [set_id])
-        result = db_conn.cursor().fetchone()
-
-        dataset_info = {
-            "id":          result[0],
-            "displayName": result[1],
-            "description": result[2] 
-        }
-    # ENDWITH
-
-    page_indices = dv.get_page_indices(set_id, tablename, 50, page_nr)
-
-    table_data = dv.render_table(set_id, tablename, page_nr, 50)
-
-    return render_template('dataset_view_table.html', 
-                                dataset_info = dataset_info, 
-                                page_indices = page_indices, 
-                                table_data   = table_data,
-                                table_name = tablename,
-                                current_page = page_nr)
-# ENDFUNCTION
-
-########################################################################################## TIJDELIJK ##########################################################################################
-
-class FindReplaceForm(FlaskForm):
-    select_attr = SelectField('Attribute', choices=[])
-    search = StringField('Search', [InputRequired(message="Input is required.")])
-    replacement = StringField('Replacement', [InputRequired(message="Input is required.")])
-
-class DeleteAttrForm(FlaskForm):
-    select_attr = SelectField('Attribute', choices=[])
-
-def transform_dataset_table(request_data, set_id, tablename, page_nr):
+@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>', defaults = {'page_nr': 1})
+@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/<int:page_nr>')
+@user_utils.require_login
+def view_dataset_table(dataset_id, tablename, page_nr):
     """Given the id of a dataset, the name of a table and a page nr,
     this returns a page on which data can be transformed."""
     
@@ -103,18 +103,18 @@ def transform_dataset_table(request_data, set_id, tablename, page_nr):
     dv = DataViewer()
 
     # set possible attribues
-    attrs = dv.get_attributes(set_id, tablename)
+    attrs = dv.get_attributes(dataset_id, tablename)
     findrepl_form.select_attr.choices = [(attrname, attrname) for attrname in attrs]
     deleteattr_form.select_attr.choices = [(attrname, attrname) for attrname in attrs]
 
     ## retrieve information about table ##
-    if not dv.is_in_range(set_id, tablename, page_nr, 50):
+    if not dv.is_in_range(dataset_id, tablename, page_nr, 50):
         flash(message="Page out of range.", category="error")
-        return redirect(url_for('view_dataset_home', dataset_id=set_id))
+        return redirect(url_for('view_dataset_home', dataset_id=dataset_id))
 
     ## retrieve basic information
     with DBConnection() as db_conn:
-        db_conn.cursor().execute("SELECT * FROM SYSTEM.datasets WHERE setid = %s", [set_id])
+        db_conn.cursor().execute("SELECT * FROM SYSTEM.datasets WHERE setid = %s", [dataset_id])
         result = db_conn.cursor().fetchone()
 
         dataset_info = {
@@ -124,9 +124,9 @@ def transform_dataset_table(request_data, set_id, tablename, page_nr):
         }
     # ENDWITH
 
-    page_indices = dv.get_page_indices(set_id, tablename, 50, page_nr)
+    page_indices = dv.get_page_indices(dataset_id, tablename, 50, page_nr)
 
-    table_data = dv.render_table(set_id, tablename, page_nr, 50)
+    table_data = dv.render_table(dataset_id, tablename, page_nr, 50)
 
     return render_template('dataset_transform.html', 
                                                 dataset_info = dataset_info,
@@ -137,11 +137,13 @@ def transform_dataset_table(request_data, set_id, tablename, page_nr):
                                                 findrepl_form = findrepl_form)
 # ENDFUNCTION
 
-def transform_delete_attr(request_data, set_id, tablename):
+@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/deleteattr')
+@user_utils.require_login
+def transform_deleteattr(dataset_id, tablename):
     
     dv = DataViewer()
 
-    form = DeleteAttrForm(request_data.form)
+    form = DeleteAttrForm(request.form)
     
     # set possible attributes
     attrs = dv.get_attributes(set_id, tablename)
@@ -149,72 +151,76 @@ def transform_delete_attr(request_data, set_id, tablename):
 
     if not form.validate():
         Logger.log("Invalid form")
-        return redirect(url_for('transform_dataset_table', dataset_id=set_id, tablename=tablename, page_nr=1))
+        return redirect(url_for('transform_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 
     dt = DataTransformer(session['user_data']['user_id'])
 
-    dt.delete_attribute(set_id, tablename, form.select_attr.data)
+    dt.delete_attribute(dataset_id, tablename, form.select_attr.data)
     flash(message="Attribute deleted.", category="success")
 
-    return redirect(url_for('transform_dataset_table', dataset_id=set_id, tablename=tablename, page_nr=1))
+    return redirect(url_for('transform_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 # ENDFUNCTION
 
-def transform_findreplace(request_data, set_id, tablename):
+@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/findreplace')
+@user_utils.require_login
+def transform_findreplace(dataset_id, tablename):
 
     dv = DataViewer()
 
-    form = FindReplaceForm(request_data.form)
+    form = FindReplaceForm(request.form)
 
     # set possible attributes
-    attrs = dv.get_attributes(set_id, tablename)
+    attrs = dv.get_attributes(dataset_id, tablename)
     form.select_attr.choices = [(attrname, attrname) for attrname in attrs]
 
     if not form.validate():
         Logger.log("Invalid form")
-        return redirect(url_for('transform_dataset_table', dataset_id=set_id, tablename=tablename, page_nr=1))
+        return redirect(url_for('transform_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 
     dt = DataTransformer(session['user_data']['user_id'])
     try:
-        dt.find_and_replace(set_id, tablename, form.select_attr.data, form.search.data, form.replacement.data)
+        dt.find_and_replace(dataset_id, tablename, form.select_attr.data, form.search.data, form.replacement.data)
         flash(message="Find and replace successfull.", category="success")
     except:
         flash(message="No matches found.", category="error")
 
-    return redirect(url_for('transform_dataset_table', dataset_id=set_id, tablename=tablename, page_nr=1))
+    return redirect(url_for('transform_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 # ENDFUNCTION
 
-########################################################################################## TIJDELIJK ##########################################################################################
-
-def create_dataset(request_data):
+@dataset_pages.route('/dataset/create', methods=['GET', 'POST'])
+@user_utils.require_login
+def create_dataset():
     """Returns a page where a new dataset can be created.
     The current logged in user will be made administrator
     of the new dataset."""
 
     # CREATE FORM
-    form = DatasetForm(request_data.form)
+    form = DatasetForm(request.form)
 
-    if request_data.method == 'POST' and form.validate(): # there was valid submitted data
+    if request.method == 'POST' and form.validate(): # there was valid submitted data
         with DBConnection() as db_conn:
             # INSERT DATA INTO DB
             db_conn.cursor().execute("INSERT INTO SYSTEM.datasets(setname, description) VALUES (%s, %s) RETURNING setid;", [form.name.data, form.description.data])
             db_conn.commit()
 
             # retrieve ID
-            set_id = db_conn.cursor().fetchone()[0]
+            dataset_id = db_conn.cursor().fetchone()[0]
 
             # SET PERMISSIONS
-            db_conn.cursor().execute("INSERT INTO SYSTEM.set_permissions(userid, setid, permission_type) VALUES (%s, %s, 'admin');", [session['user_data']['user_id'], set_id])
+            db_conn.cursor().execute("INSERT INTO SYSTEM.set_permissions(userid, setid, permission_type) VALUES (%s, %s, 'admin');", [session['user_data']['user_id'], dataset_id])
             db_conn.commit()
         # ENDWITH
 
         flash(message="The dataset was created.", category="success")
-        return redirect(url_for('view_dataset', dataset_id=set_id))
+        return redirect(url_for('view_dataset', dataset_id=dataset_id))
     else: # no submitted data or invalid data
         return render_template('dataset_create.html', form=form)
     # ENDIF
 # ENDFUNCTION
 
-def list_dataset(request_data):
+@dataset_pages.route('/dataset/list')
+@user_utils.require_login
+def list_dataset():
     """Returns a page that lists all datasets associated
     with the current user."""
 
@@ -227,7 +233,6 @@ def list_dataset(request_data):
         # iterate over datasets
         for dataset in results:
             setid        = dataset[0]
-            print(setid)
             display_name = dataset[1]
             description  = dataset[2]
 
@@ -242,18 +247,20 @@ def list_dataset(request_data):
     return render_template('dataset_list.html', setlist = dataset_list)
 # ENDFUNCTION
 
-def manage_dataset(request_data, set_id):
+@dataset_pages.route('/dataset/<int:dataset_id>/manage/', methods=['GET', 'POST'])
+@user_utils.require_login
+def manage_dataset(dataset_id):
     """Returns a page where the name and the permissions
     for a dataset can be edited."""
 
     # CREATE FORM
-    form = DatasetForm(request_data.form)
+    form = DatasetForm(request.form)
 
-    if request_data.method == 'POST' and form.validate: # there was form data
+    if request.method == 'POST' and form.validate: # there was form data
         if form.validate(): # form data was valid
             with DBConnection() as db_conn:
                 db_conn.cursor().execute("UPDATE SYSTEM.datasets SET setname = %s, description = %s WHERE setid = %s;", 
-                                    [form.name.data, form.description.data, set_id])
+                                    [form.name.data, form.description.data, dataset_id])
                 db_conn.commit()
 
                 flash("Information is updated.")
@@ -263,7 +270,7 @@ def manage_dataset(request_data, set_id):
         # retrieve data from DB
         with DBConnection() as db_conn:
             # retrieve data
-            db_conn.cursor().execute("SELECT * FROM SYSTEM.datasets WHERE setid = %s;", [set_id])
+            db_conn.cursor().execute("SELECT * FROM SYSTEM.datasets WHERE setid = %s;", [dataset_id])
             result = db_conn.cursor().fetchone()
 
             # fill form
@@ -275,25 +282,9 @@ def manage_dataset(request_data, set_id):
     return render_template('dataset_manage.html', form = form)
 # ENDFUNCTION
 
-class AddUserForm(FlaskForm):
-    """Form to give a user permission to alter the dataset."""
-    email = StringField('Email', [
-        InputRequired(message="Email is required."),
-        Email(message="The supplied email address is not valid."),
-        Length(min=6, max=70, message="Email address should contain between 1 and 50 characters.")
-    ])
-
-    permission_type = SelectField('Permission Type', choices=[('admin', 'Admin'),('write', 'Write'),('read', 'Read')])
-# ENDCLASS
-
-class RemoveUserForm(FlaskForm):
-    """Form to revoke a user's permission to alter the dataset."""
-    userid = HiddenField('UserID')
-    email = HiddenField('Email', [Email()])
-    permission_type = HiddenField('Permission Type', [EnumCheck(message="Invalid permission type.", choises=['read', 'write', 'admin'])])
-# ENDCLASS
-
-def edit_perms_dataset(request_data, set_id):
+@dataset_pages.route('/dataset/<int:dataset_id>/permissions')
+@user_utils.require_login
+def edit_perms_dataset(dataset_id):
     """Returns a page where the name and the permissions for
     a dataset can be edited."""
 
@@ -307,7 +298,7 @@ def edit_perms_dataset(request_data, set_id):
         db_conn.cursor().execute("SELECT UserAccs.userid, UserAccs.fname, UserAccs.lname, UserAccs.email, Perms.permission_type "
                                         "FROM SYSTEM.user_accounts AS UserAccs "
                                         "INNER JOIN SYSTEM.set_permissions AS Perms "
-                                        "ON UserAccs.userid = Perms.userid WHERE setid=%s AND permission_type='admin' AND UserAccs.userid <> %s; ", [set_id, session['user_data']['user_id']])
+                                        "ON UserAccs.userid = Perms.userid WHERE setid=%s AND permission_type='admin' AND UserAccs.userid <> %s; ", [dataset_id, session['user_data']['user_id']])
 
         results = db_conn.cursor().fetchall()
 
@@ -333,7 +324,7 @@ def edit_perms_dataset(request_data, set_id):
         db_conn.cursor().execute("SELECT UserAccs.userid, UserAccs.fname, UserAccs.lname, UserAccs.email, Perms.permission_type "
                                         "FROM SYSTEM.user_accounts AS UserAccs "
                                         "INNER JOIN SYSTEM.set_permissions AS Perms "
-                                        "ON UserAccs.userid = Perms.userid WHERE setid=%s AND permission_type='write' AND UserAccs.userid <> %s; ", [set_id, session['user_data']['user_id']])
+                                        "ON UserAccs.userid = Perms.userid WHERE setid=%s AND permission_type='write' AND UserAccs.userid <> %s; ", [dataset_id, session['user_data']['user_id']])
 
         results = db_conn.cursor().fetchall()
 
@@ -358,7 +349,7 @@ def edit_perms_dataset(request_data, set_id):
         db_conn.cursor().execute("SELECT UserAccs.userid, UserAccs.fname, UserAccs.lname, UserAccs.email, Perms.permission_type "
                                         "FROM SYSTEM.user_accounts AS UserAccs "
                                         "INNER JOIN SYSTEM.set_permissions AS Perms "
-                                        "ON UserAccs.userid = Perms.userid WHERE setid=%s AND permission_type='read' AND UserAccs.userid <> %s; ", [set_id, session['user_data']['user_id']])
+                                        "ON UserAccs.userid = Perms.userid WHERE setid=%s AND permission_type='read' AND UserAccs.userid <> %s; ", [dataset_id, session['user_data']['user_id']])
 
         results = db_conn.cursor().fetchall()
 
@@ -377,20 +368,22 @@ def edit_perms_dataset(request_data, set_id):
         # ENDFOR
     # ENDWITH
 
-    return render_template('dataset_permissions.html', setid = set_id, form = form_add_user, admin_list = admin_list, read_list = read_list, write_list = write_list)
+    return render_template('dataset_permissions.html', setid = dataset_id, form = form_add_user, admin_list = admin_list, read_list = read_list, write_list = write_list)
 # ENDFUNCTION
 
-def add_user_dataset(request_data, set_id):
+@dataset_pages.route('/dataset/<int:dataset_id>/add_user', methods=['POST'])
+@user_utils.require_login
+def add_user_dataset(dataset_id):
     """Callback that adds the user contained in
     the POST data from the specified dataset."""
 
     # read form
-    form = AddUserForm(request_data.form)
+    form = AddUserForm(request.form)
 
     # validate form
     if not form.validate():
         flash(message="Invalid form, please check email and permission type.", category="error")
-        return redirect(url_for('edit_perms_dataset', dataset_id=set_id))
+        return redirect(url_for('edit_perms_dataset', dataset_id=dataset_id))
 
     with DBConnection() as db_conn:
         ## check if user exists ##
@@ -398,65 +391,61 @@ def add_user_dataset(request_data, set_id):
         result = db_conn.cursor().fetchone()
         if result is None:
             flash(message="User with specified email address does not exist.", category="error")
-            return redirect(url_for('edit_perms_dataset', dataset_id=set_id))
+            return redirect(url_for('edit_perms_dataset', dataset_id=dataset_id))
         # ENDIF
 
         ## check if permission already exists for user ##
-        db_conn.cursor().execute("SELECT * FROM SYSTEM.set_permissions WHERE userid=(SELECT userid FROM SYSTEM.user_accounts WHERE email=%s) AND setid=%s", [form.email.data, set_id])
+        db_conn.cursor().execute("SELECT * FROM SYSTEM.set_permissions WHERE userid=(SELECT userid FROM SYSTEM.user_accounts WHERE email=%s) AND setid=%s", [form.email.data, dataset_id])
         result = db_conn.cursor().fetchone()
 
         if result is not None:
             flash(message="Specified user already has permissions for specified data set.", category="error")
-            return redirect(url_for('edit_perms_dataset', dataset_id=set_id))
+            return redirect(url_for('edit_perms_dataset', dataset_id=dataset_id))
         # ENDIF
 
         ## add permission ##
-        db_conn.cursor().execute("INSERT INTO SYSTEM.set_permissions(userid, setid, permission_type) VALUES ((SELECT userid FROM SYSTEM.user_accounts WHERE email=%s), %s, %s);", [form.email.data, set_id, form.permission_type.data])
+        db_conn.cursor().execute("INSERT INTO SYSTEM.set_permissions(userid, setid, permission_type) VALUES ((SELECT userid FROM SYSTEM.user_accounts WHERE email=%s), %s, %s);", [form.email.data, dataset_id, form.permission_type.data])
         result = db_conn.commit()
     # ENDWITH
 
-    return redirect(url_for('edit_perms_dataset', dataset_id=set_id))
+    return redirect(url_for('edit_perms_dataset', dataset_id=dataset_id))
 # ENDFUNCTION
 
-def remove_user_dataset(request_data, set_id):
+@dataset_pages.route('/dataset/<int:dataset_id>/remove_user', methods=['POST'])
+@user_utils.require_login
+def remove_user_dataset(dataset_id):
     """Callback that removes the user contained in
     the POST data from the specified dataset."""
 
     # create form
-    form = RemoveUserForm(request_data.form)
+    form = RemoveUserForm(request.form)
 
     # validate
     if not form.validate():
-        Logger.log("'remove_user_dataset(request_data, set_id)': Form not valid.")
-        return redirect(url_for('edit_perms_dataset', dataset_id=set_id))
+        return redirect(url_for('edit_perms_dataset', dataset_id=dataset_id))
     # ENDIF
 
     with DBConnection() as db_conn:
         ## check that user does not edit own permissions ##
 
         if form.email.data == session['user_data']['email']:
-            print(form.email.data)
-            print(session['user_data']['email'])
             flash(message="User cannot remove itself from dataset.", category="error")
-            Logger.log("'remove_user_dataset(request_data, set_id)': Cannot remove self.")
-            return redirect(url_for('edit_perms_dataset', dataset_id=set_id))
+            return redirect(url_for('edit_perms_dataset', dataset_id=dataset_id))
         # ENDIF
 
         ## check if user exists ##
         db_conn.cursor().execute("SELECT * FROM SYSTEM.user_accounts WHERE email=%s", [form.email.data])
         result = db_conn.cursor().fetchone()
         if result is None:
-            Logger.log("'remove_user_dataset(request_data, set_id)': User with email does not exist.")
-            return redirect(url_for('edit_perms_dataset', dataset_id=set_id))
+            return redirect(url_for('edit_perms_dataset', dataset_id=dataset_id))
         # ENDIF
 
         ## check if permission already exists for user ##
-        db_conn.cursor().execute("SELECT * FROM SYSTEM.set_permissions WHERE userid=(SELECT userid FROM SYSTEM.user_accounts WHERE email=%s) AND setid=%s AND permission_type=%s", [form.email.data, set_id, form.permission_type.data])
+        db_conn.cursor().execute("SELECT * FROM SYSTEM.set_permissions WHERE userid=(SELECT userid FROM SYSTEM.user_accounts WHERE email=%s) AND setid=%s AND permission_type=%s", [form.email.data, dataset_id, form.permission_type.data])
         result = db_conn.cursor().fetchone()
 
         if result is None:
-            Logger.log("'remove_user_dataset(request_data, set_id)': No permissions to remove.")
-            return redirect(url_for('edit_perms_dataset', dataset_id=set_id))
+            return redirect(url_for('edit_perms_dataset', dataset_id=dataset_id))
         # ENDIF
 
         ## remove permission ##
@@ -464,10 +453,9 @@ def remove_user_dataset(request_data, set_id):
                                     "userid=(SELECT userid FROM SYSTEM.user_accounts WHERE email=%s) "
                                     "AND setid=%s "
                                     "AND permission_type=%s;", 
-                                                [form.email.data, set_id, form.permission_type.data])
+                                                [form.email.data, dataset_id, form.permission_type.data])
         db_conn.commit()
     # ENDWITH
 
-    return redirect(url_for('edit_perms_dataset', dataset_id=set_id))
+    return redirect(url_for('edit_perms_dataset', dataset_id=dataset_id))
 # ENDFUNCTION
-
