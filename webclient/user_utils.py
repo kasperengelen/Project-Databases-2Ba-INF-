@@ -22,7 +22,7 @@ def require_login(func):
             return func(*args, **kwargs)
         else:
             flash(message='Please log in to view this content.', category='warning')
-            return redirect(url_for('login'))
+            return redirect(url_for('user_pages.login_user'))
     return wrapper
 # END FUNCTION
 
@@ -31,13 +31,14 @@ def require_login(func):
 class UserInformation:
     """Class that contains information about a user."""
 
-    def __init__(self, user_id, firstname, lastname, email, register_date):
+    def __init__(self, user_id, firstname, lastname, email, register_date, admin):
         """Constructor that specifies each field."""
         self.user_id = user_id
         self.firstname = firstname
         self.lastname = lastname
         self.email = email
         self.register_date = register_date
+        self.admin = admin
     # ENDMETHOD
 
     @staticmethod
@@ -57,7 +58,8 @@ class UserInformation:
                                     str(result[1]), 
                                     str(result[2]),
                                     str(result[3]),
-                                    utils.sql_time_to_dict(str(result[5])))
+                                    utils.sql_time_to_dict(str(result[5])),
+                                    bool(result[6]))
         # ENDWITH
     # ENDMETHOD
 
@@ -85,7 +87,8 @@ class UserInformation:
                                     str(result[1]), 
                                     str(result[2]),
                                     str(result[3]),
-                                    utils.sql_time_to_dict(str(result[5])))
+                                    utils.sql_time_to_dict(str(result[5])),
+                                    bool(result[6]))
         # ENDWITH
 
     @staticmethod
@@ -107,7 +110,8 @@ class UserInformation:
                                     str(result[1]), 
                                     str(result[2]),
                                     str(result[3]),
-                                    utils.sql_time_to_dict(str(result[5])))
+                                    utils.sql_time_to_dict(str(result[5])),
+                                    bool(result[6]))
         # ENDWITH
     # ENDMETHOD
 
@@ -126,7 +130,8 @@ class UserInformation:
                 "hr": self.register_date['hr'],
                 "min": self.register_date['min'],
                 "sec": self.register_date['sec']
-            }
+            },
+            "admin": self.admin
         }
     # ENDMETHOD
 # ENDCLASS
@@ -266,7 +271,7 @@ def register_user():
             # notify user that the registration is complete
             flash(message="You are now registered as a user.", category="success")
 
-            return redirect(url_for("login"))
+            return redirect(url_for("user_pages.login_user"))
         else: # The data supplied by the form was not valid.
             return render_template('register.html',  form = register_form)
         #ENDIF

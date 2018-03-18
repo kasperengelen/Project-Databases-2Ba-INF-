@@ -7,7 +7,8 @@ CREATE TABLE SYSTEM.user_accounts (
     lname         VARCHAR(255) NOT NULL,
     email         VARCHAR(255) UNIQUE NOT NULL,
     passwd        VARCHAR(255) NOT NULL,
-    register_date TIMESTAMP    DEFAULT now(),
+    register_date TIMESTAMP    DEFAULT now() NOT NULL,
+    admin         BOOLEAN      DEFAULT FALSE NOT NULL,
 
     PRIMARY KEY(userid)
 );

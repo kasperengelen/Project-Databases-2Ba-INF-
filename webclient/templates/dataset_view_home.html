@@ -13,27 +13,21 @@
 	</div>    		
 
     <div class="jumbotron">
-		<div>
-			<table>
-				{% if table_list %}
-					<tr>
-						<th>Table</th>
-						<th></th>
-						<th></th>
-					</tr>
-					
+		<table>
+			{% if table_list %}
+				<tr>
+					<th>Tables</th>
+				</tr>
 
-					{% for table in table_list %}
-					<tr>
-						<td>{{ table }}</td>
-						<td><a href="/dataset/{{ dataset_info.id }}/view/{{ table }}">View</a></td>
-						<td><a href="/dataset/{{ dataset_info.id }}/transform/{{ table }}">Transform</a></td>
-					</tr>
-					{% endfor %}
-					
-				{% endif %}
-			</table>
-		</div>
+				{% for table in table_list %}
+				<tr>
+					<td><a href="/dataset/{{ dataset_info.id }}/{{ table }}">{{ table }}</a></td>
+				</tr>
+				{% endfor %}
+				
+			{% endif %}
+		</table>
+	</div>
 
 
 {% endblock %}
