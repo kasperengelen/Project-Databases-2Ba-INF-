@@ -18,8 +18,14 @@
     <div class="jumbotron">
     	<div class="text-center">
     		{% for index in page_indices %}
-				<p style="display: inline-block;"><a href="/dataset/{{ dataset_info.id }}/{{ table_name }}/{{ index }}">
-					{{ index }}</a></p>	
+    			{% if index == "..." %}
+    				<p style="display: inline-block;">...</p>
+    			{% else %}
+					<p style="display: inline-block;"><a style="color: black;"
+						href="/dataset/{{ dataset_info.id }}/{{ table_name }}/{{ index }}">
+						{{ index }}</a></p>	
+    			{% endif %}
+    			
     		{% endfor %}
     	</div>    		
 

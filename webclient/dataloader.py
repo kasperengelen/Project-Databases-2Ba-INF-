@@ -3,6 +3,7 @@ import os
 import shutil
 import psycopg2
 import re
+from DataTransformer import DataTransformer
 from db_wrapper import DBConnection
 
 
@@ -180,11 +181,12 @@ class DataLoader:
         # unzip the file
         zip = zipfile.ZipFile(filename, 'r')
         # each dataset gets an unzip folder, so that no data can overlap
-        zip.extractall(".unzip_temp_" + self.setid)
+        unzip_folder = ".unzip_temp_" + str(self.setid)
+        zip.extractall(unzip_folder)
         zip.close()
 
         # load all files that were extracted
-        directory = os.fsencode(".unzip_temp")
+        directory = os.fsencode(unzip_folder)
         for sub_file in os.listdir(directory):
             sub_filename = os.fsdecode(sub_file)
             # files other than csv's are ignored
@@ -195,7 +197,7 @@ class DataLoader:
                     print("Didn't read file " + sub_filename)
 
         # delete the temporary folder
-        shutil.rmtree(".unzip_temp_" + self.setid)
+        shutil.rmtree(unzip_folder)
 
     def cancel(self):
         with DBConnection() as db_conn:
@@ -203,15 +205,15 @@ class DataLoader:
             db_conn.cursor().execute("DELETE FROM SYSTEM.datasets AS d WHERE d.setid = %s;", [self.setid])
             db_conn.commit()
 
-    def join_tables(self, table1, table2, columns):
-        # not implemented yet
-        return
-
 
 if __name__ == "__main__":
-    test = DataLoader()
-    test.create_new("demo", "dataset for the demo")
-    # test.use_existing(52)
-    # test.read_file("Demo.zip", True)
-    test.read_file("load_departments.dump", True)
-    test.end()
+    # test = DataLoader()
+    # # test.create_new("demo", "dataset for the demo")
+    # test.use_existing(12)
+    # test.read_file("test_csv.zip", True)
+    # # test.read_file("load_departments.dump", True)
+    dt = DataTransformer(3, True)
+    # dt.change_column_name(12, "test_csv", "num2", "numero2")
+    dt.join_tables(12, "test_csv", "test_csv_x", ["numero2"], ["num2"], "combined")
+
+    # test.end()
