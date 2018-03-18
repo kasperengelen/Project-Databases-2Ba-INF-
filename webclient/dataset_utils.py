@@ -8,6 +8,7 @@ from db_wrapper import DBConnection
 from passlib.hash import sha256_crypt
 from utils import EnumCheck, Logger
 import user_utils
+from utils import get_db
 from DataViewer import DataViewer
 from DataTransformer import DataTransformer
 
@@ -101,6 +102,10 @@ def view_dataset_table(dataset_id, tablename, page_nr):
 
     # set attribute values
     dv = DataViewer()
+
+    if tablename not in dv.get_tablenames(dataset_id):
+        flash(message="Invalid table.", category="error")
+        return redirect(url_for('dataset_pages.view_dataset_home', dataset_id=dataset_id))
 
     # set possible attribues
     attrs = dv.get_attributes(dataset_id, tablename)
@@ -224,25 +229,39 @@ def list_dataset():
     """Returns a page that lists all datasets associated
     with the current user."""
 
-    dataset_list = []
+    # dataset_list = []
 
-    with DBConnection() as db_conn:
-        db_conn.cursor().execute("SELECT * FROM SYSTEM.datasets WHERE setid IN (SELECT setid FROM SYSTEM.set_permissions WHERE userid = %s);", [session['user_data']['user_id']])
-        results = db_conn.cursor().fetchall()
+    # with DBConnection() as db_conn:
+    #     db_conn.cursor().execute("SELECT * FROM SYSTEM.datasets WHERE setid IN (SELECT setid FROM SYSTEM.set_permissions WHERE userid = %s);", [session['user_data']['user_id']])
+    #     results = db_conn.cursor().fetchall()
 
-        # iterate over datasets
-        for dataset in results:
-            setid        = dataset[0]
-            display_name = dataset[1]
-            description  = dataset[2]
+    #     # iterate over datasets
+    #     for dataset in results:
+    #         setid        = dataset[0]
+    #         display_name = dataset[1]
+    #         description  = dataset[2]
 
-            dataset_list.append({
-                "id":          setid,
-                "displayName": display_name,
-                "description": description
-            })
-        # ENDIF
-    # ENDWITH
+    #         dataset_list.append({
+    #             "id":          setid,
+    #             "displayName": display_name,
+    #             "description": description
+    #         })
+    #     # ENDFOR
+    # # ENDWITH
+
+    get_db().cursor().execute("SELECT * FROM SYSTEM.datasets WHERE setid IN (SELECT setid FROM SYSTEM.set_permissions WHERE userid = %s);", [session['user_data']['user_id']])
+    results = get_db().cursor().fetchall()
+    # iterate over datasets
+    for dataset in results:
+        setid        = dataset[0]
+        display_name = dataset[1]
+        description  = dataset[2]
+
+        dataset_list.append({
+            "id":          setid,
+            "displayName": display_name,
+            "description": description
+        })
 
     return render_template('dataset_list.html', setlist = dataset_list)
 # ENDFUNCTION

@@ -46,3 +46,10 @@ class Logger:
     @staticmethod
     def log(message):
         print("[ERROR] " + message)
+
+def init_db():
+    global db_conn
+    db_conn = psycopg2.connect("dbname='{}' user='{}' host='{}' password='{}'".format("projectdb18", "dbadmin", "localhost", "AdminPass123"))
+
+def get_db():
+    return db_conn

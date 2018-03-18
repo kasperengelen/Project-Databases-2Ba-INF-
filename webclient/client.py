@@ -1,12 +1,8 @@
-from flask import Flask, flash, render_template, redirect, request, url_for, session
-import user_utils
-import dataset_utils
-from db_wrapper import DBConnection
+from flask import Flask, render_template
 import utils
-
-from dataset_utils import dataset_pages
-from user_utils import user_pages
-from admin_utils import admin_pages
+import dataset_utils
+import user_utils
+import admin_utils
 
 app = Flask(__name__)
 app.config.update(dict(
@@ -14,9 +10,9 @@ app.config.update(dict(
     WTF_CSRF_SECRET_KEY = "Uei\xc2&\x8a\x18.H\x87\xc5\x1d\xd1\xc8\xc3\xcf\xe5\xfft_\x8c:\x03r"
 ))
 
-app.register_blueprint(dataset_pages)
-app.register_blueprint(user_pages)
-app.register_blueprint(admin_pages)
+app.register_blueprint(dataset_utils.dataset_pages)
+app.register_blueprint(user_utils.user_pages)
+app.register_blueprint(admin_utils.admin_pages)
 
 @app.route('/')
 def index():
@@ -37,3 +33,5 @@ def handle_500(e):
 
 if __name__ == '__main__':
     app.run(debug=True)
+
+    utils.init_db()
