@@ -26,6 +26,8 @@ def require_login(func):
     return wrapper
 # END FUNCTION
 
+
+
 ################################################ FORMS ################################################
 
 class UserInformation:
@@ -216,6 +218,8 @@ def login_user():
                     session['logged_in'] = True
                     session['user_data'] = user_data.toDict()
 
+                    print(session['user_data'])
+
                     flash(message="You are now logged in.", category="success")
                     return redirect(url_for("index"))
                     
@@ -344,7 +348,3 @@ def edit_user():
 
     return render_template('user_edit.html', form = edit_form)
 # END FUNCTION
-
-
-
-
