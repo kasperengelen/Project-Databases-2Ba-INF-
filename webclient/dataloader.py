@@ -175,10 +175,12 @@ class DataLoader:
                 raise
 
 
+
     def __unzip(self, filename):
         # unzip the file
         zip = zipfile.ZipFile(filename, 'r')
-        zip.extractall(".unzip_temp")
+        # each dataset gets an unzip folder, so that no data can overlap
+        zip.extractall(".unzip_temp_" + self.setid)
         zip.close()
 
         # load all files that were extracted
@@ -193,7 +195,7 @@ class DataLoader:
                     print("Didn't read file " + sub_filename)
 
         # delete the temporary folder
-        shutil.rmtree(".unzip_temp")
+        shutil.rmtree(".unzip_temp_" + self.setid)
 
     def cancel(self):
         with DBConnection() as db_conn:
