@@ -212,7 +212,7 @@ def create_dataset():
         # ENDWITH
 
         flash(message="The dataset was created.", category="success")
-        return redirect(url_for('dataset_pages.view_dataset', dataset_id=dataset_id))
+        return redirect(url_for('dataset_pages.view_dataset_home', dataset_id=dataset_id))
     else: # no submitted data or invalid data
         return render_template('dataset_create.html', form=form)
     # ENDIF
