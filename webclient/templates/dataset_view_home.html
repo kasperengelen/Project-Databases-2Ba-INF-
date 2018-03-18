@@ -26,8 +26,7 @@
 					{% for table in table_list %}
 					<tr>
 						<td>{{ table }}</td>
-						<td><a href="/dataset/{{ dataset_info.id }}/view/{{ table }}">View</a></td>
-						<td><a href="/dataset/{{ dataset_info.id }}/transform/{{ table }}">Transform</a></td>
+						<td><a href="/dataset/{{ dataset_info.id }}/{{ table }}">View</a></td>
 					</tr>
 					{% endfor %}
 					
