@@ -5,7 +5,7 @@
         </div>
         <ul class="nav navbar-nav">
             <li><a href="/">Home</a></li>
-            {% if session.user_data.admin %}
+            {% if true %}
                 <li class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" href="#">Admin</a>
                 <ul class="dropdown-menu">
                     <li><a href="{{ url_for('admin_pages.manage_users') }}">Manage Users</a></li>
@@ -19,12 +19,12 @@
             {% if session.logged_in %}
                 <li class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" href="#"><span class="glyphicon glyphicon-user"></span></a></li>
                 <ul class="dropdown-menu">
-                    <li><a href="/user/profile/">My Profile</a></li>
-                    <li><a href="/dataset/list">My Datasets</a></li>
+                    <li><a href="{{ url_for('user_pages.view_user') }}">My Profile</a></li>
+                    <li><a href="{{ url_for('user_pages.edit_user') }}">My Datasets</a></li>
                 </ul>
                 <li><a href="/logout">Logout</a></li>
             {% else %}
-                <li><a href="/login">Login/Register</a></li>
+                <li><a href="{{ url_for('user_pages.login_user') }}">Login/Register</a></li>
             {% endif %}
         </ul>
     </div>

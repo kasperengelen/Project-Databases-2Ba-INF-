@@ -3,10 +3,10 @@
 {% block body %}
 	<div class="jumbotron text-center" style="padding: 1%">
 		<div class="pull-right text-center">
-			<a href="/dataset/{{ dataset_info.id }}/manage" class="btn btn-primary">Manage</a>
+			<a href="{{ url_for('dataset_pages.manage_dataset', dataset_id=dataset_info.id) }}" class="btn btn-primary">Manage</a>
 			</br>
 			</br>
-			<a href="/dataset/{{ dataset_info.id }}/permissions" class="btn btn-primary">Permissions</a>
+			<a href="{{ url_for('dataset_pages.edit_perms_dataset', dataset_id=dataset_info.id) }}" class="btn btn-primary">Permissions</a>
 		</div>
 
 		<div class="text-center">
@@ -22,8 +22,8 @@
     				<p style="display: inline-block;">...</p>
     			{% else %}
 					<p style="display: inline-block;"><a style="color: black;"
-						href="/dataset/{{ dataset_info.id }}/{{ table_name }}/{{ index }}">
-						{{ index }}</a></p>	
+						href="{{ url_for('dataset_pages.manage_dataset', dataset_id=dataset_info.id, tablename=table, page_nr=index) }}">
+							{{ index }}</a></p>	
     			{% endif %}
     			
     		{% endfor %}
@@ -43,7 +43,7 @@
 
 	<div class="jumbotron" style="padding: 1%;">
 		{% from "includes/_formhelpers.html" import render_field %}
-		<form method="post" action="/dataset/{{ dataset_info.id }}/{{ table_name }}/findreplace">
+		<form method="post" action="{{ url_for('dataset_pages.transform_findreplace', dataset_id=dataset_info.id, tablename=table_name) }}">
 		{{ findrepl_form.csrf_token }}
 		<div class="form-group" style="width: 20%; display: inline-block;">
 			{{render_field(findrepl_form.select_attr, class_="form-control")}}
@@ -57,7 +57,7 @@
 		<p style="display: inline-block;"><input type="submit" id="findrepl" class="btn btn-primary" value="Find & Replace"></p>
 		</form>
 
-		<form method="post" action="/dataset/{{ dataset_info.id }}/{{ table_name }}/deleteattr">
+		<form method="post" action="{{ url_for('dataset_pages.deleteattr', dataset_id=dataset_info.id, tablename=table_name) }}">
 		{{ delete_form.csrf_token }}
 		<div class="form-group" style="width: 30%; display: inline-block;">
 			{{render_field(delete_form.select_attr, class_="form-control")}}

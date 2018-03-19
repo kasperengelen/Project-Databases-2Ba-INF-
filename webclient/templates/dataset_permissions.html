@@ -14,7 +14,7 @@
 
 		<div>
 			{% from "includes/_formhelpers.html" import render_field %}
-			<form method="post" action="/dataset/{{ setid }}/add_user" name="add">
+			<form method="post" action="{{ url_for('dataset_pages.add_user_dataset', dataset_id=setid) }}" name="add">
 			{{ form.csrf_token }}
 			<div class="form-group" style="width: 40%; display: inline-block;">
 				{{render_field(form.email, class_="form-control")}}
@@ -41,7 +41,8 @@
 							<td>{{ user.email.data }}</td>
 							<td>{{ user.permission_type.data }}</td>
 							<td>{% from "includes/_formhelpers.html" import render_field %}
-								<form method="post" action="/dataset/{{ setid }}/remove_user" name="remove">
+								<form method="post" action="{{ url_for('dataset_pages.remove_user_dataset', dataset_id=setid) }}"
+									name="remove">
 								{{ user.hidden_tag() }}
 								<label for="remove{{ user.userid.data }}" class="glyphicon glyphicon-remove"></label>
 								<input id="remove{{ user.userid.data }}" style="visibility: hidden;" type="submit"></form></td>

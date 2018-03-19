@@ -10,12 +10,12 @@
 			<div class="jumbotron text-center col-sm-6" style="padding-top: 2%">
 				<h3>Existing Datasets</h3>
 				</br>
-				<a href="/dataset/list" class="btn btn-primary">View Datasets</a>
+				<a href="{{ url_for('dataset_pages.list_dataset') }}" class="btn btn-primary">View Datasets</a>
 			</div>
 			<div class="jumbotron text-center col-sm-6" style="padding-top: 2%;">
 				<h3>Create Dataset</h3>
 				</br>
-				<a href="/dataset/create" class="btn btn-primary">New Dataset</a>
+				<a href="{{ url_for('dataset_pages.create_dataset') }}" class="btn btn-primary">New Dataset</a>
 			</div>
 		</div>
 	{% else %}

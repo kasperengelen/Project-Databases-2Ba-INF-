@@ -16,7 +16,7 @@
 					<tr>
 						<td>{{ user.email.data }}</td>
 						<td>{% from "includes/_formhelpers.html" import render_field %}
-							<form method="post" action="/dataset/{{ setid }}/remove_user" name="remove">
+							<form method="post" action="{{ url_for('admin_pages.delete_user') }}" name="remove">
 							{{ user.hidden_tag() }}
 							<label for="remove{{ user.userid.data }}" class="glyphicon glyphicon-remove"></label>
 							<input id="remove{{ user.userid.data }}" style="visibility: hidden;" type="submit"></form></td>
