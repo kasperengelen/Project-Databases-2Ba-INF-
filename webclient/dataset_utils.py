@@ -229,40 +229,39 @@ def list_dataset():
     """Returns a page that lists all datasets associated
     with the current user."""
 
-    # dataset_list = []
+    dataset_list = []
 
-    # with DBConnection() as db_conn:
-    #     db_conn.cursor().execute("SELECT * FROM SYSTEM.datasets WHERE setid IN (SELECT setid FROM SYSTEM.set_permissions WHERE userid = %s);", [session['user_data']['user_id']])
-    #     results = db_conn.cursor().fetchall()
+    with DBConnection() as db_conn:
+        db_conn.cursor().execute("SELECT * FROM SYSTEM.datasets WHERE setid IN (SELECT setid FROM SYSTEM.set_permissions WHERE userid = %s);", [session['user_data']['user_id']])
+        results = db_conn.cursor().fetchall()
 
-    #     # iterate over datasets
-    #     for dataset in results:
-    #         setid        = dataset[0]
-    #         display_name = dataset[1]
-    #         description  = dataset[2]
+        # iterate over datasets
+        for dataset in results:
+            setid        = dataset[0]
+            display_name = dataset[1]
+            description  = dataset[2]
 
-    #         dataset_list.append({
-    #             "id":          setid,
-    #             "displayName": display_name,
-    #             "description": description
-    #         })
-    #     # ENDFOR
-    # # ENDWITH
+            dataset_list.append({
+                "id":          setid,
+                "displayName": display_name,
+                "description": description
+            })
+        # ENDFOR
+    # ENDWITH
 
-    #get_db().cursor().execute("SELECT * FROM SYSTEM.datasets WHERE setid IN (SELECT setid FROM SYSTEM.set_permissions WHERE userid = %s);", [session['user_data']['user_id']])
-    get_db().cursor().execute("SELECT * FROM SYSTEM.datasets WHERE TRUE;")
-    results = get_db().cursor().fetchall()
-    # iterate over datasets
-    for dataset in results:
-        setid        = dataset[0]
-        display_name = dataset[1]
-        description  = dataset[2]
+    # get_db().cursor().execute("SELECT * FROM SYSTEM.datasets WHERE setid IN (SELECT setid FROM SYSTEM.set_permissions WHERE userid = %s);", [session['user_data']['user_id']])
+    # results = get_db().cursor().fetchall()
+    # # iterate over datasets
+    # for dataset in results:
+    #     setid        = dataset[0]
+    #     display_name = dataset[1]
+    #     description  = dataset[2]
 
-        dataset_list.append({
-            "id":          setid,
-            "displayName": display_name,
-            "description": description
-        })
+    #     dataset_list.append({
+    #         "id":          setid,
+    #         "displayName": display_name,
+    #         "description": description
+    #     })
 
     return render_template('dataset_list.html', setlist = dataset_list)
 # ENDFUNCTION

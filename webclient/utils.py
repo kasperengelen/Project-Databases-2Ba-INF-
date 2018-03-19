@@ -10,6 +10,7 @@ def get_db():
     if db is None:
         print("OPEN DB")
         db = psycopg2.connect("dbname='{}' user='{}' host='{}' password='{}'".format("projectdb18", "dbadmin", "localhost", "AdminPass123"))
+        g.database = db
     return db
 
 
