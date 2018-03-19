@@ -1,4 +1,4 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, g
 import utils
 import dataset_utils
 import user_utils
@@ -17,6 +17,14 @@ app.register_blueprint(admin_utils.admin_pages)
 @app.route('/')
 def index():
     return render_template('index.html')
+
+@app.teardown_appcontext
+def close_db(e):
+    db = getattr(g, 'database', None)
+    if db is not None:
+        print("CLOSE DB")
+        db.cursor().close()
+        db.close()
 
 #################################################### ERROR HANDLING PAGES ####################################################
 @app.errorhandler(403)

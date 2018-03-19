@@ -249,7 +249,8 @@ def list_dataset():
     #     # ENDFOR
     # # ENDWITH
 
-    get_db().cursor().execute("SELECT * FROM SYSTEM.datasets WHERE setid IN (SELECT setid FROM SYSTEM.set_permissions WHERE userid = %s);", [session['user_data']['user_id']])
+    #get_db().cursor().execute("SELECT * FROM SYSTEM.datasets WHERE setid IN (SELECT setid FROM SYSTEM.set_permissions WHERE userid = %s);", [session['user_data']['user_id']])
+    get_db().cursor().execute("SELECT * FROM SYSTEM.datasets WHERE TRUE;")
     results = get_db().cursor().fetchall()
     # iterate over datasets
     for dataset in results:

@@ -1,7 +1,17 @@
 # file for various utility functions
 
 from wtforms.validators import ValidationError
+from flask import g
 import user_utils
+import psycopg2
+
+def get_db():
+    db = getattr(g, 'database', None)
+    if db is None:
+        print("OPEN DB")
+        db = psycopg2.connect("dbname='{}' user='{}' host='{}' password='{}'".format("projectdb18", "dbadmin", "localhost", "AdminPass123"))
+    return db
+
 
 def sql_time_to_dict(sql_date_string):
     """Given a string of the format "YYYY:MM:DD HH:MM:SS.SSSSSS" this
@@ -46,10 +56,3 @@ class Logger:
     @staticmethod
     def log(message):
         print("[ERROR] " + message)
-
-def init_db():
-    global db_conn
-    db_conn = psycopg2.connect("dbname='{}' user='{}' host='{}' password='{}'".format("projectdb18", "dbadmin", "localhost", "AdminPass123"))
-
-def get_db():
-    return db_conn
