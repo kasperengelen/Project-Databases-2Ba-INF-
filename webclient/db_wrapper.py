@@ -10,10 +10,7 @@ class DBConnection:
 
     def __enter__(self):
         # open connection
-        self.__connection = psycopg2.connect("dbname='{}' user='{}' host='{}' password='{}'".format("projectdb18",
-                                                                                                       "dbadmin",
-                                                                                                       "localhost",
-                                                                                                       "AdminPass123"))
+        self.__connection = psycopg2.connect("dbname='{}' user='{}' host='{}' password='{}'".format("projectdb18", "dbadmin", "localhost", "AdminPass123"))
 
         return DBConnectionWrapper(self.__connection, self.__connection.cursor())
 
@@ -38,3 +35,24 @@ class DBConnectionWrapper:
         self.__connection.commit()
 
     # add extra wrapper methods here
+
+class DBWrapper:
+    """Raw wrapper class that encapsulates the connection and provides a cursor."""
+
+    def __init__(self):
+        self.conn = psycopg2.connect("dbname='{}' user='{}' host='{}' password='{}'".format("projectdb18", "dbadmin", "localhost", "AdminPass123"))
+        self.cur = self.conn.cursor()
+
+    def commit(self):
+        """Commit to the connection."""
+        self.conn.commit()
+
+    def cursor(self):
+        """Retrieve the cursor. This is guaranteed to always return the
+        same cursor object."""
+        return self.cur
+
+    def close(self):
+        """Close the connection."""
+        self.cur.close()
+        self.conn.close()

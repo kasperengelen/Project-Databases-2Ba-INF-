@@ -3,6 +3,7 @@ import utils
 import dataset_utils
 import user_utils
 import admin_utils
+import db_wrapper
 
 app = Flask(__name__)
 app.config.update(dict(
@@ -14,17 +15,19 @@ app.register_blueprint(dataset_utils.dataset_pages)
 app.register_blueprint(user_utils.user_pages)
 app.register_blueprint(admin_utils.admin_pages)
 
+@app.before_request
+def before_request():
+    """Prepare request."""
+    g.db_conn = db_wrapper.DBWrapper()
+
+@app.teardown_request
+def teardown_request(e):
+    """Postprocess request."""
+    g.db_conn.close()
+
 @app.route('/')
 def index():
     return render_template('index.html')
-
-@app.teardown_appcontext
-def close_db(e):
-    db = getattr(g, 'database', None)
-    if db is not None:
-        print("CLOSE DB")
-        db.cursor().close()
-        db.close()
 
 #################################################### ERROR HANDLING PAGES ####################################################
 @app.errorhandler(403)

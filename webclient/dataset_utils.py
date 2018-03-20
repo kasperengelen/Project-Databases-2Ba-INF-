@@ -231,37 +231,19 @@ def list_dataset():
 
     dataset_list = []
 
-    with DBConnection() as db_conn:
-        db_conn.cursor().execute("SELECT * FROM SYSTEM.datasets WHERE setid IN (SELECT setid FROM SYSTEM.set_permissions WHERE userid = %s);", [session['user_data']['user_id']])
-        results = db_conn.cursor().fetchall()
+    get_db().cursor().execute("SELECT * FROM SYSTEM.datasets WHERE setid IN (SELECT setid FROM SYSTEM.set_permissions WHERE userid = %s);", [session['user_data']['user_id']])
+    results = get_db().cursor().fetchall()
+    # iterate over datasets
+    for dataset in results:
+        setid        = dataset[0]
+        display_name = dataset[1]
+        description  = dataset[2]
 
-        # iterate over datasets
-        for dataset in results:
-            setid        = dataset[0]
-            display_name = dataset[1]
-            description  = dataset[2]
-
-            dataset_list.append({
-                "id":          setid,
-                "displayName": display_name,
-                "description": description
-            })
-        # ENDFOR
-    # ENDWITH
-
-    # get_db().cursor().execute("SELECT * FROM SYSTEM.datasets WHERE setid IN (SELECT setid FROM SYSTEM.set_permissions WHERE userid = %s);", [session['user_data']['user_id']])
-    # results = get_db().cursor().fetchall()
-    # # iterate over datasets
-    # for dataset in results:
-    #     setid        = dataset[0]
-    #     display_name = dataset[1]
-    #     description  = dataset[2]
-
-    #     dataset_list.append({
-    #         "id":          setid,
-    #         "displayName": display_name,
-    #         "description": description
-    #     })
+        dataset_list.append({
+            "id":          setid,
+            "displayName": display_name,
+            "description": description
+        })
 
     return render_template('dataset_list.html', setlist = dataset_list)
 # ENDFUNCTION

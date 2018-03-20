@@ -6,13 +6,7 @@ import user_utils
 import psycopg2
 
 def get_db():
-    db = getattr(g, 'database', None)
-    if db is None:
-        print("OPEN DB")
-        db = psycopg2.connect("dbname='{}' user='{}' host='{}' password='{}'".format("projectdb18", "dbadmin", "localhost", "AdminPass123"))
-        g.database = db
-    return db
-
+    return g.db_conn
 
 def sql_time_to_dict(sql_date_string):
     """Given a string of the format "YYYY:MM:DD HH:MM:SS.SSSSSS" this
