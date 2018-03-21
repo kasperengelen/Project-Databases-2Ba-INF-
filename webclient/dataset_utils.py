@@ -64,16 +64,14 @@ def view_dataset_home(dataset_id):
     dv = DataViewer()
 
     ## retrieve basic information
-    with DBConnection() as db_conn:
-        db_conn.cursor().execute("SELECT * FROM SYSTEM.datasets WHERE setid = %s", [dataset_id])
-        result = db_conn.cursor().fetchone()
+    get_db().cursor().execute("SELECT * FROM SYSTEM.datasets WHERE setid = %s", [dataset_id])
+    result = get_db().cursor().fetchone()
 
-        dataset_info = {
-            "id":          result[0],
-            "displayName": result[1],
-            "description": result[2] 
-        }
-    # ENDWITH
+    dataset_info = {
+        "id":          result[0],
+        "displayName": result[1],
+        "description": result[2] 
+    }
 
     #dataset_info = dv.get_info(dataset_id)
 
@@ -83,7 +81,6 @@ def view_dataset_home(dataset_id):
     return render_template('dataset_view_home.html', 
                                 dataset_info = dataset_info, 
                                 table_list = table_list)
-    # ENDWITH
 # ENDFUNCTION
 
 @dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>', defaults = {'page_nr': 1})
@@ -118,16 +115,14 @@ def view_dataset_table(dataset_id, tablename, page_nr):
         return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename = tablename, page_nr = 1))
 
     ## retrieve basic information
-    with DBConnection() as db_conn:
-        db_conn.cursor().execute("SELECT * FROM SYSTEM.datasets WHERE setid = %s", [dataset_id])
-        result = db_conn.cursor().fetchone()
+    get_db().cursor().execute("SELECT * FROM SYSTEM.datasets WHERE setid = %s", [dataset_id])
+    result = get_db().cursor().fetchone()
 
-        dataset_info = {
-            "id":          result[0],
-            "displayName": result[1],
-            "description": result[2] 
-        }
-    # ENDWITH
+    dataset_info = {
+        "id":          result[0],
+        "displayName": result[1],
+        "description": result[2]
+    }
 
     page_indices = dv.get_page_indices(dataset_id, tablename, 50, page_nr)
 
@@ -203,23 +198,22 @@ def create_dataset():
     form = DatasetForm(request.form)
 
     if request.method == 'POST' and form.validate(): # there was valid submitted data
-        with DBConnection() as db_conn:
-            # INSERT DATA INTO DB
-            db_conn.cursor().execute("INSERT INTO SYSTEM.datasets(setname, description) VALUES (%s, %s) RETURNING setid;", [form.name.data, form.description.data])
-            db_conn.commit()
+        
+        # INSERT DATA INTO DB
+        get_db().cursor().execute("INSERT INTO SYSTEM.datasets(setname, description) VALUES (%s, %s) RETURNING setid;", [form.name.data, form.description.data])
+        get_db().commit()
 
-            # retrieve ID
-            dataset_id = db_conn.cursor().fetchone()[0]
+        # retrieve ID
+        dataset_id = get_db().cursor().fetchone()[0]
 
-            # SET PERMISSIONS
-            db_conn.cursor().execute("INSERT INTO SYSTEM.set_permissions(userid, setid, permission_type) VALUES (%s, %s, 'admin');", [session['user_data']['user_id'], dataset_id])
-            db_conn.commit()
-        # ENDWITH
+        # SET PERMISSIONS
+        get_db().cursor().execute("INSERT INTO SYSTEM.set_permissions(userid, setid, permission_type) VALUES (%s, %s, 'admin');", [session['user_data']['user_id'], dataset_id])
+        get_db().commit()
 
         flash(message="The dataset was created.", category="success")
         return redirect(url_for('dataset_pages.view_dataset_home', dataset_id=dataset_id))
     else: # no submitted data or invalid data
-        return render_template('dataset_create.html', form=form)
+        return render_template('dataset_pages.dataset_create.html', form=form)
     # ENDIF
 # ENDFUNCTION
 
@@ -259,26 +253,21 @@ def manage_dataset(dataset_id):
 
     if request.method == 'POST' and form.validate: # there was form data
         if form.validate(): # form data was valid
-            with DBConnection() as db_conn:
-                db_conn.cursor().execute("UPDATE SYSTEM.datasets SET setname = %s, description = %s WHERE setid = %s;", 
-                                    [form.name.data, form.description.data, dataset_id])
-                db_conn.commit()
+            get_db().cursor().execute("UPDATE SYSTEM.datasets SET setname = %s, description = %s WHERE setid = %s;", 
+                                [form.name.data, form.description.data, dataset_id])
+            get_db().commit()
 
-                flash("Information is updated.")
-            # ENDWITH
+            flash("Information is updated.")
         # ENDIF
     else: # no form data
         # retrieve data from DB
-        with DBConnection() as db_conn:
-            # retrieve data
-            db_conn.cursor().execute("SELECT * FROM SYSTEM.datasets WHERE setid = %s;", [dataset_id])
-            result = db_conn.cursor().fetchone()
+        get_db().cursor().execute("SELECT * FROM SYSTEM.datasets WHERE setid = %s;", [dataset_id])
+        result = get_db().cursor().fetchone()
 
-            # fill form
-            form.name.data = result[1]
-            form.description.data = result[2]
+        # fill form
+        form.name.data = result[1]
+        form.description.data = result[2]
 
-        # ENDWITH
     # ENDIF
     return render_template('dataset_manage.html', form = form)
 # ENDFUNCTION
@@ -294,80 +283,74 @@ def edit_perms_dataset(dataset_id):
 
     ### CREATE DELETE LIST ###
     ## retrieve admins ##
-    with DBConnection() as db_conn:
-        # join permissions and users and filter only the permissions that are related to the specified data set.
-        db_conn.cursor().execute("SELECT UserAccs.userid, UserAccs.fname, UserAccs.lname, UserAccs.email, Perms.permission_type "
-                                        "FROM SYSTEM.user_accounts AS UserAccs "
-                                        "INNER JOIN SYSTEM.set_permissions AS Perms "
-                                        "ON UserAccs.userid = Perms.userid WHERE setid=%s AND permission_type='admin' AND UserAccs.userid <> %s; ", [dataset_id, session['user_data']['user_id']])
+    # join permissions and users and filter only the permissions that are related to the specified data set.
+    get_db().cursor().execute("SELECT UserAccs.userid, UserAccs.fname, UserAccs.lname, UserAccs.email, Perms.permission_type "
+                                    "FROM SYSTEM.user_accounts AS UserAccs "
+                                    "INNER JOIN SYSTEM.set_permissions AS Perms "
+                                    "ON UserAccs.userid = Perms.userid WHERE setid=%s AND permission_type='admin' AND UserAccs.userid <> %s; ", [dataset_id, session['user_data']['user_id']])
 
-        results = db_conn.cursor().fetchall()
+    results = get_db().cursor().fetchall()
 
-        admin_list = []
-        
-        for result in results:
+    admin_list = []
+    
+    for result in results:
 
-            # create form
-            delete_admin_form = RemoveUserForm()
+        # create form
+        delete_admin_form = RemoveUserForm()
 
-            # fill with data
-            delete_admin_form.userid.data = result[0]
-            delete_admin_form.email.data = result[3]
-            delete_admin_form.permission_type.data = result[4]
+        # fill with data
+        delete_admin_form.userid.data = result[0]
+        delete_admin_form.email.data = result[3]
+        delete_admin_form.permission_type.data = result[4]
 
-            admin_list.append(delete_admin_form)
-        # ENDFOR
-    # ENDWITH
+        admin_list.append(delete_admin_form)
+    # ENDFOR
 
     ## retrieve write perms ##
-    with DBConnection() as db_conn:
-        # join permissions and users and filter only the permissions that are related to the specified data set.
-        db_conn.cursor().execute("SELECT UserAccs.userid, UserAccs.fname, UserAccs.lname, UserAccs.email, Perms.permission_type "
-                                        "FROM SYSTEM.user_accounts AS UserAccs "
-                                        "INNER JOIN SYSTEM.set_permissions AS Perms "
-                                        "ON UserAccs.userid = Perms.userid WHERE setid=%s AND permission_type='write' AND UserAccs.userid <> %s; ", [dataset_id, session['user_data']['user_id']])
+    # join permissions and users and filter only the permissions that are related to the specified data set.
+    get_db().cursor().execute("SELECT UserAccs.userid, UserAccs.fname, UserAccs.lname, UserAccs.email, Perms.permission_type "
+                                    "FROM SYSTEM.user_accounts AS UserAccs "
+                                    "INNER JOIN SYSTEM.set_permissions AS Perms "
+                                    "ON UserAccs.userid = Perms.userid WHERE setid=%s AND permission_type='write' AND UserAccs.userid <> %s; ", [dataset_id, session['user_data']['user_id']])
 
-        results = db_conn.cursor().fetchall()
+    results = get_db().cursor().fetchall()
 
-        write_list = []
+    write_list = []
 
-        for result in results:
-            # create form
-            delete_write_form = RemoveUserForm()
+    for result in results:
+        # create form
+        delete_write_form = RemoveUserForm()
 
-            # fill with data
-            delete_write_form.userid.data = result[0]
-            delete_write_form.email.data = result[3]
-            delete_write_form.permission_type.data = result[4]
+        # fill with data
+        delete_write_form.userid.data = result[0]
+        delete_write_form.email.data = result[3]
+        delete_write_form.permission_type.data = result[4]
 
-            write_list.append(delete_write_form)
-        # ENDFOR
-    # ENDWITH
+        write_list.append(delete_write_form)
+    # ENDFOR
 
     ## retrieve read perms ##
-    with DBConnection() as db_conn:
-        # join permissions and users and filter only the permissions that are related to the specified data set.
-        db_conn.cursor().execute("SELECT UserAccs.userid, UserAccs.fname, UserAccs.lname, UserAccs.email, Perms.permission_type "
-                                        "FROM SYSTEM.user_accounts AS UserAccs "
-                                        "INNER JOIN SYSTEM.set_permissions AS Perms "
-                                        "ON UserAccs.userid = Perms.userid WHERE setid=%s AND permission_type='read' AND UserAccs.userid <> %s; ", [dataset_id, session['user_data']['user_id']])
+    # join permissions and users and filter only the permissions that are related to the specified data set.
+    get_db().cursor().execute("SELECT UserAccs.userid, UserAccs.fname, UserAccs.lname, UserAccs.email, Perms.permission_type "
+                                    "FROM SYSTEM.user_accounts AS UserAccs "
+                                    "INNER JOIN SYSTEM.set_permissions AS Perms "
+                                    "ON UserAccs.userid = Perms.userid WHERE setid=%s AND permission_type='read' AND UserAccs.userid <> %s; ", [dataset_id, session['user_data']['user_id']])
 
-        results = db_conn.cursor().fetchall()
+    results = get_db().cursor().fetchall()
 
-        read_list = []
+    read_list = []
 
-        for result in results:
-            # create form
-            delete_read_form = RemoveUserForm()
+    for result in results:
+        # create form
+        delete_read_form = RemoveUserForm()
 
-            # fill with data
-            delete_read_form.userid.data = result[0]
-            delete_read_form.email.data = result[3]
-            delete_read_form.permission_type.data = result[4]
+        # fill with data
+        delete_read_form.userid.data = result[0]
+        delete_read_form.email.data = result[3]
+        delete_read_form.permission_type.data = result[4]
 
-            read_list.append(delete_read_form)
-        # ENDFOR
-    # ENDWITH
+        read_list.append(delete_read_form)
+    # ENDFOR
 
     return render_template('dataset_permissions.html', setid = dataset_id, form = form_add_user, admin_list = admin_list, read_list = read_list, write_list = write_list)
 # ENDFUNCTION
@@ -386,28 +369,26 @@ def add_user_dataset(dataset_id):
         flash(message="Invalid form, please check email and permission type.", category="error")
         return redirect(url_for('dataset_pages.edit_perms_dataset', dataset_id=dataset_id))
 
-    with DBConnection() as db_conn:
-        ## check if user exists ##
-        db_conn.cursor().execute("SELECT * FROM SYSTEM.user_accounts WHERE email=%s", [form.email.data])
-        result = db_conn.cursor().fetchone()
-        if result is None:
-            flash(message="User with specified email address does not exist.", category="error")
-            return redirect(url_for('dataset_pages.edit_perms_dataset', dataset_id=dataset_id))
-        # ENDIF
+    ## check if user exists ##
+    get_db().cursor().execute("SELECT * FROM SYSTEM.user_accounts WHERE email=%s", [form.email.data])
+    result = get_db().cursor().fetchone()
+    if result is None:
+        flash(message="User with specified email address does not exist.", category="error")
+        return redirect(url_for('dataset_pages.edit_perms_dataset', dataset_id=dataset_id))
+    # ENDIF
 
-        ## check if permission already exists for user ##
-        db_conn.cursor().execute("SELECT * FROM SYSTEM.set_permissions WHERE userid=(SELECT userid FROM SYSTEM.user_accounts WHERE email=%s) AND setid=%s", [form.email.data, dataset_id])
-        result = db_conn.cursor().fetchone()
+    ## check if permission already exists for user ##
+    get_db().cursor().execute("SELECT * FROM SYSTEM.set_permissions WHERE userid=(SELECT userid FROM SYSTEM.user_accounts WHERE email=%s) AND setid=%s", [form.email.data, dataset_id])
+    result = get_db().cursor().fetchone()
 
-        if result is not None:
-            flash(message="Specified user already has permissions for specified data set.", category="error")
-            return redirect(url_for('dataset_pages.edit_perms_dataset', dataset_id=dataset_id))
-        # ENDIF
+    if result is not None:
+        flash(message="Specified user already has permissions for specified data set.", category="error")
+        return redirect(url_for('dataset_pages.edit_perms_dataset', dataset_id=dataset_id))
+    # ENDIF
 
-        ## add permission ##
-        db_conn.cursor().execute("INSERT INTO SYSTEM.set_permissions(userid, setid, permission_type) VALUES ((SELECT userid FROM SYSTEM.user_accounts WHERE email=%s), %s, %s);", [form.email.data, dataset_id, form.permission_type.data])
-        result = db_conn.commit()
-    # ENDWITH
+    ## add permission ##
+    get_db().cursor().execute("INSERT INTO SYSTEM.set_permissions(userid, setid, permission_type) VALUES ((SELECT userid FROM SYSTEM.user_accounts WHERE email=%s), %s, %s);", [form.email.data, dataset_id, form.permission_type.data])
+    result = get_db().commit()
 
     return redirect(url_for('dataset_pages.edit_perms_dataset', dataset_id=dataset_id))
 # ENDFUNCTION
@@ -426,37 +407,35 @@ def remove_user_dataset(dataset_id):
         return redirect(url_for('dataset_pages.edit_perms_dataset', dataset_id=dataset_id))
     # ENDIF
 
-    with DBConnection() as db_conn:
-        ## check that user does not edit own permissions ##
+    ## check that user does not edit own permissions ##
 
-        if form.email.data == session['user_data']['email']:
-            flash(message="User cannot remove itself from dataset.", category="error")
-            return redirect(url_for('dataset_pages.edit_perms_dataset', dataset_id=dataset_id))
-        # ENDIF
+    if form.email.data == session['user_data']['email']:
+        flash(message="User cannot remove itself from dataset.", category="error")
+        return redirect(url_for('dataset_pages.edit_perms_dataset', dataset_id=dataset_id))
+    # ENDIF
 
-        ## check if user exists ##
-        db_conn.cursor().execute("SELECT * FROM SYSTEM.user_accounts WHERE email=%s", [form.email.data])
-        result = db_conn.cursor().fetchone()
-        if result is None:
-            return redirect(url_for('dataset_pages.edit_perms_dataset', dataset_id=dataset_id))
-        # ENDIF
+    ## check if user exists ##
+    get_db().cursor().execute("SELECT * FROM SYSTEM.user_accounts WHERE email=%s", [form.email.data])
+    result = get_db().cursor().fetchone()
+    if result is None:
+        return redirect(url_for('dataset_pages.edit_perms_dataset', dataset_id=dataset_id))
+    # ENDIF
 
-        ## check if permission already exists for user ##
-        db_conn.cursor().execute("SELECT * FROM SYSTEM.set_permissions WHERE userid=(SELECT userid FROM SYSTEM.user_accounts WHERE email=%s) AND setid=%s AND permission_type=%s", [form.email.data, dataset_id, form.permission_type.data])
-        result = db_conn.cursor().fetchone()
+    ## check if permission already exists for user ##
+    get_db().cursor().execute("SELECT * FROM SYSTEM.set_permissions WHERE userid=(SELECT userid FROM SYSTEM.user_accounts WHERE email=%s) AND setid=%s AND permission_type=%s", [form.email.data, dataset_id, form.permission_type.data])
+    result = get_db().cursor().fetchone()
 
-        if result is None:
-            return redirect(url_for('dataset_pages.edit_perms_dataset', dataset_id=dataset_id))
-        # ENDIF
+    if result is None:
+        return redirect(url_for('dataset_pages.edit_perms_dataset', dataset_id=dataset_id))
+    # ENDIF
 
-        ## remove permission ##
-        db_conn.cursor().execute("DELETE FROM SYSTEM.set_permissions WHERE "
-                                    "userid=(SELECT userid FROM SYSTEM.user_accounts WHERE email=%s) "
-                                    "AND setid=%s "
-                                    "AND permission_type=%s;", 
-                                                [form.email.data, dataset_id, form.permission_type.data])
-        db_conn.commit()
-    # ENDWITH
+    ## remove permission ##
+    get_db().cursor().execute("DELETE FROM SYSTEM.set_permissions WHERE "
+                                "userid=(SELECT userid FROM SYSTEM.user_accounts WHERE email=%s) "
+                                "AND setid=%s "
+                                "AND permission_type=%s;", 
+                                            [form.email.data, dataset_id, form.permission_type.data])
+    get_db().commit()
 
     return redirect(url_for('dataset_pages.edit_perms_dataset', dataset_id=dataset_id))
 # ENDFUNCTION

@@ -12,6 +12,7 @@ from wtforms.validators import Length, InputRequired, Email, EqualTo, DataRequir
 from db_wrapper import DBConnection
 from passlib.hash import sha256_crypt
 import utils
+from utils import get_db
 from functools import wraps
 
 # SOURCE: https://docs.python.org/2/library/functools.html
@@ -49,20 +50,18 @@ class UserInformation:
         Raises RuntimeError if there is no user with the specified id.
         """
 
-        with DBConnection() as db_connection:
-            db_connection.cursor().execute("SELECT * FROM SYSTEM.user_accounts WHERE userid = %s;", [id])
-            result = db_connection.cursor().fetchone() # we fetch the first and max only tuple
+        get_db().cursor().execute("SELECT * FROM SYSTEM.user_accounts WHERE userid = %s;", [id])
+        result = get_db().cursor().fetchone() # we fetch the first and max only tuple
 
-            if result is None: # if the user witht the specified email doesn't exist
-                raise RuntimeError("No user with the specified id exists.")
+        if result is None: # if the user witht the specified email doesn't exist
+            raise RuntimeError("No user with the specified id exists.")
 
-            return UserInformation(int(result[0]), 
-                                    str(result[1]), 
-                                    str(result[2]),
-                                    str(result[3]),
-                                    utils.sql_time_to_dict(str(result[5])),
-                                    bool(result[6]))
-        # ENDWITH
+        return UserInformation(int(result[0]), 
+                                str(result[1]), 
+                                str(result[2]),
+                                str(result[3]),
+                                utils.sql_time_to_dict(str(result[5])),
+                                bool(result[6]))
     # ENDMETHOD
 
     @staticmethod
@@ -73,25 +72,23 @@ class UserInformation:
         Raises RuntimeError if there is no user with the specified email, or if the password is false.
         """
 
-        with DBConnection() as db_connection:
-            db_connection.cursor().execute("SELECT * FROM SYSTEM.user_accounts WHERE email = %s;", [email])
-            result = db_connection.cursor().fetchone() # we fetch the first and max only tuple
+        get_db().cursor().execute("SELECT * FROM SYSTEM.user_accounts WHERE email = %s;", [email])
+        result = get_db().cursor().fetchone() # we fetch the first and max only tuple
 
-            if result is None: # if the user witht the specified email doesn't exist
-                raise RuntimeError("No user with the specified email exists.")
+        if result is None: # if the user witht the specified email doesn't exist
+            raise RuntimeError("No user with the specified email exists.")
 
-            correct_password_hash = result[4]
+        correct_password_hash = result[4]
 
-            if not sha256_crypt.verify(password_candidate, correct_password_hash):
-                raise RuntimeError("Invalid password.")
+        if not sha256_crypt.verify(password_candidate, correct_password_hash):
+            raise RuntimeError("Invalid password.")
 
-            return UserInformation(int(result[0]), 
-                                    str(result[1]), 
-                                    str(result[2]),
-                                    str(result[3]),
-                                    utils.sql_time_to_dict(str(result[5])),
-                                    bool(result[6]))
-        # ENDWITH
+        return UserInformation(int(result[0]), 
+                                str(result[1]), 
+                                str(result[2]),
+                                str(result[3]),
+                                utils.sql_time_to_dict(str(result[5])),
+                                bool(result[6]))
 
     @staticmethod
     def from_email(email):
@@ -101,20 +98,19 @@ class UserInformation:
         Raises RuntimeError if there is no user with the specified email.
         """
 
-        with DBConnection() as db_connection:
-            db_connection.cursor().execute("SELECT * FROM SYSTEM.user_accounts WHERE email = %s;", [email])
-            result = db_connection.cursor().fetchone() # we fetch the first and max only tuple
+        get_db().cursor().execute("SELECT * FROM SYSTEM.user_accounts WHERE email = %s;", [email])
+        result = get_db().cursor().fetchone() # we fetch the first and max only tuple
 
-            if result is None: # if the user witht the specified email doesn't exist
-                raise RuntimeError("No user with the specified email exists.")
+        if result is None: # if the user witht the specified email doesn't exist
+            raise RuntimeError("No user with the specified email exists.")
 
-            return UserInformation(int(result[0]), 
-                                    str(result[1]), 
-                                    str(result[2]),
-                                    str(result[3]),
-                                    utils.sql_time_to_dict(str(result[5])),
-                                    bool(result[6]))
-        # ENDWITH
+        return UserInformation(int(result[0]), 
+                                str(result[1]), 
+                                str(result[2]),
+                                str(result[3]),
+                                utils.sql_time_to_dict(str(result[5])),
+                                bool(result[6]))
+
     # ENDMETHOD
 
     def toDict(self):
@@ -212,22 +208,21 @@ def login_user():
 
             # check if the user exists in the database and if the
             # password checks out
-            with DBConnection() as db_connection:
-                try:
-                    user_data = UserInformation.from_email_and_pass(login_form.email.data, login_form.password.data)
-                    session['logged_in'] = True
-                    session['user_data'] = user_data.toDict()
+            try:
+                user_data = UserInformation.from_email_and_pass(login_form.email.data, login_form.password.data)
+                session['logged_in'] = True
+                session['user_data'] = user_data.toDict()
 
-                    print(session['user_data'])
+                print(session['user_data'])
 
-                    flash(message="You are now logged in.", category="success")
-                    return redirect(url_for("index"))
-                    
-                except RuntimeError as err:
-                    flash(message="Specified email and password combination is invalid.", category="error")
-                    return render_template('login.html', form = login_form)
-                # ENDTRY
-            # ENDWITH
+                flash(message="You are now logged in.", category="success")
+                return redirect(url_for("index"))
+                
+            except RuntimeError as err:
+                flash(message="Specified email and password combination is invalid.", category="error")
+                return render_template('login.html', form = login_form)
+            # ENDTRY
+
         else: # the form data was invalid
             return render_template('login.html', form = login_form)
         # ENDIF
@@ -249,16 +244,16 @@ def register_user():
             # Validated Post data -> try to register user
 
             # CHECK if there is already a user with the specified email
-            with DBConnection() as db_connection:
-                db_connection.cursor().execute("SELECT * FROM SYSTEM.user_accounts WHERE email = %s;", [register_form.email.data])
-                result = db_connection.cursor().fetchone() # we fetch the first
 
-                # there are users with the specified email --> error
-                if result is not None:
-                    flash(message="Specified e-mail address already in use.", category="error")
-                    return render_template('register.html',  form = register_form)
-                #ENDIF
-            #ENDWITH
+            get_db().cursor().execute("SELECT * FROM SYSTEM.user_accounts WHERE email = %s;", [register_form.email.data])
+            result = get_db().cursor().fetchone() # we fetch the first
+
+            # there are users with the specified email --> error
+            if result is not None:
+                flash(message="Specified e-mail address already in use.", category="error")
+                return render_template('register.html',  form = register_form)
+            #ENDIF
+
 
             # RETRIEVE data from form
             fname = register_form.firstname.data
@@ -267,10 +262,8 @@ def register_user():
             password = sha256_crypt.hash(register_form.password.data)
 
             # REGISTER user data into database
-            with DBConnection() as db_connection:
-                db_connection.cursor().execute("INSERT INTO SYSTEM.user_accounts(fname, lname, email, passwd) VALUES (%s, %s, %s, %s);", [fname, lname, email, password])
-                db_connection.commit()
-            #ENDWITH
+            get_db().cursor().execute("INSERT INTO SYSTEM.user_accounts(fname, lname, email, passwd) VALUES (%s, %s, %s, %s);", [fname, lname, email, password])
+            get_db().commit()
 
             # notify user that the registration is complete
             flash(message="You are now registered as a user.", category="success")
@@ -316,23 +309,21 @@ def edit_user():
             email = edit_form.email.data
             new_password_hash = sha256_crypt.hash(edit_form.password.data) # encrypt the password
 
-            with DBConnection() as db_conn:
-                # the email must remain unique, if there is a user with a different user_id and the same email as the one
-                # specified, this is invalid
-                db_conn.cursor().execute("SELECT * FROM SYSTEM.user_accounts WHERE email = %s AND userid != %s;", [edit_form.email.data, cur_user_id])
-                result = db_conn.cursor().fetchone()
+            # the email must remain unique, if there is a user with a different user_id and the same email as the one
+            # specified, this is invalid
+            get_db().cursor().execute("SELECT * FROM SYSTEM.user_accounts WHERE email = %s AND userid != %s;", [edit_form.email.data, cur_user_id])
+            result = get_db().cursor().fetchone()
 
-                if result is not None: # email already in use
-                    flash(message='Specified e-mail address already in use.', category='error')
-                else: # updata info
-                    db_conn.cursor().execute("UPDATE SYSTEM.user_accounts SET fname = %s, lname = %s, email = %s, passwd = %s WHERE userid = %s;",
-                                             [fname, lname, email, new_password_hash, cur_user_id])
-                    db_conn.commit()
-                    flash(message='Information updated.')
-                    user_data = UserInformation.from_id(session['user_data']['user_id'])
-                    session['user_data'] = user_data.toDict()
-                # ENDIF
-            # ENDWITH
+            if result is not None: # email already in use
+                flash(message='Specified e-mail address already in use.', category='error')
+            else: # updata info
+                get_db().cursor().execute("UPDATE SYSTEM.user_accounts SET fname = %s, lname = %s, email = %s, passwd = %s WHERE userid = %s;",
+                                         [fname, lname, email, new_password_hash, cur_user_id])
+                get_db().commit()
+                flash(message='Information updated.')
+                user_data = UserInformation.from_id(session['user_data']['user_id'])
+                session['user_data'] = user_data.toDict()
+            # ENDIF
         # ENDIF
     else: # There was no POST data
         # retrieve data from DB
