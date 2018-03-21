@@ -5,7 +5,7 @@ from psycopg2 import sql
 from sqlalchemy import create_engine
 
 
-class DataTransformer:
+class TableTransformer:
 
     def __init__(self, userid, setid, replace=True):
         self.userid = userid
