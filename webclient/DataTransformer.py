@@ -6,7 +6,7 @@ from sqlalchemy import create_engine
 
 class DataTransformer:
 
-    def __init__(self, userid, replace=True):
+    def __init__(self, userid, setid, replace=True):
         self.userid = userid
         self.replace = replace
 
