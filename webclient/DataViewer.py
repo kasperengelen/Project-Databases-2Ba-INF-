@@ -81,11 +81,6 @@ class DataViewer:
         html_table = data_frame.to_html(None, None, None, True, False)
         return html_table
 
-
-
-
-
-
 if __name__ == '__main__':
     dv = DataViewer()
     #lol = dv.get_tablenames(1)
