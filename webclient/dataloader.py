@@ -207,13 +207,13 @@ class DataLoader:
 
 
 if __name__ == "__main__":
-    # test = DataLoader()
-    # # test.create_new("demo", "dataset for the demo")
+     test = DataLoader()
+     test.create_new("demo", "dataset for the demo")
     # test.use_existing(12)
-    # test.read_file("test_csv.zip", True)
+     test.read_file("records.csv", True)
     # # test.read_file("load_departments.dump", True)
-    dt = DataTransformer(3, True)
+    # dt = DataTransformer(3, True)
     # dt.change_column_name(12, "test_csv", "num2", "numero2")
-    dt.join_tables(12, "test_csv", "test_csv_x", ["numero2"], ["num2"], "combined")
+    # dt.join_tables(12, "test_csv", "test_csv_x", ["numero2"], ["num2"], "combined")
 
-    # test.end()
+     test.end()
