@@ -7,14 +7,14 @@ from sqlalchemy import create_engine
 
 class TableTransformer:
 
-    def __init__(self, userid, setid, replace=True):
+    def __init__(self, userid, setid, db_conn, engine, replace=True):
         self.userid = userid
         self.setid = setid
         self.replace = replace
         #Get the psycopg2 database connection to execute SQL queries
-        self.db_connection = get_db()
+        self.db_connection = db_conn
         #Get the SQLalchemy engine to use pandas functionality
-        self.engine = None
+        self.engine = engine
 
     """Extra option to check whether deleting the attribute will destroy integrity constraints.
     Checks for other constraints is possible as well"""
@@ -182,3 +182,5 @@ class TableTransformer:
 
 
 if __name__ == '__main__':
+    tt = TableTransformer(1, 1)
+    print("What's up fool")

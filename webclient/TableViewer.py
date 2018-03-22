@@ -4,8 +4,8 @@ import math
 
 class TableViewer:
 
-    def __init__(self, setid):
-        self.engine = self.engine = create_engine("postgresql://dbadmin:AdminPass123@localhost/projectdb18")
+    def __init__(self, setid, engine):
+        self.engine = self.engine = engine
         self.setid = setid
         self.maxrows = None
 
