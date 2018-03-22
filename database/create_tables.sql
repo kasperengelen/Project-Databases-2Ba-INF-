@@ -1,4 +1,8 @@
+--Schema for system tables
 CREATE SCHEMA SYSTEM;
+
+--Schema for unit-testing purposes
+CREATE SCHEMA TEST;
 
 -- Table for keeping track of users
 CREATE TABLE SYSTEM.user_accounts (
@@ -35,7 +39,8 @@ CREATE TABLE SYSTEM.set_permissions (
     FOREIGN KEY(setid) REFERENCES SYSTEM.datasets(setid) ON DELETE CASCADE
 );
 
-CREATE TABLE dataset_history(
+--Table that should be made for every dataset to store all transformations performed on the data
+/*CREATE TABLE dataset_history(
 	setid INTEGER,
 	table_name VARCHAR(255),
 	attribute VARCHAR(255),
@@ -45,7 +50,7 @@ CREATE TABLE dataset_history(
 	transformation_date TIMESTAMP DEFAULT NOW(),
 
 	FOREIGN KEY(setid) REFERENCES datasets(setid) ON DELETE CASCADE);
-);
+);*/
 
 --TRIGGER to delete all the data if the admin is deleted (needs to be modified for more than 1 admin)
 /*CREATE FUNCTION delete_clean() RETURNS TRIGGER AS $BODY$
