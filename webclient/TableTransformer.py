@@ -1,8 +1,5 @@
 import pandas as pd
-from db_wrapper import DBConnection
-from utils import get_db
 from psycopg2 import sql
-from sqlalchemy import create_engine
 
 
 class TableTransformer:
