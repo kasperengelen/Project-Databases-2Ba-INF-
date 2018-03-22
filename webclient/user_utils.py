@@ -187,7 +187,7 @@ user_pages = Blueprint('user_pages', __name__)
 
 @user_pages.route('/logout/', methods=['GET', 'POST'])
 @require_login
-def logout_user():
+def logout():
     """Page that destroys the current session when visited."""
     session["user_data"] = None
     session["logged_in"] = False
@@ -196,7 +196,7 @@ def logout_user():
 # ENDFUNCTION
 
 @user_pages.route('/login/', methods=['GET', 'POST'])
-def login_user():
+def login():
     """Given the specified request data received from a POST or GET request, this will try to login
     a user with the data contained in the request. If no data is present in the request, this will return
     the login page."""
@@ -232,7 +232,7 @@ def login_user():
 # END FUNCTION
 
 @user_pages.route('/register/', methods=['GET', 'POST'])
-def register_user():
+def register():
     """Given the specified request data received from a POST or GET request, this will try to register
     a user with the data contained in the request. If no data is present in the request, this will return
     the register page."""
@@ -280,7 +280,7 @@ def register_user():
 @user_pages.route('/user/profile/', defaults = {'user_id': None})
 @user_pages.route('/user/profile/<int:user_id>')
 @require_login
-def view_user(user_id):
+def profile(user_id):
     """Returns a view profile page for the specified user if the user exists, otherwise
     this returns an error page."""
     try:
@@ -292,7 +292,7 @@ def view_user(user_id):
 
 @user_pages.route('/user/edit/', methods=['GET', 'POST'])
 @require_login
-def edit_user():
+def edit():
     """Returns a page for editing the information of the logged in user."""
 
     # create form

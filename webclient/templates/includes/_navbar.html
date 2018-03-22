@@ -20,13 +20,13 @@
                 <li class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" href="#"><span class="glyphicon glyphicon-user">
                 </span></a>
                 <ul class="dropdown-menu">
-                    <li><a href="{{ url_for('user_pages.view_user') }}">My Profile</a></li>
+                    <li><a href="{{ url_for('user_pages.profile') }}">My Profile</a></li>
                     <li><a href="{{ url_for('dataset_pages.list_dataset') }}">My Datasets</a></li>
                 </ul>
                 </li>
                 <li><a href="/logout">Logout</a></li>
             {% else %}
-                <li><a href="{{ url_for('user_pages.login_user') }}">Login/Register</a></li>
+                <li><a href="{{ url_for('user_pages.login') }}">Login/Register</a></li>
             {% endif %}
         </ul>
     </div>
