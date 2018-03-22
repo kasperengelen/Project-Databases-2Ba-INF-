@@ -175,7 +175,7 @@ class DataTransformer:
         query = query[:-5] + ")"
         print(query)
 
-        self.db_connection.cursor().execute("SET search_path TO {};".format(setid))
+        self.db_connection.cursor().execute("SET search_path TO {};".format(self.setid))
         self.db_connection.cursor().execute(query)
         self.db_connection.commit()
         return

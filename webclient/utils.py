@@ -5,6 +5,7 @@ from flask import g
 import user_utils
 import psycopg2
 
+
 def get_db():
     return g.db_conn
 
