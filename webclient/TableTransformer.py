@@ -5,7 +5,7 @@ from psycopg2 import sql
 from sqlalchemy import create_engine
 
 
-class DataTransformer:
+class TableTransformer:
 
     def __init__(self, userid, setid, replace=True):
         self.userid = userid
@@ -182,10 +182,3 @@ class DataTransformer:
 
 
 if __name__ == '__main__':
-    dt = DataTransformer(3, True)
-    #print(dt.get_internal_reference("etherdelta", "employees"))dt.delete_attribute("etherdelta", "clients", "stupid")
-    #dt.force_attribute_type(1, 'clients5', 'clientnumber', 'INTEGER', '', '')
-    #dt.change_attribute_type(1, 'clients2', 'clientnumber', 'VARCHAR(255)', '', 'clients5')
-    #dt.find_and_replace(1, 'clients5', 'clientnumber', '332', 'probleem')
-    dt.find_and_replace('9', 'test_csv', 'num3', '9', '50')
-    print("SUCCES!")

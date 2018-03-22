@@ -2,30 +2,31 @@ import pandas as pd
 from sqlalchemy import create_engine
 import math
 
-class DataViewer:
+class TableViewer:
 
-    def __init__(self):
+    def __init__(self, setid):
         self.engine = self.engine = create_engine("postgresql://dbadmin:AdminPass123@localhost/projectdb18")
+        self.setid = setid
         self.maxrows = None
 
         
     #Given a setid this method returns a list of all the tables within this dataset
-    def get_tablenames(self, setid):
-        sql_query = "SELECT table_name FROM information_schema.tables WHERE table_schema = '%s'" % str(setid)
+    def get_tablenames(self):
+        sql_query = "SELECT table_name FROM information_schema.tables WHERE table_schema = '%s'" % str(self.setid)
         query_result = pd.read_sql(sql_query, self.engine)
         tablenames = query_result['table_name'].tolist()
         return tablenames
 
 
-    def get_attributes(self, setid, tablename):
-        SQL_query = "SELECT * FROM \"%s\".\"%s\" LIMIT 1" % (str(setid), tablename)
+    def get_attributes(self, tablename):
+        SQL_query = "SELECT * FROM \"%s\".\"%s\" LIMIT 1" % (str(self.setid), tablename)
         data_frame = pd.read_sql(SQL_query, self.engine)
         return data_frame.columns.values.tolist()
         
     
     #Given a a number of rows to display this functions returns a list of possible page indices.
-    def get_page_indices(self, setid, tablename, display_nr, page_nr=1):
-        count_query  = "SELECT COUNT(*) FROM \"%s\".\"%s\"" % (setid, tablename)
+    def get_page_indices(self, tablename, display_nr, page_nr=1):
+        count_query  = "SELECT COUNT(*) FROM \"%s\".\"%s\"" % (self.setid, tablename)
         query_result = pd.read_sql(count_query, self.engine)
         table_size = query_result.iat[0, 0]
         self.maxrows = table_size
@@ -60,9 +61,9 @@ class DataViewer:
 
     #Method that calculates whether a index is in range of table with display of nr_rows.
     #Make sure get_page_indices is always called before this method for properly setting self.maxrows
-    def is_in_range(self, setid, tablename, page_nr, nr_rows):
+    def is_in_range(self, tablename, page_nr, nr_rows):
         if self.maxrows is None:
-            count_query  = "SELECT COUNT(*) FROM \"%s\".\"%s\"" % (setid, tablename)
+            count_query  = "SELECT COUNT(*) FROM \"%s\".\"%s\"" % (self.setid, tablename)
             query_result = pd.read_sql(count_query, self.engine)
             table_size = query_result.iat[0, 0]
             self.maxrows = table_size
@@ -73,17 +74,13 @@ class DataViewer:
             return True
 
     #This method returns a html table representagtion given the setid, tablename and page number and how many rows per page
-    def render_table(self, setid, tablename, page_nr, nr_rows):
+    def render_table(self, tablename, page_nr, nr_rows):
         offset = 0
         offset = (page_nr - 1) * nr_rows
-        SQL_query = "SELECT * FROM \"%s\".\"%s\" LIMIT %s OFFSET %s" % (str(setid), tablename, nr_rows, offset)
+        SQL_query = "SELECT * FROM \"%s\".\"%s\" LIMIT %s OFFSET %s" % (str(self.setid), tablename, nr_rows, offset)
         data_frame = pd.read_sql(SQL_query, self.engine)
         html_table = data_frame.to_html(None, None, None, True, False)
         return html_table
 
 if __name__ == '__main__':
-    dv = DataViewer()
-    #lol = dv.get_tablenames(1)
-    lol = dv.get_attributes(1, 'clients3')
-    print(lol)
     
