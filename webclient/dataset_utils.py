@@ -9,8 +9,8 @@ from passlib.hash import sha256_crypt
 from utils import EnumCheck, Logger
 import user_utils
 from utils import get_db
-from DataViewer import DataViewer
-from DataTransformer import DataTransformer
+from TableViewer import TableViewer
+from TableTransformer import TableTransformer
 
 ########################################### FORM CLASSES ###########################################
 
@@ -61,7 +61,7 @@ def view_dataset_home(dataset_id):
     information about the dataset. This page does not specify
     information contained in the tables of the dataset."""
 
-    dv = DataViewer()
+    dv = TableViewer()
 
     ## retrieve basic information
     get_db().cursor().execute("SELECT * FROM SYSTEM.datasets WHERE setid = %s", [dataset_id])
@@ -98,7 +98,7 @@ def view_dataset_table(dataset_id, tablename, page_nr):
     deleteattr_form = DeleteAttrForm()
 
     # set attribute values
-    dv = DataViewer()
+    dv = TableViewer()
 
     if tablename not in dv.get_tablenames(dataset_id):
         flash(message="Invalid table.", category="error")
@@ -141,7 +141,7 @@ def view_dataset_table(dataset_id, tablename, page_nr):
 @user_utils.require_login
 def transform_deleteattr(dataset_id, tablename):
     
-    dv = DataViewer()
+    dv = TableViewer()
 
     form = DeleteAttrForm(request.form)
     
@@ -153,7 +153,7 @@ def transform_deleteattr(dataset_id, tablename):
         Logger.log("Invalid form")
         return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 
-    dt = DataTransformer(session['user_data']['user_id'])
+    dt = TableTransformer(session['user_data']['user_id'])
 
     dt.delete_attribute(dataset_id, tablename, form.select_attr.data)
     flash(message="Attribute deleted.", category="success")
@@ -165,7 +165,7 @@ def transform_deleteattr(dataset_id, tablename):
 @user_utils.require_login
 def transform_findreplace(dataset_id, tablename):
 
-    dv = DataViewer()
+    dv = TableViewer()
 
     form = FindReplaceForm(request.form)
 
@@ -177,7 +177,7 @@ def transform_findreplace(dataset_id, tablename):
         Logger.log("Invalid form")
         return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 
-    dt = DataTransformer(session['user_data']['user_id'])
+    dt = TableTransformer(session['user_data']['user_id'])
     try:
         dt.find_and_replace(dataset_id, tablename, form.select_attr.data, form.search.data, form.replacement.data)
         flash(message="Find and replace successfull.", category="success")

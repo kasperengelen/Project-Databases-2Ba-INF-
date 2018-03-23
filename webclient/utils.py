@@ -2,7 +2,6 @@
 
 from wtforms.validators import ValidationError
 from flask import g
-import user_utils
 import psycopg2
 
 
