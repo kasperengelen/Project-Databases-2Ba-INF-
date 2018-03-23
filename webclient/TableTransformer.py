@@ -1,8 +1,5 @@
 import pandas as pd
-from db_wrapper import DBConnection
-from utils import get_db
 from psycopg2 import sql
-from sqlalchemy import create_engine
 
 
 class TableTransformer:
@@ -63,9 +60,10 @@ class TableTransformer:
     # Return the postgres data type of an attribute
     def get_attribute_type(self, tablename, attribute):
         internal_ref = self.get_internal_reference(tablename)
-        self.db_connection.cursor().execute(sql.SQL("SELECT pg_typeof({}) FROM {}.{}").format(sql.Identifier(attribute), sql.Identifier(internal_ref[0]),
+        cur = self.db_connection.cursor()
+        cur.execute(sql.SQL("SELECT pg_typeof({}) FROM {}.{}").format(sql.Identifier(attribute), sql.Identifier(internal_ref[0]),
                                                                                    sql.Identifier(internal_ref[1])))
-        return (self.db_connection.cursor().fetchone()[0], internal_ref)
+        return (cur.fetchone()[0], internal_ref)
 
 
     # Conversion of a "numeric" things (INTEGER and FLOAT, DATE, TIME, TIMESTAMP)
@@ -114,7 +112,7 @@ class TableTransformer:
 
 
     # In case that change_attribute_type fails due to elements that can't be converted
-    # this method will force the conversion by deleting the rows containing problematic elemants
+    # this method will force the conversion by a) setting
     def force_attribute_type(self, tablename, attribute, to_type, data_format="", new_name=""):
         if self.replace is True:
             internal_ref = self.get_internal_reference(tablename)
@@ -183,4 +181,3 @@ class TableTransformer:
 
 if __name__ == '__main__':
     tt = TableTransformer(1, 1)
-    print("What's up fool")
