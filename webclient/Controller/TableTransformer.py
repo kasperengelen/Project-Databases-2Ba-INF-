@@ -157,26 +157,33 @@ class TableTransformer:
                                                                                            sql.Identifier(attribute), sql.Identifier(attribute)), (replacement, value))
         self.db_connection.commit()
 
-        
     def change_column_name(self, tablename, old_name, new_name):
-        self.db_connection.cursor().execute("ALTER TABlE \"{}\".{} RENAME COLUMN {} TO {}".format(self.setid, tablename, old_name, new_name))
+        self.db_connection.cursor().execute(sql.SQL(
+            "ALTER TABlE {}.{} RENAME COLUMN {} TO {}").format(sql.Identifier(str(self.setid)),
+                                                               sql.Identifier(tablename),
+                                                               sql.Identifier(old_name),
+                                                               sql.Identifier(new_name)))
         self.db_connection.commit()
 
     def join_tables(self, table1, table2, table1_columns, table2_columns, new_table):
         # not complete
 
-        query = "CREATE TABLE {} AS (SELECT * FROM {} t1 JOIN {} t2 ON ".format(new_table, table1, table2)
+        query = sql.SQL("CREATE TABLE {} AS (SELECT * FROM {} t1 JOIN {} t2 ON ").format(sql.Identifier(new_table),
+                                                                                         sql.Identifier(table1),
+                                                                                         sql.Identifier(table2))
 
-        for i in range(len(table1_columns)):
-            query += "t1.{} = t2.{} AND ".format(table1_columns[i], table2_columns[i])
-        # remove the trailing AND
-        query = query[:-5] + ")"
+        for i in range(len(table1_columns) - 1):
+            query += sql.SQL("t1.{} = t2.{} AND ").format(sql.Identifier(table1_columns[i]),
+                                                          sql.Identifier(table2_columns[i]))
+
+        query += sql.SQL("t1.{} = t2.{})").format(sql.Identifier(table1_columns[-1]),
+                                                  sql.Identifier(table2_columns[-1]))
+
         print(query)
 
         self.db_connection.cursor().execute("SET search_path TO {};".format(self.setid))
         self.db_connection.cursor().execute(query)
         self.db_connection.commit()
-        return
 
 
 if __name__ == '__main__':
