@@ -1,0 +1,40 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+	
+	{% if session.logged_in %}
+		<div class="jumbotron text-center" style="padding: 1%">
+			<h2>My Profile</h2>
+		</div>
+		<div class="jumbotron text-center">
+    		
+
+    		<div class="jumbotron text-left">
+    			<div class="pull-right text-center">
+    				<a href="{{ url_for('user_pages.edit_user') }}" class="btn btn-primary">Edit</a>
+    			</div>
+    			<table style="width: 100%">
+                    <tr>
+                        <th>Name</th>
+    				    <td>{{ user_data.firstname }} {{ user_data.lastname }}</td>
+                    </tr>
+                    <tr>
+    				    <th>Email</th>
+                        <td>{{ user_data.email }}</td>
+    				</tr>
+                    <tr>
+                        <th>Register Date</th>
+                        <td>{{ user_data.register_date.D }}-{{ user_data.register_date.M }}-{{ user_data.register_date.Y }}</td>
+                    </tr>
+    			</table>
+    		</div>
+     	</div>
+
+     {% else %}
+     	<div class="jumbotron text-center" style="padding: 5px">
+     		<p>Please login to see your profile</p>
+     	</div>
+
+	{% endif %}
+
+{% endblock %}
