@@ -112,7 +112,7 @@ class TableTransformer:
 
 
     # In case that change_attribute_type fails due to elements that can't be converted
-    # this method will force the conversion by deleting the rows containing problematic elemants
+    # this method will force the conversion by a) setting
     def force_attribute_type(self, tablename, attribute, to_type, data_format="", new_name=""):
         if self.replace is True:
             internal_ref = self.get_internal_reference(tablename)
@@ -181,4 +181,3 @@ class TableTransformer:
 
 if __name__ == '__main__':
     tt = TableTransformer(1, 1)
-    print("What's up fool")

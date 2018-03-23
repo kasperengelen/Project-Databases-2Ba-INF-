@@ -4,6 +4,8 @@ sys.path.append(os.path.join(sys.path[0],'..'))
 import psycopg2
 import TableTransformer as transformer
 
+#This file contains tests for TableTransformer that specificaly overwrites tables.
+#For the tests on TableTransformer that create new tables instead overwriting refer to "test_TableTransformerCopy.py"
 
 class TestTableTransformer(unittest.TestCase):
     db_connection = None
@@ -67,6 +69,62 @@ class TestTableTransformer(unittest.TestCase):
         result = cur.fetchone()
         self.assertEqual(result[1], 1)
         self.assertEqual(result[2], '08/08/1997')
+
+    #Test the conversion of numeric types (INTEGER, FLOAT)
+    def test_numeric_conversion(self):
+        #From integer to float
+        self.test_object.change_attribute_type('test_table', 'number', 'FLOAT')
+        cur = self.db_connection.cursor()
+        cur.execute("SELECT pg_typeof(number) FROM \"TEST\".test_table")
+        result = cur.fetchone()[0]
+        self.assertEqual(result, 'double precision')
+        #From float to integer
+        self.test_object.change_attribute_type('test_table', 'number', 'INTEGER')
+        cur.execute("SELECT pg_typeof(number) FROM \"TEST\".test_table")
+        result = cur.fetchone()[0]
+        self.assertEqual(result, 'integer')
+        #From integer to VARCHAR(255)
+        self.test_object.change_attribute_type('test_table', 'number', 'VARCHAR(255)')
+        cur.execute("SELECT pg_typeof(number) FROM \"TEST\".test_table")
+        result = cur.fetchone()[0]
+        self.assertEqual(result, 'character varying')
+        #Leave database in valid testing state by returning the column to integer
+        self.test_object.change_attribute_type('test_table', 'number', 'INTEGER')
+        cur.execute("SELECT pg_typeof(number) FROM \"TEST\".test_table")
+        result = cur.fetchone()[0]
+        self.assertEqual(result, 'integer')
+
+    #Test the conversion of character types
+    def test_character_conversion(self):
+        cur = self.db_connection.cursor()
+        #Make it into a varchar for testing purposes
+        self.test_object.change_attribute_type('test_table', 'number', 'VARCHAR(255)')
+        self.test_object.change_attribute_type('test_table', 'number', 'INTEGER')
+        cur.execute("SELECT pg_typeof(number) FROM \"TEST\".test_table")
+        result = cur.fetchone()[0]
+        self.assertEqual(result, 'integer')
+        #Reset to varchar
+        self.test_object.change_attribute_type('test_table', 'number', 'VARCHAR(255)')
+        self.test_object.change_attribute_type('test_table', 'number', 'FLOAT')
+        cur.execute("SELECT pg_typeof(number) FROM \"TEST\".test_table")
+        result = cur.fetchone()[0]
+        self.assertEqual(result, 'double precision')
+        #Reset to varchar
+        self.test_object.change_attribute_type('test_table', 'number', 'VARCHAR(255)')
+        self.test_object.change_attribute_type('test_table', 'number', 'CHAR(255)')
+        cur.execute("SELECT pg_typeof(number) FROM \"TEST\".test_table")
+        result = cur.fetchone()[0]
+        self.assertEqual(result, 'character')
+        #Leave database in valid testing state by returning the column to integer
+        self.test_object.change_attribute_type('test_table', 'number', 'INTEGER')
+        cur.execute("SELECT pg_typeof(number) FROM \"TEST\".test_table")
+        result = cur.fetchone()[0]
+        self.assertEqual(result, 'integer')
+        
+        
+
+        
+        
 
         
 
