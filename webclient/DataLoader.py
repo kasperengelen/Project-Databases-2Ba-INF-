@@ -5,6 +5,7 @@ import psycopg2
 import re
 from psycopg2 import sql
 import db_wrapper
+from TableTransformer import TableTransformer
 # from utils import get_db
 
 class DataLoader:
@@ -182,8 +183,11 @@ class DataLoader:
 
 if __name__ == "__main__":
 
-    test = DataLoader(91)
-    test.create_dataset("demo", "dataset for the demo")
-    test.read_file("records.csv", True)
+    test = DataLoader(32)
+    # test.create_dataset("demo", "dataset for the demo")
+    # test.read_file("records.csv", True)
     # test.read_file("load_departments.dump", True)
     # test.delete_dataset()
+
+    tf = TableTransformer(3, 32, test.db_conn, 1)
+    tf.change_column_name("departments", "dept_no", "OwO")
