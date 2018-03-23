@@ -15,8 +15,8 @@
 				</tr>
 				{% for dataset in datasets %}
 					<tr>
-						<td><a href="{{ url_for('dataset_pages.view_dataset_home', dataset_id=dataset.id) }}">{{ dataset.displayName }}</a></td>
-						<td>{{ dataset.description }}</td>
+						<td><a href="{{ url_for('dataset_pages.view_dataset_home', dataset_id=dataset.setid) }}">{{ dataset.name }}</a></td>
+						<td>{{ dataset.desc }}</td>
 					</tr>					
 				{% endfor %}
 			{% else %}

@@ -1,29 +1,30 @@
 {% extends 'layout.html' %}
 
 {% block body %}
-	<div class="jumbotron text-center" style="padding: 1%">
-		<h2>Manage Users</h2>
-	</div>    		
+    <div class="jumbotron text-center" style="padding: 1%">
+        <h2>Manage Users</h2>
+    </div>            
 
     <div class="jumbotron">
-		<table>			
-			{% if user_list %}
-				<tr>
-					<th>Email</th>
-					<th></th>
-				</tr>
-				{% for user in user_list %}
-					<tr>
-						<td>{{ user.email.data }}</td>
-						<td>{% from "includes/_formhelpers.html" import render_field %}
-							<form method="post" action="{{ url_for('admin_pages.delete_user') }}" name="remove">
-							{{ user.hidden_tag() }}
-							<label for="remove{{ user.userid.data }}" class="glyphicon glyphicon-remove"></label>
-							<input id="remove{{ user.userid.data }}" style="visibility: hidden;" type="submit"></form></td>
-					</tr>
-				{% endfor %}
-			{% endif %}			
-		</table>
-	</div>
-
+        <table>
+            {% if destroy_user_forms %}
+                <tr>
+                    <th>Email</th>
+                    <th></th>
+                </tr>
+                {% for user in destroy_user_forms %}
+                    <tr>
+                        <td>{{ user.email.data }}</td>
+                        <td>{% from "includes/_formhelpers.html" import render_field %}
+                            <form method="post" action="{{ url_for('admin_pages.delete_user') }}" name="remove">
+                                {{ user.hidden_tag() }}
+                                <label for="remove{{ user.userid.data }}" class="glyphicon glyphicon-remove"></label>
+                                <input id="remove{{ user.userid.data }}" style="visibility: hidden;" type="submit">
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
+            {% endif %}
+        </table>
+    </div>
 {% endblock %}

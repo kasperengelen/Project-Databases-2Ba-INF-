@@ -1,46 +1,37 @@
 {% extends 'layout.html' %}
 
 {% block body %}
-	
-	{% if session.logged_in %}
-		<div class="jumbotron text-center" style="padding: 1%">
-			<h2>Edit Profile</h2>
-		</div>
-		<div class="jumbotron text-center" style="padding: 1%">
 
-    		<div class="jumbotron text-left">
+    <div class="jumbotron text-center" style="padding: 1%">
+        <h2>Edit Profile</h2>
+    </div>
+    <div class="jumbotron text-center" style="padding: 1%">
 
-	    		<div class="panel-body">
-	              <form method="post" action="">
-	                {{ form.csrf_token }}
-	                {% from "includes/_formhelpers.html" import render_field %}
-	                <div class="form-group">
-	                	{{render_field(form.firstname, class_="form-control")}}
-	                </div>
-	                <div class="form-group">
-	                  	{{render_field(form.lastname, class_="form-control")}}
-	                </div>
-	                <div class="form-group">
-	                  	{{render_field(form.email, class_="form-control")}}
-	                </div>
-	                <div class="form-group">
-	                  	{{render_field(form.password, class_="form-control")}}
-	                </div>
-	                <div class="form-group">
-	                  	{{render_field(form.passwordconfirm, class_="form-control")}}
-	                </div>
-	                <p><input type="submit" class="btn btn-primary" value="Save Changes"></p>
-	              </form>
-	            </div>
+        <div class="jumbotron text-left">
 
-    		</div>
-     	</div>
+            <div class="panel-body">
+                <form method="post" action="">
+                    {{ form.csrf_token }}
+                    {% from "includes/_formhelpers.html" import render_field %}
+                    <div class="form-group">
+                        {{render_field(form.firstname, class_="form-control")}}
+                    </div>
+                    <div class="form-group">
+                        {{render_field(form.lastname, class_="form-control")}}
+                    </div>
+                    <div class="form-group">
+                        {{render_field(form.email, class_="form-control")}}
+                    </div>
+                    <div class="form-group">
+                        {{render_field(form.password, class_="form-control")}}
+                    </div>
+                    <div class="form-group">
+                        {{render_field(form.passwordconfirm, class_="form-control")}}
+                    </div>
+                    <p><input type="submit" class="btn btn-primary" value="Save Changes"></p>
+                </form>
+            </div>
 
-     {% else %}
-     	<div class="jumbotron text-center" style="padding: 5px">
-     		<p>Please login to see your profile</p>
-     	</div>
-
-	{% endif %}
-
+        </div>
+    </div>
 {% endblock %}
