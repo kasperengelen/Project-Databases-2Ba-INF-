@@ -5,6 +5,7 @@ from DatasetInfo import DatasetInfo
 from DatasetManager import DatasetManager
 from UserManager import UserManager
 from dataset_forms import FindReplaceForm, DeleteAttrForm, DatasetForm, AddUserForm, RemoveUserForm
+from TableViewer import TableViewer
 
 dataset_pages = Blueprint('dataset_pages', __name__)
 
@@ -60,6 +61,11 @@ def view_dataset_table(dataset_id, tablename, page_nr):
 @dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/deleteattr', methods=['POST'])
 @require_login
 def transform_deleteattr(dataset_id, tablename):
+    """Callback for delete attribute transformation."""
+    tv = TableViewer()
+
+
+
     return ""
 
 @dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/findreplace', methods=['POST'])

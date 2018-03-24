@@ -6,7 +6,12 @@ import psycopg2
 from functools import wraps
 
 def get_db():
+    """Retrieve the DB connection."""
     return g.db_conn
+
+def get_sqla_eng():
+    """Retrieve the SQLA engine."""
+    return g.sqla_engine
 
 def sql_time_to_dict(sql_date_string):
     """Given a string of the format "YYYY:MM:DD HH:MM:SS.SSSSSS" this

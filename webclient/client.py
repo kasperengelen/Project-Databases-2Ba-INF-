@@ -9,6 +9,7 @@ import user_pages
 import admin_pages
 import dataset_pages
 import db_wrapper
+from sqlalchemy import create_engine
 
 app = Flask(__name__, template_folder="./View/templates/")
 app.config.update(dict(
@@ -23,11 +24,13 @@ app.register_blueprint(dataset_pages.dataset_pages)
 def before_request():
     """Prepare request."""
     g.db_conn = db_wrapper.DBWrapper()
+    g.sqla_engine = self.engine = self.engine = create_engine("postgresql://dbadmin:AdminPass123@localhost/projectdb18")
 
 @app.teardown_request
 def teardown_request(e):
     """Postprocess request."""
     g.db_conn.close()
+    g.sqla_engine.dispose()
 
 @app.route('/')
 def index():
