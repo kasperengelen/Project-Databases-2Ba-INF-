@@ -57,7 +57,7 @@ class DatasetManager:
         get_db().commit()
 
         # CREATE BACKUP SCHEMA
-        get_db().cursor().execute("CREATE SCHEMA \"{}\";".format(int(setid)))
+        get_db().cursor().execute("CREATE SCHEMA \"original_{}\";".format(int(setid)))
         get_db().commit()
 
         return setid
