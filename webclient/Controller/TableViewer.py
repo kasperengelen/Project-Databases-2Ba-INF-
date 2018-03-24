@@ -4,9 +4,11 @@ import math
 
 class TableViewer:
 
-    def __init__(self, setid, engine):
+    def __init__(self, setid, tablename, engine):
         self.engine = engine
         self.setid = setid
+        self.tablename = tablename
+        query_result = pd.read_sql(sql_query, self.engine)
         self.maxrows = None
 
         
@@ -18,17 +20,19 @@ class TableViewer:
         return tablenames
 
 
-    def get_attributes(self, tablename):
-        SQL_query = "SELECT * FROM \"%s\".\"%s\" LIMIT 1" % (str(self.setid), tablename)
+    def get_attributes(self):
+        SQL_query = "SELECT * FROM \"%s\".\"%s\" LIMIT 1" % (str(self.setid), self.tablename)
         data_frame = pd.read_sql(SQL_query, self.engine)
         return data_frame.columns.values.tolist()
         
     
     #Given a a number of rows to display this functions returns a list of possible page indices.
-    def get_page_indices(self, tablename, display_nr, page_nr=1):
-        count_query  = "SELECT COUNT(*) FROM \"%s\".\"%s\"" % (self.setid, tablename)
-        query_result = pd.read_sql(count_query, self.engine)
-        table_size = query_result.iat[0, 0]
+    def get_page_indices(self, display_nr, page_nr=1):
+        if self.maxrows is None:
+            #This method will set the maxrows
+            self.is_in_range(1, 1)
+    
+        table_size = self.maxrows
         self.maxrows = table_size
         max_index = math.ceil(table_size / display_nr)
         #At this point the table is too large to just show all the indices, we have to minimize clutter
@@ -61,12 +65,11 @@ class TableViewer:
 
     #Method that calculates whether a index is in range of table with display of nr_rows.
     #Make sure get_page_indices is always called before this method for properly setting self.maxrows
-    def is_in_range(self, tablename, page_nr, nr_rows):
-        if self.maxrows is None:
-            count_query  = "SELECT COUNT(*) FROM \"%s\".\"%s\"" % (self.setid, tablename)
-            query_result = pd.read_sql(count_query, self.engine)
-            table_size = query_result.iat[0, 0]
-            self.maxrows = table_size
+    def is_in_range(self, page_nr, nr_rows):
+        count_query  = "SELECT COUNT(*) FROM \"%s\".\"%s\"" % (self.setid, self.tablename)
+        query_result = pd.read_sql(count_query, self.engine)
+        table_size = query_result.iat[0, 0]
+        self.maxrows = table_size
             
         if((page_nr - 1) * nr_rows >= self.maxrows):
             return False
@@ -74,10 +77,10 @@ class TableViewer:
             return True
 
     #This method returns a html table representagtion given the setid, tablename and page number and how many rows per page
-    def render_table(self, tablename, page_nr, nr_rows):
+    def render_table(self, page_nr, nr_rows):
         offset = 0
         offset = (page_nr - 1) * nr_rows
-        SQL_query = "SELECT * FROM \"%s\".\"%s\" LIMIT %s OFFSET %s" % (str(self.setid), tablename, nr_rows, offset)
+        SQL_query = "SELECT * FROM \"%s\".\"%s\" LIMIT %s OFFSET %s" % (str(self.setid), self.tablename, nr_rows, offset)
         data_frame = pd.read_sql(SQL_query, self.engine)
         html_table = data_frame.to_html(None, None, None, True, False)
         return html_table
