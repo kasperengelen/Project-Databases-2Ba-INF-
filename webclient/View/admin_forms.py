@@ -19,8 +19,8 @@ class DeleteDatasetForm(FlaskForm):
     """Class that represents a form that allows an admin to delete
     a dataset."""
     
-    setid = None
-    setname = None
+    userid = HiddenField('Set id')
+    setname = HiddenField('Set name')
 
     def fillForm(self, dataset):
         self.setid.data = dataset.setid
