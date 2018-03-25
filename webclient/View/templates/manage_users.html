@@ -11,10 +11,12 @@
                 <tr>
                     <th>Email</th>
                     <th></th>
+                    <th></th>
                 </tr>
                 {% for user in destroy_user_forms %}
                     <tr>
                         <td>{{ user.email.data }}</td>
+                        <td><a href="#">Manage</a>
                         <td>{% from "includes/_formhelpers.html" import render_field %}
                             <form method="post" action="{{ url_for('admin_pages.delete_user') }}" name="remove">
                                 {{ user.hidden_tag() }}

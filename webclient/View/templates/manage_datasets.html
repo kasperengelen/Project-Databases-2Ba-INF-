@@ -1,0 +1,28 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+	<div class="jumbotron text-center" style="padding: 1%">
+        <h2>Manage Datasets</h2>
+    </div>            
+
+    <div class="jumbotron">
+        <table>
+            {% if dataset_list %}
+                <tr>
+                    <th>Name</th>
+                    <th>Description</th>
+                    <th></th>
+                    <th></th>
+                </tr>
+                {% for dataset in destroy_user_forms %}
+                    <tr>
+                        <td>{{ dataset.displayName }}</td>
+                        <td>{{ dataset.description }}</td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                {% endfor %}
+            {% endif %}
+        </table>
+    </div>
+{% endblock %}

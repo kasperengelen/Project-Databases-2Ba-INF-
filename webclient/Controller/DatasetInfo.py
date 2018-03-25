@@ -35,7 +35,7 @@ class DatasetInfo:
     def getTableViewer(self, tablename):
         """Retrieves a TableViewer object associated with the specified set and table."""
         
-        if not table_name in self.getTableNames():
+        if not tablename in self.getTableNames():
             raise RuntimeError("Invalid tablename.")
         return TableViewer(self.setid, tablename, get_sqla_eng())
     # ENDMETHOD
