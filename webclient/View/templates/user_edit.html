@@ -3,8 +3,19 @@
 {% block body %}
 
     <div class="jumbotron text-center" style="padding: 1%">
-        <h2>Edit Profile</h2>
+        <div class="pull-right">
+        {% from "includes/_formhelpers.html" import render_field %}
+            <form method="post" action="{{ url_for('admin_pages.delete_user') }}" name="remove">
+                {{ form.hidden_tag() }}
+                <label for="remove" class="btn btn-primary">Delete</label>
+                <input id="remove" style="visibility: hidden;" type="submit">
+            </form>
+        </div>
+        <div class="text-center">
+            <h2>Edit Profile</h2>
+        </div>
     </div>
+
     <div class="jumbotron text-center" style="padding: 1%">
 
         <div class="jumbotron text-left">
