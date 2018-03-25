@@ -99,14 +99,43 @@ def transform_deleteattr(dataset_id, tablename):
 
     tt = dataset.getTableTransformer(tablename)
 
-    tt.delet
+    tt.delete_attribute(tablename, form.select_attr.data)
+    flash(message="Attribute deleted.", category="success")
 
-    return ""
+    return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
+# ENDFUNCTION
 
 @dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/findreplace', methods=['POST'])
 @require_login
 def transform_findreplace(dataset_id, tablename):
-    return ""
+    """Callback for universal search and replace transformation."""
+
+    if not DatasetManager.existsID(dataset_id):
+        abort(404)
+
+    dataset = DatasetManager.getDataset(dataset_id)
+
+    if tablename not in dataset.getTableNames():
+        abort(404)
+
+    tv = dataset.getTableViewer(tablename)
+
+    form = FindReplaceForm(request.form)
+    form.fillForm(tv.get_attributes())
+
+    if not form.validate():
+        flash(message="Invalid form.", category="error")
+        return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
+
+    tt = dataset.getTableTransformer(tablename)
+
+    try:
+        tt.find_and_replace(tablename, form.select_attr.data, form.search.data, form.replacement.data)
+    except:
+        flash(message="No matches found.", category="error")
+
+    return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
+# ENDFUNCTION
 
 @dataset_pages.route('/dataset/create', methods=['GET', 'POST'])
 @require_login
