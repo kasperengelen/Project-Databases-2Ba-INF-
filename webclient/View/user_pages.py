@@ -81,7 +81,7 @@ def profile(user_id):
 @user_pages.route('/user/edit/', methods=['GET', 'POST'], defaults={'userid': None})
 @user_pages.route('/user/edit/<int:userid>/', methods=['GET', 'POST'])
 @require_login
-def edit():
+def edit(userid):
     """Returns a page that provides a way to edit user information."""
 
     if userid is None:
