@@ -78,12 +78,20 @@ def profile(user_id):
     return render_template('user_profile.html', user_data = user_data.toDict())
 # ENDFUNCTION
 
-@user_pages.route('/user/edit/', methods=['GET', 'POST'])
+@user_pages.route('/user/edit/', methods=['GET', 'POST'], defaults = {'userid': None})
+@user_pages.route('/user/edit/<int:userid>/', methods = ['GET', 'POST'])
 @require_login
-def edit():
+def edit(userid):
     """Returns a page that provides a way to edit user information."""
 
-    current_user = UserManager.getUserFromID(session['userdata']['userid'])
+    if userid is None:
+        userid = session['userdata']['userid']
+
+    # PERMISSION CHECK
+    if not(userid == session['userdata']['userid'] or session['userdata']['admin']):
+        abort(403)
+
+    current_user = UserManager.getUserFromID(userid)
 
     form = UserEditForm(request.form)
 
@@ -108,3 +116,19 @@ def edit():
     
     return render_template('user_edit.html', form = form)
 # ENDFUNCTION
+
+@user_pages.route('/user/delete/', methods = ['POST'], defaults={'userid': None})
+@user_pages.route('/user/delete/<int:userid>/', methods = ['POST'])
+@require_login
+def delete(userid):
+    """Callback to delete the user."""
+
+    # CHECK IF USER EXISTS
+
+
+    # PERMISSION CHECK
+
+    # DELETE USER
+
+    return redirect(url_for('index'))
+
