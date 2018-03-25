@@ -6,6 +6,19 @@ from TableTransformer import TableTransformer
 
 class DatasetInfo:
     """Class that represents a dataset."""
+
+    @staticmethod
+    def fromSqlTuple(tupl):
+        """Convert a SQL-tuple containing information about a user
+        to a DatasetInfo object."""
+
+        setid = int(tupl[0])
+        setname = str(tupl[1])
+        description = str(tupl[2])
+
+        return DatasetInfo(setid, setname, description)
+    # ENDMETHOD
+
     def __init__(self, setid, name, description):
         self.setid = setid
         self.name = name
