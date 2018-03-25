@@ -19,11 +19,19 @@ class FindReplaceForm(FlaskForm):
     select_attr = SelectField('Attribute', choices=[])
     search = StringField('Search', [InputRequired(message="Input is required.")])
     replacement = StringField('Replacement', [InputRequired(message="Input is required.")])
+
+    def fillForm(self, attrs):
+        self.select_attr.choices = [(attrname, attrname) for attrname in attrs]
+    # ENDMETHOD
 # ENDCLASS
 
 class DeleteAttrForm(FlaskForm):
     """Form for the delete attribute/column transformation."""
     select_attr = SelectField('Attribute', choices=[])
+
+    def fillForm(self, attrs):
+        self.select_attr.choices = [(attrname, attrname) for attrname in attrs]
+    # ENDMETHOD
 # ENDCLASS
 
 class AddUserForm(FlaskForm):

@@ -42,13 +42,29 @@ def view_dataset_table(dataset_id, tablename, page_nr):
     if tablename not in dataset.getTableNames():
         abort(404)
 
-    # RETRIEVE ATTRIBUTES
-    # FILL FORMS
+    # get tableviewer
+    tv = dataset.getTableViewer(tablename)
+
+    # get info
+    dataset_info = dataset.toDict()
 
     # CHECK IN RANGE
+    if not tv.is_in_range(page_nr, 50):
+        flash(message="Page out of range.", category="error")
+        return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename = tablename, page_nr = 1))
 
-    dataset_info = dataset.toDict()
-    table_list = dataset.getTableNames()
+    # RETRIEVE ATTRIBUTES
+    attrs = tv.get_attributes()
+
+    # FILL FORMS
+    findrepl_form.fillForm(attrs)
+    delete_form.fillForm(attrs)
+
+    # render table
+    table_data = tv.render_table(page_nr, 50)
+
+    # get indices
+    page_indices = tv.get_page_indices(display_nr = 50, page_nr = page_nr)
 
     return render_template('dataset_transform.html', 
                                                 dataset_info = dataset_info,

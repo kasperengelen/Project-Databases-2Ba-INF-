@@ -1,4 +1,5 @@
 from utils import get_db
+from utils import get_sqla_eng
 from UserManager import UserManager
 
 class DatasetInfo:
@@ -34,7 +35,7 @@ class DatasetInfo:
         
         if not table_name in self.getTableNames():
             raise RuntimeError("Invalid tablename.")
-        return TableViewer(self.setid, table_name)
+        return TableViewer(self.setid, table_name, get_sqla_eng())
     # ENDMETHOD
 
     def changeMetadata(self, new_name, new_desc):
