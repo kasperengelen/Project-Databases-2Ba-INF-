@@ -157,7 +157,7 @@ def create_dataset():
         return render_template('dataset_create.html', form=form)
 # ENDFUNCTION
 
-@dataset_pages.route('/dataset/list')
+@dataset_pages.route('/dataset/list/')
 @require_login
 def list_dataset():
     """Returns a page that lists all the datasets that the currently
@@ -167,7 +167,32 @@ def list_dataset():
 
     setlist = [dataset.toDict() for dataset in datasets]
 
-    return render_template('dataset_list.html', setlist=setlist)
+    dataset_forms = []
+
+    for dataset in datasets:
+        form = DatasetListEntryForm()
+        form.fillForm(dataset)
+
+        dataset_forms.append(form)
+
+    return render_template('dataset_list.html', setlist=setlist, dataset_forms=dataset_forms)
+# ENDFUNCTION
+
+@dataset_pages.route('/dataset/<int:dataset_id>/leave/', methods=['POST'])
+@require_login
+def leave(dataset_id):
+    """Callback for leaving a dataset."""
+
+    if not DatasetManager.existsID(dataset_id):
+        abort(404)
+
+    try:
+        dataset = DatasetManager.getDataset(dataset_id)
+        dataset.removePerm(int(session['userdata']['userid']))
+    except:
+        flash(message="Error when leaving dataset.", category="error")
+
+    return redirect(url_for('dataset_pages.list_dataset'))
 # ENDFUNCTION
 
 @dataset_pages.route('/dataset/<int:dataset_id>/manage/', methods=['GET', 'POST'])
@@ -279,7 +304,7 @@ def add_user_dataset(dataset_id):
         dataset = DatasetManager.getDataset(dataset_id)
         dataset.addPerm(form.email.data, form.permission_type.data)
     except RuntimeError as e:
-        flash(message=e.args[0], category="error")
+        flash(message="Cannot add user to dataset.", category="error")
 
     return redirect(url_for('dataset_pages.edit_perms_dataset', dataset_id=dataset_id))
 # ENDFUNCTION
@@ -305,7 +330,7 @@ def remove_user_dataset(dataset_id):
             return redirect(url_for('dataset_pages.edit_perms_dataset', dataset_id=dataset_id))
         dataset.removePerm(int(form.userid.data))
     except RuntimeError as e:
-        flash(message=e.args[0], category="error")
+        flash(message="Cannot remove user from dataset.", category="error")
 
     return redirect(url_for('dataset_pages.edit_perms_dataset', dataset_id=dataset_id))
 # ENDFUNCTION

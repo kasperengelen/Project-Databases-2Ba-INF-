@@ -50,3 +50,18 @@ class RemoveUserForm(FlaskForm):
     email = HiddenField('Email', [Email()])
     permission_type = HiddenField('Permission Type', [EnumCheck(message="Invalid permission type.", choises=['read', 'write', 'admin'])])
 # ENDCLASS
+
+class DatasetListEntryForm(FlaskForm):
+    """Form that contains data about a dataset
+    that the user is part of."""
+
+    setid = HiddenField('Set id')
+    name = HiddenField('Set Name')
+    desc = HiddenField('Description')
+
+    def fillForm(dataset):
+        self.setid.data = dataset.setid
+        self.name.data = dataset.name
+        self.desc.data = dataset.data
+    # ENDMETHOD
+# ENDCLASS
