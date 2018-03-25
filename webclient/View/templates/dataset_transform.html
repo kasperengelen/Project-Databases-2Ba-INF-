@@ -35,7 +35,7 @@
 
 			<script type="text/javascript">
 			function page_search(){
-			    window.location.href = '/dataset/{{ dataset_info.setid }}/{{ table_name }}/' + document.getElementById('input').value;
+			    window.location.href = '/dataset/{{ dataset_info.setid }}/{{ tablename }}/' + document.getElementById('input').value;
 			 }
 			</script>
 		</div>
@@ -103,10 +103,15 @@
 	            background-color: white;
 	        }
 		</style>
-		{{ table_data|safe }}
+		<div class="container">
+			{{ table_data|safe }}
+		</div>
 		<script>
 			$(document).ready( function () {
-    			$('#dataframe').DataTable();
+    			$('#mytable').DataTable( {
+    				autoWidth: true,
+    				scrollX: 500
+    			} );
 			} );
 		</script>
 	</div>

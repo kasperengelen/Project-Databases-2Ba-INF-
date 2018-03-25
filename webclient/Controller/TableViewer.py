@@ -1,6 +1,7 @@
 import pandas as pd
 from sqlalchemy import create_engine
 import math
+import re
 
 class TableViewer:
 
@@ -82,7 +83,7 @@ class TableViewer:
         offset = (page_nr - 1) * nr_rows
         SQL_query = "SELECT * FROM \"%s\".\"%s\" LIMIT %s OFFSET %s" % (str(self.setid), self.tablename, nr_rows, offset)
         data_frame = pd.read_sql(SQL_query, self.engine)
-        html_table = data_frame.to_html(None, None, None, True, False, id="table")
+        html_table = re.sub(' mytable', '" id="mytable', data_frame.to_html(None, None, None, True, False, classes='mytable'))
         return html_table
 
 if __name__ == '__main__':
