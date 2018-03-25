@@ -5,10 +5,8 @@
 	<div class="jumbotron text-center" style="padding: 1%">
 		<h2>Manage Dataset</h2>
 		<div class="pull-right">
-		{% from "includes/_formhelpers.html" import render_field %}
-            <form method="post" action="{{ url_for('admin_pages.delete_dataset') }}" name="remove">
-                {{ form.hidden_tag() }}
-                <label for="remove" class="btn btn-primary"></label>
+            <form method="post" action="{{ url_for('dataset_pages.delete', dataset_id = dataset_id) }}" name="remove">
+                <label for="remove" class="btn btn-primary">Delete</label>
                 <input id="remove" style="visibility: hidden;" type="submit">
             </form>
         </div>
@@ -24,7 +22,7 @@
 		<div class="form-group">
 		    {{render_field(form.description, class_="form-control")}}  
 		</div>
-		<p><input type="submit" class="btn btn-primary" value="Save Changes"></p>
+		<p><input id="edit_form" type="submit" class="btn btn-primary" value="Save Changes"></p>
 		</form>
 	</div>
 

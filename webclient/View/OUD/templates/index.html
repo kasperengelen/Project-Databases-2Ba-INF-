@@ -1,0 +1,32 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+    
+    {% if session.loggedin %}
+        <div class="jumbotron text-center col-sm-12" style="padding: 1%">
+            <h2>Getting Started</h2>
+        </div>
+        <div>
+            <div class="jumbotron text-center col-sm-6" style="padding-top: 2%">
+                <h3>Existing Datasets</h3>
+                </br>
+                <a href="{{ url_for('dataset_pages.list_dataset') }}" class="btn btn-primary">View Datasets</a>
+            </div>
+            <div class="jumbotron text-center col-sm-6" style="padding-top: 2%;">
+                <h3>Create Dataset</h3>
+                </br>
+                <a href="{{ url_for('dataset_pages.create_dataset') }}" class="btn btn-primary">New Dataset</a>
+            </div>
+        </div>
+    {% else %}
+        <div class="jumbotron text-center"  style="padding: 1%">
+            <h2>Welcome</h2>
+        </div>
+
+        <div class="jumbotron text-center">
+            <h3>Programming Project Databases 2018</h3>    
+            <p></br>Atisha Ribeiro</br>Chris Nsana</br>Kasper Engelen</br>Luuk van Sloun</p>
+        </div>
+    {% endif %}
+
+{% endblock %}

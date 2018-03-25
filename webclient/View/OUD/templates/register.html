@@ -1,0 +1,47 @@
+{% extends 'layout.html'%}  
+
+{% block body %}
+  <div class="jumbotron text-center">
+    <div class="row">
+      <div class="col-md-6 col-md-offset-3">
+        <div class="panel panel-login">
+          <div class="panel-heading">
+            <div class="row">
+              <div class="col-xs-6">
+                <a href="{{ url_for('user_pages.login') }}" class="active" id="login-form-link">Login</a>
+              </div>
+              <div class="col-xs-6">
+                <a href="{{ url_for('user_pages.register') }}" id="register-form-link">Register</a>
+              </div>
+            </div>
+              <hr>
+            </div>
+            <div class="panel-body">
+              <form method="post" action="">
+                {{ form.csrf_token }}
+                {% from "includes/_formhelpers.html" import render_field %}
+                <div class="form-group">
+                  {{render_field(form.firstname, class_="form-control")}}
+                </div>
+                <div class="form-group">
+                  {{render_field(form.lastname, class_="form-control")}}
+                </div>
+                <div class="form-group">
+                  {{render_field(form.email, class_="form-control")}}
+                </div>
+                <div class="form-group">
+                  {{render_field(form.password, class_="form-control")}}
+                </div>
+                <div class="form-group">
+                  {{render_field(form.passwordconfirm, class_="form-control")}}
+                </div>
+                <p><input type="submit" class="btn btn-primary" value="Register"></p>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+{% endblock %}

@@ -59,9 +59,9 @@ class DatasetListEntryForm(FlaskForm):
     name = HiddenField('Set Name')
     desc = HiddenField('Description')
 
-    def fillForm(dataset):
+    def fillForm(self, dataset):
         self.setid.data = dataset.setid
         self.name.data = dataset.name
-        self.desc.data = dataset.data
+        self.desc.data = dataset.desc
     # ENDMETHOD
 # ENDCLASS

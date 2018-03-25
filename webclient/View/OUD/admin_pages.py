@@ -26,7 +26,7 @@ def manage_users():
         destroy_user_forms.append(form)
     # ENDFOR
 
-    return render_template('admin_pages.manage_users.html', destroy_user_forms = destroy_user_forms)
+    return render_template('manage_users.html', destroy_user_forms = destroy_user_forms)
 # ENDFUNCTION
 
 @admin_pages.route('/admin/edit_user/<int:userid>/', methods=['POST', 'GET'])
@@ -48,7 +48,7 @@ def edit_user(userid):
         # check if new email is in use.
         if form.email.data != current_user.email and UserManager.existsEmail(form.email.data):
             flash(message="Specified e-mail address already in use.", category="error")
-            return render_template('admin_pages.edit_user.html', form=form)
+            return render_template('admin_edit_user.html', form=form)
 
         # update information
         new_email = form.email.data
@@ -60,7 +60,7 @@ def edit_user(userid):
     else:
         form.fillFields(current_user)
 
-    return render_template('admin_pages.edit_user.html', form=form)
+    return render_template('admin_edit_user.html', form=form)
 # ENDFUNCTION
 
 @admin_pages.route('/admin/delete_user/', methods=['POST'])
@@ -105,7 +105,7 @@ def manage_datasets():
         destroy_dataset_forms.append(form)
     # ENDFOR
 
-    return render_template('admin_pages.manage_datasets.html', destroy_dataset_forms = destroy_dataset_forms)
+    return render_template('manage_datasets.html', destroy_dataset_forms = destroy_dataset_forms)
 # ENDFUNCTION
 
 @admin_pages.route('/admin/delete_dataset/', methods=['POST'])

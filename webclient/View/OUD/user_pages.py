@@ -31,9 +31,9 @@ def login():
             return redirect(url_for('index'))
         else:
             flash(message="Invalid email and password combination.", category="error")
-            return render_template('user_pages.login.html', form=form)
+            return render_template('login.html', form=form)
     else:
-        return render_template('user_pages.login.html', form = form)
+        return render_template('login.html', form = form)
 # ENDFUNCTION
 
 @user_pages.route('/register/', methods=['GET', 'POST'])
@@ -45,7 +45,7 @@ def register():
     if request.method == 'POST' and form.validate():
         if UserManager.existsEmail(form.email.data):
             flash(message="Specified e-mail address is already in use.", category="error")
-            return render_template('user_pages.register.html', form=form)
+            return render_template('register.html', form=form)
         else:
             fname = form.firstname.data
             lname = form.lastname.data
@@ -58,7 +58,7 @@ def register():
 
             return redirect(url_for('user_pages.login'))
     else:
-        return render_template('user_pages.register.html', form=form)
+        return render_template('register.html', form=form)
 # ENDFUNCTION
 
 @user_pages.route('/user/profile/', defaults={'user_id': None})
@@ -75,7 +75,7 @@ def profile(user_id):
 
     user_data = UserManager.getUserFromID(user_id)
 
-    return render_template('user_pages.profile.html', user_data = user_data.toDict())
+    return render_template('user_profile.html', user_data = user_data.toDict())
 # ENDFUNCTION
 
 @user_pages.route('/user/edit/', methods=['GET', 'POST'])
@@ -98,7 +98,7 @@ def edit():
         # check if new email is in use.
         if form.email.data != current_user.email and UserManager.existsEmail(form.email.data):
             flash(message="Specified e-mail address already in use.", category="error")
-            return render_template('user_pages.edit.html', form = form)
+            return render_template('user_edit.html', form = form)
 
         # update information
         new_email = form.email.data
@@ -112,7 +112,7 @@ def edit():
     else:
         form.fillFields(session['userdata'])
     
-    return render_template('user_pages.edit.html', form = form)
+    return render_template('user_edit.html', form = form)
 # ENDFUNCTION
 
 @user_pages.route('/user/delete/', methods = ['POST'])

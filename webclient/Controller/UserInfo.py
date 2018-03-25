@@ -59,6 +59,21 @@ class UserInfo:
         self.email = new.email
     # ENDMETHOD
 
+    def editInfoNoPass(self, new_email, new_fname, new_lname):
+        """Edit the user information except the password."""
+
+        get_db().cursor().execute("UPDATE SYSTEM.user_accounts SET fname=%s, lname=%s, email=%s WHERE userid=%s", 
+                                                                        [new_fname, new_lname, new_email, self.userid])
+        get_db().commit()
+
+        # update values
+        new = UserManager.UserManager.getUserFromID(self.userid)
+        self.fname = new.fname
+        self.lname = new.lname
+        self.email = new.email
+
+    # ENDMETHOD
+
     def toDict(self):
         """Retrieve a JSON-compatible dict
         that contains information about the user."""

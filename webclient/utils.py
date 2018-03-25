@@ -43,6 +43,11 @@ def sql_time_to_dict(sql_date_string):
         "sec_full": sec_full
     }
 
+def sync_user_info():
+    userid = session['userdata']['userid']
+
+    session['userdata'] = UserManager.getUserFromID(userid).toDict()
+
 
 class EnumCheck:
     def __init__(self, message="", choises=[]):
@@ -98,3 +103,5 @@ def require_admin(func):
 
     return wrapper
 # ENDFUNCTION
+
+from UserManager import UserManager

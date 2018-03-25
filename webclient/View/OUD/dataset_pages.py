@@ -23,7 +23,7 @@ def view_dataset_home(dataset_id):
     dataset_info = dataset.toDict()
     table_list = dataset.getTableNames()
 
-    return render_template('dataset_pages.home.html', dataset_info = dataset_info, table_list = table_list)
+    return render_template('dataset_view_home.html', dataset_info = dataset_info, table_list = table_list)
 # ENDFUNCTION
 
 @dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>', defaults = {'page_nr': 1})
@@ -66,7 +66,7 @@ def view_dataset_table(dataset_id, tablename, page_nr):
     # get indices
     page_indices = tv.get_page_indices(display_nr = 50, page_nr = page_nr)
 
-    return render_template('dataset_pages.table.html', 
+    return render_template('dataset_transform.html', 
                                                 table_name = tablename,
                                                 dataset_info = dataset_info,
                                                 page_indices = page_indices,
@@ -154,7 +154,7 @@ def create_dataset():
 
         return redirect(url_for('dataset_pages.view_dataset_home', dataset_id = setid))
     else:
-        return render_template('dataset_pages.create.html', form=form)
+        return render_template('dataset_create.html', form=form)
 # ENDFUNCTION
 
 @dataset_pages.route('/dataset/list/')
@@ -175,7 +175,7 @@ def list_dataset():
 
         dataset_forms.append(form)
 
-    return render_template('dataset_pages.list.html', setlist=setlist, dataset_forms=dataset_forms)
+    return render_template('dataset_list.html', setlist=setlist, dataset_forms=dataset_forms)
 # ENDFUNCTION
 
 @dataset_pages.route('/dataset/<int:dataset_id>/leave/', methods=['POST'])
@@ -214,7 +214,7 @@ def manage_dataset(dataset_id):
         return redirect(url_for('dataset_pages.view_dataset_home', dataset_id = dataset_id))
     else:
         form.fillForm(dataset.toDict())
-        return render_template('dataset_pages.manage.html', form = form, dataset_id = dataset_id)
+        return render_template('dataset_manage.html', form = form, dataset_id = dataset_id)
 # ENDFUNCTION
 
 @dataset_pages.route('/dataset/<int:dataset_id>/permissions')
@@ -278,7 +278,7 @@ def edit_perms_dataset(dataset_id):
 
     add_user_form = AddUserForm()
 
-    return render_template('dataset_pages.edit_perms.html', 
+    return render_template('dataset_permissions.html', 
                                             dataset_id = dataset_id, 
                                             add_user_form = add_user_form, 
                                             admin_form_list = admin_form_list,

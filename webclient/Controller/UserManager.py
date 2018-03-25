@@ -97,7 +97,7 @@ class UserManager:
         if not UserManager.existsID(userid):
             raise RuntimeError("User with specified userid does not exists.")
 
-        get_db().cursor().execute("DELETE FROM SYSTEM.user_accounts WHERE userid=%s CASCADE;", [userid])
+        get_db().cursor().execute("DELETE FROM SYSTEM.user_accounts WHERE userid=%s;", [userid])
         get_db().commit()
     # ENDMETHOD
 

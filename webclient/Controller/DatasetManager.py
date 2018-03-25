@@ -77,7 +77,7 @@ class DatasetManager:
 
 
         # DELETE DATASET
-        get_db().cursor().execute("DELETE FROM SYSTEM.datasets WHERE setid=%s CASCADE;", [setid])
+        get_db().cursor().execute("DELETE FROM SYSTEM.datasets WHERE setid=%s;", [setid])
         get_db().commit()
     # ENDMETHOD
 

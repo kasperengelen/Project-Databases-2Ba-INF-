@@ -3,7 +3,7 @@ sys.path.append('./View/')
 sys.path.append('./Model/')
 sys.path.append('./Controller/')
 
-from flask import Flask, render_template, g
+from flask import Flask, render_template, g, session
 import utils
 import user_pages
 import admin_pages
@@ -26,11 +26,17 @@ def before_request():
     g.db_conn = db_wrapper.DBWrapper()
     g.sqla_engine = create_engine("postgresql://dbadmin:AdminPass123@localhost/projectdb18")
 
+    # make sure that user information is up to date
+    if 'loggedin' in session and session['loggedin']:
+        utils.sync_user_info()
+# ENDFUNCTION
+
 @app.teardown_request
 def teardown_request(e):
     """Postprocess request."""
     g.db_conn.close()
     g.sqla_engine.dispose()
+# ENDFUNCTION
 
 @app.route('/')
 def index():
