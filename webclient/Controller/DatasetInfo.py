@@ -1,6 +1,7 @@
 from utils import get_db
 from utils import get_sqla_eng
 from UserManager import UserManager
+from TableViewer import TableViewer
 
 class DatasetInfo:
     """Class that represents a dataset."""
