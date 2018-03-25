@@ -16,7 +16,8 @@
                 {% for user in destroy_user_forms %}
                     <tr>
                         <td>{{ user.email.data }}</td>
-                        <td><a href="#">Manage</a>
+                        <td><a style="color: black;" href="{{ url_for('user_pages.edit') }}">
+                            <span class="glyphicon glyphicon-pencil"></span></a></td>
                         <td>{% from "includes/_formhelpers.html" import render_field %}
                             <form method="post" action="{{ url_for('admin_pages.delete_user') }}" name="remove">
                                 {{ user.hidden_tag() }}
