@@ -22,7 +22,7 @@
     				<p style="display: inline-block;">...</p>
     			{% else %}
 					<p style="display: inline-block;"><a style="color: black;"
-						href="{{ url_for('dataset_pages.view_dataset_table', dataset_id=dataset_info.setid, tablename=table_name, page_nr=index) }}">
+						href="{{ url_for('dataset_pages.view_dataset_table', dataset_id=dataset_info.setid, tablename=tablename, page_nr=index) }}">
 							{{ index }}</a></p>	
     			{% endif %}
     			
@@ -104,8 +104,11 @@
 	        }
 		</style>
 		{{ table_data|safe }}
-
-		
+		<script>
+			$(document).ready( function () {
+    			$('#dataframe').DataTable();
+			} );
+		</script>
 	</div>
 
 	
