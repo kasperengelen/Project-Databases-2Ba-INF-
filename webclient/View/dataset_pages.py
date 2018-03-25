@@ -78,7 +78,7 @@ def view_dataset_table(dataset_id, tablename, page_nr):
 @require_login
 def transform_deleteattr(dataset_id, tablename):
     """Callback for delete attribute transformation."""
-    tv = TableViewer()
+    dataset = DatasetManager.getDataset(dataset_id)
 
 
 
