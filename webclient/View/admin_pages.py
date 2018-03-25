@@ -35,6 +35,8 @@ def manage_users():
 def delete_user():
     """Callback for admins to delete a user."""
 
+    form = DeleteUserForm(request.form)
+
     if not form.validate():
         return redirect(url_for('admin_pages.manage_users'))
 
@@ -77,6 +79,10 @@ def manage_datasets():
 @require_admin
 def delete_dataset():
     """Callback for admins to delete a dataset."""
+
+    form = DeleteDatasetForm(request.form)
+
+    dataset_id = int(form.setid.data)
 
     if not DatasetManager.existsID(dataset_id):
         abort(404)
