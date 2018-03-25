@@ -14,10 +14,10 @@
                     <th></th>
                     <th></th>
                 </tr>
-                {% for dataset in destroy_user_forms %}
+                {% for dataset in destroy_dataset_forms %}
                     <tr>
-                        <td>{{ dataset.displayName }}</td>
-                        <td>{{ dataset.description }}</td>
+                        <td>{{ dataset.displayName.data }}</td>
+                        <td>{{ dataset.description.data }}</td>
                         <td><a style="color: black;" href="{{ url_for('dataset_pages.manage_dataset') }}">
                             <span class="glyphicon glyphicon-pencil"></span></a></td>
                         <td>{% from "includes/_formhelpers.html" import render_field %}

@@ -10,12 +10,12 @@
 		</div>
 
 		<div class="text-center">
-			<h2>Dataset: {{ dataset_info.name }}</h2>
+			<h2>{{ dataset_info.name }}</h2>
 			<p>{{ dataset_info.desc }}</p>	
 		</div>
 	</div>    		
 
-    <div class="jumbotron">
+    <!--<div class="jumbotron">
     	<div class="text-center">
     		{% for index in page_indices %}
     			{% if index == "..." %}
@@ -39,7 +39,7 @@
 			 }
 			</script>
 		</div>
-	</div>	
+	</div>-->
   
   	<div class="panel-group" id="accordion">
 	    <div class="panel panel-default">
@@ -103,14 +103,14 @@
 	            background-color: white;
 	        }
 		</style>
-		<div class="container">
+		<div>
 			{{ table_data|safe }}
 		</div>
 		<script>
 			$(document).ready( function () {
     			$('#mytable').DataTable( {
-    				autoWidth: true,
-    				scrollX: 550
+    				scroller: true,
+    				scrollX: true
     			} );
 			} );
 		</script>
