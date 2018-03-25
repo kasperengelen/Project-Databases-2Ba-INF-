@@ -91,7 +91,7 @@ class DatasetManager:
         retval = []
 
         for result in results:
-            retval.append(DatasetManager.fromSqlTuple(result))
+            retval.append(DatasetInfo.fromSqlTuple(result))
 
         return retval
     # ENDMETHOD
