@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, redirect, url_for
 from utils import require_admin
 from utils import require_login
 from UserManager import UserManager
+from DatasetManager import DatasetManager
 from admin_forms import DeleteUserForm, DeleteDatasetForm
 
 admin_pages = Blueprint('admin_pages', __name__)
