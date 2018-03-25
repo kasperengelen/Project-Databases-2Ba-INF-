@@ -309,3 +309,15 @@ def remove_user_dataset(dataset_id):
 
     return redirect(url_for('dataset_pages.edit_perms_dataset', dataset_id=dataset_id))
 # ENDFUNCTION
+
+@dataset_pages.route('/dataset/<int:dataset_id/delete', methods=['POST'])
+@require_login
+def delete(dataset_id):
+    """Callback to delete dataset."""
+
+    if not DatasetManager.existsID(dataset_id):
+        abort(404)
+
+    DatasetManager.destroyDataset(dataset_id)
+    flash(message="Dataset deleted.", category="success")
+# ENDFUNCTION

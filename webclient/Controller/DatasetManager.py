@@ -22,7 +22,7 @@ class DatasetManager:
         get_db().cursor().execute("SELECT * FROM SYSTEM.datasets WHERE setid=%s;", [setid])
         result = get_db().cursor().fetchone()
 
-        return DatasetInfo(int(result[0]), str(result[1]), str(result[2]))
+        return DatasetInfo.fromSqlTuple(result)
     # ENDMETHOD
 
     @staticmethod
@@ -35,11 +35,7 @@ class DatasetManager:
         retval = []
 
         for result in results:
-            setid = int(result[0])
-            setname = str(result[1])
-            desc = str(result[2])
-
-            retval.append(DatasetInfo(setid, setname, desc))
+            retval.append(DatasetInfo.fromSqlTuple(result))
 
         return retval
     # ENDMETHOD
@@ -83,5 +79,20 @@ class DatasetManager:
         # DELETE DATASET
         get_db().cursor().execute("DELETE FROM SYSTEM.datasets WHERE setid=%s CASCADE;", [setid])
         get_db().commit()
+    # ENDMETHOD
+
+    @staticmethod
+    def getAllDatasets():
+        """Retrieve a list of DatasetInfo objects that represent all datasets."""
+        
+        get_db().cursor().execute("SELECT * FROM SYSTEM.datasets;")
+        results = get_db().cursor().fetchall()
+
+        retval = []
+
+        for result in results:
+            retval.append(DatasetManager.fromSqlTuple(result))
+
+        return retval
     # ENDMETHOD
 

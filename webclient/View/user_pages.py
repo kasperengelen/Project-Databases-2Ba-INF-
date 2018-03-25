@@ -78,20 +78,24 @@ def profile(user_id):
     return render_template('user_profile.html', user_data = user_data.toDict())
 # ENDFUNCTION
 
-@user_pages.route('/user/edit/', methods=['GET', 'POST'], defaults = {'userid': None})
-@user_pages.route('/user/edit/<int:userid>/', methods = ['GET', 'POST'])
+@user_pages.route('/user/edit/', methods=['GET', 'POST'], defaults={'userid': None})
+@user_pages.route('/user/edit/<int:userid>/', methods=['GET', 'POST'])
 @require_login
-def edit(userid):
+def edit():
     """Returns a page that provides a way to edit user information."""
 
     if userid is None:
         userid = session['userdata']['userid']
 
-    # PERMISSION CHECK
-    if not(userid == session['userdata']['userid'] or session['userdata']['admin']):
+    current_user = UserManager.getUserFromID(session['userdata']['userid'])
+
+    # CHECK PERMISSIONS
+    if not (userid == session['userdata']['userid'] or session['userdata']['admin']):
         abort(403)
 
-    current_user = UserManager.getUserFromID(userid)
+    # CHECK IF USER EXISTS
+    if not UserManager.existsID(userid):
+        abort(404)
 
     form = UserEditForm(request.form)
 
@@ -117,18 +121,18 @@ def edit(userid):
     return render_template('user_edit.html', form = form)
 # ENDFUNCTION
 
-@user_pages.route('/user/delete/', methods = ['POST'], defaults={'userid': None})
-@user_pages.route('/user/delete/<int:userid>/', methods = ['POST'])
+@user_pages.route('/user/delete/', methods = ['POST'])
 @require_login
-def delete(userid):
+def delete():
     """Callback to delete the user."""
 
-    # CHECK IF USER EXISTS
-
-
-    # PERMISSION CHECK
-
     # DELETE USER
+    UserManager.destroyUser(session['userdata']['userid'])
+
+    # LOGOUT
+    LoginManager.setLoggedOut()
+
+    flash(message="User account deleted.", category="success")
 
     return redirect(url_for('index'))
-
+# ENDFUNCTION

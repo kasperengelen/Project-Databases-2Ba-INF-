@@ -4,6 +4,7 @@ from passlib.hash import sha256_crypt
 
 class UserInfo:
     """Class that represents a user."""
+    
     @staticmethod
     def fromSqlTuple(tupl):
         """Convert a SQL-tuple containing information about a user

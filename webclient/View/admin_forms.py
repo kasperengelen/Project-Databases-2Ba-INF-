@@ -15,3 +15,16 @@ class DeleteUserForm(FlaskForm):
     # ENDMETHOD
 # ENDCLASS
 
+class DeleteDatasetForm(FlaskForm):
+    """Class that represents a form that allows an admin to delete
+    a dataset."""
+    
+    setid = None
+    setname = None
+
+    def fillForm(self, dataset):
+        self.setid.data = dataset.setid
+        self.setname.data = dataset.name
+    # ENDMETHOD
+# ENDCLASS
+
