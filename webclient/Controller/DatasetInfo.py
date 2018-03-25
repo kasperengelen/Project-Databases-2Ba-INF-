@@ -2,6 +2,7 @@ from utils import get_db
 from utils import get_sqla_eng
 from UserManager import UserManager
 from TableViewer import TableViewer
+from TableTransformer import TableTransformer
 
 class DatasetInfo:
     """Class that represents a dataset."""
@@ -31,12 +32,20 @@ class DatasetInfo:
         return tablenames
     # ENDMETHOD
 
-    def getTableViewer(self, table_name):
+    def getTableViewer(self, tablename):
         """Retrieves a TableViewer object associated with the specified set and table."""
         
         if not table_name in self.getTableNames():
             raise RuntimeError("Invalid tablename.")
-        return TableViewer(self.setid, table_name, get_sqla_eng())
+        return TableViewer(self.setid, tablename, get_sqla_eng())
+    # ENDMETHOD
+
+    def getTableTransformer(self, tablename):
+        """Retrieves a TableTransformer object associated with the specified set and table."""
+        if not table_name in self.getTableNames():
+            raise RuntimeError("Invalid tablename.")
+
+        return TableTransformer(session['userdata']['userid'], self.setid, get_db(), get_sqla_eng())
     # ENDMETHOD
 
     def changeMetadata(self, new_name, new_desc):

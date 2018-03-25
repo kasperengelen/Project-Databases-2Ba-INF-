@@ -67,6 +67,7 @@ def view_dataset_table(dataset_id, tablename, page_nr):
     page_indices = tv.get_page_indices(display_nr = 50, page_nr = page_nr)
 
     return render_template('dataset_transform.html', 
+                                                table_name = tablename,
                                                 dataset_info = dataset_info,
                                                 page_indices = page_indices,
                                                 table_data = table_data,
@@ -78,10 +79,27 @@ def view_dataset_table(dataset_id, tablename, page_nr):
 @require_login
 def transform_deleteattr(dataset_id, tablename):
     """Callback for delete attribute transformation."""
+
+    if not DatasetManager.existsID(dataset_id):
+        abort(404)
+
     dataset = DatasetManager.getDataset(dataset_id)
 
+    if tablename not in dataset.getTableNames():
+        abort(404)
 
+    tv = dataset.getTableViewer(tablename)
 
+    form = DeleteAttrForm(request.form)
+    form.fillForm(tv.get_attributes())
+
+    if not form.validate():
+        flash(message="Invalid form.", category="error")
+        return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
+
+    tt = dataset.getTableTransformer(tablename)
+
+    tt.delet
 
     return ""
 
