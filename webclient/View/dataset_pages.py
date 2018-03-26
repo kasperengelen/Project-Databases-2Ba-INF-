@@ -348,3 +348,23 @@ def delete(dataset_id):
 
     return redirect(url_for('dataset_pages.list_dataset'))
 # ENDFUNCTION
+
+@dataset_pages.route('/dataset/upload', methods=['POST'])
+@require_login
+def upload():
+    """Callback to upload data."""
+
+    # CHECK IF FILE IS PRESENT AND VALID
+
+    # CHECK IF FILENAME IS OK
+
+    # RETRIEVE SECURE FILENAME
+
+    # SAVE FILE
+
+    # GIVE FILE TO DATALOADER
+
+    # DELETE FILE
+
+    return redirect(url_for('index'))
+
