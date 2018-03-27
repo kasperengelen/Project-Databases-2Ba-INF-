@@ -20,13 +20,12 @@
 	        	</h4>
 	      	</div>
 	      	<div id="view" class="panel-collapse collapse">
-	        	<div class="panel-body text-center">
-	        		<p>Choose File</p>
+	        	<div class="panel-body">
 	        		{% from "includes/_formhelpers.html" import render_field %}
 					<form method="post" enctype="multipart/form-data" action="{{ url_for('dataset_pages.upload', 
 					dataset_id=dataset_info.setid) }}">
 						{{ form.hidden_tag() }}
-						<div class="form-group">
+						<div class="form-group" style="width: 50%;">
                  			{{render_field(form.data_file, class_="form-control")}}  
                 		</div>
 						<p><input type="submit" class="btn btn-primary" value="Upload File"></p>
