@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, TextAreaField, SelectField, HiddenField
-from wtforms.validators import Length, InputRequired, Email, EqualTo
+from wtforms import StringField, PasswordField, TextAreaField, SelectField, HiddenField, FileField
+from wtforms.validators import Length, InputRequired, Email, EqualTo, Regexp
 from utils import EnumCheck
 
 class DatasetForm(FlaskForm):
@@ -65,3 +65,10 @@ class DatasetListEntryForm(FlaskForm):
         self.desc.data = dataset.desc
     # ENDMETHOD
 # ENDCLASS
+
+class TableUploadForm(FlaskForm):
+    """Form to upload """
+    
+    data_file = FileField('File', [Regexp("[A-Za-z0-9][A-Za-z0-9_]+\\.(sql|csv|zip)")])
+
+    

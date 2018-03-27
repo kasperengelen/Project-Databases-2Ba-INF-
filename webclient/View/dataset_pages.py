@@ -4,7 +4,7 @@ from utils import require_login
 from DatasetInfo import DatasetInfo
 from DatasetManager import DatasetManager
 from UserManager import UserManager
-from dataset_forms import FindReplaceForm, DeleteAttrForm, DatasetForm, AddUserForm, RemoveUserForm, DatasetListEntryForm
+from dataset_forms import FindReplaceForm, DeleteAttrForm, DatasetForm, AddUserForm, RemoveUserForm, DatasetListEntryForm, TableUploadForm
 from TableViewer import TableViewer
 
 dataset_pages = Blueprint('dataset_pages', __name__)
@@ -22,6 +22,8 @@ def view_dataset_home(dataset_id):
 
     dataset_info = dataset.toDict()
     table_list = dataset.getTableNames()
+
+    upload_form = TableUploadForm()
 
     return render_template('dataset_pages.home.html', dataset_info = dataset_info, table_list = table_list)
 # ENDFUNCTION
@@ -349,10 +351,17 @@ def delete(dataset_id):
     return redirect(url_for('dataset_pages.list_dataset'))
 # ENDFUNCTION
 
-@dataset_pages.route('/dataset/upload', methods=['POST'])
+@dataset_pages.route('/dataset/<int:dataset_id>/upload', methods=['POST'])
 @require_login
-def upload():
+def upload(dataset_id):
     """Callback to upload data."""
+
+    form = TableUploadForm(request.form)
+
+    if request.method == 'POST' and form.validate():
+
+
+        pass
 
     # CHECK IF FILE IS PRESENT AND VALID
 
@@ -366,5 +375,5 @@ def upload():
 
     # DELETE FILE
 
-    return redirect(url_for('index'))
+    return redirect(url_for('dataset_pages.view_dataset_home', dataset_id=dataset_id))
 
