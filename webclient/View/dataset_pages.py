@@ -1,4 +1,5 @@
 from flask import Blueprint, render_template, request, url_for, redirect, session, flash, abort
+from flask import current_app as app
 from utils import require_admin
 from utils import require_login
 from DatasetInfo import DatasetInfo
@@ -6,6 +7,8 @@ from DatasetManager import DatasetManager
 from UserManager import UserManager
 from dataset_forms import FindReplaceForm, DeleteAttrForm, DatasetForm, AddUserForm, RemoveUserForm, DatasetListEntryForm, TableUploadForm
 from TableViewer import TableViewer
+from werkzeug.utils import secure_filename
+
 
 dataset_pages = Blueprint('dataset_pages', __name__)
 
@@ -25,7 +28,7 @@ def view_dataset_home(dataset_id):
 
     upload_form = TableUploadForm()
 
-    return render_template('dataset_pages.home.html', dataset_info = dataset_info, table_list = table_list)
+    return render_template('dataset_pages.home.html', dataset_info = dataset_info, table_list = table_list, form = upload_form)
 # ENDFUNCTION
 
 @dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>', defaults = {'page_nr': 1})
@@ -189,6 +192,7 @@ def leave(dataset_id):
         abort(404)
 
     try:
+        flash(message="Leaving dataset complete.", category="success")
         dataset = DatasetManager.getDataset(dataset_id)
         dataset.removePerm(int(session['userdata']['userid']))
     except:
@@ -351,17 +355,38 @@ def delete(dataset_id):
     return redirect(url_for('dataset_pages.list_dataset'))
 # ENDFUNCTION
 
+import os
+
 @dataset_pages.route('/dataset/<int:dataset_id>/upload', methods=['POST'])
 @require_login
 def upload(dataset_id):
     """Callback to upload data."""
 
-    form = TableUploadForm(request.form)
+    form = TableUploadForm()
 
+    # HANDLE SUBMITTED FILE
     if request.method == 'POST' and form.validate():
+        file = form.data_file.data
+
+        if file:
+            sec_filename = secure_filename(file.filename)
+
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], sec_filename))
+
+            # HANDLE FILE WITH DATALOADER
+
+            # delete file
 
 
-        pass
+    # PRINT ERRORS
+    if len(form.errors) > 0:
+        for error_msg in form.errors['data_file']:
+            flash(message=error_msg, category="error")
+
+    return redirect(url_for('dataset_pages.view_dataset_home', dataset_id=dataset_id))
+
+
+    print(form.errors)
 
     # CHECK IF FILE IS PRESENT AND VALID
 
@@ -375,5 +400,4 @@ def upload(dataset_id):
 
     # DELETE FILE
 
-    return redirect(url_for('dataset_pages.view_dataset_home', dataset_id=dataset_id))
-
+# ENDFUNCTION

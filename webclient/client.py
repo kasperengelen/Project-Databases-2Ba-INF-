@@ -14,7 +14,8 @@ from sqlalchemy import create_engine
 app = Flask(__name__, template_folder="./View/templates/")
 app.config.update(dict(
     SECRET_KEY = "\xbf\xcf\xde\xee\xe8\xc1\x8c\\\xfd\xe6\\!t^(\x1c/\xc6l\xe1,\xc9#\xd7",
-    WTF_CSRF_SECRET_KEY = "Uei\xc2&\x8a\x18.H\x87\xc5\x1d\xd1\xc8\xc3\xcf\xe5\xfft_\x8c:\x03r"
+    WTF_CSRF_SECRET_KEY = "Uei\xc2&\x8a\x18.H\x87\xc5\x1d\xd1\xc8\xc3\xcf\xe5\xfft_\x8c:\x03r",
+    UPLOAD_FOLDER = "/home/kasper/Documents/School/Unief/2BaINF/2-ProjectDataBases/git_repo/webclient/upload"
 ))
 
 app.register_blueprint(user_pages.user_pages)
@@ -43,6 +44,10 @@ def index():
     return render_template('index.html')
 
 ################################################### ERROR HANDLING PAGES ####################################################
+@app.errorhandler(400)
+def handle_400(e):
+    return render_template('error.html', message="400, bad request."), 400
+
 @app.errorhandler(403)
 def handle_403(e):
     return render_template('error.html', message="403, forbidden."), 403

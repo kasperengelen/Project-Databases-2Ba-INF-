@@ -4,6 +4,7 @@ from wtforms.validators import ValidationError
 from flask import g, abort, session
 import psycopg2
 from functools import wraps
+import re
 
 def get_db():
     """Retrieve the DB connection."""
@@ -58,6 +59,14 @@ class EnumCheck:
         if field.data not in self.choises:
             raise ValidationError(self.message)
 
+class FilenameCheck:
+    def __init__(self, message="", regex=""):
+        self.message=message
+        self.regex = re.compile(regex)
+
+    def __call__(self, form, field):
+        if not self.regex.fullmatch(field.data.filename):
+            raise ValidationError(self.message)
 
 class Logger:
     @staticmethod
