@@ -17,12 +17,22 @@
 					<th></th>
 				</tr>
 				{% for dataset in datasets %}
+					<script>
+						function check() {
+							if (confirm("Are you sure?")) {
+								form.submit();
+							} else {
+								isValidForm() = false;
+								isValidForm();
+							}
+						}
+					</script>
 					<tr>
 						<td><a href="{{ url_for('dataset_pages.view_dataset_home', dataset_id=dataset.setid) }}">{{ dataset.name }}</a></td>
 						<td>{{ dataset.desc }}</td>
-						<td>
-							<form method="post" action="{{ url_for('dataset_pages.leave', dataset_id=dataset.setid) }}" name="leave">
-								<p><input id="leave" type="submit"></p>
+						<td><form method="post" action="{{ url_for('dataset_pages.leave', dataset_id=dataset.setid) }}" name="leave">
+								<p><input id="leave" type="submit" class="btn btn-primary" value="Leave" 
+									onclick="check()"></p>
 							</form>
 						</td>
 					</tr>					
