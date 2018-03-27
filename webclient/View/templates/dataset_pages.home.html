@@ -16,6 +16,27 @@
 	    <div class="panel panel-default">
 	      	<div class="panel-heading">
 	        	<h4 class="panel-title">
+	          		<a data-toggle="collapse" data-parent="#accordion" href="#view">Add Table</a>
+	        	</h4>
+	      	</div>
+	      	<div id="view" class="panel-collapse collapse">
+	        	<div class="panel-body text-center">
+	        		<p>Choose File</p>
+					<form method="post" enctype="multipart/form-data" action="{{ url_for('dataset_pages.upload', 
+					dataset_id=dataset_info.setid) }}">
+					    <label for="files" class="btn btn-primary">Select Files</label>
+						<input id="files" style="visibility: hidden;" type="file" onchange="form.submit()">
+					</form>
+					<p>Allowed extensions: .csv, .zip, .dump</p>
+	        	</div>
+	      	</div>
+	    </div>  
+	</div>  
+
+	<div class="panel-group" id="accordion">
+	    <div class="panel panel-default">
+	      	<div class="panel-heading">
+	        	<h4 class="panel-title">
 	          		<a data-toggle="collapse" data-parent="#accordion" href="#view">Join Tables</a>
 	        	</h4>
 	      	</div>
@@ -25,7 +46,7 @@
 	        	</div>
 	      	</div>
 	    </div>  
-	</div>  		
+	</div> 		
 
     <div class="jumbotron">
 		<table>

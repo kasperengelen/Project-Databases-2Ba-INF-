@@ -6,12 +6,12 @@
 			<h2>Create Dataset</h2>
 		</div>
 		<div>
-			<div class="jumbotron text-center col-sm-6" style="padding-top: 2%; height: 400px;"">
+			<div class="jumbotron text-center" style="padding-top: 2%; height: 400px;"">
 				<h3>Dataset Name</h3>
 				</br>
 				</br>
 				{% from "includes/_formhelpers.html" import render_field %}
-				<form method="post" action="">
+				<form method="post" action="" id="dataform">
 				{{ form.csrf_token }}
 					<div class="form-group">
 				  		{{render_field(form.name, class_="form-control")}}
@@ -19,18 +19,8 @@
 					<div class="form-group">
 						{{render_field(form.description, class_="form-control", id="larger")}}
                     </div>
-                    <p><input type="submit" class="btn btn-primary" value="Create"></p>
+                    <button onclick="form.submit()" class="btn btn-primary" value="Create">Create</button>
 				</form>
-			</div>
-			<div class="jumbotron text-center col-sm-6" style="padding-top: 2%; height: 400px;">
-				<h3>Upload File</h3>
-				</br>
-				</br>
-				<div>
-					<label for="files" class="btn btn-primary">Select Files</label>
-					<input id="files" style="visibility: hidden" type="file">
-				</div>
-				<p>Allowed extensions: .csv, .zip, .dump</p>
 			</div>
 		</div>
 
