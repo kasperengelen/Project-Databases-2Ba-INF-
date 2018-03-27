@@ -8,6 +8,7 @@ from UserManager import UserManager
 from dataset_forms import FindReplaceForm, DeleteAttrForm, DatasetForm, AddUserForm, RemoveUserForm, DatasetListEntryForm, TableUploadForm
 from TableViewer import TableViewer
 from werkzeug.utils import secure_filename
+import os
 
 
 dataset_pages = Blueprint('dataset_pages', __name__)
@@ -355,7 +356,7 @@ def delete(dataset_id):
     return redirect(url_for('dataset_pages.list_dataset'))
 # ENDFUNCTION
 
-import os
+
 
 @dataset_pages.route('/dataset/<int:dataset_id>/upload', methods=['POST'])
 @require_login
@@ -371,33 +372,34 @@ def upload(dataset_id):
         if file:
             sec_filename = secure_filename(file.filename)
 
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], sec_filename))
+            real_upload_folder = None
+
+            # create upload folder
+            # format: <UPLOAD_FOLDER>/<USER_ID>_<X>/<FILENAME>.<EXT>
+            for i in range(100):
+                temp_dir = os.path.join(app.config['UPLOAD_FOLDER'], str(session['userdata']['userid']) + "_" + str(i))
+
+                if not os.path.exists(temp_dir):
+                    os.makedirs(temp_dir)
+                    real_upload_folder = temp_dir
+                    break
+
+            if real_upload_folder is None:
+                abort(500)
+
+            # SAVE FILE
+            file.save(os.path.join(real_upload_folder, sec_filename))
 
             # HANDLE FILE WITH DATALOADER
 
             # delete file
 
+            flash(message="Tables added.", category="error")
 
-    # PRINT ERRORS
-    if len(form.errors) > 0:
+    elif len(form.errors) > 0:
+        # PRINT ERRORS
         for error_msg in form.errors['data_file']:
             flash(message=error_msg, category="error")
 
     return redirect(url_for('dataset_pages.view_dataset_home', dataset_id=dataset_id))
-
-
-    print(form.errors)
-
-    # CHECK IF FILE IS PRESENT AND VALID
-
-    # CHECK IF FILENAME IS OK
-
-    # RETRIEVE SECURE FILENAME
-
-    # SAVE FILE
-
-    # GIVE FILE TO DATALOADER
-
-    # DELETE FILE
-
 # ENDFUNCTION
