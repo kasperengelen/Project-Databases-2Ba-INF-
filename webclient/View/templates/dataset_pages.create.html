@@ -6,7 +6,7 @@
 			<h2>Create Dataset</h2>
 		</div>
 		<div>
-			<div class="jumbotron text-center col-sm-6" style="padding-top: 2%; height: 400px;"">
+			<div class="jumbotron text-center" style="padding-top: 2%; height: 400px;"">
 				<h3>Dataset Name</h3>
 				</br>
 				</br>
@@ -19,28 +19,9 @@
 					<div class="form-group">
 						{{render_field(form.description, class_="form-control", id="larger")}}
                     </div>
-                    <button onclick="submitForms()" class="btn btn-primary" value="Create">Create</button>
+                    <button onclick="form.submit()" class="btn btn-primary" value="Create">Create</button>
 				</form>
 			</div>
-			<div class="jumbotron text-center col-sm-6" style="padding-top: 2%; height: 400px;">
-				<h3>Upload File</h3>
-				</br>
-				</br>
-				<div>
-					<form method="post" enctype="multipart/form-data" id="fileform">
-						<label for="files" class="btn btn-primary">Select Files</label>
-						<input id="files" style="visibility: hidden" type="file">
-					</form>
-				</div>
-				<p>Allowed extensions: .csv, .zip, .dump</p>
-			</div>
 		</div>
-
-		<script>
-			submitForms = function(){
-				document.getElementById("dataform").submit();
-				document.getElementById("fileform").submit();
-			}
-		</script>
 
 {% endblock %}

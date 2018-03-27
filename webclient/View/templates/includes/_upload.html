@@ -1,5 +1,5 @@
 <div class="text-center">	<p>Choose File</p>
-	<form method=post enctype=multipart/form-data>
+	<form method="post" enctype="multipart/form-data" action="{ url_for('dataset_pages.edit_perms_dataset', dataset_id=dataset_info.setid) }}">
     	<label for="files" class="btn btn-primary">Select Files</label>
 		<input id="files" style="visibility: hidden;" type="file" onchange="form.submit()">
     </form>

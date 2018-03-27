@@ -20,8 +20,14 @@
 	        	</h4>
 	      	</div>
 	      	<div id="view" class="panel-collapse collapse">
-	        	<div class="panel-body">
-	        		{% include 'includes/_upload.html' %}
+	        	<div class="panel-body text-center">
+	        		<p>Choose File</p>
+					<form method="post" enctype="multipart/form-data" action="{{ url_for('dataset_pages.upload', 
+					dataset_id=dataset_info.setid) }}">
+					    <label for="files" class="btn btn-primary">Select Files</label>
+						<input id="files" style="visibility: hidden;" type="file" onchange="form.submit()">
+					</form>
+					<p>Allowed extensions: .csv, .zip, .dump</p>
 	        	</div>
 	      	</div>
 	    </div>  
