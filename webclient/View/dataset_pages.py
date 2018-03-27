@@ -9,7 +9,8 @@ from dataset_forms import FindReplaceForm, DeleteAttrForm, DatasetForm, AddUserF
 from TableViewer import TableViewer
 from werkzeug.utils import secure_filename
 import os
-
+from DataLoader import DataLoader
+import shutil
 
 dataset_pages = Blueprint('dataset_pages', __name__)
 
@@ -363,6 +364,9 @@ def delete(dataset_id):
 def upload(dataset_id):
     """Callback to upload data."""
 
+    if not DatasetManager.existsID(dataset_id):
+        abort(404)
+
     form = TableUploadForm()
 
     # HANDLE SUBMITTED FILE
@@ -388,13 +392,17 @@ def upload(dataset_id):
                 abort(500)
 
             # SAVE FILE
-            file.save(os.path.join(real_upload_folder, sec_filename))
+            real_filename = os.path.join(real_upload_folder, sec_filename)
+            file.save(real_filename)
 
             # HANDLE FILE WITH DATALOADER
+            dl = DataLoader(dataset_id)
+            dl.read_file(real_filename)
 
-            # delete file
+            # delete file + folder
+            shutil.rmtree(real_upload_folder, ignore_errors=True)
 
-            flash(message="Tables added.", category="error")
+            flash(message="Tables added.", category="success")
 
     elif len(form.errors) > 0:
         # PRINT ERRORS
