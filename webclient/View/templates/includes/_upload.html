@@ -1,5 +1,7 @@
 <div class="text-center">	<p>Choose File</p>
-	<label for="files" class="btn btn-primary">Select Files</label>
-	<input id="files" style="visibility: hidden" type="file">
+	<form method=post enctype=multipart/form-data>
+    	<label for="files" class="btn btn-primary">Select Files</label>
+		<input id="files" style="visibility: hidden;" type="file" onchange="form.submit()">
+    </form>
 	<p>Allowed extensions: .csv, .zip, .dump</p>
 </div>

@@ -5,7 +5,8 @@
 		<h2>Datasets</h2>
 	</div>
 
-	<div id="div" class="jumbotron col-sm-6">
+	<div class="jumbotron">
+	
 		<table>
 		{% with datasets = setlist %}
 			{% if datasets %}
@@ -24,14 +25,6 @@
 			{% endif %}
 		{% endwith %}
 		</table>
-	</div>
-	<div id="div" class="jumbotron col-sm-6">
-		{% include 'includes/_upload.html' %}
-	</div>
 
-	<script>
-		$(function() {
-			$('#div').matchHeight(options);
-		});
-	</script>
+	</div>
 {% endblock %}
