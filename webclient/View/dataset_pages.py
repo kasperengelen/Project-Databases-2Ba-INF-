@@ -104,7 +104,7 @@ def transform_deleteattr(dataset_id, tablename):
         flash(message="Invalid form.", category="error")
         return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 
-    tt = dataset.getTableTransformer(tablename)
+    tt = dataset.getTableTransformer(tablename, session['userdata']['userid'])
 
     tt.delete_attribute(tablename, form.select_attr.data)
     flash(message="Attribute deleted.", category="success")
@@ -134,7 +134,7 @@ def transform_findreplace(dataset_id, tablename):
         flash(message="Invalid form.", category="error")
         return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 
-    tt = dataset.getTableTransformer(tablename)
+    tt = dataset.getTableTransformer(tablename, session['userdata']['userid'])
 
     try:
         tt.find_and_replace(tablename, form.select_attr.data, form.search.data, form.replacement.data)
