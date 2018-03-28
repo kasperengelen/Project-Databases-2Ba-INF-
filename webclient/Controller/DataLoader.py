@@ -6,6 +6,7 @@ import re
 from psycopg2 import sql
 import db_wrapper
 # from utils import get_db
+from DatasetManager import DatasetManager
 
 class DataLoader:
 
@@ -13,17 +14,15 @@ class DataLoader:
         self.db_conn = db_wrapper.DBWrapper()
 
         # first check if the setid is valid
-        self.db_conn.cursor().execute("SELECT EXISTS (SELECT TRUE FROM SYSTEM.datasets WHERE setid = %s);", [setid])
-        found = self.db_conn.cursor().fetchone()[0]
-        # found = True
-
-        if found:
+        if DatasetManager.existsID():
             self.setid = setid
         else:
             raise ValueError("setid is not valid")
 
         # predefine attribute
         self.header = None
+
+
 
     def read_file(self, filename, header=False):
         """
@@ -49,7 +48,7 @@ class DataLoader:
         else:
             raise ValueError("file type not supported")
 
-        # only commit when no errors occured
+        # only commit when no errors occurred
         self.db_conn.commit()
 
     def __csv(self, filename):

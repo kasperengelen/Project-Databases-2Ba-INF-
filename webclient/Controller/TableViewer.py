@@ -2,6 +2,10 @@ import pandas as pd
 from sqlalchemy import create_engine
 import math
 import re
+import os
+import csv
+from utils import get_db
+from psycopg2 import sql
 
 class TableViewer:
 
@@ -85,6 +89,30 @@ class TableViewer:
         data_frame = pd.read_sql(SQL_query, self.engine)
         html_table = re.sub(' mytable', '" id="mytable', data_frame.to_html(None, None, None, True, False, classes='mytable'))
         return html_table
+
+    def to_csv(self, filename=""):
+        """Convert a table from the dataset to a CSV file"""
+        if len(filename) == 0:
+            filename = str(self.setid) + "_" + self.tablename
+        else:
+            # remove all /'s to prevent the file from being put in another directory
+            filename = os.path.basename(filename)
+
+        filename += ".csv"
+
+        outfile = open(filename, 'w')
+        outcsv = csv.writer(outfile)
+        conn = get_db()
+
+        conn.cursor().execute("SELECT column_name FROM information_schema.columns WHERE table_schema = '{}' AND table_name = '{}'".format(self.setid, self.tablename))
+
+        # write header
+        outcsv.writerow([x[0] for x in conn.cursor().fetchall()])
+
+        conn.cursor().execute(sql.SQL("SELECT * FROM {}.{}").format(sql.Identifier(str(self.setid)), sql.Identifier(self.tablename)))
+
+        # write rows
+        outcsv.writerows(conn.cursor().fetchall())
 
 if __name__ == '__main__':
     
