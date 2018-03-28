@@ -108,32 +108,15 @@ class DataLoader:
                 column_names.append(sql.Identifier("column_" + str(i)))
 
 
-        # extract table name and create a new table name if it's already in use
+        # extract table name
         tablename = os.path.basename(filename.replace(".csv", ""))
-        Dm = DatasetManager.getDataset(self.setid)
-        name_available = False
-        name_count = 0
-        new_name = tablename
-        table_names = Dm.getTableNames()
-        while not name_available:
-            for i in range(len(table_names)):
-                # if every name has been checked
-                if i == len(table_names) - 1:
-                    name_available = True
-                if new_name == table_names[i]:
-                    name_available = False
-                    break
-
-            if not name_available:
-                name_count += 1
-                new_name = tablename + '(' + str(name_count) + ')'
-
-        tablename = new_name
-
 
         # raise error if the table name is not alphanumeric, this is to not cause problems with url's
         if not tablename.isalnum():
             raise ValueError("Table names should be alphanumeric")
+
+        # get a name that is not in use
+        tablename = self.__get_valid_name(tablename)
 
         # Create table query
         query = sql.SQL("CREATE TABLE {} (").format(sql.Identifier(tablename))
@@ -145,14 +128,15 @@ class DataLoader:
         self.db_conn.cursor().execute(query)
         csv = open(filename, 'r')
         try:
-            self.db_conn.cursor().copy_from(csv, tablename, sep=',')
+            # tablename has to be wrapped in quotes for this function to work
+            self.db_conn.cursor().copy_from(csv, "\"" + tablename + "\"", sep=',')
         except psycopg2.DataError:
             raise ColumnInconsistencyException
 
         # if the first line in the csv contained the names of the columns, that row has to be deleted from the table
         if self.header:
-            self.db_conn.cursor().execute("DELETE FROM {} WHERE ctid IN (SELECT ctid FROM {} LIMIT 1);".format(
-                tablename, tablename))
+            self.db_conn.cursor().execute(sql.SQL("DELETE FROM {} WHERE ctid IN (SELECT ctid FROM {} LIMIT 1);").format(
+                sql.Identifier(tablename), sql.Identifier(tablename)))
 
         # make backup
         self.__make_backup(tablename)
@@ -226,6 +210,33 @@ class DataLoader:
         self.db_conn.cursor().execute(sql.SQL("SELECT * INTO {} FROM {}.{}").format(sql.Identifier(tablename),
                                                                                     sql.Identifier(str(self.setid)),
                                                                                     sql.Identifier(tablename)))
+
+    def __get_valid_name(self, tablename):
+        # create a new tablename if the current one is already in use
+        Dm = DatasetManager.getDataset(self.setid)
+        table_names = Dm.getTableNames()
+        new_name = tablename
+
+        # if there is at least one table in the dataset
+        if len(table_names) != 0:
+            name_available = False
+            name_count = 0
+
+            while not name_available:
+                print(table_names)
+                for i in range(len(table_names)):
+                    # if every name has been checked
+                    if i == len(table_names) - 1:
+                        name_available = True
+                    if new_name == table_names[i]:
+                        name_available = False
+                        break
+
+                if not name_available:
+                    name_count += 1
+                    new_name = tablename + '(' + str(name_count) + ')'
+
+        return new_name
 
 
 if __name__ == "__main__":

@@ -44,7 +44,7 @@ CREATE TABLE dataset_history(
 	origin_table VARCHAR(255),
 	transformation_date TIMESTAMP DEFAULT NOW(),
 
-	FOREIGN KEY(setid) REFERENCES datasets(setid) ON DELETE CASCADE);
+	FOREIGN KEY(setid) REFERENCES SYSTEM.datasets(setid) ON DELETE CASCADE
 );
 
 --TRIGGER to delete all the data if the admin is deleted (needs to be modified for more than 1 admin)
