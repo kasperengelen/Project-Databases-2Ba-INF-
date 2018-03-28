@@ -5,6 +5,7 @@ import psycopg2
 import re
 from psycopg2 import sql
 import db_wrapper
+from DatasetInfo import get_db
 # from utils import get_db
 from DatasetManager import DatasetManager
 
@@ -41,15 +42,16 @@ class EODException(FileException):
 class DataLoader:
 
     def __init__(self, setid):
-        self.db_conn = db_wrapper.DBWrapper()
+        self.db_conn = get_db()
+        # self.db_conn = db_wrapper.DBWrapper()
 
         # first check if the setid is valid
-        # if DatasetManager.existsID(setid):
-        #     self.setid = setid
-        # else:
-        #     raise ValueError("setid is not valid")
+        if DatasetManager.existsID(setid):
+            self.setid = setid
+        else:
+            raise ValueError("setid is not valid")
 
-        self.setid = setid
+        # self.setid = setid
 
         # predefine attribute
         self.header = None
@@ -105,8 +107,29 @@ class DataLoader:
             for i in range(header.count(',') + 1):
                 column_names.append(sql.Identifier("column_" + str(i)))
 
-        # extract table name
+
+        # extract table name and create a new table name if it's already in use
         tablename = os.path.basename(filename.replace(".csv", ""))
+        Dm = DatasetManager.getDataset(self.setid)
+        name_available = False
+        name_count = 0
+        new_name = tablename
+        table_names = Dm.getTableNames()
+        while not name_available:
+            for i in range(len(table_names)):
+                # if every name has been checked
+                if i == len(table_names) - 1:
+                    name_available = True
+                if new_name == table_names[i]:
+                    name_available = False
+                    break
+
+            if not name_available:
+                name_count += 1
+                new_name = tablename + '(' + str(name_count) + ')'
+
+        tablename = new_name
+
 
         # raise error if the table name is not alphanumeric, this is to not cause problems with url's
         if not tablename.isalnum():
