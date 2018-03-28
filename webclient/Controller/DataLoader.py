@@ -14,7 +14,7 @@ class DataLoader:
         self.db_conn = db_wrapper.DBWrapper()
 
         # first check if the setid is valid
-        if DatasetManager.existsID(self.setid):
+        if DatasetManager.existsID(setid):
             self.setid = setid
         else:
             raise ValueError("setid is not valid")
