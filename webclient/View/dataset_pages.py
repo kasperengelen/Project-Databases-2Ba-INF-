@@ -397,7 +397,8 @@ def upload(dataset_id):
 
             # HANDLE FILE WITH DATALOADER
             dl = DataLoader(dataset_id)
-            dl.read_file(real_filename)
+            # header set to True temporarily so that uploading still works
+            dl.read_file(real_filename, True)
 
             # delete file + folder
             shutil.rmtree(real_upload_folder, ignore_errors=True)

@@ -8,21 +8,51 @@ import db_wrapper
 # from utils import get_db
 from DatasetManager import DatasetManager
 
+
+class FileException(Exception):
+    def __init__(self, message):
+        super().__init__(message)
+
+
+class EmptyFileException(FileException):
+    # exception thrown if file is empty
+    def __init__(self):
+        super().__init__("Given file is empty")
+
+
+class ColumnInconsistencyException(FileException):
+    # exception thrown if data does not match the amount of columns
+    def __init__(self):
+        super().__init__("Data does not match amount of columns")
+
+
+class DumpInconsistencyException(FileException):
+    # exception thrown if the dump/sql file is inconsistent (query-wise)
+    def __init__(self):
+        super().__init__("Queries in dump/sql file are inconsistent")
+
+
+class EODException(FileException):
+    # exception thrown if there were no CREATE TABLE queries
+    def __init__(self):
+        super().__init__("End of dump reached without create table statements")
+
+
 class DataLoader:
 
     def __init__(self, setid):
         self.db_conn = db_wrapper.DBWrapper()
 
         # first check if the setid is valid
-        if DatasetManager.existsID(setid):
-            self.setid = setid
-        else:
-            raise ValueError("setid is not valid")
+        # if DatasetManager.existsID(setid):
+        #     self.setid = setid
+        # else:
+        #     raise ValueError("setid is not valid")
+
+        self.setid = setid
 
         # predefine attribute
         self.header = None
-
-
 
     def read_file(self, filename, header=False):
         """
@@ -35,6 +65,10 @@ class DataLoader:
         nothing is committed.
         If the commit is reached at the end of this function, all went well and the tables are committed.
         """
+
+        # check if file is empty
+        if os.stat(filename).st_size == 0:
+            raise EmptyFileException
 
         if filename.endswith(".csv"):
             self.__csv(filename)
@@ -68,7 +102,7 @@ class DataLoader:
                 column_names[i] = sql.Identifier(column_names[i].replace(" ", "_"))
         else:
             for i in range(header.count(',') + 1):
-                column_names.append(sql.Identifier("column" + str(i)))
+                column_names.append(sql.Identifier("column_" + str(i)))
 
         # extract table name
         tablename = os.path.basename(filename.replace(".csv", ""))
@@ -86,7 +120,11 @@ class DataLoader:
         self.db_conn.cursor().execute("SET search_path TO {};".format(self.setid))
         self.db_conn.cursor().execute(query)
         csv = open(filename, 'r')
-        self.db_conn.cursor().copy_from(csv, tablename, sep=',')
+        try:
+            self.db_conn.cursor().copy_from(csv, tablename, sep=',')
+        except psycopg2.DataError:
+            raise ColumnInconsistencyException
+
         # if the first line in the csv contained the names of the columns, that row has to be deleted from the table
         if self.header:
             self.db_conn.cursor().execute("DELETE FROM {} WHERE ctid IN (SELECT ctid FROM {} LIMIT 1);".format(
@@ -96,6 +134,9 @@ class DataLoader:
         self.__make_backup(tablename)
 
     def __dump(self, filename):
+        # check if any tables were created
+        table_count = 0
+
         with open(filename, 'r') as dump:
             for command in dump.read().strip().split(';'):
 
@@ -106,9 +147,14 @@ class DataLoader:
                         raise ValueError("Table names should be alphanumeric")
 
                     self.db_conn.cursor().execute("SET search_path TO {};".format(self.setid))
-                    self.db_conn.cursor().execute(command.replace("\n", ""))
+                    try:
+                        self.db_conn.cursor().execute(command.replace("\n", ""))
+                    except psycopg2.ProgrammingError:
+                        raise DumpInconsistencyException
 
                     self.__make_backup(tablename)
+
+                    table_count += 1
 
                 elif re.search("INSERT INTO.*", command, re.DOTALL | re.IGNORECASE):
                     tablename = command.split()[2]
@@ -118,7 +164,14 @@ class DataLoader:
 
                     self.__make_backup(tablename)
                     self.db_conn.cursor().execute("SET search_path TO {};".format(self.setid))
-                    self.db_conn.cursor().execute(command.replace("\n", ""))
+                    try:
+                        self.db_conn.cursor().execute(command.replace("\n", ""))
+                    except psycopg2.ProgrammingError:
+                        raise DumpInconsistencyException
+
+        # if no tables were created, raise error
+        if table_count == 0:
+            raise EODException
 
     def __unzip(self, filename):
         # unzip the file
@@ -150,39 +203,10 @@ class DataLoader:
                                                                                     sql.Identifier(str(self.setid)),
                                                                                     sql.Identifier(tablename)))
 
-    def create_dataset(self, setname, description):
-        # insert dataset entry for the current dataset
-        self.db_conn.cursor().execute("INSERT INTO SYSTEM.datasets (setname, description) VALUES (%s, %s) "
-                                      "RETURNING setid;", [setname, description])
-
-        # get the setid of the current set
-        self.setid = self.db_conn.cursor().fetchone()[0]
-        print(self.setid)
-
-        # create new schema with name setid
-        self.db_conn.cursor().execute(sql.SQL("CREATE SCHEMA {};").format(sql.Identifier(str(self.setid))))
-
-        # create the backup schema
-        self.db_conn.cursor().execute("CREATE SCHEMA original_{};".format(self.setid))
-
-        self.db_conn.commit()
-
-    def delete_dataset(self):
-        schema = sql.Identifier(str(self.setid))
-        backup_schema = sql.Identifier("original_" + str(self.setid))
-        # delete schema
-        self.db_conn.cursor().execute(sql.SQL("DROP SCHEMA {} CASCADE;").format(schema))
-        # delete backup schema
-        self.db_conn.cursor().execute(sql.SQL("DROP SCHEMA {} CASCADE;").format(backup_schema))
-        # delete datasets table entry
-        self.db_conn.cursor().execute("DELETE FROM SYSTEM.datasets AS d WHERE d.setid = %s;", [self.setid])
-        self.db_conn.commit()
-
 
 if __name__ == "__main__":
 
-    test = DataLoader(91)
-    test.create_dataset("demo", "dataset for the demo")
-    test.read_file("records.csv", True)
+    test = DataLoader(45)
+    test.read_file("../empty.csv", True)
     # test.read_file("load_departments.dump", True)
     # test.delete_dataset()
