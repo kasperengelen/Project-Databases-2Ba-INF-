@@ -12,12 +12,14 @@
 		{% with datasets = setlist %}
 			{% if datasets %}
 				<tr>
-					<th>Dataset</th>
+					<th>ID</th>
+					<th>Dataset name</th>
 					<th>Description</th>
 					<th></th>
 				</tr>
 				{% for dataset in datasets %}
 					<tr>
+						<td>{{ dataset.setid }}</td>
 						<td><a href="{{ url_for('dataset_pages.view_dataset_home', dataset_id=dataset.setid) }}">{{ dataset.name }}</a></td>
 						<td>{{ dataset.desc }}</td>
 						<input type="hidden" id="input" value="leave this dataset?">

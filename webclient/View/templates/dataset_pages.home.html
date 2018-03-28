@@ -9,7 +9,7 @@
 			<a href="{{ url_for('dataset_pages.edit_perms_dataset', dataset_id=dataset_info.setid) }}" class="btn btn-primary">Permissions</a>
 		</div>
 		<a style="float: left;" href="{{ url_for('dataset_pages.list_dataset') }}" class="btn btn-primary">Datasets</a>
-			<h2>Dataset: {{ dataset_info.name }}</h2>
+			<h2>{{ dataset_info.name }}</h2>
 			<p>{{ dataset_info.desc }}</p>
 	</div>
 
@@ -76,7 +76,7 @@
 					        filename = "p";
 					    }
 					    document.getElementById("filename").innerHTML = filename;
-					 
+
 					}
 				</script>
 				{% endfor %}

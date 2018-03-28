@@ -9,12 +9,14 @@
         <table>
             {% if destroy_user_forms %}
                 <tr>
+                    <th>ID</th>
                     <th>Email</th>
                     <th><th>
                     <th></th>
                 </tr>
                 {% for user in destroy_user_forms %}
                     <tr>
+                        <td>{{ user.userid.data }}</td>
                         <td>{{ user.email.data }}</td>
                         <td><a style="color: black;" href="{{ url_for('admin_pages.edit_user', userid = user.userid.data) }}">
                             <span class="glyphicon glyphicon-pencil"></span></a></td>
