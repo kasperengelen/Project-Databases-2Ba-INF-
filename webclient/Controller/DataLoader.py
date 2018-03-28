@@ -24,7 +24,7 @@ class DataLoader:
 
 
 
-    def read_file(self, filename, header=False):
+    def read_file(self, filename, header):
         """
         :param header: True if the first line in the csv file contains the column names
         """
