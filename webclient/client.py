@@ -33,6 +33,7 @@ def before_request():
     if 'loggedin' in session and session['loggedin']:
         if not UserManager.existsID(session['userdata']['userid']):
             LoginManager.setLoggedOut()
+            return
         utils.sync_user_info()
 # ENDFUNCTION
 
