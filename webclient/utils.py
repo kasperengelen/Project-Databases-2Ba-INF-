@@ -46,6 +46,7 @@ def sql_time_to_dict(sql_date_string):
 
 def sync_user_info():
     userid = session['userdata']['userid']
+    print(userid)
 
     session['userdata'] = UserManager.getUserFromID(userid).toDict()
 

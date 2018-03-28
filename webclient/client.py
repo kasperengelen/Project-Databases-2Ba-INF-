@@ -5,6 +5,8 @@ sys.path.append('./Controller/')
 
 from flask import Flask, render_template, g, session
 import utils
+from utils import LoginManager
+from UserManager import UserManager
 import user_pages
 import admin_pages
 import dataset_pages
@@ -29,6 +31,8 @@ def before_request():
 
     # make sure that user information is up to date
     if 'loggedin' in session and session['loggedin']:
+        if not UserManager.existsID(session['userdata']['userid']):
+            LoginManager.setLoggedOut()
         utils.sync_user_info()
 # ENDFUNCTION
 

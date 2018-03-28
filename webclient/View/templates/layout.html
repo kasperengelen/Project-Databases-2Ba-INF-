@@ -24,7 +24,15 @@
             text-align: left;
             padding: 8px;
         }
-    </style>    
+    </style>
+    <script>
+        function check() {
+            var message = "Are you sure you want to " + document.getElementById("input").value;
+            if (!confirm(message)) {
+                return false;
+            }
+        }
+    </script> 
   </head>
   <body>    
     {% include "includes/_navbar.html" %}
