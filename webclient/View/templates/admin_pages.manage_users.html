@@ -20,7 +20,7 @@
                             <span class="glyphicon glyphicon-pencil"></span></a></td>
                         <td>{% from "includes/_formhelpers.html" import render_field %}
                             <input type="hidden" id="input" value="delete this user?">
-                            <form method="post" action="{{ url_for('admin_pages.delete_user') }}" name="remove">
+                            <form method="post" action="{{ url_for('admin_pages.delete_user') }}" name="remove" onsubmit="return check()">
                                 {{ user.hidden_tag() }}
                                 <label for="remove{{ user.userid.data }}" class="glyphicon glyphicon-remove"></label>
                                 <input id="remove{{ user.userid.data }}" style="visibility: hidden;" type="submit">

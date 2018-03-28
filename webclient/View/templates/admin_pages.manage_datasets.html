@@ -18,7 +18,8 @@
                         <td><a style="color: black;" href="{{ url_for('dataset_pages.manage_dataset', dataset_id=dataset.setid.data) }}">
                             <span class="glyphicon glyphicon-pencil"></span></a></td>
                         <td>{% from "includes/_formhelpers.html" import render_field %}
-                            <form method="post" action="{{ url_for('admin_pages.delete_dataset') }}" name="remove">
+                            <input type="hidden" id="input" value="delete this dataset?">
+                            <form method="post" action="{{ url_for('admin_pages.delete_dataset') }}" name="remove" onsubmit="return check()">
                                 {{ dataset.hidden_tag() }}
                                 <label for="remove{{ dataset.setid.data }}" class="glyphicon glyphicon-remove"></label>
                                 <input id="remove{{ dataset.setid.data }}" style="visibility: hidden;" type="submit">
