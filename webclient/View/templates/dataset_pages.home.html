@@ -9,18 +9,18 @@
 			<a href="{{ url_for('dataset_pages.edit_perms_dataset', dataset_id=dataset_info.setid) }}" class="btn btn-primary">Permissions</a>
 		</div>
 		<a style="float: left;" href="{{ url_for('dataset_pages.list_dataset') }}" class="btn btn-primary">Datasets</a>
-			<h2>{{ dataset_info.name }}</h2>
-			<p>{{ dataset_info.desc }}</p>
+			<h2 style="float: center;">{{ dataset_info.name }}</h2>
+			<p style="float: center;">{{ dataset_info.desc }}</p>
 	</div>
 
 	<div class="panel-group" id="accordion">
 	    <div class="panel panel-default">
 	      	<div class="panel-heading">
 	        	<h4 class="panel-title">
-	          		<a data-toggle="collapse" data-parent="#accordion" href="#view">Add Table</a>
+	          		<a data-toggle="collapse" data-parent="#accordion" href="#add">Add Table</a>
 	        	</h4>
 	      	</div>
-	      	<div id="view" class="panel-collapse collapse">
+	      	<div id="add" class="panel-collapse collapse">
 	        	<div class="panel-body">
 	        		{% from "includes/_formhelpers.html" import render_field %}
 					<form method="post" enctype="multipart/form-data" action="{{ url_for('dataset_pages.upload', 
@@ -34,23 +34,20 @@
 					<p>Allowed extensions: .csv, .zip, .dump</p>
 	        	</div>
 	      	</div>
-	    </div>  
-	</div>  
-
-	<div class="panel-group" id="accordion">
+	    </div>
 	    <div class="panel panel-default">
 	      	<div class="panel-heading">
 	        	<h4 class="panel-title">
-	          		<a data-toggle="collapse" data-parent="#accordion" href="#view">Join Tables</a>
+	         		<a data-toggle="collapse" data-parent="#accordion" href="#join">Join Tables</a>
 	        	</h4>
 	      	</div>
-	      	<div id="view" class="panel-collapse collapse">
-	        	<div class="panel-body">
-	        	Join Form
+	      	<div id="join" class="panel-collapse collapse">
+	        	<div class="panel-body">	
+	        		Join Form
 	        	</div>
-	      	</div>
-	    </div>  
-	</div> 		
+     		</div>
+    	</div>
+  	</div>		
 
     <div class="jumbotron">
 		<table>
