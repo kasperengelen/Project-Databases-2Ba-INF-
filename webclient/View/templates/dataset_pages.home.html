@@ -29,6 +29,10 @@
 						<div class="form-group" style="width: 50%;">
                  			{{render_field(form.data_file, class_="form-control")}}  
                 		</div>
+                		<p style="display: inline-block;">Column names included? (Only CSV)     </p>
+                		<div class="form-group" style="display: inline-block;">
+                			{{ form.columnnames_included }}
+                		</div>
 						<p><input type="submit" class="btn btn-primary" value="Upload File"></p>
 					</form>
 					<p>Allowed extensions: .csv, .zip, .dump</p>
