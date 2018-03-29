@@ -32,12 +32,14 @@
 			{% with remove_form_list = admin_form_list + write_form_list + read_form_list %}
 				{% if remove_form_list %}
 					<tr>
+						<th>ID</th>
 						<th>Email</th>
 						<th>Permission</th>
 						<th></th>
 					</tr>
 					{% for form in remove_form_list %}
 						<tr>
+							<td>{{ form.userid.data }}</td>
 							<td>{{ form.email.data }}</td>
 							<td>{{ form.permission_type.data }}</td>
 							<td>{% from "includes/_formhelpers.html" import render_field %}

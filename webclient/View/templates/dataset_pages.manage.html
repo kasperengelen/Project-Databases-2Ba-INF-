@@ -2,13 +2,28 @@
 
 {% block body %}
 	<div class="jumbotron text-center" style="padding: 1%">
-		<h2>Manage Dataset</h2>
+		<div class="row">
+			<div class="col-sm-6 col-sm-offset-3">
+				<h2>Manage Dataset</h2>
+			</div>
 
-		<input type="hidden" id="input" value="delete this dataset?">
-        <form method="post" action="{{ url_for('dataset_pages.delete', dataset_id = dataset_id) }}" name="remove" onsubmit="return check()">
-            <label style="float: right;" for="remove" class="btn btn-primary">Delete</label>
-            <input id="remove" style="visibility: hidden;" type="submit">
-        </form>
+			<div class="col-sm-3 text-right">
+				<input type="hidden" id="input" value="delete this dataset?">
+		        <form method="post" action="{{ url_for('dataset_pages.delete', dataset_id = dataset_id) }}" name="remove"
+		        	onsubmit="return check()">
+		            <button class="btn btn-primary" onsubmit="form.submit()">Delete</button>
+		        </form>
+			</div>
+
+			<!--<div class="col-sm-3 text-right">
+				<input type="hidden" id="input" value="delete this dataset?">
+		        <form method="post" action="{{ url_for('dataset_pages.delete', dataset_id = dataset_id) }}" name="remove"
+		        	onsubmit="return check()">
+		            <label for="remove" class="btn btn-primary">Delete</label>
+		            <input id="remove" style="visibility: hidden;" type="submit">
+		        </form>
+		    </div>-->
+	    </div>
 	</div>
 
 	<div class="jumbotron text-center">
