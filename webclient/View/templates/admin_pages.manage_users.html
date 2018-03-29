@@ -6,31 +6,33 @@
     </div>            
 
     <div class="jumbotron">
-        <table>
-            {% if destroy_user_forms %}
-                <tr>
-                    <th>ID</th>
-                    <th>Email</th>
-                    <th><th>
-                    <th></th>
-                </tr>
-                {% for user in destroy_user_forms %}
+        <div style="overflow-x: auto;">
+            <table>
+                {% if destroy_user_forms %}
                     <tr>
-                        <td>{{ user.userid.data }}</td>
-                        <td>{{ user.email.data }}</td>
-                        <td><a style="color: black;" href="{{ url_for('admin_pages.edit_user', userid = user.userid.data) }}">
-                            <span class="glyphicon glyphicon-pencil"></span></a></td>
-                        <td>{% from "includes/_formhelpers.html" import render_field %}
-                            <input type="hidden" id="input" value="delete this user?">
-                            <form method="post" action="{{ url_for('admin_pages.delete_user') }}" name="remove" onsubmit="return check()">
-                                {{ user.hidden_tag() }}
-                                <label for="remove{{ user.userid.data }}" class="glyphicon glyphicon-remove"></label>
-                                <input id="remove{{ user.userid.data }}" style="visibility: hidden;" type="submit">
-                            </form>
-                        </td>
+                        <th>ID</th>
+                        <th>Email</th>
+                        <th><th>
+                        <th></th>
                     </tr>
-                {% endfor %}
-            {% endif %}
-        </table>
+                    {% for user in destroy_user_forms %}
+                        <tr>
+                            <td>{{ user.userid.data }}</td>
+                            <td>{{ user.email.data }}</td>
+                            <td><a style="color: black;" href="{{ url_for('admin_pages.edit_user', userid = user.userid.data) }}">
+                                <span class="glyphicon glyphicon-pencil"></span></a></td>
+                            <td>{% from "includes/_formhelpers.html" import render_field %}
+                                <input type="hidden" id="input" value="delete this user?">
+                                <form method="post" action="{{ url_for('admin_pages.delete_user') }}" name="remove" onsubmit="return check()">
+                                    {{ user.hidden_tag() }}
+                                    <label for="remove{{ user.userid.data }}" class="glyphicon glyphicon-remove"></label>
+                                    <input id="remove{{ user.userid.data }}" style="visibility: hidden;" type="submit">
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                {% endif %}
+            </table>
+        </div>
     </div>
 {% endblock %}

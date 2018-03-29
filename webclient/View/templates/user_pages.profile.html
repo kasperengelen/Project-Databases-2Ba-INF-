@@ -11,20 +11,22 @@
             <div class="pull-right text-center">
                 <a href="{{ url_for('user_pages.edit') }}" class="btn btn-primary">Edit</a>
             </div>
-            <table style="width: 100%">
-                <tr>
-                    <th>Name</th>
-                    <td>{{ user_data.firstname }} {{ user_data.lastname }}</td>
-                </tr>
-                <tr>
-                    <th>Email</th>
-                    <td>{{ user_data.email }}</td>
-                </tr>
-                <tr>
-                    <th>Register Date</th>
-                    <td>{{ user_data.register_date.D }}-{{ user_data.register_date.M }}-{{ user_data.register_date.Y }}</td>
-                </tr>
-            </table>
+            <div style="overflow-x: auto;">
+                <table style="width: 100%">
+                    <tr>
+                        <th>Name</th>
+                        <td>{{ user_data.firstname }} {{ user_data.lastname }}</td>
+                    </tr>
+                    <tr>
+                        <th>Email</th>
+                        <td>{{ user_data.email }}</td>
+                    </tr>
+                    <tr>
+                        <th>Register Date</th>
+                        <td>{{ user_data.register_date.D }}-{{ user_data.register_date.M }}-{{ user_data.register_date.Y }}</td>
+                    </tr>
+                </table>
+            </div>
         </div>
     </div>
 

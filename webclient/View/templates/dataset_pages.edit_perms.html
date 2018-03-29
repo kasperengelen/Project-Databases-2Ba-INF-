@@ -28,36 +28,34 @@
 			</form>
 		</div>
 
-		<table>			
-			{% with remove_form_list = admin_form_list + write_form_list + read_form_list %}
-				{% if remove_form_list %}
-					<tr>
-						<th>ID</th>
-						<th>Email</th>
-						<th>Permission</th>
-						<th></th>
-					</tr>
-					{% for form in remove_form_list %}
+		<div style="overflow-x: auto;">
+			<table>			
+				{% with remove_form_list = admin_form_list + write_form_list + read_form_list %}
+					{% if remove_form_list %}
 						<tr>
-							<td>{{ form.userid.data }}</td>
-							<td>{{ form.email.data }}</td>
-							<td>{{ form.permission_type.data }}</td>
-							<td>{% from "includes/_formhelpers.html" import render_field %}
-								<form method="post" action="{{ url_for('dataset_pages.remove_user_dataset', dataset_id=dataset_id) }}"
-									name="remove">
-								{{ form.hidden_tag() }}
-								<label for="remove{{ form.userid.data }}" class="glyphicon glyphicon-remove"></label>
-								<input id="remove{{ form.userid.data }}" style="visibility: hidden;" type="submit"></form></td>
+							<th>ID</th>
+							<th>Email</th>
+							<th>Permission</th>
+							<th></th>
 						</tr>
-					{% endfor %}
-				{% endif %}
-			{% endwith %}
-			
-		</table>
+						{% for form in remove_form_list %}
+							<tr>
+								<td>{{ form.userid.data }}</td>
+								<td>{{ form.email.data }}</td>
+								<td>{{ form.permission_type.data }}</td>
+								<td>{% from "includes/_formhelpers.html" import render_field %}
+									<form method="post" action="{{ url_for('dataset_pages.remove_user_dataset', dataset_id=dataset_id) }}"
+										name="remove">
+									{{ form.hidden_tag() }}
+									<label for="remove{{ form.userid.data }}" class="glyphicon glyphicon-remove"></label>
+									<input id="remove{{ form.userid.data }}" style="visibility: hidden;" type="submit"></form></td>
+							</tr>
+						{% endfor %}
+					{% endif %}
+				{% endwith %}
+				
+			</table>
+		</div>
 	</div>
-
-
-
-
-	</div>
+	
 {% endblock %}

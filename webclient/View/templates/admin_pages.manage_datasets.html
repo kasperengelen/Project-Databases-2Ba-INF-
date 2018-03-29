@@ -6,29 +6,31 @@
     </div>            
 
     <div class="jumbotron">
-        <table>
-                <tr>
-                    <th>ID</th>
-                    <th>Dataset Name</th>
-                    <th></th>
-                    <th></th>
-                </tr>
-                {% for dataset in destroy_dataset_forms %}
+        <div style="overflow-x: auto;">
+            <table>
                     <tr>
-                        <td>{{ dataset.setid.data }}</td>
-                        <td>{{ dataset.setname.data }}</td>
-                        <td><a style="color: black;" href="{{ url_for('dataset_pages.manage_dataset', dataset_id=dataset.setid.data) }}">
-                            <span class="glyphicon glyphicon-pencil"></span></a></td>
-                        <td>{% from "includes/_formhelpers.html" import render_field %}
-                            <input type="hidden" id="input" value="delete this dataset?">
-                            <form method="post" action="{{ url_for('admin_pages.delete_dataset') }}" name="remove" onsubmit="return check()">
-                                {{ dataset.hidden_tag() }}
-                                <label for="remove{{ dataset.setid.data }}" class="glyphicon glyphicon-remove"></label>
-                                <input id="remove{{ dataset.setid.data }}" style="visibility: hidden;" type="submit">
-                            </form>
-                        </td>
+                        <th>ID</th>
+                        <th>Dataset Name</th>
+                        <th></th>
+                        <th></th>
                     </tr>
-                {% endfor %}
-        </table>
+                    {% for dataset in destroy_dataset_forms %}
+                        <tr>
+                            <td>{{ dataset.setid.data }}</td>
+                            <td>{{ dataset.setname.data }}</td>
+                            <td><a style="color: black;" href="{{ url_for('dataset_pages.manage_dataset', dataset_id=dataset.setid.data) }}">
+                                <span class="glyphicon glyphicon-pencil"></span></a></td>
+                            <td>{% from "includes/_formhelpers.html" import render_field %}
+                                <input type="hidden" id="input" value="delete this dataset?">
+                                <form method="post" action="{{ url_for('admin_pages.delete_dataset') }}" name="remove" onsubmit="return check()">
+                                    {{ dataset.hidden_tag() }}
+                                    <label for="remove{{ dataset.setid.data }}" class="glyphicon glyphicon-remove"></label>
+                                    <input id="remove{{ dataset.setid.data }}" style="visibility: hidden;" type="submit">
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+            </table>
+        </div>
     </div>
 {% endblock %}
