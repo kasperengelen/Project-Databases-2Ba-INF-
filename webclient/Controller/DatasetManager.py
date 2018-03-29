@@ -117,7 +117,7 @@ class DatasetManager:
         if not UserManager.existsID(int(userid)):
             raise RuntimeError("Specified user does not exist.")
 
-        get_db().cursor().execute("SELECT permission_type FROM SYSTEM.set_permissions WHERE setid=%s AND userid = %s;", [int(self.setid), int(userid)])
+        get_db().cursor().execute("SELECT permission_type FROM SYSTEM.set_permissions WHERE setid=%s AND userid = %s;", [int(setid), int(userid)])
         result = get_db().cursor().fetchone()
 
         return minimum_perm_type in higher_perm_list
