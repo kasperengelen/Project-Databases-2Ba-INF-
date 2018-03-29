@@ -4,7 +4,7 @@ import math
 import re
 import os
 import csv
-from utils import get_db
+#from utils import get_db
 from psycopg2 import sql
 
 class TableViewer:
@@ -14,7 +14,7 @@ class TableViewer:
         self.setid = setid
         self.tablename = tablename
         #query_result = pd.read_sql(sql_query, self.engine)
-        self.maxrows = None
+        self.maxrows = 50000
 
         
     #Given a setid this method returns a list of all the tables within this dataset
@@ -41,7 +41,7 @@ class TableViewer:
         self.maxrows = table_size
         max_index = math.ceil(table_size / display_nr)
         #At this point the table is too large to just show all the indices, we have to minimize clutter
-        if(max_index > 12):
+        if(max_index > 5):
             if page_nr > 2:
                 indices = ['1', '...', ]
                 start = page_nr
@@ -49,8 +49,9 @@ class TableViewer:
                 indices = []
                 start = 1
 
-            end = start + 11 #Show 10 indices past start
-            if (end > max_index + 1):
+            end = start + 3 #Show 3 indices including current page
+            if (end >= max_index):
+                start = max_index -3 #Keep last pages from being isolated
                 end = max_index + 1 
 
         else:
@@ -115,5 +116,6 @@ class TableViewer:
         outcsv.writerows(conn.cursor().fetchall())
 
 if __name__ == '__main__':
-    
+    tv = TableViewer(1, 'test', None)
+    print(tv.get_page_indices(50, 88))
     pass
