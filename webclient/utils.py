@@ -5,7 +5,6 @@ from flask import g, abort, session
 import psycopg2
 from functools import wraps
 import re
-from DatasetManager import DatasetManager
 
 def get_db():
     """Retrieve the DB connection."""
@@ -153,3 +152,4 @@ def require_adminperm(func):
     return require_perm(func, 'admin')
 
 from UserManager import UserManager
+from DatasetManager import DatasetManager
