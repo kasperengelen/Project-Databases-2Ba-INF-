@@ -2,7 +2,7 @@ from flask_wtf import FlaskForm
 from flask_wtf.file import FileField as FWFileField, FileRequired as FWFileRequired
 from wtforms import StringField, PasswordField, TextAreaField, SelectField, HiddenField, FileField, BooleanField
 from wtforms.validators import Length, InputRequired, Email, EqualTo, Regexp
-from utils import EnumCheck, FilenameCheck, BooleanField
+from utils import EnumCheck, FilenameCheck
 
 class DatasetForm(FlaskForm):
     """Form that queries the user for the metadata of a dataset."""
