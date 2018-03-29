@@ -153,6 +153,19 @@ class DatasetInfo:
         get_db().commit()
     # ENDMETHOD
 
+    def getPermForUserID(self, userid):
+        """Returns the permission that the specified user has."""
+
+        if not UserManager.existsID(int(userid)):
+            raise RuntimeError("Specified user does not exist.")
+
+        get_db().cursor().execute("SELECT permission_type FROM SYSTEM.set_permissions WHERE setid=%s AND userid = %s;", [int(self.setid), int(userid)])
+        result = get_db().cursor().fetchone()
+
+        return result
+
+    # ENDMETHOD
+
     def __getPermIDs(self, perm_type):
         """Returns a list of userids of users that have the specified
         access-level to the dataset."""

@@ -115,4 +115,5 @@ class UserManager:
 
         return retval
     # ENDMETHOD
+
 # ENDCLASS

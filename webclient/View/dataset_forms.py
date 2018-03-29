@@ -2,7 +2,7 @@ from flask_wtf import FlaskForm
 from flask_wtf.file import FileField as FWFileField, FileRequired as FWFileRequired
 from wtforms import StringField, PasswordField, TextAreaField, SelectField, HiddenField, FileField
 from wtforms.validators import Length, InputRequired, Email, EqualTo, Regexp
-from utils import EnumCheck, FilenameCheck
+from utils import EnumCheck, FilenameCheck, BooleanField
 
 class DatasetForm(FlaskForm):
     """Form that queries the user for the metadata of a dataset."""
@@ -68,7 +68,7 @@ class DatasetListEntryForm(FlaskForm):
 # ENDCLASS
 
 class TableUploadForm(FlaskForm):
-    """Form to upload """
+    """Form to upload tables."""
     data_file = FWFileField('File', [FWFileRequired("No file selected."), FilenameCheck("Invalid filename. Only alphanumeric characters and underscore allowed. Only csv, zip, sql and dump files allowed.", "[A-Za-z0-9][A-Za-z0-9_]+\\.(sql|csv|zip|dump)")])
     columnnames_included = BooleanField('Column names included in files? (CSV only)')
 # ENDCLASS

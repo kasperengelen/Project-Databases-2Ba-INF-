@@ -1,5 +1,6 @@
 from utils import get_db
 from DatasetInfo import DatasetInfo
+from UserManager import UserManager
 
 class DatasetManager:
     """Class that provides facilities for managing datasets."""
@@ -96,3 +97,29 @@ class DatasetManager:
         return retval
     # ENDMETHOD
 
+    @staticmethod
+    def userHasAccessTo(setid, userid, minimum_perm_type):
+        """Determine if the specfied user has at least
+        the specified permissions for the specified set."""
+
+        # list of permission types that are equivalent or higher
+        higher_perm_list = []
+
+        for ptype in ['admin', 'write', 'read']:
+            # higher or equivalent perm is always added to the list
+            higher_perm_list.append(ptype)
+
+            # stop if equivalent perm is reached
+            if ptype == minimum_perm_type:
+                break;
+        # ENDFOR
+
+        if not UserManager.existsID(int(userid)):
+            raise RuntimeError("Specified user does not exist.")
+
+        get_db().cursor().execute("SELECT permission_type FROM SYSTEM.set_permissions WHERE setid=%s AND userid = %s;", [int(self.setid), int(userid)])
+        result = get_db().cursor().fetchone()
+
+        return minimum_perm_type in higher_perm_list
+    # ENDFUNCTION
+# ENDCLASS

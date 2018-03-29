@@ -29,6 +29,10 @@ def before_request():
     g.db_conn = db_wrapper.DBWrapper()
     g.sqla_engine = create_engine("postgresql://dbadmin:AdminPass123@localhost/projectdb18")
 
+    if not 'loggedin' in session:
+        session['loggedin'] = False
+        session['userdata'] = None
+
     # make sure that user information is up to date
     if 'loggedin' in session and session['loggedin']:
         if not UserManager.existsID(session['userdata']['userid']):

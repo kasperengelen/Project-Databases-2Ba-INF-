@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, request, url_for, redirect, sessio
 from flask import current_app as app
 from utils import require_admin
 from utils import require_login
+from utils import require_adminperm, require_writeperm, require_readperm
 from DatasetInfo import DatasetInfo
 from DatasetManager import DatasetManager
 from UserManager import UserManager
@@ -16,9 +17,13 @@ dataset_pages = Blueprint('dataset_pages', __name__)
 
 @dataset_pages.route('/dataset/<int:dataset_id>/')
 @require_login
+@require_readperm
 def view_dataset_home(dataset_id):
     """Returns a page that gives an overview of the
     dataset with the specified id."""
+
+    if not DatasetManager.userHasAccessTo(dataset_id, session['userdata']['userid'], 'read'):
+        abort(403)
 
     if not DatasetManager.existsID(dataset_id):
         abort(404)
@@ -36,6 +41,7 @@ def view_dataset_home(dataset_id):
 @dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>', defaults = {'page_nr': 1})
 @dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/<int:page_nr>')
 @require_login
+@require_readperm
 def view_dataset_table(dataset_id, tablename, page_nr):
 
     findrepl_form = FindReplaceForm()
@@ -84,6 +90,7 @@ def view_dataset_table(dataset_id, tablename, page_nr):
 
 @dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/deleteattr', methods=['POST'])
 @require_login
+@require_writeperm
 def transform_deleteattr(dataset_id, tablename):
     """Callback for delete attribute transformation."""
 
@@ -114,6 +121,7 @@ def transform_deleteattr(dataset_id, tablename):
 
 @dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/findreplace', methods=['POST'])
 @require_login
+@require_writeperm
 def transform_findreplace(dataset_id, tablename):
     """Callback for universal search and replace transformation."""
 
@@ -187,6 +195,7 @@ def list_dataset():
 
 @dataset_pages.route('/dataset/<int:dataset_id>/leave/', methods=['POST'])
 @require_login
+@require_readperm
 def leave(dataset_id):
     """Callback for leaving a dataset."""
 
@@ -205,6 +214,7 @@ def leave(dataset_id):
 
 @dataset_pages.route('/dataset/<int:dataset_id>/manage/', methods=['GET', 'POST'])
 @require_login
+@require_adminperm
 def manage_dataset(dataset_id):
     """Returns a page with which the metadata of the
     dataset with the specified id can be changed."""
@@ -227,6 +237,7 @@ def manage_dataset(dataset_id):
 
 @dataset_pages.route('/dataset/<int:dataset_id>/permissions')
 @require_login
+@require_adminperm
 def edit_perms_dataset(dataset_id):
 
     if not DatasetManager.existsID(dataset_id):
@@ -296,6 +307,7 @@ def edit_perms_dataset(dataset_id):
 
 @dataset_pages.route('/dataset/<int:dataset_id>/add_user', methods=['POST'])
 @require_login
+@require_adminperm
 def add_user_dataset(dataset_id):
     """Callback for form to add user access to dataset."""
 
@@ -319,6 +331,7 @@ def add_user_dataset(dataset_id):
 
 @dataset_pages.route('/dataset/<int:dataset_id>/remove_user', methods=['POST'])
 @require_login
+@require_adminperm
 def remove_user_dataset(dataset_id):
     """Callback for form to remove user access from dataset."""
 
@@ -345,6 +358,7 @@ def remove_user_dataset(dataset_id):
 
 @dataset_pages.route('/dataset/<int:dataset_id>/delete', methods=['POST'])
 @require_login
+@require_adminperm
 def delete(dataset_id):
     """Callback to delete dataset."""
 
@@ -361,6 +375,7 @@ def delete(dataset_id):
 
 @dataset_pages.route('/dataset/<int:dataset_id>/upload', methods=['POST'])
 @require_login
+@require_writeperm
 def upload(dataset_id):
     """Callback to upload data."""
 
