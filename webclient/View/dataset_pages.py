@@ -34,6 +34,8 @@ def view_dataset_home(dataset_id):
 
     perm_type = dataset.getPermForUserID(session['userdata']['userid'])
 
+    print(perm_type)
+
     return render_template('dataset_pages.home.html', dataset_info = dataset_info, table_list = table_list, form = upload_form, perm_type=perm_type)
 # ENDFUNCTION
 

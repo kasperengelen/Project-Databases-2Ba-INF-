@@ -162,7 +162,7 @@ class DatasetInfo:
         get_db().cursor().execute("SELECT permission_type FROM SYSTEM.set_permissions WHERE setid=%s AND userid = %s;", [int(self.setid), int(userid)])
         result = get_db().cursor().fetchone()
 
-        return result
+        return result[0]
 
     # ENDMETHOD
 

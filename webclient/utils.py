@@ -46,7 +46,6 @@ def sql_time_to_dict(sql_date_string):
 
 def sync_user_info():
     userid = session['userdata']['userid']
-    print(userid)
 
     session['userdata'] = UserManager.getUserFromID(userid).toDict()
 
@@ -130,11 +129,12 @@ def require_perm(func, perm):
         dataset_id = kwargs['dataset_id']
         userid = session['userdata']['userid']
 
+
         # only acces if user has correct permission or is site admin
-        if not (DatasetManager.userHasAccessTo(dataset_id, userid, perm) or session['userdata']['admin']):
-            abort(403)
-        else:
+        if DatasetManager.userHasAccessTo(dataset_id, userid, perm) or session['userdata']['admin']:
             return func(*args, **kwargs)
+        else:
+            abort(403)
 
     return wrapper
 # ENDFUNCTION
