@@ -120,6 +120,9 @@ class DatasetManager:
         get_db().cursor().execute("SELECT permission_type FROM SYSTEM.set_permissions WHERE setid=%s AND userid = %s;", [int(setid), int(userid)])
         result = get_db().cursor().fetchone()
 
-        return result in higher_perm_list
+        if result is None:
+            return False
+
+        return result[0] in higher_perm_list
     # ENDFUNCTION
 # ENDCLASS
