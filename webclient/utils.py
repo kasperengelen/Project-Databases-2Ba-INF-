@@ -131,7 +131,8 @@ def require_perm(func, perm):
         dataset_id = kwargs['dataset_id']
         userid = session['userdata']['userid']
 
-        if not DatasetManager.userHasAccessTo(dataset_id, userid, perm):
+        # only acces if user has correct permission or is site admin
+        if not (DatasetManager.userHasAccessTo(dataset_id, userid, perm) or session['userdata']['admin']):
             abort(403)
         else:
             return func(*args, **kwargs)
