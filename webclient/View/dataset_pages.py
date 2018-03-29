@@ -22,9 +22,6 @@ def view_dataset_home(dataset_id):
     """Returns a page that gives an overview of the
     dataset with the specified id."""
 
-    if not DatasetManager.userHasAccessTo(dataset_id, session['userdata']['userid'], 'read'):
-        abort(403)
-
     if not DatasetManager.existsID(dataset_id):
         abort(404)
 
@@ -35,7 +32,9 @@ def view_dataset_home(dataset_id):
 
     upload_form = TableUploadForm()
 
-    return render_template('dataset_pages.home.html', dataset_info = dataset_info, table_list = table_list, form = upload_form)
+    perm_type = dataset.getPermForUserID(session['userdata']['userid'])
+
+    return render_template('dataset_pages.home.html', dataset_info = dataset_info, table_list = table_list, form = upload_form, perm_type=perm_type)
 # ENDFUNCTION
 
 @dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>', defaults = {'page_nr': 1})
@@ -79,13 +78,16 @@ def view_dataset_table(dataset_id, tablename, page_nr):
     # get indices
     page_indices = tv.get_page_indices(display_nr = 50, page_nr = page_nr)
 
+    perm_type = dataset.getPermForUserID(session['userdata']['userid'])
+
     return render_template('dataset_pages.table.html', 
                                                 table_name = tablename,
                                                 dataset_info = dataset_info,
                                                 page_indices = page_indices,
                                                 table_data = table_data,
                                                 findrepl_form = findrepl_form,
-                                                delete_form = delete_form)
+                                                delete_form = delete_form, 
+                                                perm_type=perm_type)
 # ENDFUNCTION
 
 @dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/deleteattr', methods=['POST'])
