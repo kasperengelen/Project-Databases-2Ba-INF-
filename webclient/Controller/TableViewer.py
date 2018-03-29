@@ -14,15 +14,8 @@ class TableViewer:
         self.setid = setid
         self.tablename = tablename
         #query_result = pd.read_sql(sql_query, self.engine)
-        self.maxrows = 50000
+        self.maxrows = None
 
-        
-    #Given a setid this method returns a list of all the tables within this dataset
-    def get_tablenames(self):
-        sql_query = "SELECT table_name FROM information_schema.tables WHERE table_schema = '%s'" % str(self.setid)
-        query_result = pd.read_sql(sql_query, self.engine)
-        tablenames = query_result['table_name'].tolist()
-        return tablenames
 
 
     def get_attributes(self):
