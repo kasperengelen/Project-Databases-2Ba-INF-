@@ -372,6 +372,7 @@ def upload(dataset_id):
     # HANDLE SUBMITTED FILE
     if request.method == 'POST' and form.validate():
         file = form.data_file.data
+        columnnames_included = bool(form.columnnames_included.data)
 
         if file:
             sec_filename = secure_filename(file.filename)
