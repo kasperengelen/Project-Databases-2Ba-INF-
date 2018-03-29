@@ -2,9 +2,9 @@
 
 {% block body %}
 	<div class="jumbotron text-center" style="padding: 1%">
-		{% if perm_type == "admin" %}
+		{% if (perm_type == 'admin') %}
 			<div class="pull-right" style="float: right;">
-				<a href="{{ url_for('dataset_pages.manage_dataset', dataset_id=dataset_info.setid) }}" class="btn btn-primary">Manage</a>
+				<a style="float: right;" href="{{ url_for('dataset_pages.manage_dataset', dataset_id=dataset_info.setid) }}" class="btn btn-primary">Manage</a>
 				</br>
 				</br>
 				<a href="{{ url_for('dataset_pages.edit_perms_dataset', dataset_id=dataset_info.setid) }}" 
@@ -12,7 +12,10 @@
 			</div>
 		{% endif %}
 
+		<a style="float: left;" href="{{ url_for('dataset_pages.view_dataset_home', dataset_id=dataset_info.setid) }}"
+			class="btn btn-primary">Tables</a>
 		<div class="text-center">
+
 			<h2>{{ dataset_info.name }}</h2>
 			<p>{{ dataset_info.desc }}</p>	
 		</div>
@@ -52,10 +55,10 @@
 	        	</h4>
 	      	</div>
 	      	<div id="view" class="panel-collapse collapse">
-	        	<div class="panel-body">View</div>
+	        	<div class="panel-body">{{perm_type }}</div>
 	      	</div>
 	    </div>
-	    {% if perm_type == "admin" or perm_type == "write" %}
+	    {% if (perm_type == 'admin' or perm_type == 'write') %}
 		    <div class="panel panel-default">
 		      	<div class="panel-heading">
 		        	<h4 class="panel-title">
