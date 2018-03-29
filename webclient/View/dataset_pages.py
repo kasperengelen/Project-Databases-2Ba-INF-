@@ -9,7 +9,7 @@ from dataset_forms import FindReplaceForm, DeleteAttrForm, DatasetForm, AddUserF
 from TableViewer import TableViewer
 from werkzeug.utils import secure_filename
 import os
-from DataLoader import DataLoader
+from DataLoader import DataLoader, FileException as DLFileExcept
 import shutil
 
 dataset_pages = Blueprint('dataset_pages', __name__)
@@ -398,8 +398,15 @@ def upload(dataset_id):
 
             # HANDLE FILE WITH DATALOADER
             dl = DataLoader(dataset_id)
-            # header set to True temporarily so that uploading still works
-            dl.read_file(real_filename, True)
+            
+            try:
+                dl.read_file(real_filename, columnnames_included)
+            except DLFileExcept as e:
+                flash(message=str(e), category="error")
+                # delete file + folder
+                shutil.rmtree(real_upload_folder, ignore_errors=True)
+                return redirect(url_for('dataset_pages.view_dataset_home', dataset_id=dataset_id))
+            # ENDTRY
 
             # delete file + folder
             shutil.rmtree(real_upload_folder, ignore_errors=True)
@@ -407,7 +414,7 @@ def upload(dataset_id):
             flash(message="Tables added.", category="success")
 
     elif len(form.errors) > 0:
-        # PRINT ERRORS
+        # print errors
         for error_msg in form.errors['data_file']:
             flash(message=error_msg, category="error")
 
