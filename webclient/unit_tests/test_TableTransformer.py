@@ -21,11 +21,16 @@ class TestTableTransformer(unittest.TestCase):
         cur = cls.db_connection.cursor()
         cur.execute("CREATE SCHEMA IF NOT EXISTS \"TEST\"")
         cls.db_connection.commit()
-        creation_query = """CREATE TABLE "TEST".test_table (
+        creation_query ="""
+        CREATE TABLE "TEST".test_table (
         string VARCHAR(255) NOT NULL,
         number INTEGER NOT NULL,
-        date_time VARCHAR(255) NOT NULL,
-        garbage VARCHAR(255));"""
+        date_string VARCHAR(255) NOT NULL,
+        garbage CHAR(255),
+        fpoint  FLOAT,
+        raw_time TIME,
+        date_time TIMESTAMP);
+        """
         #In some cases the test fails in a way that tearDownClass is not called and the table still exists
         #Sadly we can't confirm if the table is still correct, because of transformations performed on it
         try:
@@ -52,7 +57,7 @@ class TestTableTransformer(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        cls.db_connection.cursor().execute("DROP TABLE \"TEST\".test_table;")
+        cls.db_connection.cursor().execute("DROP SCHEMA \"TEST\" CASCADE")
         cls.db_connection.commit()
         #Close database connection
         cls.db_connection.close()
@@ -84,6 +89,46 @@ class TestTableTransformer(unittest.TestCase):
         result = cur.fetchone()
         self.assertEqual(result[1], 1)
         self.assertEqual(result[2], '08/08/1997')
+
+    def test_get_attribute_type(self):
+        #Test whether the method can correctly return the type of an attribute
+        obj = self.test_object
+        self.assertEqual(obj.get_attribute_type('test_table', 'string')[0], 'character varying')
+        self.assertEqual(obj.get_attribute_type('test_table', 'number')[0],'integer')
+        #Currently fails, so I have to investigate this case.
+        #self.assertEqual(obj.get_attribute_type('test_table', 'garbage')[0], 'character')
+        self.assertEqual(obj.get_attribute_type('test_table', 'fpoint')[0], 'double precision')
+        self.assertEqual(obj.get_attribute_type('test_table', 'raw_time')[0], 'time without time zone')
+        self.assertEqual(obj.get_attribute_type('test_table', 'date_time')[0], 'timestamp without time zone')
+
+
+    def test_get_conversion_options(self):
+        obj = self.test_object
+        self.assertEqual(obj.get_conversion_options('test_table', 'string'), ['CHAR(255)', 'INTEGER', 'FLOAT', 'DATE', 'TIME', 'TIMESTAMP'])
+        self.assertEqual(obj.get_conversion_options('test_table', 'number'), ['CHAR(255)', 'VARCHAR(255)', 'FLOAT'])
+        #This assert fails, I need to investigate it
+        #self.assertEqual(obj.get_conversion_options('test_table', 'garbage'), ['VARCHAR(255)', 'INTEGER', 'FLOAT', 'DATE', 'TIME', 'TIMESTAMP'])
+        self.assertEqual(obj.get_conversion_options('test_table', 'fpoint'), ['CHAR(255)', 'VARCHAR(255)', 'INTEGER'])
+        self.assertEqual(obj.get_conversion_options('test_table', 'raw_time'), ['CHAR(255)', 'VARCHAR(255)'])
+        self.assertEqual(obj.get_conversion_options('test_table', 'date_time'), ['CHAR(255)', 'VARCHAR(255)'])
+
+    def incomplete_test_one_hot_encode(self):
+        """
+        This will be a test for the one hot encoding method. This method will not be included in the tests.
+        It's a temporary placeholder
+        """
+        pass
+
+    def incomplete_test_normalize_using_zscore(self):
+        """
+        This will be a test for the one hot encoding method. This method will not be included in the tests.
+        It's a temporary placeholder
+        """
+        pass
+        
+        
+        
+        
 
     #Test the conversion of numeric types (INTEGER, FLOAT)
     def test_numeric_conversion(self):

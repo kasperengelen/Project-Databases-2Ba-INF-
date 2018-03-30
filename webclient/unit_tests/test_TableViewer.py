@@ -56,7 +56,7 @@ class TestTableViewer(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        cls.db_connection.cursor().execute("DROP TABLE \"TEST\".test_table;")
+        cls.db_connection.cursor().execute("DROP SCHEMA \"TEST\" CASCADE")
         cls.db_connection.commit()
         #Close database connection
         cls.db_connection.close()

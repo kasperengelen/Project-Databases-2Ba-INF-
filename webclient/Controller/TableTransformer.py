@@ -35,6 +35,14 @@ class TableTransformer:
         #implemented in secret file
         pass
 
+    #Method to change the transformation behavior to overwrite the table with the changes
+    def set_to_overwrite(self):
+        self.replace = True
+
+    #Method to change the transformation behavior to create a new table with the changes
+    def set_to_copy(self):
+        self.replace = False
+
 
     # Get the internal reference for the table of (setid) and (tablename). This returns a pair (id, name)
     def get_internal_reference(self, tablename):
@@ -61,7 +69,7 @@ class TableTransformer:
 
     # Returns a list of supported types to convert to given a data_type
     def get_conversion_options(self, tablename, attribute):
-        data_type = self.get_attribute_type(tablename, attribute)
+        data_type = self.get_attribute_type(tablename, attribute)[0]
         options = { 'character varying' : ['CHAR(255)', 'INTEGER', 'FLOAT', 'DATE', 'TIME', 'TIMESTAMP'],
                     'character'         : ['VARCHAR(255)', 'INTEGER', 'FLOAT', 'DATE', 'TIME', 'TIMESTAMP'],
                     'integer'           : ['CHAR(255)', 'VARCHAR(255)', 'FLOAT'],
@@ -70,8 +78,8 @@ class TableTransformer:
                     'time without time zone' : ['CHAR(255)', 'VARCHAR(255)'],
                     'timestamp without time zone' : ['CHAR(255)', 'VARCHAR(255)']
                     }
-
-        return options.setdefault(data_type, [])
+        #In case it's a data type unknown to this class, we can almost certainly convert to varchar(255)
+        return options.setdefault(data_type, ['VARCHAR(255)'])
 
     # Return the postgres data type of an attribute
     def get_attribute_type(self, tablename, attribute):
@@ -274,4 +282,4 @@ class TableTransformer:
 
 if __name__ == '__main__':
     tt = TableTransformer(1, 1, None, None)
-
+    
