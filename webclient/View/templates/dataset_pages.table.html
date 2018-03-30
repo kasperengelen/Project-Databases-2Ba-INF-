@@ -25,32 +25,6 @@
 			{% endif %}
 		</div>
 	</div>    		
-
-    <!--<div class="jumbotron">
-    	<div class="text-center">
-    		{% for index in page_indices %}
-    			{% if index == "..." %}
-    				<p style="display: inline-block;">...</p>
-    			{% else %}
-					<p style="display: inline-block;"><a style="color: black;"
-						href="{{ url_for('dataset_pages.view_dataset_table', dataset_id=dataset_info.setid, tablename=tablename, page_nr=index) }}">
-							{{ index }}</a></p>	
-    			{% endif %}
-    			
-    		{% endfor %}
-    	</div>    		
-
-		<div class="pull-right" style="display: inline-block;">
-			<input type="text" id="input" placeholder="Search Page No" style="border-style: solid; border-width: 1px; border-radius: 3px;"/>
-			<button onclick="page_search()"><i class="glyphicon glyphicon-arrow-right"></i></button>
-
-			<script type="text/javascript">
-			function page_search(){
-			    window.location.href = '/dataset/{{ dataset_info.setid }}/{{ tablename }}/' + document.getElementById('input').value;
-			 }
-			</script>
-		</div>
-	</div>-->
   
   	<div class="panel-group" id="accordion">
 	    <div class="panel panel-default">
@@ -100,6 +74,38 @@
 	    {% endif %}
   	</div>	
 
+  	<div class="xs-center">
+    	<div class="row">
+	    	<div class="col-sm-3 text-left">
+	    		<input type="text" id="searchInput" placeholder="Search Entry" style="border-style: solid; border-width: 1px; border-radius: 3px;" />
+			</div>
+
+	    	<div class="col-sm-6 text-center" style="overflow-x: auto;">
+    	   		<ul class="pagination">
+	    			{% for index in page_indices %}
+	    				{% if index == "..." %}
+	    					<li class="page-item hidden-xs"><a class="page-link" style="color: black;">...</a></li>
+	    				{% else %}
+	    					<li class="page-item"><a class="page-link" href="{{ url_for('dataset_pages.view_dataset_table', dataset_id=dataset_info.setid, tablename=table_name, page_nr=index) }}" style="color: black;"">
+	    						{{ index }}</a></li>
+	    				{% endif %}
+	    			{% endfor %}
+	    		</ul>	
+		    </div>
+
+		    <div class="col-sm-3 text-right">
+		    	<input type="text" id="input" placeholder="Search Page No" style="border-style: solid; border-width: 1px; border-radius: 3px;"/>
+				<button onclick="page_search()"><i class="glyphicon glyphicon-arrow-right"></i></button>
+
+				<script type="text/javascript">
+				function page_search(){
+				    window.location.href = '/dataset/{{ dataset_info.setid }}/{{ table_name }}/' + document.getElementById('input').value;
+				 }
+				</script>
+		    </div>
+		</div>
+	</div>
+
 	<div class="text-center">
 		<style>
 			table {
@@ -115,6 +121,11 @@
 	            padding: 8px;
 	            background-color: white;
 	        }
+
+	        .dataTables_filter {
+	        	display: none;
+	        }
+
 		</style>
 		<div>
 			{{ table_data|safe }}
@@ -123,9 +134,22 @@
 			$(document).ready( function () {
     			$('#mytable').DataTable( {
     				scrollX: true,
-    				scrollY: true
+    				scrollY: true,
+    				paging: false,
+    				lengthChange: false
     			} );
-			} );
+    		} );
+
+    		var $rows = $('#mytable tbody tr');
+			$('#searchInput').keyup(function() {
+			    var val = $.trim($(this).val()).replace(/ +/g, ' ').toLowerCase();
+			    
+			    $rows.show().filter(function() {
+			        var text = $(this).text().replace(/\s+/g, ' ').toLowerCase();
+			        return !~text.indexOf(val);
+			    }).hide();
+
+			});
 		</script>
 	</div>
 
