@@ -89,7 +89,8 @@ def view_dataset_table(dataset_id, tablename, page_nr):
                                                 table_data = table_data,
                                                 findrepl_form = findrepl_form,
                                                 delete_form = delete_form, 
-                                                perm_type=perm_type)
+                                                perm_type=perm_type,
+                                                current_page=page_nr)
 # ENDFUNCTION
 
 @dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/deleteattr', methods=['POST'])

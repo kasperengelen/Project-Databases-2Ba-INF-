@@ -86,8 +86,13 @@
 	    				{% if index == "..." %}
 	    					<li class="page-item hidden-xs"><a class="page-link" style="color: black;">...</a></li>
 	    				{% else %}
-	    					<li class="page-item"><a class="page-link" href="{{ url_for('dataset_pages.view_dataset_table', dataset_id=dataset_info.setid, tablename=table_name, page_nr=index) }}" style="color: black;"">
-	    						{{ index }}</a></li>
+	    					{% if index|int == current_page %}
+		    					<li class="page-item current"><a class="page-link" href="{{ url_for('dataset_pages.view_dataset_table', dataset_id=dataset_info.setid, tablename=table_name, page_nr=index) }}" style="color: black;"">
+		    						{{ index }}</a></li>
+		    				{% else %}
+		    					<li class="page-item"><a class="page-link" href="{{ url_for('dataset_pages.view_dataset_table', dataset_id=dataset_info.setid, tablename=table_name, page_nr=index) }}" style="color: black;"">
+		    						{{ index }}</a></li>
+	    					{% endif %}
 	    				{% endif %}
 	    			{% endfor %}
 	    		</ul>	
