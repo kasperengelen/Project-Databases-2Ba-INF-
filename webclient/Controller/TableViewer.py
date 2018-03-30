@@ -17,7 +17,7 @@ class TableViewer:
         self.maxrows = None
 
 
-
+    #Get all the attributes from a table
     def get_attributes(self):
         SQL_query = "SELECT * FROM \"%s\".\"%s\" LIMIT 1" % (str(self.setid), self.tablename)
         data_frame = pd.read_sql(SQL_query, self.engine)

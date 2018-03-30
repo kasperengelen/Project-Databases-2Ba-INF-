@@ -9,6 +9,7 @@ import TableTransformer as transformer
 
 class TestTransformerCopy(unittest.TestCase):
     db_connection = None
+    engine = None
     test_object = None
 
     @classmethod
