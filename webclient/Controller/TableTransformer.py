@@ -1,6 +1,6 @@
 import pandas as pd
 from psycopg2 import sql
-
+from sqlalchemy import create_engine
 
 class TableTransformer:
 
@@ -12,6 +12,22 @@ class TableTransformer:
         self.db_connection = db_conn
         #Get the SQLalchemy engine to use pandas functionality
         self.engine = engine
+
+
+    
+    class AttrTypeError(Exception):
+        """
+        This exception is raised whenever an user attempts to perform a transformation on an attribute
+        whose type is not supported by the called transformation
+        """
+
+    class ConversionError(Exception):
+        """
+        This exception is raised whenever an implicit type conversion of an attribute failed because of
+        values that aren't possible to convert
+        """
+        
+    
 
     """Extra option to check whether deleting the attribute will destroy integrity constraints.
     Checks for other constraints is possible as well"""
@@ -66,7 +82,7 @@ class TableTransformer:
         return (cur.fetchone()[0], internal_ref)
 
 
-    # Conversion of a "numeric" things (INTEGER and FLOAT, DATE, TIME, TIMESTAMP)
+    # Conversion of "numeric" things (INTEGER and FLOAT, DATE, TIME, TIMESTAMP)
     def __convert_numeric(self, internal_ref, attribute, to_type):
         sql_query = "ALTER TABLE {}.{} ALTER COLUMN  {} TYPE %s" % to_type
         self.db_connection.cursor().execute(sql.SQL(sql_query).format(sql.Identifier(internal_ref[0]), sql.Identifier(internal_ref[1]),
@@ -95,8 +111,6 @@ class TableTransformer:
         self.db_connection.commit()
 
 
-
-                
 
     # Change the attribute type, if the data follows a specific format like TIMESTAMP provide it as well.
     def change_attribute_type(self, tablename, attribute, to_type, data_format="", new_name=""):
@@ -146,7 +160,7 @@ class TableTransformer:
 
 
 
-
+    #Method that finds all the exact matches (value = value) and replaces it with the provided value
     def find_and_replace(self, tablename, attribute, value, replacement, new_name=""):
         cur_type, internal_ref  = self.get_attribute_type(tablename, attribute)
         if self.replace is False:
@@ -156,6 +170,78 @@ class TableTransformer:
         self.db_connection.cursor().execute(sql.SQL("UPDATE {}.{} SET  {} = %s WHERE {} = %s").format(sql.Identifier(internal_ref[0]), sql.Identifier(internal_ref[1]),
                                                                                            sql.Identifier(attribute), sql.Identifier(attribute)), (replacement, value))
         self.db_connection.commit()
+
+        
+    #Method that performs one hot encoding given an attribute
+    def one_hot_encode(self, tablename, attribute, new_name=""):
+        internal_ref = self.get_internal_reference(tablename)
+        #Read the table in a dataframe
+        sql_query = "SELECT * FROM \"{}\".\"{}\"".format(*internal_ref)
+        df = pd.read_sql(sql_query, self.engine)
+        #Perfom one-hot-encoding
+        encoded = pd.get_dummies(df[attribute])
+        #Drop the attribute used for encoding
+        df = df.drop(attribute, axis=1)
+        #Join the original attributes with the encoded table
+        df = df.join(encoded)
+        if self.replace is True:
+            #If the table should be replaced, drop it and recreate it.
+            df.to_sql(tablename, self.engine, None, internal_ref[0], 'replace', index = False)
+        elif self.replace is False:
+            #We need to create a new table and leave the original untouched
+            df.to_sql(new_name, self.engine, None, internal_ref[0], 'fail', index = False)
+
+    #Method to quickly calculate z-scores
+    def __calculate_zscore(self, mean, standard_dev, value):
+        zscore = (value - mean) / standard_dev
+        return zscore
+            
+
+    #Method that normalizes the values of an attribute using the z-score.
+    #This will normalize everything in a 1-point range, thus [0-1]
+    def normalize_using_zscore(self, tablename, attribute, new_name = ""):
+        copy_made = False #If we are still
+        #Let's check if the attribute is a numeric type, this should not be performed on non-numeric types
+        attr_type = self.get_attribute_type(tablename, attribute)
+        if attr_type not in ['integer', 'double precision']:
+            raise self.AttrTypeError("Normalization failed due attribute not being of numeric type (neither integer or float)")
+        internal_ref = self.get_internal_reference(tablename)
+        #Read the table in a dataframe
+        sql_query = "SELECT * FROM \"{}\".\"{}\"".format(*internal_ref)
+        df = pd.read_sql(sql_query, self.engine)
+        #Calculate the mean
+        mean = df[attribute].mean()
+        #Calculate the standard deviation, for this method we consider the data as the population
+        #and not a sample so we don't use Bessel's correction
+        standard_deviation = df[attribute].std(ddof=0)
+        #Get the series containing values and convert them to float so that they can be assigned with their z-scores
+        column = df[attribute].astype(float)
+        #Calculate all the z-scores
+        for i in range(column.size):
+            zscore = self.__calculate_zscore(mean, standard_deviation, column[i])
+            #limit the extremes to -2 and +2
+            if zscore < -2:
+                zscore = 2
+            elif zscore > 2:
+                zscore = 2
+            column[i] = zscore
+        #Divide all the values by 4 to get a 1-point range
+        column = column.divide(4)
+        #Now the mean is 0, so add 0.5 to have the mean at 0.5
+        column = column.add(0.5)
+        #Update these changes to the dataframe
+        df.update(column)
+
+        if self.replace is True:
+            #If the table should be replaced, drop it and recreate it.
+            df.to_sql(tablename, self.engine, None, internal_ref[0], 'replace', index = False)
+        elif self.replace is False:
+            #We need to create a new table and leave the original untouched
+            df.to_sql(new_name, self.engine, None, internal_ref[0], 'fail', index = False)
+        return column
+        
+        
+        
 
     def change_column_name(self, tablename, old_name, new_name):
         self.db_connection.cursor().execute(sql.SQL(
@@ -187,4 +273,5 @@ class TableTransformer:
 
 
 if __name__ == '__main__':
-    tt = TableTransformer(1, 1)
+    tt = TableTransformer(1, 1, None, None)
+
