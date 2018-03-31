@@ -440,3 +440,30 @@ def upload(dataset_id):
 
     return redirect(url_for('dataset_pages.view_dataset_home', dataset_id=dataset_id))
 # ENDFUNCTION
+
+@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/download/')
+def download(dataset_id, tablename):
+    """Callback to download the specified table from the specified dataset."""
+
+    if not DatasetManager.existsID(dataset_id):
+        abort(404)
+
+    dataset = DatasetManager.getDataset(dataset_id)
+
+    if tablename not in dataset.getTableNames():
+        abort(404)
+
+
+    # PREPARE FILE FOR DOWNLOAD
+
+    filename = "..."
+    real_download_dir = "..."
+
+    # SEND TO USER
+    send_file = send_from_directory(real_download_dir, filename)
+
+    # DELETE FILE
+    shutil.rmtree(real_download_dir, ignore_errors=True)
+
+    return send_file
+# ENDFUNCTION
