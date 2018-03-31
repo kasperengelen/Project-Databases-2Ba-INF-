@@ -453,8 +453,10 @@ def download(dataset_id, tablename):
     if tablename not in dataset.getTableNames():
         abort(404)
 
+    tv = dataset.getTableViewer()
 
     # PREPARE FILE FOR DOWNLOAD
+    tv.to_csv()
 
     filename = "..."
     real_download_dir = "..."

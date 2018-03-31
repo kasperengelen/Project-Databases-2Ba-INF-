@@ -89,27 +89,27 @@ class TableViewer:
         """Convert a table from the dataset to a CSV file"""
         filename = foldername + "/" + self.tablename + ".csv"
 
-        outfile = open(filename, 'w')
-        outcsv = csv.writer(outfile, delimiter=delimiter, quotechar=quotechar)
-        conn = get_db()
-        # conn = db_wrapper.DBWrapper()
+        with open(filename, 'w') as outfile:
+            outcsv = csv.writer(outfile, delimiter=delimiter, quotechar=quotechar)
+            conn = get_db()
+            # conn = db_wrapper.DBWrapper()
 
-        conn.cursor().execute("SELECT column_name FROM information_schema.columns WHERE table_schema = '{}' AND table_name = '{}'".format(self.setid, self.tablename))
+            conn.cursor().execute("SELECT column_name FROM information_schema.columns WHERE table_schema = '{}' AND table_name = '{}'".format(self.setid, self.tablename))
 
-        # write header
-        outcsv.writerow([x[0] for x in conn.cursor().fetchall()])
+            # write header
+            outcsv.writerow([x[0] for x in conn.cursor().fetchall()])
 
-        conn.cursor().execute(sql.SQL("SELECT * FROM {}.{}").format(sql.Identifier(str(self.setid)), sql.Identifier(self.tablename)))
-        rows = conn.cursor().fetchall()
+            conn.cursor().execute(sql.SQL("SELECT * FROM {}.{}").format(sql.Identifier(str(self.setid)), sql.Identifier(self.tablename)))
+            rows = conn.cursor().fetchall()
 
-        # replace NULL values with parameter 'null'
-        for i in range(len(rows)):
-            rows[i] = list(rows[i])
-            for j in range(len(rows[i])):
-                if rows[i][j] is None: rows[i][j] = null
+            # replace NULL values with parameter 'null'
+            for i in range(len(rows)):
+                rows[i] = list(rows[i])
+                for j in range(len(rows[i])):
+                    if rows[i][j] is None: rows[i][j] = null
 
-        # write rows
-        outcsv.writerows(rows)
+            # write rows
+            outcsv.writerows(rows)
 
 if __name__ == '__main__':
     tv = TableViewer(1, 'test', None)
