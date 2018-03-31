@@ -86,8 +86,10 @@ class TableViewer:
         return html_table
 
     def to_csv(self, foldername, delimiter=',', quotechar='"', null="NULL"):
-        """Convert a table from the dataset to a CSV file"""
-        filename = foldername + "/" + self.tablename + ".csv"
+        """Convert a table from the dataset to a CSV file. The csv file will be stored
+        in the specified folder. The filename will be the tablename followed by '.csv'."""
+
+        filename = os.path.join(foldername, self.tablename + ".csv")
 
         with open(filename, 'w') as outfile:
             outcsv = csv.writer(outfile, delimiter=delimiter, quotechar=quotechar)
