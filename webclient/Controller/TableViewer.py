@@ -85,9 +85,9 @@ class TableViewer:
         html_table = re.sub(' mytable', '" id="mytable', data_frame.to_html(None, None, None, True, False, classes='mytable'))
         return html_table
 
-    def to_csv(self, delimiter=',', quotechar='"', null="NULL"):
+    def to_csv(self, foldername, delimiter=',', quotechar='"', null="NULL"):
         """Convert a table from the dataset to a CSV file"""
-        filename = self.tablename + ".csv"
+        filename = foldername + "/" + self.tablename + ".csv"
 
         outfile = open(filename, 'w')
         outcsv = csv.writer(outfile, delimiter=delimiter, quotechar=quotechar)
