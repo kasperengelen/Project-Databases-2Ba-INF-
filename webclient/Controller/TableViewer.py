@@ -4,7 +4,8 @@ import math
 import re
 import os
 import csv
-#from utils import get_db
+from utils import get_db
+# import db_wrapper
 from psycopg2 import sql
 
 class TableViewer:
@@ -84,19 +85,14 @@ class TableViewer:
         html_table = re.sub(' mytable', '" id="mytable', data_frame.to_html(None, None, None, True, False, classes='mytable'))
         return html_table
 
-    def to_csv(self, filename=""):
+    def to_csv(self, delimiter=',', quotechar='"', null="NULL"):
         """Convert a table from the dataset to a CSV file"""
-        if len(filename) == 0:
-            filename = str(self.setid) + "_" + self.tablename
-        else:
-            # remove all /'s to prevent the file from being put in another directory
-            filename = os.path.basename(filename)
-
-        filename += ".csv"
+        filename = self.tablename + ".csv"
 
         outfile = open(filename, 'w')
-        outcsv = csv.writer(outfile)
+        outcsv = csv.writer(outfile, delimiter=delimiter, quotechar=quotechar)
         conn = get_db()
+        # conn = db_wrapper.DBWrapper()
 
         conn.cursor().execute("SELECT column_name FROM information_schema.columns WHERE table_schema = '{}' AND table_name = '{}'".format(self.setid, self.tablename))
 
@@ -104,11 +100,19 @@ class TableViewer:
         outcsv.writerow([x[0] for x in conn.cursor().fetchall()])
 
         conn.cursor().execute(sql.SQL("SELECT * FROM {}.{}").format(sql.Identifier(str(self.setid)), sql.Identifier(self.tablename)))
+        rows = conn.cursor().fetchall()
+
+        # replace NULL values with parameter 'null'
+        for i in range(len(rows)):
+            rows[i] = list(rows[i])
+            for j in range(len(rows[i])):
+                if rows[i][j] is None: rows[i][j] = null
 
         # write rows
-        outcsv.writerows(conn.cursor().fetchall())
+        outcsv.writerows(rows)
 
 if __name__ == '__main__':
     tv = TableViewer(1, 'test', None)
-    print(tv.get_page_indices(50, 88))
+    # print(tv.get_page_indices(50, 88))
+    tv.to_csv("m8", quotechar="\"")
     pass

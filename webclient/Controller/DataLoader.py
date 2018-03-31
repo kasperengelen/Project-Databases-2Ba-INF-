@@ -4,9 +4,8 @@ import shutil
 import psycopg2
 import re
 from psycopg2 import sql
-import db_wrapper
-from DatasetInfo import get_db
-# from utils import get_db
+# import db_wrapper
+from utils import get_db
 from DatasetManager import DatasetManager
 
 
@@ -241,7 +240,8 @@ class DataLoader:
 
 if __name__ == "__main__":
 
-    test = DataLoader(45)
-    test.read_file("../empty.csv", True)
+    # test = DataLoader(45)
+    # test.read_file("../empty.csv", True)
     # test.read_file("load_departments.dump", True)
     # test.delete_dataset()
+
