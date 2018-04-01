@@ -17,7 +17,8 @@ app = Flask(__name__, template_folder="./View/templates/")
 app.config.update(dict(
     SECRET_KEY = "\xbf\xcf\xde\xee\xe8\xc1\x8c\\\xfd\xe6\\!t^(\x1c/\xc6l\xe1,\xc9#\xd7",
     WTF_CSRF_SECRET_KEY = "Uei\xc2&\x8a\x18.H\x87\xc5\x1d\xd1\xc8\xc3\xcf\xe5\xfft_\x8c:\x03r",
-    UPLOAD_FOLDER = "./upload"
+    UPLOAD_FOLDER = "./upload",
+    DOWNLOAD_FOLDER = "./download"
 ))
 
 app.register_blueprint(user_pages.user_pages)

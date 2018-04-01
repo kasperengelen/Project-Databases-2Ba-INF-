@@ -98,20 +98,8 @@
 					<tr>
 						<td><a href="{{ url_for('dataset_pages.view_dataset_table', dataset_id=dataset_info.setid, tablename=table) }}">
 							{{ table }}</a></td>
-						<td><a id="file" href="#" onclick="return exprt()">Export to CSV</a></td>
+						<td><a id="file" href="{{ url_for('dataset_pages.download', dataset_id=dataset_info.setid, tablename=table) }}">Export to CSV</a></td>
 					</tr>
-					<script>
-						function exprt() {
-							var filename
-							var p = prompt("Please enter the filename:", "file");
-						    if (p == null || p == "") {
-						        filename = "";
-						    } else {
-						        filename = "p";
-						    }
-						    document.getElementById("filename").innerHTML = filename;
-						}
-					</script>
 					{% endfor %}
 					
 				{% endif %}

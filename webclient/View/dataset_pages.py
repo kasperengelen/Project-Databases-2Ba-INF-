@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, url_for, redirect, session, flash, abort
+from flask import Blueprint, render_template, request, url_for, redirect, session, flash, abort, send_from_directory
 from flask import current_app as app
 from utils import require_admin
 from utils import require_login
@@ -33,8 +33,6 @@ def view_dataset_home(dataset_id):
     upload_form = TableUploadForm()
 
     perm_type = dataset.getPermForUserID(session['userdata']['userid'])
-
-    print(perm_type)
 
     return render_template('dataset_pages.home.html', dataset_info = dataset_info, table_list = table_list, form = upload_form, perm_type=perm_type)
 # ENDFUNCTION
@@ -439,4 +437,49 @@ def upload(dataset_id):
             flash(message=error_msg, category="error")
 
     return redirect(url_for('dataset_pages.view_dataset_home', dataset_id=dataset_id))
+# ENDFUNCTION
+
+@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/download/')
+@require_login
+@require_readperm
+def download(dataset_id, tablename):
+    """Callback to download the specified table from the specified dataset."""
+
+    if not DatasetManager.existsID(dataset_id):
+        abort(404)
+
+    dataset = DatasetManager.getDataset(dataset_id)
+
+    if tablename not in dataset.getTableNames():
+        abort(404)
+
+    tv = dataset.getTableViewer(tablename)
+
+    real_download_dir = None
+
+    # create download folder
+    # format: <DOWNLOAD_FOLDER>/<USER_ID>_<X>/
+    for i in range(100):
+        temp_dir = os.path.join(app.config['DOWNLOAD_FOLDER'], str(session['userdata']['userid']) + "_" + str(i))
+
+        if not os.path.exists(temp_dir):
+            os.makedirs(temp_dir)
+            real_download_dir = temp_dir
+            break
+
+    if real_download_dir is None:
+        abort(500)
+
+    # PREPARE FILE FOR DOWNLOAD
+    tv.to_csv(real_download_dir)
+
+    filename = tablename + ".csv"
+
+    # SEND TO USER
+    send_file = send_from_directory(real_download_dir, filename, mimetype="text/csv", attachment_filename=filename)
+
+    # DELETE FILE
+    shutil.rmtree(real_download_dir, ignore_errors=True)
+
+    return send_file
 # ENDFUNCTION
