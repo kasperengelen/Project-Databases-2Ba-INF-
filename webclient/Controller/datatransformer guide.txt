@@ -1,0 +1,72 @@
+DataTransformer guide
+
+DE CONSTRUCTOR:
+
+neemt de user.id, setid, db_connection, SQLAlchemy engine en een optional argument "replace"
+"replace" op False zetten zorgt ervoor dat een transformatie een nieuwe table creëert.
+replace staat standaard op True, dit betekent dat niets specifiëren ervoor zorgt dat
+de gegeven table wordt aangepast, dus een soort "overwrite".
+
+DataTransformer(userid, setid, db_connection, engine, replace=True) => Zal de table overwriten
+
+DataTransformer(userid, setid, db_connection, engine, False) => Zal een nieuwe table maken en de originele onveranderd laten
+
+----------------------------------------------------------------------------------
+
+delete_attribute(tablename, attribute, new_name=""):
+(REEDS GEÏMPLEMENTEERD EN VANZELFSPREKEND)
+
+
+-----------------------------------------------------------------------------------
+
+find_and_replace(self, setname, tablename, attribute, value, replacement, new_name="")
+
+(REEDS GEÏMPLEMENTEERD EN VANZELFSPREKEND)
+
+Note: dit is een find and replace voor een exacte math. Toekomstige implementaties
+ondersteunen regex en substring, maar hier komen andere methods voor.
+
+------------------------------------------------------------------------------------
+
+get_conversion_options(self, tablename, attribute):
+
+Deze method returnt een lijst van alle mogelijke conversies voor een attribuut dat ondersteunt wordt door
+DataTransformer. De parameters zijn vrij duidelijk.
+
+------------------------------------------------------------------------------------
+
+change_attribute_type(tablename, attribute, to_type, data_format="", new_name=""):
+
+Deze method converteert een attribuut naar een andere type.
+setname, tablename, attribute zijn van vanzelfsprekend. to_type is een string die de POSTGRES type accepteert.
+data_format is een parameter die voor speciale conversies geldt, ik moet deze nog implementeren dus negeer deze.
+new_name is wederom zoals de vorige functies een parameter die de naam is van de nieuwe tabel die gemaakt wordt
+indien replace op False staat. 
+
+Let op, als je een nieuwe tabel wil maken en tegelijk data_format wilt negeren dan moet je niet vergeten
+expliciet data_format op "" te zetten, anders zal new_name leeg blijven en de meegegeven new_name bij data_formaat gegeven worden.
+
+Mijn persoonlijke mening is om deze functie zodanig te gebruiken bij de front-end: wanneer iemand een attribuut wilt converteren kan je
+best get_conversion_options() callen en zo alle opties weergeven voor de gebruiker. De keuze van de gebruiker dan gebruiken als to_type
+en de conversie uitvoeren.
+
+
+-------------------------------------------------------------------------------------
+
+one_hot_encode(tablename, attribute, new_name="")
+
+Deze method voert one-hot-encoding uit op een table.
+De parameters zijn vanzelfsprekend. new_name enkel assignen
+in het geval dat replace op false is. Maar het zou geen effect hebben ookal vul je het wel in zonder replace op False te zetten.
+
+--------------------------------------------------------------------------------------
+
+normalize_using_zscore(tablename, attribute, new_name="")
+
+Deze method normaliseert alle waarde van een kolom in range [0, 1].
+Dit werkt alleen maar op numerieke waardes. Een call op een niet numerieke waarde raiset een custom
+exception, maar daar zullen we samen nog voor samenzitten.
+
+ 
+
+
