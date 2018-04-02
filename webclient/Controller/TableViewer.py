@@ -72,7 +72,11 @@ class TableViewer:
         self.maxrows = table_size
             
         if((page_nr - 1) * nr_rows >= self.maxrows):
-            return False
+            #In case it's an empty table
+            if table_size == 0:
+                return True
+            else:
+                return False
         else:
             return True
 
@@ -117,4 +121,3 @@ if __name__ == '__main__':
     tv = TableViewer(1, 'test', None)
     # print(tv.get_page_indices(50, 88))
     tv.to_csv("m8", quotechar="\"")
-    pass
