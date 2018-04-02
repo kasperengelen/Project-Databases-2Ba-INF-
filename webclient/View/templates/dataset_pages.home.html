@@ -66,7 +66,7 @@
 	                		</div>
 							<p><input type="submit" class="btn btn-primary" value="Upload File"></p>
 						</form>
-						<p>Allowed extensions: .csv, .zip, .dump</p>
+						<p>Allowed extensions: .csv, .zip, .dump, .sql</p>
 		        	</div>
 		      	</div>
 		    </div>
@@ -98,7 +98,32 @@
 					<tr>
 						<td><a href="{{ url_for('dataset_pages.view_dataset_table', dataset_id=dataset_info.setid, tablename=table) }}">
 							{{ table }}</a></td>
-						<td><a id="file" href="{{ url_for('dataset_pages.download', dataset_id=dataset_info.setid, tablename=table) }}">Export to CSV</a></td>
+						<td><a id="file" href="#" data-toggle="modal" data-target="#downloadFormModal_{{ table }}">Export to CSV</a></td>
+						<!-- Download dialog. -->
+						<div id="downloadFormModal_{{ table }}" class="modal fade" role="dialog">
+					        <div class="modal-dialog">
+					        
+					            <!-- Modal content-->
+					            <div class="modal-content">
+					                <div class="modal-header">
+					                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+					                    <h4 class="modal-title">Download table.</h4>
+					                </div>
+					                <div class="modal-body">
+					                	<!-- Download form -->
+					                    <form action="{{ url_for('dataset_pages.download', dataset_id=dataset_info.setid, tablename=table)}}" method="post" name="downloadForm_{{ table }}">
+                                    		<input id="downloadForm_{{ table }}" class="btn btn-primary" type="submit" value="Download">
+					                    </form>
+					                    <!-- Download form -->
+					                </div>
+					                <div class="modal-footer">
+					                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+					                </div>
+					            </div>
+					            <!-- Modal content -->
+					        </div>
+						</div>
+						<!-- Download dialog. -->
 					</tr>
 					{% endfor %}
 					
@@ -106,6 +131,4 @@
 			</table>
 		</div>
 	</div>
-
-
 {% endblock %}
