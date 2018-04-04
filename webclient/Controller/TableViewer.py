@@ -1,4 +1,5 @@
 import pandas as pd
+import matplotlib.pyplot as plt
 from sqlalchemy import create_engine
 import math
 import re
@@ -117,7 +118,10 @@ class TableViewer:
             # write rows
             outcsv.writerows(rows)
 
+    def show_histogram(self, columnname):
+        pass
+
 if __name__ == '__main__':
     tv = TableViewer(1, 'test', None)
     # print(tv.get_page_indices(50, 88))
-    tv.to_csv("m8", quotechar="\"")
+
