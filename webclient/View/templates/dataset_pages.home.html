@@ -111,7 +111,7 @@
 					                </div>
 					                <div class="modal-body">
 					                	<!-- Download form -->
-					                    <form action="{{ url_for('dataset_pages.download', dataset_id=dataset_info.setid, tablename=table)}}" method="post" name="downloadForm_{{ table }}">
+					                    <form action="{{ url_for('dataset_pages.download', dataset_id=dataset_info.setid, tablename=table)}}" method="get" name="downloadForm_{{ table }}">
                                     		<input id="downloadForm_{{ table }}" class="btn btn-primary" type="submit" value="Download">
 					                    </form>
 					                    <!-- Download form -->

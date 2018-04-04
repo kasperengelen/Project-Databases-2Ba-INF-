@@ -453,6 +453,13 @@ def download(dataset_id, tablename):
     if tablename not in dataset.getTableNames():
         abort(404)
 
+    # get form
+    form = DownloadForm(request.args)
+
+    if not form.validate():
+        flash(message="Invalid parameters.", category="error")
+        return redirect(url_for('dataset_pages.view_dataset_home', dataset_id=dataset_id))
+
     tv = dataset.getTableViewer(tablename)
 
     real_download_dir = None
@@ -470,8 +477,13 @@ def download(dataset_id, tablename):
     if real_download_dir is None:
         abort(500)
 
+    # GET PARAMETERS
+    delimiter = str(form.delimiter.data)
+    nullrep = str(form.nullrep.data)
+    qoutechar = str(form.qoutechar.data)
+
     # PREPARE FILE FOR DOWNLOAD
-    tv.to_csv(real_download_dir)
+    tv.to_csv(foldername=real_download_dir, delimiter=delimiter, null=nullrep, qoutechar=qoutechar)
 
     filename = tablename + ".csv"
 
