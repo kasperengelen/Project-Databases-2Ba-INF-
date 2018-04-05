@@ -94,14 +94,14 @@
 					                <div class="modal-body">
 					                	<!-- Download form -->
 					                	{% from "includes/_formhelpers.html" import render_field %}
-					                	{{ downloadform.csrf_token }}
 					                    <form action="{{ url_for('dataset_pages.download', dataset_id=dataset_info.setid, tablename=table)}}" method="get" 
 					                    	id="downloadForm_{{ table }}">
+                                            {{ downloadform.hidden_tag() }}
 					                    	<div class="form-group">
 					                    		{{ render_field(downloadform.delimiter, class_="form-control") }}
 					                    	</div>
 					                    	<div class="form-group">
-					                    		{{ render_field(downloadform.qoutechar, class_="form-control") }}
+					                    		{{ render_field(downloadform.quotechar, class_="form-control") }}
 					                    	</div>
 					                    	<div class="form-group">
 					                    		{{ render_field(downloadform.nullrep, class_="form-control") }}

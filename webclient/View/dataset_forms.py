@@ -77,6 +77,6 @@ class DownloadForm(FlaskForm):
     """Form to specify CSV properties for download."""
 
     delimiter = StringField('Delimiter', [InputRequired('Input is required.'), Length(min=1, max=1)])
-    qoutechar = StringField('Qoute character', [InputRequired(), Length(min=1, max=1)])
-    nullrep = StringField('NULL representation', [InputRequired(), Length(min=1, max=10)])
+    quotechar = StringField('Qoute character', [InputRequired('Input is required.'), Length(min=1, max=1)])
+    nullrep = StringField('NULL representation', [InputRequired('Input is required.'), Length(min=1, max=10)])
 # ENDCLASS

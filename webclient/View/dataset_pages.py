@@ -457,6 +457,7 @@ def download(dataset_id, tablename):
     form = DownloadForm(request.args)
 
     if not form.validate():
+        print(form.errors)
         flash(message="Invalid parameters.", category="error")
         return redirect(url_for('dataset_pages.view_dataset_home', dataset_id=dataset_id))
 
@@ -480,10 +481,10 @@ def download(dataset_id, tablename):
     # GET PARAMETERS
     delimiter = str(form.delimiter.data)
     nullrep = str(form.nullrep.data)
-    qoutechar = str(form.qoutechar.data)
+    quotechar = str(form.quotechar.data)
 
     # PREPARE FILE FOR DOWNLOAD
-    tv.to_csv(foldername=real_download_dir, delimiter=delimiter, null=nullrep, qoutechar=qoutechar)
+    tv.to_csv(foldername=real_download_dir, delimiter=delimiter, null=nullrep, quotechar=quotechar)
 
     filename = tablename + ".csv"
 
