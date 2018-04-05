@@ -77,7 +77,14 @@
   	<div class="xs-center">
     	<div class="row">
 	    	<div class="col-sm-3 text-left">
-	    		<input type="text" id="searchInput" placeholder="Search Entry" style="border-style: solid; border-width: 1px; border-radius: 3px;" />
+	    		<input type="text" id="input" placeholder="Search Page No" style="border-style: solid; border-width: 1px; border-radius: 3px;"/>
+				<button onclick="page_search()"><i class="glyphicon glyphicon-arrow-right"></i></button>
+
+				<script type="text/javascript">
+				function page_search(){
+				    window.location.href = '/dataset/{{ dataset_info.setid }}/{{ table_name }}/' + document.getElementById('input').value;
+				 }
+				</script>
 			</div>
 
 	    	<div class="col-sm-6 text-center" style="overflow-x: auto;">
@@ -110,14 +117,7 @@
 		    </div>
 
 		    <div class="col-sm-3 text-right">
-		    	<input type="text" id="input" placeholder="Search Page No" style="border-style: solid; border-width: 1px; border-radius: 3px;"/>
-				<button onclick="page_search()"><i class="glyphicon glyphicon-arrow-right"></i></button>
-
-				<script type="text/javascript">
-				function page_search(){
-				    window.location.href = '/dataset/{{ dataset_info.setid }}/{{ table_name }}/' + document.getElementById('input').value;
-				 }
-				</script>
+		    	<input type="text" id="searchInput" placeholder="Search Entry" style="border-style: solid; border-width: 1px; border-radius: 3px;" />
 		    </div>
 		</div>
 	</div>
@@ -152,7 +152,8 @@
     				scrollX: true,
     				scrollY: true,
     				paging: false,
-    				lengthChange: false
+    				lengthChange: false,
+    				bInfo: false
     			} );
     		} );
 
