@@ -145,8 +145,29 @@ class TableViewer:
                                                             sql.Identifier(columnname)))
         return conn.cursor().fetchone()[1]
 
+    def __aggregate_function(self, columnname, aggregate):
+        """Wrapper that returns result of aggregate function"""
+        conn = get_db()
+
+        conn.cursor().execute(sql.SQL("SELECT " + aggregate + "({}) FROM {}.{}").format(sql.Identifier(columnname),
+                                                                          sql.Identifier(str(self.setid)),
+                                                                          sql.Identifier(self.tablename)))
+        return conn.cursor().fetchone()[0]
+
+    def get_max(self, columnname):
+        """Return max value of the column"""
+        return self.__aggregate_function(columnname, "MAX")
+
+    def get_min(self, columnname):
+        """Return min value of the column"""
+        return self.__aggregate_function(columnname, "MIN")
+
+    def get_avg(self, columnname):
+        """Return average value of the column"""
+        return self.__aggregate_function(columnname, "AVG")
+
 if __name__ == '__main__':
     tv = TableViewer(1, 'test', None)
-    print(tv.get_null_frequency("dept_name"))
+    print(tv.get_avg("dept_name"))
     # print(tv.get_page_indices(50, 88))
 
