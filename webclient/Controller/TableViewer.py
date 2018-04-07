@@ -6,7 +6,7 @@ import re
 import os
 import csv
 from utils import get_db
-# import db_wrapper
+import db_wrapper
 from psycopg2 import sql
 
 class TableViewer:
@@ -121,7 +121,32 @@ class TableViewer:
     def show_histogram(self, columnname):
         pass
 
+    def get_most_frequent_value(self, columnname):
+        """Return the value that appears most often in the column"""
+        conn = get_db()
+
+        # get the frequence of every value and select the one that has the highest one
+        conn.cursor().execute(sql.SQL("SELECT {}, COUNT(*) FROM {}.{} GROUP BY {} ORDER BY COUNT(*) DESC,"
+                                      " {} LIMIT 1").format(sql.Identifier(columnname), sql.Identifier(str(self.setid)),
+                                                            sql.Identifier(self.tablename),
+                                                            sql.Identifier(columnname),
+                                                            sql.Identifier(columnname)))
+        return conn.cursor().fetchone()[0]
+
+
+    def get_null_frequency(self, columnname):
+        """Return the amount of times NULL appears in the column"""
+        conn = get_db()
+
+        conn.cursor().execute(sql.SQL("SELECT {}, COUNT(*) FROM {}.{} WHERE {} IS NULL GROUP BY {}"
+                                      "").format(sql.Identifier(columnname), sql.Identifier(str(self.setid)),
+                                                            sql.Identifier(self.tablename),
+                                                            sql.Identifier(columnname),
+                                                            sql.Identifier(columnname)))
+        return conn.cursor().fetchone()[1]
+
 if __name__ == '__main__':
     tv = TableViewer(1, 'test', None)
+    print(tv.get_null_frequency("dept_name"))
     # print(tv.get_page_indices(50, 88))
 
