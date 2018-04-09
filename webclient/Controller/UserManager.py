@@ -116,4 +116,15 @@ class UserManager:
         return retval
     # ENDMETHOD
 
+    @staticmethod
+    def updateUserActivity(userid, active):
+        """Set the user as active/inactive."""
+
+        if not UserManager.existsID(userid):
+            raise RuntimeError("User with specified userid does not exists.")
+
+        get_db().cursor().execute("UPDATE SYSTEM.user_accounts SET active=%s WHERE userid=%s", [bool(active), int(userid)])
+        get_db().commit()
+    # ENDMETHOD
+
 # ENDCLASS

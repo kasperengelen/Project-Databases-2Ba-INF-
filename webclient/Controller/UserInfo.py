@@ -16,11 +16,12 @@ class UserInfo:
         email = str(tupl[3])
         register_date = sql_time_to_dict(tupl[5])
         admin = bool(tupl[6])
+        active = bool(tupl[7])
 
-        return UserInfo(userid, fname, lname, email, register_date, admin)
+        return UserInfo(userid, fname, lname, email, register_date, admin, active)
     # ENDMETHOD
 
-    def __init__(self, userid, fname, lname, email, register_date, admin):
+    def __init__(self, userid, fname, lname, email, register_date, admin, active):
         """Construct an object that represents a user with the
         specified parameters.
 
@@ -40,6 +41,7 @@ class UserInfo:
         self.email = email
         self.register_date = register_date
         self.admin = admin
+        self.active = active
     # ENDMETHOD
 
     def editInfo(self, new_email, new_fname, new_lname, new_pass):
@@ -84,7 +86,8 @@ class UserInfo:
             "firstname": self.fname,
             "lastname": self.lname,
             "register_date": self.register_date,
-            "admin": self.admin
+            "admin": self.admin,
+            "active" : self.active
         }
     # ENDMETHOD
 

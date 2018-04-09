@@ -3,7 +3,7 @@ from utils import require_admin
 from utils import require_login
 from UserManager import UserManager
 from DatasetManager import DatasetManager
-from admin_forms import DeleteUserForm, DeleteDatasetForm, AdminUserEditForm
+from admin_forms import DeleteUserForm, DeleteDatasetForm, AdminUserEditForm, ActivateDecactivateUser
 
 admin_pages = Blueprint('admin_pages', __name__)
 
@@ -16,17 +16,22 @@ def manage_users():
     ## retrieve list of all users
     user_list = UserManager.getAllUsers()
 
-    destroy_user_forms = []
+    user_forms = []
 
     for user in user_list:
-        form = DeleteUserForm()
+        deleteform = DeleteUserForm()
+        activationform = ActivateDecactivateUser()
 
-        form.fillForm(user)
+        deleteform.fillForm(user)
+        activationform.fillForm(user)
 
-        destroy_user_forms.append(form)
+        user_forms.append({
+            'deleteform': deleteform,
+            'activationform': activationform
+        })
     # ENDFOR
 
-    return render_template('admin_pages.manage_users.html', destroy_user_forms = destroy_user_forms)
+    return render_template('admin_pages.manage_users.html', user_forms = user_forms)
 # ENDFUNCTION
 
 @admin_pages.route('/admin/edit_user/<int:userid>/', methods=['POST', 'GET'])
@@ -86,6 +91,38 @@ def delete_user():
 
     return redirect(url_for('admin_pages.manage_users'))
 # ENDFUNCTION
+
+@admin_pages.route('/admin/set_user_activation/', methods=['POST'])
+@require_login
+@require_admin
+def set_user_activation():
+    """Callback for admins to activate a user."""
+
+    form = ActivateDecactivateUser(request.form)
+
+    if not form.validate():
+        return redirect(url_for('admin_pages.manage_users'))
+
+    userid = int(form.userid.data)
+
+    if not UserManager.existsID(userid):
+        flash(message="User does not exist.", category="error")
+        return redirect(url_for('admin_pages.manage_users'))
+
+    UserManager.updateUserActivity(userid, bool(form.new_activation_status))
+
+    if(bool(form.new_activation_status)):
+        flash(message="User activated.", category="success")
+    else:
+        flash(message="User deactivated.", category="success")
+
+    return redirect(url_for('admin_pages.manage_users'))
+
+def deactivate_user():
+    """Callback for admins to deactivate a user."""
+
+    return redirect(url_for('admin_pages.manage_users'))
+
 
 @admin_pages.route('/admin/manage_datasets/')
 @require_login

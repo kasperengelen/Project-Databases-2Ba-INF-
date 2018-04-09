@@ -9,6 +9,7 @@ CREATE TABLE SYSTEM.user_accounts (
     passwd        VARCHAR(255) NOT NULL,
     register_date TIMESTAMP    DEFAULT now() NOT NULL,
     admin         BOOLEAN      DEFAULT FALSE NOT NULL,
+    active        BOOLEAN      DEFAULT TRUE  NOT NULL,
 
     PRIMARY KEY(userid)
 );
