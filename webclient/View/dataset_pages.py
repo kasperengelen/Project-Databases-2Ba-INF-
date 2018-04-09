@@ -78,7 +78,21 @@ def view_dataset_table(dataset_id, tablename, page_nr):
     # get indices
     page_indices = tv.get_page_indices(display_nr = 50, page_nr = page_nr)
 
+    # RETRIEVE USER PERMISSION
     perm_type = dataset.getPermForUserID(session['userdata']['userid'])
+
+    # RETRIEVE COLUMN STATISTICS
+    colstats = {}
+
+    for attr_name in tv.get_attributes():
+        colstats[attr_name] = {
+            "nullfreq": tv.get_null_frequency(attr_name),
+            "mostfreq": tv.get_most_frequent_value(attr_name),
+            "max": tv.get_max(attr_name),
+            "min": tv.get_min(attr_name),
+            "avg": tv.get_avg(attr_name)
+        }
+    # ENDFOR
 
     return render_template('dataset_pages.table.html', 
                                                 table_name = tablename,
@@ -88,7 +102,8 @@ def view_dataset_table(dataset_id, tablename, page_nr):
                                                 findrepl_form = findrepl_form,
                                                 delete_form = delete_form, 
                                                 perm_type=perm_type,
-                                                current_page=page_nr)
+                                                current_page=page_nr,
+                                                colstats=colstats)
 # ENDFUNCTION
 
 @dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/deleteattr', methods=['POST'])
