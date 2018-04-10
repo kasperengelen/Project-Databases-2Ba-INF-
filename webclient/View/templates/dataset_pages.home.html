@@ -1,24 +1,6 @@
 {% extends 'layout.html' %}
 
 {% block body %}
-	<!--<div class="jumbotron text-center" style="padding: 1%">
-		{% if perm_type == 'admin' %}
-			<div style="float: right;">
-				<a style="float: right;" href="{{ url_for('dataset_pages.manage_dataset', dataset_id=dataset_info.setid) }}" 
-					class="btn btn-primary">Manage</a>
-				</br>
-				</br>
-				<a href="{{ url_for('dataset_pages.edit_perms_dataset', dataset_id=dataset_info.setid) }}" 
-					class="btn btn-primary">Permissions</a>
-			</div>
-		{% endif %}
-
-		<a style="float: left;" href="{{ url_for('dataset_pages.list_dataset') }}" class="btn btn-primary">Datasets</a>
-		<div class="text-center">
-			<h2>{{ dataset_info.name }}</h2>
-			<p>{{ dataset_info.desc }}</p>
-		</div>
-	</div>-->
 	<div class="jumbotron" style="padding: 1%;">
 		<div class="row">
 			<div class="col-sm-3 text-left">
@@ -66,7 +48,7 @@
 	                		</div>
 							<p><input type="submit" class="btn btn-primary" value="Upload File"></p>
 						</form>
-						<p>Allowed extensions: .csv, .zip, .dump</p>
+						<p>Allowed extensions: .csv, .zip, .dump, .sql</p>
 		        	</div>
 		      	</div>
 		    </div>
@@ -98,7 +80,44 @@
 					<tr>
 						<td><a href="{{ url_for('dataset_pages.view_dataset_table', dataset_id=dataset_info.setid, tablename=table) }}">
 							{{ table }}</a></td>
-						<td><a id="file" href="{{ url_for('dataset_pages.download', dataset_id=dataset_info.setid, tablename=table) }}">Export to CSV</a></td>
+						<td><a id="file" href="#" data-toggle="modal" data-target="#downloadFormModal_{{ table }}">Export to CSV</a></td>
+						<!-- Download dialog. -->
+						<div id="downloadFormModal_{{ table }}" class="modal fade" role="dialog">
+					        <div class="modal-dialog">
+					        
+					            <!-- Modal content-->
+					            <div class="modal-content">
+					                <div class="modal-header">
+					                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+					                    <h4 class="modal-title">Download table.</h4>
+					                </div>
+					                <div class="modal-body">
+					                	<!-- Download form -->
+					                	{% from "includes/_formhelpers.html" import render_field %}
+					                    <form action="{{ url_for('dataset_pages.download', dataset_id=dataset_info.setid, tablename=table)}}" method="get" 
+					                    	id="downloadForm_{{ table }}">
+                                            {{ downloadform.hidden_tag() }}
+					                    	<div class="form-group">
+					                    		{{ render_field(downloadform.delimiter, class_="form-control") }}
+					                    	</div>
+					                    	<div class="form-group">
+					                    		{{ render_field(downloadform.quotechar, class_="form-control") }}
+					                    	</div>
+					                    	<div class="form-group">
+					                    		{{ render_field(downloadform.nullrep, class_="form-control") }}
+					                    	</div>
+                                    		<input id="downloadForm_{{ table }}" class="btn btn-primary" type="submit" value="Download">
+					                    </form>
+					                    <!-- Download form -->
+					                </div>
+					                <div class="modal-footer">
+					                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+					                </div>
+					            </div>
+					            <!-- Modal content -->
+					        </div>
+						</div>
+						<!-- Download dialog. -->
 					</tr>
 					{% endfor %}
 					
@@ -106,6 +125,4 @@
 			</table>
 		</div>
 	</div>
-
-
 {% endblock %}

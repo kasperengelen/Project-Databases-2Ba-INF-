@@ -40,6 +40,10 @@ def before_request():
             LoginManager.setLoggedOut()
             return
         utils.sync_user_info()
+
+        if not session['userdata']['active']:
+            LoginManager.setLoggedOut()
+            return
 # ENDFUNCTION
 
 @app.teardown_request

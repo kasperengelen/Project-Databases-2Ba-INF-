@@ -6,7 +6,7 @@ from utils import require_adminperm, require_writeperm, require_readperm
 from DatasetInfo import DatasetInfo
 from DatasetManager import DatasetManager
 from UserManager import UserManager
-from dataset_forms import FindReplaceForm, DeleteAttrForm, DatasetForm, AddUserForm, RemoveUserForm, DatasetListEntryForm, TableUploadForm
+from dataset_forms import FindReplaceForm, DeleteAttrForm, DatasetForm, AddUserForm, RemoveUserForm, DatasetListEntryForm, TableUploadForm, DownloadForm
 from TableViewer import TableViewer
 from werkzeug.utils import secure_filename
 import os
@@ -34,7 +34,7 @@ def view_dataset_home(dataset_id):
 
     perm_type = dataset.getPermForUserID(session['userdata']['userid'])
 
-    return render_template('dataset_pages.home.html', dataset_info = dataset_info, table_list = table_list, form = upload_form, perm_type=perm_type)
+    return render_template('dataset_pages.home.html', dataset_info = dataset_info, table_list = table_list, form = upload_form, perm_type=perm_type, downloadform = DownloadForm())
 # ENDFUNCTION
 
 @dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>', defaults = {'page_nr': 1})
@@ -78,7 +78,21 @@ def view_dataset_table(dataset_id, tablename, page_nr):
     # get indices
     page_indices = tv.get_page_indices(display_nr = 50, page_nr = page_nr)
 
+    # RETRIEVE USER PERMISSION
     perm_type = dataset.getPermForUserID(session['userdata']['userid'])
+
+    # RETRIEVE COLUMN STATISTICS
+    colstats = {}
+
+    '''for attr_name in tv.get_attributes():
+        colstats[attr_name] = {
+            "nullfreq": tv.get_null_frequency(attr_name),
+            "mostfreq": tv.get_most_frequent_value(attr_name),
+            "max": tv.get_max(attr_name),
+            "min": tv.get_min(attr_name),
+            "avg": tv.get_avg(attr_name)
+        }'''
+    # ENDFOR
 
     return render_template('dataset_pages.table.html', 
                                                 table_name = tablename,
@@ -88,7 +102,8 @@ def view_dataset_table(dataset_id, tablename, page_nr):
                                                 findrepl_form = findrepl_form,
                                                 delete_form = delete_form, 
                                                 perm_type=perm_type,
-                                                current_page=page_nr)
+                                                current_page=page_nr,
+                                                colstats=colstats)
 # ENDFUNCTION
 
 @dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/deleteattr', methods=['POST'])
@@ -453,6 +468,14 @@ def download(dataset_id, tablename):
     if tablename not in dataset.getTableNames():
         abort(404)
 
+    # get form
+    form = DownloadForm(request.args)
+
+    if not form.validate():
+        print(form.errors)
+        flash(message="Invalid parameters.", category="error")
+        return redirect(url_for('dataset_pages.view_dataset_home', dataset_id=dataset_id))
+
     tv = dataset.getTableViewer(tablename)
 
     real_download_dir = None
@@ -470,8 +493,13 @@ def download(dataset_id, tablename):
     if real_download_dir is None:
         abort(500)
 
+    # GET PARAMETERS
+    delimiter = str(form.delimiter.data)
+    nullrep = str(form.nullrep.data)
+    quotechar = str(form.quotechar.data)
+
     # PREPARE FILE FOR DOWNLOAD
-    tv.to_csv(real_download_dir)
+    tv.to_csv(foldername=real_download_dir, delimiter=delimiter, null=nullrep, quotechar=quotechar)
 
     filename = tablename + ".csv"
 

@@ -26,6 +26,11 @@ def login():
     if request.method == 'POST' and form.validate():
         if UserManager.validateLogin(form.email.data, form.password.data):
             user = UserManager.getUserFromEmail(form.email.data)
+
+            if not user.active:
+                flash(message="Error: User is deactivated.", category="error")
+                return render_template('user_pages.login.html', form=form)
+
             LoginManager.setLoggedIn(user)
             flash(message="You are now logged in.", category="success")
             return redirect(url_for('index'))

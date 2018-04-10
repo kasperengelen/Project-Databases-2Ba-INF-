@@ -73,4 +73,10 @@ class TableUploadForm(FlaskForm):
     columnnames_included = BooleanField('Column names included in files? (CSV only)')
 # ENDCLASS
 
-    
+class DownloadForm(FlaskForm):
+    """Form to specify CSV properties for download."""
+
+    delimiter = StringField('Delimiter', [InputRequired('Input is required.'), Length(min=1, max=1)])
+    quotechar = StringField('Qoute character', [InputRequired('Input is required.'), Length(min=1, max=1)])
+    nullrep = StringField('NULL representation', [InputRequired('Input is required.'), Length(min=1, max=10)])
+# ENDCLASS

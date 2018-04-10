@@ -170,3 +170,4 @@ if __name__ == '__main__':
     tv = TableViewer(1, 'test', None)
     print(tv.get_avg("dept_name"))
     # print(tv.get_page_indices(50, 88))
+
