@@ -91,10 +91,10 @@ def view_dataset_table(dataset_id, tablename, page_nr):
 
     for attr_name in tv.get_attributes():
         colstats[attr_name] = {
-            "nullfreq": 0 #tv.get_null_frequency(attr_name),
-            "mostfreq": 0 #tv.get_most_frequent_value(attr_name),
-            "max": 0 #tv.get_max(attr_name),
-            "min": 0 #tv.get_min(attr_name),
+            "nullfreq": 0, #tv.get_null_frequency(attr_name),
+            "mostfreq": 0, #tv.get_most_frequent_value(attr_name),
+            "max": 0, #tv.get_max(attr_name),
+            "min": 0, #tv.get_min(attr_name),
             "avg": 0 #tv.get_avg(attr_name)
         }
     # ENDFOR
@@ -181,7 +181,7 @@ def transform_findreplace(dataset_id, tablename):
 @dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/typeconversion', methods = ['POST'])
 @require_login
 @require_writeperm
-def transform_typeconversion():
+def transform_typeconversion(dataset_id, tablename):
     """Callback for typeconversion transformation."""
 
     if not DatasetManager.existsID(dataset_id):
@@ -217,7 +217,7 @@ def transform_typeconversion():
 @dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/onehotencoding', methods = ['POST'])
 @require_login
 @require_writeperm
-def transform_onehotencoding():
+def transform_onehotencoding(dataset_id, tablename):
     """Callback for one hot encoding transformation."""
 
     if not DatasetManager.existsID(dataset_id):
@@ -250,7 +250,7 @@ def transform_onehotencoding():
 @dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/zscorenormalisation', methods = ['POST'])
 @require_login
 @require_writeperm
-def transform_zscorenormalisation():
+def transform_zscorenormalisation(dataset_id, tablename):
     """Callback for z-score normalisation."""
 
     if not DatasetManager.existsID(dataset_id):

@@ -45,54 +45,67 @@
 		        	</h4>
 		      	</div>
 		      	<div id="transform" class="panel-collapse collapse">
-		      		<!-- One Hot Encoding -->
-		        	<form method="post" action="{{ url_for('dataset_pages.transform_onehotencoding', dataset_id=dataset_info.setid, tablename=table_name) }}">
-					{{ OHE.csrf_token }}
-					<div class="form-group" style="width: 30%; display: inline-block;">
-						{{render_field(OHE.select_attr, class_="form-control")}}
-					</div>
-					<p style="display: inline-block;"><input type="submit" id="OHE" class="btn btn-primary" value="One Hot Encode"></p>
-					</form>
-					<!-- One Hot Encoding -->
+		      		<div class="panel-body">
+		      			{% from "includes/_formhelpers.html" import render_field %}
+		      			<!-- Find & Replace -->
+						<form method="post" action="{{ url_for('dataset_pages.transform_findreplace', dataset_id=dataset_info.setid, tablename=table_name) }}">
+						{{ findrepl_form.csrf_token }}
+						<div class="form-group" style="width: 20%; display: inline-block;">
+							{{render_field(findrepl_form.select_attr, class_="form-control")}}
+						</div>
+						<div class="form-group" style="width: 30%; display: inline-block;">
+							{{render_field(findrepl_form.search, class_="form-control", placeholder="Searchterm")}}
+						</div>
+						<div class="form-group" style="width: 30%; display: inline-block;">
+							{{render_field(findrepl_form.replacement, class_="form-control", placeholder="Replacement")}}  
+						</div>
+						<p style="display: inline-block;"><input type="submit" id="findrepl" class="btn btn-primary" value="Find & Replace"></p>
+						</form>
+						<!-- Find & Replace  -->
 
-					<!-- Delete Attribute -->
-					<form method="post" action="{{ url_for('dataset_pages.transform_deleteattr', dataset_id=dataset_info.setid, tablename=table_name) }}">
-					{{ delete_form.csrf_token }}
-					<div class="form-group" style="width: 30%; display: inline-block;">
-						{{render_field(delete_form.select_attr, class_="form-control")}}
-					</div>
-					<p style="display: inline-block;"><input type="submit" id="delete" class="btn btn-primary" value="Delete Attribute"></p>
-					</form>
-					<!-- Delete Attribute -->
+						<!-- Type Conversion -->
+						<form method="post" action="{{ url_for('dataset_pages.transform_typeconversion', dataset_id=dataset_info.setid, tablename=table_name) }}">
+						{{ typeconversion_form.csrf_token }}
+						<div class="form-group" style="width: 30%; display: inline-block;">
+							{{render_field(typeconversion_form.select_attr, class_="form-control") }}
+						</div>
+						<div class="form-group" style="width: 30%; display: inline-block;">
+							{{render_field(typeconversion_form.new_datatype, class_="form-control") }}
+						</div>
+						<p style="display: inline-block;"><input type="submit" id="typeconversion" class="btn btn-primary" value="Convert Attribute Type"></p>
+						</form>
+						<!-- Type Conversion -->
 
-					<!-- Normalize Using Z-Score -->
-					<form method="post" action="{{ url_for('dataset_pages.transform_normalize', dataset_id=dataset_info.setid, tablename=table_name) }}">
-					{{ NUZ.csrf_token }}
-					<div class="form-group" style="width: 30%; display: inline-block;">
-						{{render_field(NUZ.select_attr, class_="form-control")}}
-					</div>
-					<p style="display: inline-block;"><input type="submit" id="NUZ" class="btn btn-primary" value="Normalize Using Z-Score"></p>
-					</form>
-					<!-- Normalize Using Z-Score -->
+		      			<!-- Delete Attribute -->
+						<form method="post" action="{{ url_for('dataset_pages.transform_deleteattr', dataset_id=dataset_info.setid, tablename=table_name) }}">
+						{{ delete_form.csrf_token }}
+						<div class="form-group" style="width: 30%; display: inline-block;">
+							{{render_field(delete_form.select_attr, class_="form-control")}}
+						</div>
+						<p style="display: inline-block;"><input type="submit" id="delete" class="btn btn-primary" value="Delete Attribute"></p>
+						</form>
+						<!-- Delete Attribute -->
 
-					<!-- Find & Replace -->
-					<div class="panel-body">
-		        	{% from "includes/_formhelpers.html" import render_field %}
-					<form method="post" action="{{ url_for('dataset_pages.transform_findreplace', dataset_id=dataset_info.setid, tablename=table_name) }}">
-					{{ findrepl_form.csrf_token }}
-					<div class="form-group" style="width: 20%; display: inline-block;">
-						{{render_field(findrepl_form.select_attr, class_="form-control")}}
-					</div>
-					<div class="form-group" style="width: 30%; display: inline-block;">
-						{{render_field(findrepl_form.search, class_="form-control", placeholder="Searchterm")}}
-					</div>
-					<div class="form-group" style="width: 30%; display: inline-block;">
-						{{render_field(findrepl_form.replacement, class_="form-control", placeholder="Replacement")}}  
-					</div>
-					<p style="display: inline-block;"><input type="submit" id="findrepl" class="btn btn-primary" value="Find & Replace"></p>
-					</form>
-					<!-- Find & Replace  -->
+			      		<!-- One Hot Encoding -->
+			        	<form method="post" action="{{ url_for('dataset_pages.transform_onehotencoding', dataset_id=dataset_info.setid, tablename=table_name) }}">
+						{{ onehotencodingform.csrf_token }}
+						<div class="form-group" style="width: 30%; display: inline-block;">
+							{{render_field(onehotencodingform.select_attr, class_="form-control")}}
+						</div>
+						<p style="display: inline-block;"><input type="submit" id="OHE" class="btn btn-primary" value="One Hot Encode"></p>
+						</form>
+						<!-- One Hot Encoding -->
 
+						<!-- Normalize Using Z-Score -->
+						<form method="post" action="{{ url_for('dataset_pages.transform_zscorenormalisation', dataset_id=dataset_info.setid,
+							tablename=table_name) }}">
+						{{ zscoreform.csrf_token }}
+						<div class="form-group" style="width: 30%; display: inline-block;">
+							{{render_field(zscoreform.select_attr, class_="form-control")}}
+						</div>
+						<p style="display: inline-block;"><input type="submit" id="NUZ" class="btn btn-primary" value="Normalize Using Z-Score"></p>
+						</form>
+						<!-- Normalize Using Z-Score -->
 			        </div>
 	     		</div>
 	    	</div>
