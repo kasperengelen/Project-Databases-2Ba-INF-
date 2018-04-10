@@ -92,7 +92,7 @@ class DataTypeTransform(FlaskForm):
 
     def fillForm(self, attrs):
         self.select_attr.choices = [(attrname, attrname) for attrname in attrs]
-        self.new_datatype.choices = ['VARCHAR(255)', 'CHAR(255)', 'INTEGER', 'FLOAT', 'DATE', 'TIME', 'TIMESTAMP']
+        self.new_datatype.choices = [(typename, typename) for typename in ['VARCHAR(255)', 'CHAR(255)', 'INTEGER', 'FLOAT', 'DATE', 'TIME', 'TIMESTAMP']]
     # ENDMETHOD
 # ENDCLASS
 
