@@ -8,14 +8,14 @@
     <div class="jumbotron">
         <div style="overflow-x: auto;">
             <table>
-                {% if destroy_user_forms %}
+                {% if user_forms %}
                     <tr>
                         <th>ID</th>
                         <th>Email</th>
                         <th><th>
                         <th></th>
                     </tr>
-                    {% for user in destroy_user_forms %}
+                    {% for user in user_forms %}
                         <tr>
                             <td>{{ user.userid.data }}</td>
                             <td>{{ user.email.data }}</td>

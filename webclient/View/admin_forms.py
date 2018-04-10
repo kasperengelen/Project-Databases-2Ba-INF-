@@ -50,7 +50,7 @@ class ActivateDecactivateUser(FlaskForm):
 
     def fillFields(self, user_data):
         self.userid = user_data.userid
-        self.new_activation_status = !user_data.active
+        self.new_activation_status = user_data.active
     # ENDMETHOD
 # ENDCLASS
 
