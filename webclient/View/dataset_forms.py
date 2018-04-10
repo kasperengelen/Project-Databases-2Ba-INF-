@@ -88,7 +88,27 @@ class DataTypeTransform(FlaskForm):
     """Form to change the datatype of a table attribute."""
 
     select_attr = SelectField('Attribute', choices=[])
-    new_datatype = SelectField('New datatype', choises=['VARCHAR(255)', 'APPEL', 'PEER'])
+    new_datatype = SelectField('New datatype', choices=['VARCHAR(255)', 'APPEL', 'PEER'])
+
+    def fillForm(self, attrs, supported_types):
+        self.select_attr.choices = [(attrname, attrname) for attrname in attrs]
+        self.new_datatype.choices = [(typename, typename) for typename in supported_types]
+    # ENDMETHOD
+# ENDCLASS
+
+class NormalizeZScore(FlaskForm):
+    """Form to normalize an attribute by it's z-score."""
+
+    select_attr = SelectField('Attribute', choices=[])
+
+    def fillForm(self, attrs):
+        self.select_attr.choices = [(attrname, attrname) for attrname in attrs]
+    # ENDMETHOD
+# ENDCLASS
+
+class OneHotEncoding(FlaskForm):
+    """Form to perform the one-hot-encoding transformation."""
+    select_attr = SelectField('Attribute', choices=[])
 
     def fillForm(self, attrs):
         self.select_attr.choices = [(attrname, attrname) for attrname in attrs]
