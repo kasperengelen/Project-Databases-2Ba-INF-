@@ -247,6 +247,23 @@ class TableTransformer:
                                                                                            sql.Identifier(attribute), sql.Identifier(attribute)), (replacement, value))
         self.db_connection.commit()
 
+
+
+    def one_hot_encode(self, tablename, attribute, new_name=""):
+        """Method that performs one hot encoding given an attribute"""
+        internal_ref = self.get_internal_reference(tablename)
+        sql_query = "SELECT * FROM \"{}\".\"{}\"".format(*internal_ref)
+        df = pd.read_sql(sql_query, self.engine)
+        encoded = pd.get_dummies(df[attribute]) #Perfom one-hot-encoding
+        df = df.drop(attribute, axis=1) #Drop the attribute used for encoding
+        df = df.join(encoded) #Join the original attributes with the encoded table
+        if self.replace is True:
+            #If the table should be replaced, drop it and recreate it.
+            df.to_sql(tablename, self.engine, None, internal_ref[0], 'replace', index = False)
+        elif self.replace is False:
+            #We need to create a new table and leave the original untouched
+            df.to_sql(new_name, self.engine, None, internal_ref[0], 'fail', index = False)
+
         
     def __calculate_zscore(self, mean, standard_dev, value):
         """Method to quickly calculate z-scores"""
@@ -293,6 +310,9 @@ class TableTransformer:
         elif self.replace is False:
             #We need to create a new table and leave the original untouched
             df.to_sql(new_name, self.engine, None, internal_ref[0], 'fail', index = False)
+
+
+
         
         
 
