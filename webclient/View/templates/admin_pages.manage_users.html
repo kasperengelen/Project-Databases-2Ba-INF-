@@ -13,16 +13,27 @@
                         <th>ID</th>
                         <th>Email</th>
                         <th>Edit</th>
-                        <th>Delete</th>
                         <th>(De)Activate</th>
+                        <th>Delete</th>
                     </tr>
                     {% for user in user_forms %}
                         <tr>
                             <td>{{ user.deleteform.userid.data }}</td>
                             <td>{{ user.deleteform.email.data }}</td>
                             <td><a style="color: black;" href="{{ url_for('admin_pages.edit_user', userid = user.deleteform.userid.data) }}">
-                                <span class="glyphicon glyphicon-pencil"></span></a></td>
-
+                                <span class="glyphicon glyphicon-pencil"></span></a>
+                            </td>
+                            <td>{% from "includes/_formhelpers.html" import render_field %}
+                                <form method="post" action="{{ url_for('admin_pages.set_user_activation') }}" name="activate">
+                                    {{ user.activationform.hidden_tag() }}
+                                    {% if user.activationform.new_activation_status.data == False %}
+                                        <label for="activate{{ user.activationform.userid.data }}" class="glyphicon glyphicon-stop"></label>
+                                    {% else %}
+                                        <label for="activate{{ user.activationform.userid.data }}" class="glyphicon glyphicon-play"></label>
+                                    {% endif %}
+                                    <input id="activate{{ user.activationform.userid.data }}" style="visibility: hidden;" type="submit">
+                                </form>
+                            </td>
                             <td>{% from "includes/_formhelpers.html" import render_field %}
                                 <input type="hidden" id="input" value="delete this user?">
                                 <form method="post" action="{{ url_for('admin_pages.delete_user') }}" name="remove" onsubmit="return check()">
@@ -31,17 +42,7 @@
                                     <input id="remove{{ user.deleteform.userid.data }}" style="visibility: hidden;" type="submit">
                                 </form>
                             </td>                     
-                            <td>{% from "includes/_formhelpers.html" import render_field %}
-                                <form method="post" action="{{ url_for('admin_pages.set_user_activation') }}" name="activate">
-                                    {{ user.activationform.hidden_tag() }}
-                                    {% if user.activationform.new_activation_status == False %}
-                                        <label for="activate{{ user.activationform.userid.data }}" class="glyphicon glyphicon-play"></label>
-                                    {% else %}
-                                        <label for="activate{{ user.activationform.userid.data }}" class="glyphicon glyphicon-stop"></label>
-                                    {% endif %}
-                                    <input id="activate{{ user.activationform.userid.data }}" style="visibility: hidden;" type="submit">
-                                </form>
-                            </td>
+                            
                         </tr>
                     {% endfor %}
                 {% endif %}
