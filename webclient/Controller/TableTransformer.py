@@ -1,16 +1,27 @@
 import pandas as pd
+import math
+import psycopg2
 from psycopg2 import sql
 from sqlalchemy import create_engine
 
 class TableTransformer:
+    """Class that performs transformations and various actions on SQL tables to support the data cleaning process.
+
+    Attributes:
+        userid: The id of the user in our system that wants to perform actions on the data.
+        setid: The id of the dataset that the user wants to modify
+        replace: A boolean indicating whether the modification of the data should overwrite the table or create a new table
+                 True overwrites data, False creates a new table (every transformation method has a new_name parameter that is the name of the new table)
+        db_connection: psycopg2 database connection to execute SQL queries
+        engine: SQLalchemy engine to use pandas functionality
+    """
 
     def __init__(self, userid, setid, db_conn, engine, replace=True):
+        """Inits the TableTransformer with provided values"""
         self.userid = userid
         self.setid = setid
         self.replace = replace
-        #Get the psycopg2 database connection to execute SQL queries
         self.db_connection = db_conn
-        #Get the SQLalchemy engine to use pandas functionality
         self.engine = engine
 
 
@@ -18,47 +29,64 @@ class TableTransformer:
     class AttrTypeError(Exception):
         """
         This exception is raised whenever an user attempts to perform a transformation on an attribute
-        whose type is not supported by the called transformation
+        whose type is not supported by the called transformation.
         """
 
     class ConversionError(Exception):
         """
         This exception is raised whenever an implicit type conversion of an attribute failed because of
-        values that aren't possible to convert
+        values that aren't possible to convert.
         """
-        
-    
 
-    """Extra option to check whether deleting the attribute will destroy integrity constraints.
-    Checks for other constraints is possible as well"""
+    class ValueError(Exception):
+        """
+        This exception is raised whenever an operation is provided with an inappropiate value causing
+        the operation to fail.
+        """
+
+
+
     def __integrity_check(self, tablename, setid):
-        #implemented in secret file
+        """Extra option to check whether deleting the attribute will destroy integrity constraints.
+        Checks for other constraints is possible as well
+        """
         pass
 
-    #Method to change the transformation behavior to overwrite the table with the changes
+    
     def set_to_overwrite(self):
+        """Method that changes the behavior of the TableTransforler to overwrite the table when performing modifcations."""
         self.replace = True
 
-    #Method to change the transformation behavior to create a new table with the changes
+
+    
     def set_to_copy(self):
+        """Method that changes the behavior of the TableTransforler to create a new table when performing modifcations."""
         self.replace = False
 
 
-    # Get the internal reference for the table of (setid) and (tablename). This returns a pair (id, name)
+    
     def get_internal_reference(self, tablename):
-            return (str(self.setid), tablename)
+        """Get the internal reference for the table of (setid) and (tablename). This returns a pair (id, name)."""
+        return (str(self.setid), tablename)
 
-    # In case the transformation has to result in a new table, we copy the existing one
+    
     def copy_table(self, internal_ref, new_name):
-        #Execute the query this way to avoid SQL injections
+        """In case the transformation has to result in a new table, we copy the existing one and perform modifications on this copy.
+
+        Parameters:
+           internal_ref: A tuple containing information to identify the table in our system. This is returned by get_internal_reference().
+           new_name: A string representing the name of the new table constructed after performing a transformation.
+        """
+        #Execute with the dynamic SQL module of psycopg2 to avoid SQL injecitons
         self.db_connection.cursor().execute(sql.SQL("CREATE TABLE {}.{} AS SELECT * FROM {}.{}").format(sql.Identifier(internal_ref[0]),sql.Identifier(new_name),
                                                                                           sql.Identifier(internal_ref[0]), sql.Identifier(internal_ref[1])))
         self.db_connection.commit()
         return (internal_ref[0], new_name)
 
         
-    # Delete an attribute of a table
+    
     def delete_attribute(self, tablename, attribute, new_name=""):
+        """Delete an attribute of a table"""
         internal_ref = self.get_internal_reference(tablename)
         if self.replace is False:
             internal_ref = self.copy_table(internal_ref, new_name)
@@ -72,8 +100,8 @@ class TableTransformer:
         return ['VARCHAR(255)', 'CHAR(255)', 'INTEGER', 'FLOAT', 'DATE', 'TIME', 'TIMESTAMP']
 
 
-    # Returns a list of supported types to convert to given a data_type
     def get_conversion_options(self, tablename, attribute):
+        """Returns a list of supported types that the given attribute can be converted to."""
         data_type = self.get_attribute_type(tablename, attribute)[0]
         options = { 'character varying' : ['CHAR(255)', 'INTEGER', 'FLOAT', 'DATE', 'TIME', 'TIMESTAMP'],
                     'character'         : ['VARCHAR(255)', 'INTEGER', 'FLOAT', 'DATE', 'TIME', 'TIMESTAMP'],
@@ -86,8 +114,8 @@ class TableTransformer:
         #In case it's a data type unknown to this class, we can almost certainly convert to varchar(255)
         return options.setdefault(data_type, ['VARCHAR(255)'])
 
-    # Return the postgres data type of an attribute
     def get_attribute_type(self, tablename, attribute):
+        """Return the postgres data type of an attribute."""
         internal_ref = self.get_internal_reference(tablename)
         cur = self.db_connection.cursor()
         cur.execute(sql.SQL("SELECT pg_typeof({}) FROM {}.{}").format(sql.Identifier(attribute), sql.Identifier(internal_ref[0]),
@@ -95,16 +123,17 @@ class TableTransformer:
         return (cur.fetchone()[0], internal_ref)
 
 
-    # Conversion of "numeric" things (INTEGER and FLOAT, DATE, TIME, TIMESTAMP)
     def __convert_numeric(self, internal_ref, attribute, to_type):
+        """Conversion of "numeric" things (INTEGER and FLOAT, DATE, TIME, TIMESTAMP)"""
         sql_query = "ALTER TABLE {}.{} ALTER COLUMN  {} TYPE %s" % to_type
         self.db_connection.cursor().execute(sql.SQL(sql_query).format(sql.Identifier(internal_ref[0]), sql.Identifier(internal_ref[1]),
                                                                                               sql.Identifier(attribute)), [to_type])
         self.db_connection.commit()
         
 
-    # Conversion of a character type (VARCHAR and CHAR)
+    
     def __convert_character(self, internal_ref, attribute, to_type, data_format):
+        """Conversion of a character type (VARCHAR and CHAR)"""
         patterns = { 
                      'INTEGER'      : 'INTEGER USING %s::integer%s',
                      'FLOAT'        : 'FLOAT USING %s::float%s',
@@ -125,8 +154,14 @@ class TableTransformer:
 
 
 
-    # Change the attribute type, if the data follows a specific format like TIMESTAMP provide it as well.
     def change_attribute_type(self, tablename, attribute, to_type, data_format="", new_name=""):
+        """Change the type of a table attribute.
+
+        Parameters:
+            to_type: A string representing the PostreSQL type we want to convert to, like INTEGER or VARCHAR(255)
+            data_format: Optional parameter for when the attribute has to follow a specific format, like a DATE with format 'DD/MM/YYYY'
+            new_name: The name for the new table constructed from this operation if the TableTransformer is not set to overwrite
+        """
         cur_type, internal_ref  = self.get_attribute_type(tablename, attribute)
         if self.replace is False:
             internal_ref = self.copy_table(internal_ref, new_name)
@@ -138,9 +173,11 @@ class TableTransformer:
             self.__convert_numeric(internal_ref, attribute, to_type)
 
 
-    # In case that change_attribute_type fails due to elements that can't be converted
-    # this method will force the conversion by a) setting
     def force_attribute_type(self, tablename, attribute, to_type, data_format="", new_name=""):
+        """In case that change_attribute_type fails due to elements that can't be converted
+        this method will force the conversion by deleting the row containing the bad element.
+        The parameters are identical to change_attribute_type().
+        """
         if self.replace is True:
             internal_ref = self.get_internal_reference(tablename)
         else:
@@ -173,11 +210,37 @@ class TableTransformer:
 
 
 
-    #Method that finds all the exact matches (value = value) and replaces it with the provided value
-    def find_and_replace(self, tablename, attribute, value, replacement, new_name=""):
+    def find_and_replace(self, tablename, attribute, value, replacement, exact=True, new_name=""):
+        """Method that finds values and replaces them with the provided argument.
+
+        Parameters:
+            value: The value that needs to found so it can be replaced.
+            replacement: The value that will replace the values that were found.
+            exact = A boolean indicating if we want to match whole-words only or allowing substring matching
+        """
         cur_type, internal_ref  = self.get_attribute_type(tablename, attribute)
         if self.replace is False:
             internal_ref = self.copy_table(internal_ref, new_name)
+
+        if exact is True:
+            sql_query = "UPDATE {0}.{1} SET {2} = %s WHERE {2} = %s"
+        elif exact is False:
+            if value.isalnum() is not True: #Only alphanumerical substrings are supported
+                raise self.ValueError("Values not containing alphanumerical characters can not be used for substring matching. "
+                                      "Please use whole-word matching to find and replace the values.")
+            
+            if self.get_attribute_type(tablename, attribute) not in ['character', 'character varying']:
+                raise self.AttrTypeError("Substring matching is only possible with character strings. "
+                                         "Please convert the attribute to a character string type.")
+                
+            sql_query = "UPDATE {0}.{1} SET {2} = %s WHERE {2} LIKE %s"
+            value = '%{}%'.format(value)
+
+        self.db_connection.cursor().execute(sql.SQL(sql_query).format(sql.Identifier(internal_ref[0]), sql.Identifier(internal_ref[1]),
+                                                                      sql.Identifier(attribute)), (replacement, value))
+
+            
+                
 
         # Possible danger of SQL injections, so we pass value and replacement like this
         self.db_connection.cursor().execute(sql.SQL("UPDATE {}.{} SET  {} = %s WHERE {} = %s").format(sql.Identifier(internal_ref[0]), sql.Identifier(internal_ref[1]),
@@ -185,44 +248,25 @@ class TableTransformer:
         self.db_connection.commit()
 
         
-    #Method that performs one hot encoding given an attribute
-    def one_hot_encode(self, tablename, attribute, new_name=""):
-        internal_ref = self.get_internal_reference(tablename)
-        #Read the table in a dataframe
-        sql_query = "SELECT * FROM \"{}\".\"{}\"".format(*internal_ref)
-        df = pd.read_sql(sql_query, self.engine)
-        #Perfom one-hot-encoding
-        encoded = pd.get_dummies(df[attribute])
-        #Drop the attribute used for encoding
-        df = df.drop(attribute, axis=1)
-        #Join the original attributes with the encoded table
-        df = df.join(encoded)
-        if self.replace is True:
-            #If the table should be replaced, drop it and recreate it.
-            df.to_sql(tablename, self.engine, None, internal_ref[0], 'replace', index = False)
-        elif self.replace is False:
-            #We need to create a new table and leave the original untouched
-            df.to_sql(new_name, self.engine, None, internal_ref[0], 'fail', index = False)
-
-    #Method to quickly calculate z-scores
     def __calculate_zscore(self, mean, standard_dev, value):
+        """Method to quickly calculate z-scores"""
         zscore = (value - mean) / standard_dev
         return zscore
             
 
-    #Method that normalizes the values of an attribute using the z-score.
-    #This will normalize everything in a 1-point range, thus [0-1]
+
     def normalize_using_zscore(self, tablename, attribute, new_name = ""):
-        copy_made = False #If we are still
+        """Method that normalizes the values of an attribute using the z-score.
+        This will normalize everything in a 1-point range, thus [0-1].
+        """
         #Let's check if the attribute is a numeric type, this should not be performed on non-numeric types
         attr_type = self.get_attribute_type(tablename, attribute)
         if attr_type not in ['integer', 'double precision']:
             raise self.AttrTypeError("Normalization failed due attribute not being of numeric type (neither integer or float)")
+        
         internal_ref = self.get_internal_reference(tablename)
-        #Read the table in a dataframe
         sql_query = "SELECT * FROM \"{}\".\"{}\"".format(*internal_ref)
         df = pd.read_sql(sql_query, self.engine)
-        #Calculate the mean
         mean = df[attribute].mean()
         #Calculate the standard deviation, for this method we consider the data as the population
         #and not a sample so we don't use Bessel's correction
@@ -238,11 +282,9 @@ class TableTransformer:
             elif zscore > 2:
                 zscore = 2
             column[i] = zscore
-        #Divide all the values by 4 to get a 1-point range
-        column = column.divide(4)
-        #Now the mean is 0, so add 0.5 to have the mean at 0.5
-        column = column.add(0.5)
-        #Update these changes to the dataframe
+        
+        column = column.divide(4) #Divide all the values by 4 to get a 1-point range
+        column = column.add(0.5) #Now the mean is 0, so add 0.5 to have the mean at 0.5
         df.update(column)
 
         if self.replace is True:
@@ -251,8 +293,6 @@ class TableTransformer:
         elif self.replace is False:
             #We need to create a new table and leave the original untouched
             df.to_sql(new_name, self.engine, None, internal_ref[0], 'fail', index = False)
-        return column
-        
         
         
 
