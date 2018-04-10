@@ -19,11 +19,16 @@ def manage_users():
     user_forms = []
 
     for user in user_list:
+
+        print("CUR_ACTIVATION_STATUS",user.active)
+
         deleteform = DeleteUserForm()
         activationform = ActivateDecactivateUser()
 
         deleteform.fillForm(user)
         activationform.fillForm(user)
+
+        print("NEW_ACTIVATION_STATUS",activationform.new_activation_status.data)
 
         user_forms.append({
             'deleteform': deleteform,
@@ -104,25 +109,23 @@ def set_user_activation():
         return redirect(url_for('admin_pages.manage_users'))
 
     userid = int(form.userid.data)
+    new_status = (form.new_activation_status.data == "True")
+
+    print("SETTING STATUS:", new_status)
 
     if not UserManager.existsID(userid):
         flash(message="User does not exist.", category="error")
         return redirect(url_for('admin_pages.manage_users'))
 
-    UserManager.updateUserActivity(userid, bool(form.new_activation_status))
+    UserManager.updateUserActivity(userid, new_status)
 
-    if(bool(form.new_activation_status)):
+    if new_status:
         flash(message="User activated.", category="success")
     else:
         flash(message="User deactivated.", category="success")
 
     return redirect(url_for('admin_pages.manage_users'))
-
-def deactivate_user():
-    """Callback for admins to deactivate a user."""
-
-    return redirect(url_for('admin_pages.manage_users'))
-
+# ENDFUNCTION
 
 @admin_pages.route('/admin/manage_datasets/')
 @require_login
