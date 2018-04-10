@@ -84,14 +84,14 @@ def view_dataset_table(dataset_id, tablename, page_nr):
     # RETRIEVE COLUMN STATISTICS
     colstats = {}
 
-    for attr_name in tv.get_attributes():
+    '''for attr_name in tv.get_attributes():
         colstats[attr_name] = {
             "nullfreq": tv.get_null_frequency(attr_name),
             "mostfreq": tv.get_most_frequent_value(attr_name),
             "max": tv.get_max(attr_name),
             "min": tv.get_min(attr_name),
             "avg": tv.get_avg(attr_name)
-        }
+        }'''
     # ENDFOR
 
     return render_template('dataset_pages.table.html', 

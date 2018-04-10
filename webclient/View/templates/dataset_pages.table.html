@@ -45,7 +45,38 @@
 		        	</h4>
 		      	</div>
 		      	<div id="transform" class="panel-collapse collapse">
-		        	<div class="panel-body">
+		      		<!-- One Hot Encoding -->
+		        	<form method="post" action="{{ url_for('dataset_pages.transform_onehotencoding', dataset_id=dataset_info.setid, tablename=table_name) }}">
+					{{ OHE.csrf_token }}
+					<div class="form-group" style="width: 30%; display: inline-block;">
+						{{render_field(OHE.select_attr, class_="form-control")}}
+					</div>
+					<p style="display: inline-block;"><input type="submit" id="OHE" class="btn btn-primary" value="One Hot Encode"></p>
+					</form>
+					<!-- One Hot Encoding -->
+
+					<!-- Delete Attribute -->
+					<form method="post" action="{{ url_for('dataset_pages.transform_deleteattr', dataset_id=dataset_info.setid, tablename=table_name) }}">
+					{{ delete_form.csrf_token }}
+					<div class="form-group" style="width: 30%; display: inline-block;">
+						{{render_field(delete_form.select_attr, class_="form-control")}}
+					</div>
+					<p style="display: inline-block;"><input type="submit" id="delete" class="btn btn-primary" value="Delete Attribute"></p>
+					</form>
+					<!-- Delete Attribute -->
+
+					<!-- Normalize Using Z-Score -->
+					<form method="post" action="{{ url_for('dataset_pages.transform_normalize', dataset_id=dataset_info.setid, tablename=table_name) }}">
+					{{ NUZ.csrf_token }}
+					<div class="form-group" style="width: 30%; display: inline-block;">
+						{{render_field(NUZ.select_attr, class_="form-control")}}
+					</div>
+					<p style="display: inline-block;"><input type="submit" id="NUZ" class="btn btn-primary" value="Normalize Using Z-Score"></p>
+					</form>
+					<!-- Normalize Using Z-Score -->
+
+					<!-- Find & Replace -->
+					<div class="panel-body">
 		        	{% from "includes/_formhelpers.html" import render_field %}
 					<form method="post" action="{{ url_for('dataset_pages.transform_findreplace', dataset_id=dataset_info.setid, tablename=table_name) }}">
 					{{ findrepl_form.csrf_token }}
@@ -60,14 +91,8 @@
 					</div>
 					<p style="display: inline-block;"><input type="submit" id="findrepl" class="btn btn-primary" value="Find & Replace"></p>
 					</form>
+					<!-- Find & Replace  -->
 
-					<form method="post" action="{{ url_for('dataset_pages.transform_deleteattr', dataset_id=dataset_info.setid, tablename=table_name) }}">
-					{{ delete_form.csrf_token }}
-					<div class="form-group" style="width: 30%; display: inline-block;">
-						{{render_field(delete_form.select_attr, class_="form-control")}}
-					</div>
-					<p style="display: inline-block;"><input type="submit" id="delete" class="btn btn-primary" value="Delete Attribute"></p>
-					</form>
 			        </div>
 	     		</div>
 	    	</div>
