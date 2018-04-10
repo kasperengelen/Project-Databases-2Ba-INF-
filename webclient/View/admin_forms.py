@@ -48,7 +48,7 @@ class ActivateDecactivateUser(FlaskForm):
     userid = HiddenField('User id')
     new_activation_status = HiddenField('New activation status')
 
-    def fillFields(self, user_data):
+    def fillForm(self, user_data):
         self.userid = user_data.userid
         self.new_activation_status = !user_data.active
     # ENDMETHOD
