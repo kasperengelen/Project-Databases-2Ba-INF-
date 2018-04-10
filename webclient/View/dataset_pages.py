@@ -73,7 +73,7 @@ def view_dataset_table(dataset_id, tablename, page_nr):
     zscoreform = NormalizeZScore()
     findrepl_form.fillForm(attrs)
     delete_form.fillForm(attrs)
-    typeconversion_form.fillForm(attrs, ['VARCHAR(255)', 'CHAR(255)', 'INTEGER', 'FLOAT', 'DATE', 'TIME', 'TIMESTAMP'])
+    typeconversion_form.fillForm(attrs)
     onehotencodingform.fillForm(attrs)
     zscoreform.fillForm(attrs)
 
@@ -182,19 +182,103 @@ def transform_findreplace(dataset_id, tablename):
 @require_login
 @require_writeperm
 def transform_typeconversion():
-    pass
+    """Callback for typeconversion transformation."""
+
+    if not DatasetManager.existsID(dataset_id):
+        abort(404)
+
+    dataset = DatasetManager.getDataset(dataset_id)
+
+    if tablename not in dataset.getTableNames():
+        abort(404)
+
+    tv = dataset.getTableViewer(tablename)
+    tt = dataset.getTableTransformer(tablename, session['userdata']['userid'])
+
+    form = DataTypeTransform(request.form)
+    form.fillForm(tv.get_attributes())
+
+    if not form.validate():
+        flash(message="Invalid form.", category="error")
+        return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
+
+    if not form.new_datatype.data in tt.get_conversion_options(form.select_attr.data):
+        flash(message="Selected datatype not compatible with the selected attribute.", category="error")
+    else:
+        try:
+            tt.change_attribute_type(form.select_attr.data, form.new_datatype.data)
+            flash(message="Attribute type changed.", category="success")
+        except:
+            flash(message="An error occurred.", category="error")
+
+    return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
+# ENDFUNCTION
 
 @dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/onehotencoding', methods = ['POST'])
 @require_login
 @require_writeperm
 def transform_onehotencoding():
-    pass
+    """Callback for one hot encoding transformation."""
+
+    if not DatasetManager.existsID(dataset_id):
+        abort(404)
+
+    dataset = DatasetManager.getDataset(dataset_id)
+
+    if tablename not in dataset.getTableNames():
+        abort(404)
+
+    tv = dataset.getTableViewer(tablename)
+    tt = dataset.getTableTransformer(tablename, session['userdata']['userid'])
+
+    form = OneHotEncoding(request.form)
+    form.fillForm(tv.get_attributes())
+
+    if not form.validate():
+        flash(message="Invalid form.", category="error")
+        return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
+
+    try:
+        tt.one_hot_encode(form.select_attr.data)
+        flash(message="One hot encoding complete.", category="success")
+    except:
+        flash(message="An error occurred.", category="error")
+
+    return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
+# ENDFUNCTION
 
 @dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/zscorenormalisation', methods = ['POST'])
 @require_login
 @require_writeperm
 def transform_zscorenormalisation():
-    pass
+    """Callback for z-score normalisation."""
+
+    if not DatasetManager.existsID(dataset_id):
+        abort(404)
+
+    dataset = DatasetManager.getDataset(dataset_id)
+
+    if tablename not in dataset.getTableNames():
+        abort(404)
+
+    tv = dataset.getTableViewer(tablename)
+    tt = dataset.getTableTransformer(tablename, session['userdata']['userid'])
+
+    form = NormalizeZScore(request.form)
+    form.fillForm(tv.get_attributes())
+
+    if not form.validate():
+        flash(message="Invalid form.", category="error")
+        return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
+
+    try:
+        tt.normalize_using_zscore(form.select_attr.data)
+        flash(message="normalisation complete.", category="success")
+    except:
+        flash(message="An error occurred.", category="error")
+
+    return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
+# ENDFUNCTION
 
 @dataset_pages.route('/dataset/create', methods=['GET', 'POST'])
 @require_login

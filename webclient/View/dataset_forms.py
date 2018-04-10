@@ -88,11 +88,11 @@ class DataTypeTransform(FlaskForm):
     """Form to change the datatype of a table attribute."""
 
     select_attr = SelectField('Attribute', choices=[])
-    new_datatype = SelectField('New datatype', choices=['VARCHAR(255)', 'APPEL', 'PEER'])
+    new_datatype = SelectField('New datatype', choices=[])
 
-    def fillForm(self, attrs, supported_types):
+    def fillForm(self, attrs):
         self.select_attr.choices = [(attrname, attrname) for attrname in attrs]
-        self.new_datatype.choices = [(typename, typename) for typename in supported_types]
+        self.new_datatype.choices = ['VARCHAR(255)', 'CHAR(255)', 'INTEGER', 'FLOAT', 'DATE', 'TIME', 'TIMESTAMP']
     # ENDMETHOD
 # ENDCLASS
 
