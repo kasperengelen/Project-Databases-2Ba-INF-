@@ -8,7 +8,6 @@ class TableTransformer:
     """Class that performs transformations and various actions on SQL tables to support the data cleaning process.
 
     Attributes:
-        userid: The id of the user in our system that wants to perform actions on the data.
         setid: The id of the dataset that the user wants to modify
         replace: A boolean indicating whether the modification of the data should overwrite the table or create a new table
                  True overwrites data, False creates a new table (every transformation method has a new_name parameter that is the name of the new table)
@@ -16,9 +15,8 @@ class TableTransformer:
         engine: SQLalchemy engine to use pandas functionality
     """
 
-    def __init__(self, userid, setid, db_conn, engine, replace=True):
+    def __init__(self, setid, db_conn, engine, replace=True):
         """Inits the TableTransformer with provided values"""
-        self.userid = userid
         self.setid = setid
         self.replace = replace
         self.db_connection = db_conn
@@ -303,6 +301,103 @@ class TableTransformer:
         column = column.divide(4) #Divide all the values by 4 to get a 1-point range
         column = column.add(0.5) #Now the mean is 0, so add 0.5 to have the mean at 0.5
         df.update(column)
+
+        if self.replace is True:
+            #If the table should be replaced, drop it and recreate it.
+            df.to_sql(tablename, self.engine, None, internal_ref[0], 'replace', index = False)
+        elif self.replace is False:
+            #We need to create a new table and leave the original untouched
+            df.to_sql(new_name, self.engine, None, internal_ref[0], 'fail', index = False)
+
+
+
+
+    def discretizise_using_equal_width(self, tablename, attribute, new_name=""):
+        """Method that calulates the bins for an equi-distant discretizisation and performs it"""
+        internal_ref = self.get_internal_reference(tablename)
+        sql_query = "SELECT * FROM \"{}\".\"{}\"".format(*internal_ref)
+        df = pd.read_sql(sql_query, self.engine)
+
+        minimum = df[attribute].min()
+        maximum = df[attribute].max() + 0.0001 #Add a little bit to make sure the max element is included
+        leftmost_edge = math.floor(minimum)
+        rightmost_edge = math.ceil(maximum)
+        value_range = rightmost_edge - leftmost_edge
+        nr_values = df[attribute].size
+        #A good rule of thumb for the amount of bins is the square root of the amount of elements
+        nr_bins = math.ceil(math.sqrt(nr_values))
+        #Generally speaking we want to keep the amount of bins between 2 and 20 for readibility
+        if nr_bins < 2:
+            nr_bins = 2
+        elif nr_bins > 20:
+            nr_bins = 20
+        #Calculate the width of the bins
+        bin_width = math.ceil(value_range / nr_bins)
+        bins = [leftmost_edge]
+        #Get all the intervals in list form
+        for i in range(nr_bins):
+            next_interval = bins[i] + bin_width
+            bins.append(next_interval)
+
+        #Make labels for these intervals using the list of bin values
+        binlabels = []
+        for i in range(1, len(bins)):
+            label = "[" + str(bins[i-1]) + " - " + str(bins[i]) + "["                                
+            binlabels.append(label)
+            
+        column_name = attribute + "_category"
+        df['category'] = pd.cut(df[attribute], bins, right=False, labels = binlabels, include_lowest=True)
+
+        if self.replace is True:
+            #If the table should be replaced, drop it and recreate it.
+            df.to_sql(tablename, self.engine, None, internal_ref[0], 'replace', index = False)
+        elif self.replace is False:
+            #We need to create a new table and leave the original untouched
+            df.to_sql(new_name, self.engine, None, internal_ref[0], 'fail', index = False)
+
+
+    def discretizise_using_equal_frequency(self, tablename, attribute, new_name=""):
+        """Method that calulates the bins for an equi-frequent discretizisation and performs it"""
+        #The initial steps are similar to equi-distant discretizisation
+        internal_ref = self.get_internal_reference(tablename)
+        sql_query = "SELECT * FROM \"{}\".\"{}\"".format(*internal_ref)
+        df = pd.read_sql(sql_query, self.engine)
+        nr_values = df[attribute].size
+        nr_bins = math.floor(math.sqrt(nr_values))
+        if nr_bins < 2:
+            nr_bins = 2
+        elif nr_bins > 20:
+            nr_bins = 20
+        
+        elements = df[attribute].tolist() #Load all the elements in a python list
+        elements.sort()
+        index_bins = [0]
+        temp_width = math.floor(len(elements) / nr_bins) #Rough estimate of the indices
+        remainder = len(elements) % nr_bins
+        for i in range(nr_bins):
+            index_value = index_bins[i-1] + temp_width
+            if remainder > 0:
+                index_value += 1
+                remainder -= 1
+            index_bins[i] = index_value
+            index_bins.append(0) #Add dummy element that will be modified in the next loop
+
+        
+        del index_bins[-1] #Delete last dummy element
+
+        #Calculate actual values for the bins
+        bins = [elements[0]]
+        for i in index_bins:
+            bins.append((elements[i-1] + 1)) #The elements need to be included too so we add 1 to compensate
+
+
+        binlabels = []
+        for i in range(1, len(bins)):
+            label = "[" + str(bins[i-1]) + " - " + str(bins[i]) + "["                                
+            binlabels.append(label)
+
+        column_name = attribute + "_category"
+        df[column_name] = pd.cut(df[attribute], bins, right=False, labels = binlabels, include_lowest=True)
 
         if self.replace is True:
             #If the table should be replaced, drop it and recreate it.
