@@ -53,7 +53,7 @@ class DatasetInfo:
         return TableViewer(self.setid, tablename, get_sqla_eng())
     # ENDMETHOD
 
-    def getTableTransformer(self, tablename, userid):
+    def getTableTransformer(self, tablename):
         """Retrieves a TableTransformer object associated with the specified set and table."""
         if not tablename in self.getTableNames():
             raise RuntimeError("Invalid tablename.")

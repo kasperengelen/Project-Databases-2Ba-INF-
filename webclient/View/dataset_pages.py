@@ -137,7 +137,7 @@ def transform_deleteattr(dataset_id, tablename):
         flash(message="Invalid form.", category="error")
         return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 
-    tt = dataset.getTableTransformer(tablename, session['userdata']['userid'])
+    tt = dataset.getTableTransformer(tablename)
 
     tt.delete_attribute(tablename, form.select_attr.data)
     flash(message="Attribute deleted.", category="success")
@@ -168,7 +168,7 @@ def transform_findreplace(dataset_id, tablename):
         flash(message="Invalid form.", category="error")
         return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 
-    tt = dataset.getTableTransformer(tablename, session['userdata']['userid'])
+    tt = dataset.getTableTransformer(tablename)
 
     try:
         tt.find_and_replace(tablename, form.select_attr.data, form.search.data, form.replacement.data)
@@ -193,7 +193,7 @@ def transform_typeconversion(dataset_id, tablename):
         abort(404)
 
     tv = dataset.getTableViewer(tablename)
-    tt = dataset.getTableTransformer(tablename, session['userdata']['userid'])
+    tt = dataset.getTableTransformer(tablename)
 
     form = DataTypeTransform(request.form)
     form.fillForm(tv.get_attributes())
@@ -206,7 +206,7 @@ def transform_typeconversion(dataset_id, tablename):
         flash(message="Selected datatype not compatible with the selected attribute.", category="error")
     else:
         try:
-            tt.change_attribute_type(form.select_attr.data, form.new_datatype.data)
+            tt.change_attribute_type(tablename, form.select_attr.data, form.new_datatype.data)
             flash(message="Attribute type changed.", category="success")
         except:
             flash(message="An error occurred.", category="error")
@@ -229,7 +229,7 @@ def transform_onehotencoding(dataset_id, tablename):
         abort(404)
 
     tv = dataset.getTableViewer(tablename)
-    tt = dataset.getTableTransformer(tablename, session['userdata']['userid'])
+    tt = dataset.getTableTransformer(tablename)
 
     form = OneHotEncoding(request.form)
     form.fillForm(tv.get_attributes())
@@ -239,7 +239,7 @@ def transform_onehotencoding(dataset_id, tablename):
         return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 
     try:
-        tt.one_hot_encode(form.select_attr.data)
+        tt.one_hot_encode(tablename, form.select_attr.data)
         flash(message="One hot encoding complete.", category="success")
     except:
         flash(message="An error occurred.", category="error")
@@ -262,7 +262,7 @@ def transform_zscorenormalisation(dataset_id, tablename):
         abort(404)
 
     tv = dataset.getTableViewer(tablename)
-    tt = dataset.getTableTransformer(tablename, session['userdata']['userid'])
+    tt = dataset.getTableTransformer(tablename)
 
     form = NormalizeZScore(request.form)
     form.fillForm(tv.get_attributes())
@@ -272,7 +272,7 @@ def transform_zscorenormalisation(dataset_id, tablename):
         return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 
     try:
-        tt.normalize_using_zscore(form.select_attr.data)
+        tt.normalize_using_zscore(tablename, form.select_attr.data)
         flash(message="normalisation complete.", category="success")
     except:
         flash(message="An error occurred.", category="error")
