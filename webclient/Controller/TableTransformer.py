@@ -67,6 +67,11 @@ class TableTransformer:
         self.db_connection.commit()
 
 
+    def get_supported_types(self):
+        """Quick method that returns all the types supported by the TableTransformer for conversion purposes"""
+        return ['VARCHAR(255)', 'CHAR(255)', 'INTEGER', 'FLOAT', 'DATE', 'TIME', 'TIMESTAMP']
+
+
     # Returns a list of supported types to convert to given a data_type
     def get_conversion_options(self, tablename, attribute):
         data_type = self.get_attribute_type(tablename, attribute)[0]
