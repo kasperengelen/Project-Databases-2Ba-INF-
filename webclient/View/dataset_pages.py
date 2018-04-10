@@ -6,7 +6,7 @@ from utils import require_adminperm, require_writeperm, require_readperm
 from DatasetInfo import DatasetInfo
 from DatasetManager import DatasetManager
 from UserManager import UserManager
-from dataset_forms import FindReplaceForm, DeleteAttrForm, DatasetForm, AddUserForm, RemoveUserForm, DatasetListEntryForm, TableUploadForm, DownloadForm, DataTypeTransform
+from dataset_forms import FindReplaceForm, DeleteAttrForm, DatasetForm, AddUserForm, RemoveUserForm, DatasetListEntryForm, TableUploadForm, DownloadForm, DataTypeTransform, NormalizeZScore, OneHotEncoding
 from TableViewer import TableViewer
 from werkzeug.utils import secure_filename
 import os
@@ -43,8 +43,6 @@ def view_dataset_home(dataset_id):
 @require_readperm
 def view_dataset_table(dataset_id, tablename, page_nr):
 
-
-
     if not DatasetManager.existsID(dataset_id):
         abort(404)
 
@@ -71,9 +69,13 @@ def view_dataset_table(dataset_id, tablename, page_nr):
     findrepl_form = FindReplaceForm()
     delete_form = DeleteAttrForm()
     typeconversion_form = DataTypeTransform()
+    onehotencodingform = OneHotEncoding()
+    zscoreform = NormalizeZScore()
     findrepl_form.fillForm(attrs)
     delete_form.fillForm(attrs)
-    typeconversion_form.fillForm(attrs, [])
+    typeconversion_form.fillForm(attrs, ['VARCHAR(255)', 'CHAR(255)', 'INTEGER', 'FLOAT', 'DATE', 'TIME', 'TIMESTAMP'])
+    onehotencodingform.fillForm(attrs)
+    zscoreform.fillForm(attrs)
 
     # render table
     table_data = tv.render_table(page_nr, 50)
@@ -105,6 +107,8 @@ def view_dataset_table(dataset_id, tablename, page_nr):
                                                 findrepl_form = findrepl_form,
                                                 delete_form = delete_form, 
                                                 typeconversion_form = typeconversion_form,
+                                                onehotencodingform = onehotencodingform,
+                                                zscoreform = zscoreform,
                                                 perm_type = perm_type,
                                                 current_page=page_nr,
                                                 colstats=colstats)
@@ -173,6 +177,24 @@ def transform_findreplace(dataset_id, tablename):
 
     return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 # ENDFUNCTION
+
+@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/typeconversion', methods = ['POST'])
+@require_login
+@require_writeperm
+def transform_typeconversion():
+    pass
+
+@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/onehotencoding', methods = ['POST'])
+@require_login
+@require_writeperm
+def transform_onehotencoding():
+    pass
+
+@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/zscorenormalisation', methods = ['POST'])
+@require_login
+@require_writeperm
+def transform_zscorenormalisation():
+    pass
 
 @dataset_pages.route('/dataset/create', methods=['GET', 'POST'])
 @require_login
