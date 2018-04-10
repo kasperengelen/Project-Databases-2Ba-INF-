@@ -66,7 +66,3 @@ normalize_using_zscore(tablename, attribute, new_name="")
 Deze method normaliseert alle waarde van een kolom in range [0, 1].
 Dit werkt alleen maar op numerieke waardes. Een call op een niet numerieke waarde raiset een custom
 exception, maar daar zullen we samen nog voor samenzitten.
-
- 
-
-
