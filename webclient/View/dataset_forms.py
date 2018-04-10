@@ -96,6 +96,16 @@ class DataTypeTransform(FlaskForm):
     # ENDMETHOD
 # ENDCLASS
 
+class TypeConversionTestForm(FlaskForm):
+    '''Test Form for Dynamic Fields'''
+    select_attr = SelectField('Attribute', choices=[], id='attr')
+    new_datatype = SelectField('New datatype', choices=[], id='typeOptions')
+
+    def fillForm(self, attrs):
+        self.select_attr.choices = [(attrname, attrname) for attrname in attrs]
+        self.new_datatype.choices = [(typename, typename) for typename in ['VARCHAR(255)', 'CHAR(255)', 'INTEGER', 'FLOAT', 'DATE', 'TIME', 'TIMESTAMP']]
+
+
 class NormalizeZScore(FlaskForm):
     """Form to normalize an attribute by it's z-score."""
 

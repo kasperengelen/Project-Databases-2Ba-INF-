@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, url_for, redirect, session, flash, abort, send_from_directory
+from flask import Blueprint, render_template, request, url_for, redirect, session, flash, abort, send_from_directory, jsonify
 from flask import current_app as app
 from utils import require_admin
 from utils import require_login
@@ -6,7 +6,7 @@ from utils import require_adminperm, require_writeperm, require_readperm
 from DatasetInfo import DatasetInfo
 from DatasetManager import DatasetManager
 from UserManager import UserManager
-from dataset_forms import FindReplaceForm, DeleteAttrForm, DatasetForm, AddUserForm, RemoveUserForm, DatasetListEntryForm, TableUploadForm, DownloadForm, DataTypeTransform, NormalizeZScore, OneHotEncoding
+from dataset_forms import FindReplaceForm, DeleteAttrForm, DatasetForm, AddUserForm, RemoveUserForm, DatasetListEntryForm, TableUploadForm, DownloadForm, DataTypeTransform, NormalizeZScore, OneHotEncoding, TypeConversionTestForm
 from TableViewer import TableViewer
 from werkzeug.utils import secure_filename
 import os
@@ -69,6 +69,7 @@ def view_dataset_table(dataset_id, tablename, page_nr):
     findrepl_form = FindReplaceForm()
     delete_form = DeleteAttrForm()
     typeconversion_form = DataTypeTransform()
+    testform = TypeConversionTestForm()
     onehotencodingform = OneHotEncoding()
     zscoreform = NormalizeZScore()
     findrepl_form.fillForm(attrs)
@@ -76,6 +77,7 @@ def view_dataset_table(dataset_id, tablename, page_nr):
     typeconversion_form.fillForm(attrs)
     onehotencodingform.fillForm(attrs)
     zscoreform.fillForm(attrs)
+    testform.fillForm(attrs)
 
     # render table
     table_data = tv.render_table(page_nr, 50)
@@ -111,7 +113,8 @@ def view_dataset_table(dataset_id, tablename, page_nr):
                                                 zscoreform = zscoreform,
                                                 perm_type = perm_type,
                                                 current_page=page_nr,
-                                                colstats=colstats)
+                                                colstats=colstats,
+                                                testform=testform)
 # ENDFUNCTION
 
 @dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/deleteattr', methods=['POST'])
@@ -177,6 +180,14 @@ def transform_findreplace(dataset_id, tablename):
 
     return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 # ENDFUNCTION
+
+@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/_get_options')
+@require_login
+@require_writeperm
+def _get_options(tablename):
+    attr = request.args.get('attr', '01', type=str)
+    options = [(option, option) for option in self.get_conversion_options(tablename, attr=attr)]
+    return jsonify(options)
 
 @dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/typeconversion', methods = ['POST'])
 @require_login
