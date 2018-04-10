@@ -407,6 +407,50 @@ class TableTransformer:
             df.to_sql(new_name, self.engine, None, internal_ref[0], 'fail', index = False)
 
 
+    def discretizise_using_custom_ranges(self, tablename, attribute, ranges, exclude_right=True, new_name=""):
+        """Method that discretizises given a a list representing the bins.
+
+        Parameters:
+            ranges: A python list that represents the bins that the user has provided
+            exclude_right: A boolean indicating whether the rightmost edge should be included
+                           True if the rightmost edge is excluded [X - Y[, False if rightmost edge is included ]X - Y]
+        """
+        internal_ref = self.get_internal_reference(tablename)
+        sql_query = "SELECT * FROM \"{}\".\"{}\"".format(*internal_ref)
+        df = pd.read_sql(sql_query, self.engine)
+        bracket = ""
+
+        if exclude_right is True:
+            bracket = "["
+
+        else:
+            bracket = "]"
+
+        binlabels = []
+        for i in range(1, len(bins)):
+            label = bracket + str(bins[i-1]) + " - " + str(bins[i]) + bracket                           
+            binlabels.append(label)
+
+        if exclude_right is True:
+            param_a = False
+            param_b = True
+        else:
+            param_a = True
+            param_b = False
+
+        column_name = attribute + "_category"
+        df[column_name] = pd.cut(df[attribute], ranges, right=param_a, labels = binlabels, include_lowest=param_b)
+
+        if self.replace is True:
+            #If the table should be replaced, drop it and recreate it.
+            df.to_sql(tablename, self.engine, None, internal_ref[0], 'replace', index = False)
+        elif self.replace is False:
+            #We need to create a new table and leave the original untouched
+            df.to_sql(new_name, self.engine, None, internal_ref[0], 'fail', index = False)
+
+
+
+
 
         
         
