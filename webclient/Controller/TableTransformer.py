@@ -282,4 +282,3 @@ class TableTransformer:
 
 if __name__ == '__main__':
     tt = TableTransformer(1, 1, None, None)
-    
