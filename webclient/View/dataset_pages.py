@@ -6,7 +6,7 @@ from utils import require_adminperm, require_writeperm, require_readperm
 from DatasetInfo import DatasetInfo
 from DatasetManager import DatasetManager
 from UserManager import UserManager
-from dataset_forms import FindReplaceForm, DeleteAttrForm, DatasetForm, AddUserForm, RemoveUserForm, DatasetListEntryForm, TableUploadForm, DownloadForm
+from dataset_forms import FindReplaceForm, DeleteAttrForm, DatasetForm, AddUserForm, RemoveUserForm, DatasetListEntryForm, TableUploadForm, DownloadForm, DataTypeTransform, NormalizeZScore, OneHotEncoding
 from TableViewer import TableViewer
 from werkzeug.utils import secure_filename
 import os
@@ -43,9 +43,6 @@ def view_dataset_home(dataset_id):
 @require_readperm
 def view_dataset_table(dataset_id, tablename, page_nr):
 
-    findrepl_form = FindReplaceForm()
-    delete_form = DeleteAttrForm()
-
     if not DatasetManager.existsID(dataset_id):
         abort(404)
 
@@ -68,9 +65,17 @@ def view_dataset_table(dataset_id, tablename, page_nr):
     # RETRIEVE ATTRIBUTES
     attrs = tv.get_attributes()
 
-    # FILL FORMS
+    # FORMS
+    findrepl_form = FindReplaceForm()
+    delete_form = DeleteAttrForm()
+    typeconversion_form = DataTypeTransform()
+    onehotencodingform = OneHotEncoding()
+    zscoreform = NormalizeZScore()
     findrepl_form.fillForm(attrs)
     delete_form.fillForm(attrs)
+    typeconversion_form.fillForm(attrs)
+    onehotencodingform.fillForm(attrs)
+    zscoreform.fillForm(attrs)
 
     # render table
     table_data = tv.render_table(page_nr, 50)
@@ -84,14 +89,14 @@ def view_dataset_table(dataset_id, tablename, page_nr):
     # RETRIEVE COLUMN STATISTICS
     colstats = {}
 
-    '''for attr_name in tv.get_attributes():
+    for attr_name in tv.get_attributes():
         colstats[attr_name] = {
-            "nullfreq": tv.get_null_frequency(attr_name),
-            "mostfreq": tv.get_most_frequent_value(attr_name),
-            "max": tv.get_max(attr_name),
-            "min": tv.get_min(attr_name),
-            "avg": tv.get_avg(attr_name)
-        }'''
+            "nullfreq": 0 #tv.get_null_frequency(attr_name),
+            "mostfreq": 0 #tv.get_most_frequent_value(attr_name),
+            "max": 0 #tv.get_max(attr_name),
+            "min": 0 #tv.get_min(attr_name),
+            "avg": 0 #tv.get_avg(attr_name)
+        }
     # ENDFOR
 
     return render_template('dataset_pages.table.html', 
@@ -101,7 +106,10 @@ def view_dataset_table(dataset_id, tablename, page_nr):
                                                 table_data = table_data,
                                                 findrepl_form = findrepl_form,
                                                 delete_form = delete_form, 
-                                                perm_type=perm_type,
+                                                typeconversion_form = typeconversion_form,
+                                                onehotencodingform = onehotencodingform,
+                                                zscoreform = zscoreform,
+                                                perm_type = perm_type,
                                                 current_page=page_nr,
                                                 colstats=colstats)
 # ENDFUNCTION
@@ -166,6 +174,108 @@ def transform_findreplace(dataset_id, tablename):
         tt.find_and_replace(tablename, form.select_attr.data, form.search.data, form.replacement.data)
     except:
         flash(message="No matches found.", category="error")
+
+    return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
+# ENDFUNCTION
+
+@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/typeconversion', methods = ['POST'])
+@require_login
+@require_writeperm
+def transform_typeconversion():
+    """Callback for typeconversion transformation."""
+
+    if not DatasetManager.existsID(dataset_id):
+        abort(404)
+
+    dataset = DatasetManager.getDataset(dataset_id)
+
+    if tablename not in dataset.getTableNames():
+        abort(404)
+
+    tv = dataset.getTableViewer(tablename)
+    tt = dataset.getTableTransformer(tablename, session['userdata']['userid'])
+
+    form = DataTypeTransform(request.form)
+    form.fillForm(tv.get_attributes())
+
+    if not form.validate():
+        flash(message="Invalid form.", category="error")
+        return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
+
+    if not form.new_datatype.data in tt.get_conversion_options(form.select_attr.data):
+        flash(message="Selected datatype not compatible with the selected attribute.", category="error")
+    else:
+        try:
+            tt.change_attribute_type(form.select_attr.data, form.new_datatype.data)
+            flash(message="Attribute type changed.", category="success")
+        except:
+            flash(message="An error occurred.", category="error")
+
+    return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
+# ENDFUNCTION
+
+@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/onehotencoding', methods = ['POST'])
+@require_login
+@require_writeperm
+def transform_onehotencoding():
+    """Callback for one hot encoding transformation."""
+
+    if not DatasetManager.existsID(dataset_id):
+        abort(404)
+
+    dataset = DatasetManager.getDataset(dataset_id)
+
+    if tablename not in dataset.getTableNames():
+        abort(404)
+
+    tv = dataset.getTableViewer(tablename)
+    tt = dataset.getTableTransformer(tablename, session['userdata']['userid'])
+
+    form = OneHotEncoding(request.form)
+    form.fillForm(tv.get_attributes())
+
+    if not form.validate():
+        flash(message="Invalid form.", category="error")
+        return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
+
+    try:
+        tt.one_hot_encode(form.select_attr.data)
+        flash(message="One hot encoding complete.", category="success")
+    except:
+        flash(message="An error occurred.", category="error")
+
+    return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
+# ENDFUNCTION
+
+@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/zscorenormalisation', methods = ['POST'])
+@require_login
+@require_writeperm
+def transform_zscorenormalisation():
+    """Callback for z-score normalisation."""
+
+    if not DatasetManager.existsID(dataset_id):
+        abort(404)
+
+    dataset = DatasetManager.getDataset(dataset_id)
+
+    if tablename not in dataset.getTableNames():
+        abort(404)
+
+    tv = dataset.getTableViewer(tablename)
+    tt = dataset.getTableTransformer(tablename, session['userdata']['userid'])
+
+    form = NormalizeZScore(request.form)
+    form.fillForm(tv.get_attributes())
+
+    if not form.validate():
+        flash(message="Invalid form.", category="error")
+        return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
+
+    try:
+        tt.normalize_using_zscore(form.select_attr.data)
+        flash(message="normalisation complete.", category="success")
+    except:
+        flash(message="An error occurred.", category="error")
 
     return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 # ENDFUNCTION

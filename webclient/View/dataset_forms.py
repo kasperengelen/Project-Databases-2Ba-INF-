@@ -15,25 +15,6 @@ class DatasetForm(FlaskForm):
     # ENDMETHOD
 # ENDCLASS
 
-class FindReplaceForm(FlaskForm):
-    """Form for the search and replace transformation."""
-    select_attr = SelectField('Attribute', choices=[])
-    search = StringField('Search', [InputRequired(message="Input is required.")])
-    replacement = StringField('Replacement', [InputRequired(message="Input is required.")])
-
-    def fillForm(self, attrs):
-        self.select_attr.choices = [(attrname, attrname) for attrname in attrs]
-    # ENDMETHOD
-# ENDCLASS
-
-class DeleteAttrForm(FlaskForm):
-    """Form for the delete attribute/column transformation."""
-    select_attr = SelectField('Attribute', choices=[])
-
-    def fillForm(self, attrs):
-        self.select_attr.choices = [(attrname, attrname) for attrname in attrs]
-    # ENDMETHOD
-# ENDCLASS
 
 class AddUserForm(FlaskForm):
     """Form to give a user permission to alter the dataset."""
@@ -79,4 +60,57 @@ class DownloadForm(FlaskForm):
     delimiter = StringField('Delimiter', [InputRequired('Input is required.'), Length(min=1, max=1)])
     quotechar = StringField('Qoute character', [InputRequired('Input is required.'), Length(min=1, max=1)])
     nullrep = StringField('NULL representation', [InputRequired('Input is required.'), Length(min=1, max=10)])
+# ENDCLASS
+
+################################################################# TRANSFORMATION FORMS #################################################################
+
+class FindReplaceForm(FlaskForm):
+    """Form for the search and replace transformation."""
+    select_attr = SelectField('Attribute', choices=[])
+    search = StringField('Search', [InputRequired(message="Input is required.")])
+    replacement = StringField('Replacement', [InputRequired(message="Input is required.")])
+
+    def fillForm(self, attrs):
+        self.select_attr.choices = [(attrname, attrname) for attrname in attrs]
+    # ENDMETHOD
+# ENDCLASS
+
+class DeleteAttrForm(FlaskForm):
+    """Form for the delete attribute/column transformation."""
+    select_attr = SelectField('Attribute', choices=[])
+
+    def fillForm(self, attrs):
+        self.select_attr.choices = [(attrname, attrname) for attrname in attrs]
+    # ENDMETHOD
+# ENDCLASS
+
+class DataTypeTransform(FlaskForm):
+    """Form to change the datatype of a table attribute."""
+
+    select_attr = SelectField('Attribute', choices=[])
+    new_datatype = SelectField('New datatype', choices=[])
+
+    def fillForm(self, attrs):
+        self.select_attr.choices = [(attrname, attrname) for attrname in attrs]
+        self.new_datatype.choices = ['VARCHAR(255)', 'CHAR(255)', 'INTEGER', 'FLOAT', 'DATE', 'TIME', 'TIMESTAMP']
+    # ENDMETHOD
+# ENDCLASS
+
+class NormalizeZScore(FlaskForm):
+    """Form to normalize an attribute by it's z-score."""
+
+    select_attr = SelectField('Attribute', choices=[])
+
+    def fillForm(self, attrs):
+        self.select_attr.choices = [(attrname, attrname) for attrname in attrs]
+    # ENDMETHOD
+# ENDCLASS
+
+class OneHotEncoding(FlaskForm):
+    """Form to perform the one-hot-encoding transformation."""
+    select_attr = SelectField('Attribute', choices=[])
+
+    def fillForm(self, attrs):
+        self.select_attr.choices = [(attrname, attrname) for attrname in attrs]
+    # ENDMETHOD
 # ENDCLASS
