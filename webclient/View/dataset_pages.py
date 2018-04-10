@@ -6,7 +6,7 @@ from utils import require_adminperm, require_writeperm, require_readperm
 from DatasetInfo import DatasetInfo
 from DatasetManager import DatasetManager
 from UserManager import UserManager
-from dataset_forms import FindReplaceForm, DeleteAttrForm, DatasetForm, AddUserForm, RemoveUserForm, DatasetListEntryForm, TableUploadForm, DownloadForm
+from dataset_forms import FindReplaceForm, DeleteAttrForm, DatasetForm, AddUserForm, RemoveUserForm, DatasetListEntryForm, TableUploadForm, DownloadForm, DataTypeTransform
 from TableViewer import TableViewer
 from werkzeug.utils import secure_filename
 import os
@@ -43,8 +43,7 @@ def view_dataset_home(dataset_id):
 @require_readperm
 def view_dataset_table(dataset_id, tablename, page_nr):
 
-    findrepl_form = FindReplaceForm()
-    delete_form = DeleteAttrForm()
+
 
     if not DatasetManager.existsID(dataset_id):
         abort(404)
@@ -68,9 +67,13 @@ def view_dataset_table(dataset_id, tablename, page_nr):
     # RETRIEVE ATTRIBUTES
     attrs = tv.get_attributes()
 
-    # FILL FORMS
+    # FORMS
+    findrepl_form = FindReplaceForm()
+    delete_form = DeleteAttrForm()
+    typeconversion_form = DataTypeTransform()
     findrepl_form.fillForm(attrs)
     delete_form.fillForm(attrs)
+    typeconversion_form.fillForm(attrs)
 
     # render table
     table_data = tv.render_table(page_nr, 50)
@@ -101,7 +104,8 @@ def view_dataset_table(dataset_id, tablename, page_nr):
                                                 table_data = table_data,
                                                 findrepl_form = findrepl_form,
                                                 delete_form = delete_form, 
-                                                perm_type=perm_type,
+                                                typeconversion_form = typeconversion_form,
+                                                perm_type = perm_type,
                                                 current_page=page_nr,
                                                 colstats=colstats)
 # ENDFUNCTION
