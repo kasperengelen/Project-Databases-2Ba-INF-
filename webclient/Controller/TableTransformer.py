@@ -449,6 +449,77 @@ class TableTransformer:
             df.to_sql(new_name, self.engine, None, internal_ref[0], 'fail', index = False)
 
 
+            
+
+    def delete_outlier(self, tablename, attribute, larger, value, new_name=""):
+        """Method that gets rid of outliers of an attribute by setting them to null.
+
+        Parameters:
+            larger: A boolean indicating if we need to delete values larger or smaller than the provided value
+                    True deletes all the values larger, False deletes all the values smaller.
+            value: The value used to determine whether an element is an outlier.
+        """
+        internal_ref = self.get_internal_reference(tablename)
+        if self.replace is False:
+            internal_ref = self.copy_table(internal_ref, new_name)
+        if larger is True:
+            comparator = '>'
+        else:
+            comparator = '<'
+        #Create query for larger/smaller deletion of outlier
+        sql_query = "UPDATE {0}.{1} SET {2} = null  WHERE {2} %s %s" % (comparator, '%s')
+        self.db_connection.cursor().execute(sql.SQL(sql_query).format(sql.Identifier(internal_ref[0]), sql.Identifier(internal_ref[1]),
+                                                                                    sql.Identifier(attribute)), (value,))
+        self.db_connection.commit()
+        
+
+    def __fill_nulls_with_x(self, attribute, internal_ref,  x):
+        """Method that fills null values of an attribute with a provided value.
+
+        Parameter:
+            x: The value that is going to be used to fill all the nulls with.
+        """
+        self.db_connection.cursor().execute(sql.SQL("UPDATE {0}.{1} SET {2} = %s  WHERE {2} is null").format(sql.Identifier(internal_ref[0]), sql.Identifier(internal_ref[1]),
+                                                                                    sql.Identifier(attribute)), (x,))
+        self.db_connection.commit()
+        
+
+    def fill_nulls_with_mean(self, tablename, attribute, new_name=""):
+        """Method that fills null values of an attribute with the mean."""
+        internal_ref = self.get_internal_reference(tablename)
+        if self.replace is False:
+            internal_ref = self.copy_table(internal_ref, new_name)
+
+        sql_query = "SELECT * FROM \"{}\".\"{}\"".format(*internal_ref)
+        df = pd.read_sql(sql_query, self.engine)
+        mean = df[attribute].mean()
+
+        self.__fill_nulls_with_x(attribute, internal_ref, mean)
+
+
+    def fill_nulls_with_median(self, tablename, attribute, new_name=""):
+        """Method that fills null values of an attribute with the median."""
+        internal_ref = self.get_internal_reference(tablename)
+        if self.replace is False:
+            internal_ref = self.copy_table(attribute, internal_ref, new_name)
+
+        sql_query = "SELECT * FROM \"{}\".\"{}\"".format(*internal_ref)
+        df = pd.read_sql(sql_query, self.engine)
+        median = df[attribute].median()
+
+        self.__fill_nulls_with_x(attribute, internal_ref, median)
+
+
+    def fill_nulls_with_custom_value(self, tablename, attribute, value, new_name=""):
+        """Method that fills null values of an attribute with a custom value"""
+        internal_ref = self.get_internal_reference(tablename)
+        if self.replace is False:
+            internal_ref = self.copy_table(internal_ref, new_name)
+
+        #Perhaps do a sanity check here? I'll see later on.
+
+        self.__fill_nulls_with_x(attribute, internal_ref, value)
+
 
 
 
