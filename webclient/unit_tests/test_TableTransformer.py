@@ -17,8 +17,7 @@ class TestTableTransformer(unittest.TestCase):
     
     @classmethod
     def setUpClass(cls):
-        connection_string = "dbname='{}' user='{}' host='{}' password='{}'".format(*(DatabaseConfiguration().get_packed_values()))
-        cls.db_connection = psycopg2.connect(connection_string)
+        cls.db_connection = DatabaseConfiguration().get_db()
         cls.test_object = transformer.TableTransformer('TEST', cls.db_connection, None, True)
         cur = cls.db_connection.cursor()
         cur.execute("CREATE SCHEMA IF NOT EXISTS \"TEST\"")
