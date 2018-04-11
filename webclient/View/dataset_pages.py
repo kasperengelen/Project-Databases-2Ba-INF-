@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, url_for, redirect, session, flash, abort, send_from_directory
+from flask import Blueprint, render_template, request, url_for, redirect, session, flash, abort, send_from_directory, jsonify
 from flask import current_app as app
 from utils import require_admin
 from utils import require_login
@@ -6,7 +6,7 @@ from utils import require_adminperm, require_writeperm, require_readperm
 from DatasetInfo import DatasetInfo
 from DatasetManager import DatasetManager
 from UserManager import UserManager
-from dataset_forms import FindReplaceForm, DeleteAttrForm, DatasetForm, AddUserForm, RemoveUserForm, DatasetListEntryForm, TableUploadForm, DownloadForm, DataTypeTransform, NormalizeZScore, OneHotEncoding
+from dataset_forms import FindReplaceForm, DeleteAttrForm, DatasetForm, AddUserForm, RemoveUserForm, DatasetListEntryForm, TableUploadForm, DownloadForm, DataTypeTransform, NormalizeZScore, OneHotEncoding, TypeConversionTestForm
 from TableViewer import TableViewer
 from werkzeug.utils import secure_filename
 import os
@@ -69,6 +69,7 @@ def view_dataset_table(dataset_id, tablename, page_nr):
     findrepl_form = FindReplaceForm()
     delete_form = DeleteAttrForm()
     typeconversion_form = DataTypeTransform()
+    testform = TypeConversionTestForm()
     onehotencodingform = OneHotEncoding()
     zscoreform = NormalizeZScore()
     findrepl_form.fillForm(attrs)
@@ -76,6 +77,7 @@ def view_dataset_table(dataset_id, tablename, page_nr):
     typeconversion_form.fillForm(attrs)
     onehotencodingform.fillForm(attrs)
     zscoreform.fillForm(attrs)
+    testform.fillForm(attrs)
 
     # render table
     table_data = tv.render_table(page_nr, 50)
@@ -111,7 +113,8 @@ def view_dataset_table(dataset_id, tablename, page_nr):
                                                 zscoreform = zscoreform,
                                                 perm_type = perm_type,
                                                 current_page=page_nr,
-                                                colstats=colstats)
+                                                colstats=colstats,
+                                                testform=testform)
 # ENDFUNCTION
 
 @dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/deleteattr', methods=['POST'])
@@ -137,7 +140,7 @@ def transform_deleteattr(dataset_id, tablename):
         flash(message="Invalid form.", category="error")
         return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 
-    tt = dataset.getTableTransformer(tablename, session['userdata']['userid'])
+    tt = dataset.getTableTransformer(tablename)
 
     tt.delete_attribute(tablename, form.select_attr.data)
     flash(message="Attribute deleted.", category="success")
@@ -168,7 +171,7 @@ def transform_findreplace(dataset_id, tablename):
         flash(message="Invalid form.", category="error")
         return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 
-    tt = dataset.getTableTransformer(tablename, session['userdata']['userid'])
+    tt = dataset.getTableTransformer(tablename)
 
     try:
         tt.find_and_replace(tablename, form.select_attr.data, form.search.data, form.replacement.data)
@@ -177,6 +180,14 @@ def transform_findreplace(dataset_id, tablename):
 
     return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 # ENDFUNCTION
+
+@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/_get_options')
+@require_login
+@require_writeperm
+def _get_options(tablename):
+    attr = request.args.get('attr', '01', type=str)
+    options = [(option, option) for option in self.get_conversion_options(tablename, attr=attr)]
+    return jsonify(options)
 
 @dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/typeconversion', methods = ['POST'])
 @require_login
@@ -193,7 +204,7 @@ def transform_typeconversion(dataset_id, tablename):
         abort(404)
 
     tv = dataset.getTableViewer(tablename)
-    tt = dataset.getTableTransformer(tablename, session['userdata']['userid'])
+    tt = dataset.getTableTransformer(tablename)
 
     form = DataTypeTransform(request.form)
     form.fillForm(tv.get_attributes())
@@ -206,7 +217,7 @@ def transform_typeconversion(dataset_id, tablename):
         flash(message="Selected datatype not compatible with the selected attribute.", category="error")
     else:
         try:
-            tt.change_attribute_type(form.select_attr.data, form.new_datatype.data)
+            tt.change_attribute_type(tablename, form.select_attr.data, form.new_datatype.data)
             flash(message="Attribute type changed.", category="success")
         except:
             flash(message="An error occurred.", category="error")
@@ -229,7 +240,7 @@ def transform_onehotencoding(dataset_id, tablename):
         abort(404)
 
     tv = dataset.getTableViewer(tablename)
-    tt = dataset.getTableTransformer(tablename, session['userdata']['userid'])
+    tt = dataset.getTableTransformer(tablename)
 
     form = OneHotEncoding(request.form)
     form.fillForm(tv.get_attributes())
@@ -239,7 +250,7 @@ def transform_onehotencoding(dataset_id, tablename):
         return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 
     try:
-        tt.one_hot_encode(form.select_attr.data)
+        tt.one_hot_encode(tablename, form.select_attr.data)
         flash(message="One hot encoding complete.", category="success")
     except:
         flash(message="An error occurred.", category="error")
@@ -262,7 +273,7 @@ def transform_zscorenormalisation(dataset_id, tablename):
         abort(404)
 
     tv = dataset.getTableViewer(tablename)
-    tt = dataset.getTableTransformer(tablename, session['userdata']['userid'])
+    tt = dataset.getTableTransformer(tablename)
 
     form = NormalizeZScore(request.form)
     form.fillForm(tv.get_attributes())
@@ -272,7 +283,7 @@ def transform_zscorenormalisation(dataset_id, tablename):
         return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 
     try:
-        tt.normalize_using_zscore(form.select_attr.data)
+        tt.normalize_using_zscore(tablename, form.select_attr.data)
         flash(message="normalisation complete.", category="success")
     except:
         flash(message="An error occurred.", category="error")
