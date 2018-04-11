@@ -47,11 +47,13 @@ class DatabaseConfiguration:
         
         def get_db(self):
             """Returns a DBWrapper object that represents the DB connection to PSQL"""
-            return self.db_connection
+            #return self.db_connection
+            return db_wrapper.DBWrapper(self.dbname, self.user, self.host, self.password)
 
         def get_engine(self):
             """Returns an SQL Alchemy engine."""
-            return self.engine
+            #return self.engine
+            return create_engine("postgresql://{}:{}@{}/{}".format(self.get_dbname(), self.get_password(), self.get_host(), self.get_dbname()))
 
     def __init__(self):
         if DatabaseConfiguration.__instance is None:
