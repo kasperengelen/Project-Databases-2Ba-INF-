@@ -1,5 +1,6 @@
 import configparser
 import io
+import os
 import db_wrapper
 from sqlalchemy import create_engine
 
@@ -55,10 +56,12 @@ class DatabaseConfiguration:
     def __init__(self):
         if DatabaseConfiguration.__instance is None:
             try: #Try opening the file and loading it
-                with open("./../config.ini") as conf:
+                #Get path without worrying about current working directory.
+                path = os.path.dirname(os.path.abspath(__file__)) + '/../config.ini'
+                with open(path) as conf:
                     db_config = conf.read()
             
-            except(FileNotFoundError): 
+            except(FileNotFoundError):
                 raise FileNotFoundError("The config file config.ini was not found!"
                                         " Please add this file to allow proper configuration"
                                         " of the database connection.")
@@ -92,4 +95,4 @@ class DatabaseConfiguration:
 
 
 if __name__ == '__main__':
-    pass
+    DatabaseConfiguration()

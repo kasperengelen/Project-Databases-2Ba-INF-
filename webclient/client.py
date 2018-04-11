@@ -27,8 +27,8 @@ app.register_blueprint(dataset_pages.dataset_pages)
 def before_request():
     """Prepare request."""
 
-    g.db_conn = DatabaseConfiguration.toPSQL()
-    g.sqla_engine = DatabaseConfiguration.toSQLA()
+    g.db_conn = DatabaseConfiguration().get_db()#DatabaseConfiguration.toPSQL()
+    g.sqla_engine = DatabaseConfiguration().get_engine() #DatabaseConfiguration.toSQLA()
 
     if not 'loggedin' in session:
         session['loggedin'] = False
