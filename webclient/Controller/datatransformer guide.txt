@@ -19,12 +19,33 @@ delete_attribute(tablename, attribute, new_name=""):
 
 -----------------------------------------------------------------------------------
 
-find_and_replace(self, setname, tablename, attribute, value, replacement, new_name="")
+find_and_replace(tablename, attribute, value, replacement, exact=True, replace_all=True, new_name="")
 
-(REEDS GEÏMPLEMENTEERD EN VANZELFSPREKEND)
+(AANGEPAST!!!)
 
-Note: dit is een find and replace voor een exacte math. Toekomstige implementaties
-ondersteunen regex en substring, maar hier komen andere methods voor.
+Zelfde functionaliteit als vorige versie maar extra boolean fields voor een beetje andere behaviour.
+
+exact is een boolean dat indiceert of de string whole-words moet matchen of niet.
+	True zal alleen "appel" = "appel" replacen. (een exacte match)
+	False zal ook substrings kunnen vinden dus "appelboom" wordt gevonden met de search voor "appel"
+
+replace_all is een boolean om de replace behaviour in het gevan van een substring find and replace te bepalen
+	True zal heel de string vervangen dus find and replace ("appel", "kiwi") zal "appelboom" vervangen door "kiwi"
+	False zal enkel de substring vervangen dus find and replace ("appel", "kiwi") zal "appelboom" vervangen door "kiwiboom"
+
+------------------------------------------------------------------------------------
+
+regex_find_and_replace(self, tablename, attribute, regex, replacement, case_sens=False, new_name="")
+
+Redelijk gelijkaardig aan find_and_replace
+
+regex is dus gewoon de reguliere expressie die de user meegeeft (POSIX regex)
+
+replacement is vervang waarde (voor deze method is geen substring vervanging, heel de match wordt vervangen door replacement)
+
+case_sens is een boolean die de optie geeft om case sensitive te werken of niet.
+
+
 
 ------------------------------------------------------------------------------------
 
