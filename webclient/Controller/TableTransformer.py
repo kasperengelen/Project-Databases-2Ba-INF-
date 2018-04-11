@@ -3,6 +3,9 @@ import math
 import psycopg2
 from psycopg2 import sql
 from sqlalchemy import create_engine
+import sys, os
+sys.path.append(os.path.join(sys.path[0],'..', 'Model'))
+from DatabaseConfiguration import DatabaseConfiguration
 
 class TableTransformer:
     """Class that performs transformations and various actions on SQL tables to support the data cleaning process.
@@ -208,13 +211,15 @@ class TableTransformer:
 
 
 
-    def find_and_replace(self, tablename, attribute, value, replacement, exact=True, new_name=""):
+    def find_and_replace(self, tablename, attribute, value, replacement, exact=True, replace_all=True, new_name=""):
         """Method that finds values and replaces them with the provided argument.
 
         Parameters:
             value: The value that needs to found so it can be replaced.
             replacement: The value that will replace the values that were found.
-            exact = A boolean indicating if we want to match whole-words only or allowing substring matching
+            exact : A boolean indicating if we want to match whole-words only or allowing substring matching
+            replace_all : A boolean indicating whether a found substring should be replaced or the string should be replaced.
+                          True replaces the whole string, False replaces the found substring with the replacement.
         """
         cur_type, internal_ref  = self.get_attribute_type(tablename, attribute)
         if self.replace is False:
@@ -227,15 +232,26 @@ class TableTransformer:
                 raise self.ValueError("Values not containing alphanumerical characters can not be used for substring matching. "
                                       "Please use whole-word matching to find and replace the values.")
             
-            if self.get_attribute_type(tablename, attribute) not in ['character', 'character varying']:
+            if self.get_attribute_type(tablename, attribute)[0] not in ['character', 'character varying']:
                 raise self.AttrTypeError("Substring matching is only possible with character strings. "
                                          "Please convert the attribute to a character string type.")
                 
             sql_query = "UPDATE {0}.{1} SET {2} = %s WHERE {2} LIKE %s"
+            original_value = value
             value = '%{}%'.format(value)
+
+            if replace_all is False: #We have to replace the substring and this is done with a different query.
+                sql_query = "UPDATE {0}.{1} SET {2} = replace({2}, %s, %s) WHERE {2} LIKE %s"
+                cur = self.db_connection.cursor()
+                cur.execute(sql.SQL(sql_query).format(sql.Identifier(internal_ref[0]), sql.Identifier(internal_ref[1]),
+                                                                              sql.Identifier(attribute)), (original_value, replacement, value))
+                self.db_connection.commit()
+                return
+                
 
         self.db_connection.cursor().execute(sql.SQL(sql_query).format(sql.Identifier(internal_ref[0]), sql.Identifier(internal_ref[1]),
                                                                       sql.Identifier(attribute)), (replacement, value))
+        self.db_connection.commit()
 
 
     #INCOMPLETE
@@ -248,22 +264,24 @@ class TableTransformer:
             case_sens: A boolean indicating whether the regex is case sensitive. True for sensitive, False for insensitive.
             new_name: The name of the new table if the TableTransformer is not set to overwrite.
         """
+        cur_type, internal_ref = self.get_attribute_type(tablename, attribute)
+
+        if cur_type not in ['character', 'character varying']:
+            raise self.AttrTypeError("Find-and-replace using regular epxressions is only possible with character type attributes. "
+                                     "Please convert the needed attribute to VARCHAR or CHAR.")
+        
         if case_sens is False:
             sql_query = "UPDATE {0}.{1} SET {2} = %s WHERE {2} ~ %s"
         elif case_sens is True:
             sql_query = "UPDATE {0}.{1} SET {2} = %s WHERE {2} ~* %s"
 
-        #try:
-        self.db_connection.cursor().execute(sql.SQL(sql_query).format(sql.Identifier(internal_ref[0]), sql.Identifier(internal_ref[1]),
-                                                                      sql.Identifier(attribute)), (replacement, value))
-        #except:
+        try:
+            self.db_connection.cursor().execute(sql.SQL(sql_query).format(sql.Identifier(internal_ref[0]), sql.Identifier(internal_ref[1]),
+                                                                      sql.Identifier(attribute)), (replacement, regex))
+        except psycopg2.DataError as e:
+            error_msg = str(e)  + "Please refer to the PostgreSQL documentation on regular expressions for more information."
+            raise self.ValueError(error_msg)
 
-            
-                
-
-        # Possible danger of SQL injections, so we pass value and replacement like this
-        self.db_connection.cursor().execute(sql.SQL("UPDATE {}.{} SET  {} = %s WHERE {} = %s").format(sql.Identifier(internal_ref[0]), sql.Identifier(internal_ref[1]),
-                                                                                           sql.Identifier(attribute), sql.Identifier(attribute)), (replacement, value))
         self.db_connection.commit()
 
 
@@ -584,4 +602,9 @@ class TableTransformer:
 
 
 if __name__ == '__main__':
-    tt = TableTransformer(1, 1, None, None)
+    connection_string = "dbname='{}' user='{}' host='{}' password='{}'".format(*(DatabaseConfiguration().get_packed_values()))
+    db_connection = psycopg2.connect(connection_string)
+    tt = TableTransformer(1, db_connection, None)
+    tt.change_attribute_type('LAIO', 'random', 'VARCHAR(255)')
+    #tt.regex_find_and_replace('LAIO', 'random', 'aba\\', '25')
+    tt.find_and_replace('LAIO', 'random', '8', 'acht', False, False)
