@@ -58,7 +58,7 @@ class DatasetInfo:
         if not tablename in self.getTableNames():
             raise RuntimeError("Invalid tablename.")
 
-        return TableTransformer(userid, self.setid, get_db(), get_sqla_eng())
+        return TableTransformer(self.setid, get_db(), get_sqla_eng())
     # ENDMETHOD
 
     def changeMetadata(self, new_name, new_desc):

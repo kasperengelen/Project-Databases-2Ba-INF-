@@ -181,14 +181,6 @@ def transform_findreplace(dataset_id, tablename):
     return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 # ENDFUNCTION
 
-@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/_get_options')
-@require_login
-@require_writeperm
-def _get_options(tablename):
-    attr = request.args.get('attr', '01', type=str)
-    options = [(option, option) for option in self.get_conversion_options(tablename, attr=attr)]
-    return jsonify(options)
-
 @dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/typeconversion', methods = ['POST'])
 @require_login
 @require_writeperm
@@ -213,7 +205,9 @@ def transform_typeconversion(dataset_id, tablename):
         flash(message="Invalid form.", category="error")
         return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 
-    if not form.new_datatype.data in tt.get_conversion_options(form.select_attr.data):
+    print("type", tt.get_attribute_type(tablename, form.select_attr.data))
+
+    if not form.new_datatype.data in tt.get_conversion_options(tablename, form.select_attr.data):
         flash(message="Selected datatype not compatible with the selected attribute.", category="error")
     else:
         try:
@@ -631,4 +625,16 @@ def download(dataset_id, tablename):
     shutil.rmtree(real_download_dir, ignore_errors=True)
 
     return send_file
+# ENDFUNCTION
+
+############################################################# DYNAMIC CALLBACKS #############################################################
+
+@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/_get_options')
+@require_login
+@require_writeperm
+def _get_options(tablename):
+    """Callback for dynamic forms."""
+    attr = request.args.get('attr', '01', type=str)
+    options = [(option, option) for option in self.get_conversion_options(tablename, attr=attr)]
+    return jsonify(options)
 # ENDFUNCTION

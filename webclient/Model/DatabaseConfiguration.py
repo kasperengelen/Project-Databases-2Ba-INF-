@@ -1,5 +1,7 @@
 import configparser
 import io
+import db_wrapper
+from sqlalchemy import create_engine
 
 
 class DatabaseConfiguration:
@@ -40,7 +42,15 @@ class DatabaseConfiguration:
             """
             return [self.dbname, self.user, self.host, self.password]
         
+        def toPSQL(self):
+            """Returns a DBWrapper object that represents the DB connection to PSQL"""
 
+            return db_wrapper.DBWrapper(self.get_dbname(), self.get_user(), self.get_host(), self.get_password())
+
+        def toSQLA(self):
+            """Returns an SQL Alchemy engine."""
+
+            return create_engine("postgresql://{}:{}@{}/{}".format(self.get_dbname(), self.get_password(), self.get_host(), self.get_dbname()))
 
     def __init__(self):
         if DatabaseConfiguration.__instance is None:

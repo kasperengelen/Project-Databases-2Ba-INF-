@@ -10,8 +10,7 @@ from UserManager import UserManager
 import user_pages
 import admin_pages
 import dataset_pages
-import db_wrapper
-from sqlalchemy import create_engine
+from DatabaseConfiguration import DatabaseConfiguration
 
 app = Flask(__name__, template_folder="./View/templates/")
 app.config.update(dict(
@@ -27,8 +26,9 @@ app.register_blueprint(dataset_pages.dataset_pages)
 @app.before_request
 def before_request():
     """Prepare request."""
-    g.db_conn = db_wrapper.DBWrapper()
-    g.sqla_engine = create_engine("postgresql://dbadmin:AdminPass123@localhost/projectdb18")
+
+    g.db_conn = DatabaseConfiguration.toPSQL()
+    g.sqla_engine = DatabaseConfiguration.toSQLA()
 
     if not 'loggedin' in session:
         session['loggedin'] = False
