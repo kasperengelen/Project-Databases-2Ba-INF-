@@ -1,6 +1,8 @@
 import unittest
 import sys, os
 sys.path.append(os.path.join(sys.path[0],'..', 'Controller'))
+sys.path.append(os.path.join(sys.path[0],'..', 'Model'))
+from DatabaseConfiguration import DatabaseConfiguration
 import psycopg2
 import TableTransformer as transformer
 
@@ -14,8 +16,8 @@ class TestTransformerCopy(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.db_connection = psycopg2.connect("dbname='hmtbpols' user='hmtbpols' host='baasu.db.elephantsql.com' password='yIje-2zT-zF0YyJywkAy57h6ob3ZnoV2'")
-        #Fake userid = 0 and And setid is actually the TEST set
+        connection_string = "dbname='{}' user='{}' host='{}' password='{}'".format(*(DatabaseConfiguration().get_packed_values()))
+        cls.db_connection = psycopg2.connect(connection_string)
         cls.test_object = transformer.TableTransformer('TEST', cls.db_connection, None, True)
         cur = cls.db_connection.cursor()
         cur.execute("CREATE SCHEMA IF NOT EXISTS \"TEST\"")
