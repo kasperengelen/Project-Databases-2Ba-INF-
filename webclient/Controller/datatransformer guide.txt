@@ -58,6 +58,7 @@ one_hot_encode(tablename, attribute, new_name="")
 Deze method voert one-hot-encoding uit op een table.
 De parameters zijn vanzelfsprekend. new_name enkel assignen
 in het geval dat replace op false is. Maar het zou geen effect hebben ookal vul je het wel in zonder replace op False te zetten.
+Front-end implementatie is evident.
 
 --------------------------------------------------------------------------------------
 
@@ -66,3 +67,79 @@ normalize_using_zscore(tablename, attribute, new_name="")
 Deze method normaliseert alle waarde van een kolom in range [0, 1].
 Dit werkt alleen maar op numerieke waardes. Een call op een niet numerieke waarde raiset een custom
 exception, maar daar zullen we samen nog voor samenzitten.
+Front-end implementatie is evident.
+
+
+--------------------------------------------------------------------------------------
+
+discretizise_using_equal_width(tablename, attribute, new_name="")
+
+Deze method discretiseert in equi-distant intervallen zoals in een histogram.
+Dit werkt alleen maar op numerieke waardes. Een call op een niet numerieke waarde raiset een custom
+exception, maar wederom zal dit later pas besproken worden.
+Front-end implementatie is evident.
+
+--------------------------------------------------------------------------------------
+
+discretizise_using_equal_frequency(tablename, attribute, new_name="")
+
+Deze method discretiseert in equi-frequent intervallen zoals in een histogram.
+Dit werkt alleen maar op numerieke waardes. Een call op een niet numerieke waarde raiset een custom
+exception, maar wederom zal dit later pas besproken worden.
+Front-end implementatie is evident.
+
+--------------------------------------------------------------------------------------
+
+discretizise_using_custom_ranges(tablename, attribute, ranges, exclude_right=True, new_name="")
+
+Deze method discretiseert in intervallen die gegeven zijn door de gebruiker. De front-end implementatie is dus niet
+evident. Er moet vanuit de front-end op een of andere manier de mogelijkheid gegeven worden om de gebruiker een lijst
+van integers / floats te laten beschrijven die dan de edges van de intervals worden. Dit zou op een zoveel mogelijk
+ge-sandboxte manier gebeuren zodat er geen vreemde dingen gebeuren.
+
+parameter ranges is dan een python list die de edges beschrijft. Bv ranges zou dan [0, 10, 20, 30] kunnen zijn
+en dan zal de method discretiseren met als intervallen [0 - 10[, [10 - 20[, [20 - 30[.
+Er moet ook een field zijn die bepaalt of een interval half open is naar rechts (zoals hierboven) of half open naar links
+zoals ]0 - 10], ]10, 20], etc. Dit is de exclude_right parameter.
+True geeft intervallen als het eerste voorbeeld en False geeft intervallen als het laatste voorbeeld.
+
+---------------------------------------------------------------------------------------
+
+delete_outlier(self, tablename, attribute, larger, value, new_name="")
+
+Deze method zet outliers op null. Deze keuze werd tactisch gemaakt omdat dan de gebruiker
+via andere methods (die later beschreven worden) die null values kunnen vervangen door
+de mediaan, het gemiddelde of zelfs een custom value naar keuze.
+
+Deze transformatie is vrij simpel te implementeren in front-end. larger is een boolean die laat
+weten of de outliers kleiner of groter moeten zijn dan value. True is alles groter dan value wordt op nul gezet,
+False is alles kleiner wordt op null gezet.
+
+Value is natuurlijk de waarde die als comparison gebruikt wordt om de outliers te identifiëren.
+
+----------------------------------------------------------------------------------------
+
+fill_nulls_with_mean(tablename, attribute, new_name="")
+
+Deze method vult alle nulls in een attribute met het gemiddelde.
+Front-end implementatie is evident.
+
+
+-----------------------------------------------------------------------------------------
+
+fill_nulls_with_median(tablename, attribute, new_name="")
+
+Deze method vult alle nulls in een attribute met de mediaan.
+Front-end implementatie is evident.
+
+-----------------------------------------------------------------------------------------
+
+fill_nulls_with_custom_value(tablename, attribute, new_name="")
+
+Deze method vult alle nulls in een attribute met de gegeven waarde.
+Front-end implementatie is evident.
+
+
+ 
+
+

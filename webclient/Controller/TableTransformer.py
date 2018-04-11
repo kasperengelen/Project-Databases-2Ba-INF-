@@ -237,6 +237,27 @@ class TableTransformer:
         self.db_connection.cursor().execute(sql.SQL(sql_query).format(sql.Identifier(internal_ref[0]), sql.Identifier(internal_ref[1]),
                                                                       sql.Identifier(attribute)), (replacement, value))
 
+
+    #INCOMPLETE
+    def regex_find_and_replace(self, tablename, attribute, regex, replacement, case_sens=False, new_name=""):
+        """Method that finds values with a provided regex and replaces them with a provided replacement.
+
+        Parameters:
+            regex: A string that is a POSIX compliant regex to match all the searched values.
+            replacement: A replacement for the found values.
+            case_sens: A boolean indicating whether the regex is case sensitive. True for sensitive, False for insensitive.
+            new_name: The name of the new table if the TableTransformer is not set to overwrite.
+        """
+        if case_sens is False:
+            sql_query = "UPDATE {0}.{1} SET {2} = %s WHERE {2} ~ %s"
+        elif case_sens is True:
+            sql_query = "UPDATE {0}.{1} SET {2} = %s WHERE {2} ~* %s"
+
+        #try:
+        self.db_connection.cursor().execute(sql.SQL(sql_query).format(sql.Identifier(internal_ref[0]), sql.Identifier(internal_ref[1]),
+                                                                      sql.Identifier(attribute)), (replacement, value))
+        #except:
+
             
                 
 
@@ -519,6 +540,13 @@ class TableTransformer:
         #Perhaps do a sanity check here? I'll see later on.
 
         self.__fill_nulls_with_x(attribute, internal_ref, value)
+
+
+    #INCOMPLETE    
+    def extract_part_of_datetime(self, tablename, attribute, new_name=""):
+        """Method that extracts part of a date, time, or datetime"""
+        pass
+        
 
 
 
