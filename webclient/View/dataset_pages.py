@@ -205,6 +205,8 @@ def transform_typeconversion(dataset_id, tablename):
         flash(message="Invalid form.", category="error")
         return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 
+    print("type", tt.get_attribute_type(tablename, form.select_attr.data))
+
     if not form.new_datatype.data in tt.get_conversion_options(tablename, form.select_attr.data):
         flash(message="Selected datatype not compatible with the selected attribute.", category="error")
     else:
