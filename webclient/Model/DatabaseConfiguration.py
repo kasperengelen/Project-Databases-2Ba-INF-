@@ -53,7 +53,7 @@ class DatabaseConfiguration:
         def get_engine(self):
             """Returns an SQL Alchemy engine."""
             #return self.engine
-            return create_engine("postgresql://{}:{}@{}/{}".format(self.get_dbname(), self.get_password(), self.get_host(), self.get_dbname()))
+            return create_engine("postgresql://{}:{}@{}/{}".format(self.user, self.password, self.host, self.dbname))
 
     def __init__(self):
         if DatabaseConfiguration.__instance is None:
