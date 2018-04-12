@@ -125,7 +125,8 @@ class TableViewer:
 
         Parameters:
             page_nr: Integer indicating which page we're viewing.
-            nr_rows: The number of rows that are being showed per page. 
+            nr_rows: The number of rows that are being showed per page.
+            show_types: Boolean indicating whether data types should be included in the column header
         """
         offset = 0
         offset = (page_nr - 1) * nr_rows
