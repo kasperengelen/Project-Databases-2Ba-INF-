@@ -6,7 +6,7 @@ from utils import require_adminperm, require_writeperm, require_readperm
 from DatasetInfo import DatasetInfo
 from DatasetManager import DatasetManager
 from UserManager import UserManager
-from dataset_forms import FindReplaceForm, DeleteAttrForm, DatasetForm, AddUserForm, RemoveUserForm, DatasetListEntryForm, TableUploadForm, DownloadForm, DataTypeTransform, NormalizeZScore, OneHotEncoding
+from dataset_forms import FindReplaceForm, DeleteAttrForm, DatasetForm, AddUserForm, RemoveUserForm, DatasetListEntryForm, TableUploadForm, DownloadForm, DataTypeTransform, NormalizeZScore, OneHotEncoding, JoinForm
 from TableViewer import TableViewer
 from werkzeug.utils import secure_filename
 import os
@@ -31,10 +31,12 @@ def view_dataset_home(dataset_id):
     table_list = dataset.getTableNames()
 
     upload_form = TableUploadForm()
+    joinform = JoinForm()
+    joinform.fillForm(table_list)
 
     perm_type = dataset.getPermForUserID(session['userdata']['userid'])
 
-    return render_template('dataset_pages.home.html', dataset_info = dataset_info, table_list = table_list, form = upload_form, perm_type=perm_type, downloadform = DownloadForm())
+    return render_template('dataset_pages.home.html', dataset_info = dataset_info, table_list = table_list, form = upload_form, join_form=joinform, perm_type=perm_type, downloadform = DownloadForm())
 # ENDFUNCTION
 
 @dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>', defaults = {'page_nr': 1})
@@ -636,7 +638,58 @@ def _get_options(dataset_id, tablename):
     dataset = DatasetManager.getDataset(dataset_id)
     tt = dataset.getTableTransformer(tablename)
 
+    print(attr)
+
     options = [(option, option) for option in tt.get_conversion_options(tablename, attribute=attr)]
     return jsonify(options)
 
 # ENDFUNCTION
+
+@dataset_pages.route('/dataset/<int:dataset_id>/_get_attr1_options')
+@require_login
+@require_writeperm
+def _get_attr1_options(dataset_id):
+    info = request.args.get('tablename1', '01', type=str)
+
+    dataset = DatasetManager.getDataset(dataset_id)
+    tv = dataset.getTableViewer(info)
+
+    options = [(option, option) for option in tv.get_attributes()]
+
+    return jsonify(options)
+
+# ENDFUNCTION
+
+@dataset_pages.route('/dataset/<int:dataset_id>/_get_attr2_options')
+@require_login
+@require_writeperm
+def _get_attr2_options(dataset_id):
+    info = request.args.get('tablename2', '01', type=str)
+
+    dataset = DatasetManager.getDataset(dataset_id)
+    tv = dataset.getTableViewer(info)
+
+    options = [(option, option) for option in tv.get_attributes()]
+
+    return jsonify(options)
+
+# ENDFUNCTION
+
+@dataset_pages.route('/dataset/<int:dataset_id>/_get_table2_options')
+@require_login
+@require_writeperm
+def _get_table2_options(dataset_id):
+    table = request.args.get('tablename1', '01', type=str)
+
+    dataset = DatasetManager.getDataset(dataset_id)
+    table_list = dataset.getTableNames()
+
+    table_list.remove(table)
+
+    options = [(option, option) for option in table_list]
+    options.insert(0, ('', ''))
+
+    return jsonify(options)
+
+# ENDFUNCTION
+

@@ -60,7 +60,25 @@
 		      	</div>
 		      	<div id="join" class="panel-collapse collapse">
 		        	<div class="panel-body">	
-		        		Join Form
+		        		{% from "includes/_formhelpers.html" import render_field %}
+		      			<!-- Join Form -->
+						<form method="post" action="{{ url_for('dataset_pages.transform_findreplace', dataset_id=dataset_info.setid, tablename=table_name) }}">
+						{{ join_form.csrf_token }}
+						<div class="form-group" style="width: 20%; display: inline-block;">
+							{{render_field(join_form.tablename1, class_="form-control")}}
+						</div>
+						<div class="form-group" style="width: 20%; display: inline-block;">
+							{{render_field(join_form.attribute1, class_="form-control", placeholder="Searchterm")}}
+						</div>
+						<div class="form-group" style="width: 20%; display: inline-block;">
+							{{render_field(join_form.tablename2, class_="form-control", placeholder="Searchterm")}}
+						</div>
+						<div class="form-group" style="width: 20%; display: inline-block;">
+							{{render_field(join_form.attribute2, class_="form-control", placeholder="Searchterm")}}
+						</div>
+						<p style="display: inline-block;"><input type="submit" id="join" class="btn btn-primary" value="Join Tables"></p>
+						</form>
+						<!-- Join Form -->
 		        	</div>
 	     		</div>
 	    	</div>
@@ -125,4 +143,89 @@
 			</table>
 		</div>
 	</div>
+
+	<script charset="utf-8" type="text/javascript">
+
+		$(function() {
+
+			var dropdown = {
+				tablename1: $('#tablename1'),
+				attribute1: $('#attribute1'),
+				tablename2: $('#tablename2'),
+				attribute2: $('#attribute2')
+			};
+
+			updateAttr1();
+			updateTable2();
+			updateAttr2();
+
+			function updateAttr1() {
+				var send = {
+					tablename1: dropdown.tablename1.val()
+				};
+				dropdown.attribute1.attr('disabled', 'disabled');
+				dropdown.attribute1.empty();
+				$.getJSON("{{ url_for('dataset_pages._get_attr1_options', dataset_id=dataset_info.setid, tablename=table_name, info=send) }}", send, function(data) {
+					data.forEach(function(item) {
+						dropdown.attribute1.append (
+							$('<option>', {
+								value: item[0],
+								text: item[1]
+							})
+						);
+					});
+					dropdown.attribute1.removeAttr('disabled');
+				});
+			}
+
+			function updateTable2() {
+				var send = {
+					tablename1: dropdown.tablename1.val()
+				};
+				dropdown.tablename2.attr('disabled', 'disabled');
+				dropdown.tablename2.empty();
+				$.getJSON("{{ url_for('dataset_pages._get_table2_options', dataset_id=dataset_info.setid, tablename=table_name, table=send) }}", send, function(data) {
+					data.forEach(function(item) {
+						dropdown.tablename2.append (
+							$('<option>', {
+								value: item[0],
+								text: item[1]
+							})
+						);
+					});
+					dropdown.tablename2.removeAttr('disabled');
+				});
+			}
+
+			function updateAttr2() {
+				var send = {
+					tablename2: dropdown.tablename2.val()
+				};
+				dropdown.attribute2.empty();
+				$.getJSON("{{ url_for('dataset_pages._get_attr2_options', dataset_id=dataset_info.setid, tablename=table_name, info=send) }}", send, function(data) {
+					data.forEach(function(item) {
+						dropdown.attribute2.append (
+							$('<option>', {
+								value: item[0],
+								text: item[1]
+							})
+						);
+					});
+					dropdown.attribute2.removeAttr('disabled');
+				});
+			}
+
+			
+			$('#tablename1').change(function() {
+				updateAttr1();
+				updateTable2();
+				updateAttr2();
+			});
+			$('#tablename2').change(function() {
+				updateAttr2();
+			});
+		});
+
+	</script>
+
 {% endblock %}

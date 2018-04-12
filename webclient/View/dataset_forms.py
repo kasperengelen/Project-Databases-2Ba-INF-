@@ -60,7 +60,25 @@ class DownloadForm(FlaskForm):
     delimiter = StringField('Delimiter', [InputRequired('Input is required.'), Length(min=1, max=1)])
     quotechar = StringField('Qoute character', [InputRequired('Input is required.'), Length(min=1, max=1)])
     nullrep = StringField('NULL representation', [InputRequired('Input is required.'), Length(min=1, max=10)])
+
 # ENDCLASS
+
+class JoinForm(FlaskForm):
+    '''Test Form for Dynamic Fields'''
+    tablename1 = SelectField('First Table', choices=[], id='tablename1')
+    attribute1 = SelectField('First Table Attribute', choices=[], id='attribute1')
+    tablename2 = SelectField('Second Table', choices=[], id='tablename2')
+    attribute2 = SelectField('Second Table Attribute', choices=[], id='attribute2')
+
+    def fillForm(self, tables):
+        self.tablename1.choices = [(table, table) for table in tables]
+        self.attribute1.choices = []
+        self.tablename2.choices = [(table, table) for table in tables]
+        self.attribute2.choices = []
+    # ENDMETHOD
+# ENDCLASS
+
+
 
 ################################################################# TRANSFORMATION FORMS #################################################################
 
