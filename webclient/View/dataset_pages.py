@@ -632,9 +632,14 @@ def download(dataset_id, tablename):
 @dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/_get_options')
 @require_login
 @require_writeperm
-def _get_options(tablename):
+def _get_options(dataset_id, tablename):
     """Callback for dynamic forms."""
-    attr = request.args.get('attr', '01', type=str)
-    options = [(option, option) for option in self.get_conversion_options(tablename, attr=attr)]
+    attr = request.args.get('attribute', '01', type=str)
+
+    dataset = DatasetManager.getDataset(dataset_id)
+    tt = dataset.getTableTransformer(tablename)
+
+    options = [(option, option) for option in tt.get_conversion_options(tablename, attribute=attr)]
     return jsonify(options)
+
 # ENDFUNCTION

@@ -224,9 +224,11 @@
 	</div>
 
 	<script charset="utf-8" type="text/javascript">
+
 		$(function() {
+
 			var dropdown = {
-				attr: $('#attr'),
+				attribute: $('#attribute'),
 				options: $('#typeOptions')
 			};
 
@@ -234,28 +236,27 @@
 
 			function updateOptions() {
 				var send = {
-					attr: dropdown.attr.val()
+					attribute: dropdown.attribute.val()
 				};
 				dropdown.options.attr('disabled', 'disabled');
 				dropdown.options.empty();
-				$.getJSON("{{ url_for('dataset_pages._get_options', dataset_id=dataset_info.setid, tablename=table_name) }}", send, function(data) {
-					data.forEach(function(item)) {
-						dropdown.options.append(
+				$.getJSON("{{ url_for('dataset_pages._get_options', dataset_id=dataset_info.setid, tablename=table_name, attr=send) }}", send, function(data) {
+					data.forEach(function(item) {
+						dropdown.options.append (
 							$('<option>', {
 								value: item[0],
 								text: item[1]
 							})
 						);
-					}
+					});
 					dropdown.options.removeAttr('disabled');
 				});
 			}
-			dropdown.attr.on('change', function() {
+			$('#attribute').change(function() {
 				updateOptions();
 			});
 		});
-	</script>
 
-	
+	</script>
 
 {% endblock %}
