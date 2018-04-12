@@ -6,7 +6,7 @@ from utils import require_adminperm, require_writeperm, require_readperm
 from DatasetInfo import DatasetInfo
 from DatasetManager import DatasetManager
 from UserManager import UserManager
-from dataset_forms import FindReplaceForm, DeleteAttrForm, DatasetForm, AddUserForm, RemoveUserForm, DatasetListEntryForm, TableUploadForm, DownloadForm, DataTypeTransform, NormalizeZScore, OneHotEncoding, TypeConversionTestForm
+from dataset_forms import FindReplaceForm, DeleteAttrForm, DatasetForm, AddUserForm, RemoveUserForm, DatasetListEntryForm, TableUploadForm, DownloadForm, DataTypeTransform, NormalizeZScore, OneHotEncoding
 from TableViewer import TableViewer
 from werkzeug.utils import secure_filename
 import os
@@ -69,7 +69,6 @@ def view_dataset_table(dataset_id, tablename, page_nr):
     findrepl_form = FindReplaceForm()
     delete_form = DeleteAttrForm()
     typeconversion_form = DataTypeTransform()
-    testform = TypeConversionTestForm()
     onehotencodingform = OneHotEncoding()
     zscoreform = NormalizeZScore()
     findrepl_form.fillForm(attrs)
@@ -77,7 +76,6 @@ def view_dataset_table(dataset_id, tablename, page_nr):
     typeconversion_form.fillForm(attrs)
     onehotencodingform.fillForm(attrs)
     zscoreform.fillForm(attrs)
-    testform.fillForm(attrs)
 
     # render table
     table_data = tv.render_table(page_nr, 50)
@@ -113,8 +111,7 @@ def view_dataset_table(dataset_id, tablename, page_nr):
                                                 zscoreform = zscoreform,
                                                 perm_type = perm_type,
                                                 current_page=page_nr,
-                                                colstats=colstats,
-                                                testform=testform)
+                                                colstats=colstats)
 # ENDFUNCTION
 
 @dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/deleteattr', methods=['POST'])

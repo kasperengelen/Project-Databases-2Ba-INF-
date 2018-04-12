@@ -76,21 +76,6 @@
 						</form>
 						<!-- Type Conversion -->
 
-						<!-- Type Conversion -->
-						<p> TESTFORM </p>
-						<form method="post" action="{{ url_for('dataset_pages.transform_typeconversion', dataset_id=dataset_info.setid, tablename=table_name) }}">
-						{{ testform.csrf_token }}
-						<div class="form-group" style="width: 30%; display: inline-block;">
-							{{render_field(testform.select_attr, class_="form-control") }}
-						</div>
-						<div class="form-group" style="width: 30%; display: inline-block;">
-							{{render_field(testform.new_datatype, class_="form-control") }}
-						</div>
-						<p style="display: inline-block;"><input type="submit" id="typeconversion" class="btn btn-primary" value="Convert Attribute Type"></p>
-						</form>
-						<p> TESTFORM </p>
-						<!-- Type Conversion -->
-
 		      			<!-- Delete Attribute -->
 						<form method="post" action="{{ url_for('dataset_pages.transform_deleteattr', dataset_id=dataset_info.setid, tablename=table_name) }}">
 						{{ delete_form.csrf_token }}

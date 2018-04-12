@@ -85,18 +85,6 @@ class DeleteAttrForm(FlaskForm):
 # ENDCLASS
 
 class DataTypeTransform(FlaskForm):
-    """Form to change the datatype of a table attribute."""
-
-    select_attr = SelectField('Attribute', choices=[])
-    new_datatype = SelectField('New datatype', choices=[])
-
-    def fillForm(self, attrs):
-        self.select_attr.choices = [(attrname, attrname) for attrname in attrs]
-        self.new_datatype.choices = [(typename, typename) for typename in ['VARCHAR(255)', 'CHAR(255)', 'INTEGER', 'FLOAT', 'DATE', 'TIME', 'TIMESTAMP']]
-    # ENDMETHOD
-# ENDCLASS
-
-class TypeConversionTestForm(FlaskForm):
     '''Test Form for Dynamic Fields'''
     select_attr = SelectField('Attribute', choices=[], id='attribute')
     new_datatype = SelectField('New datatype', choices=[], id='typeOptions')
