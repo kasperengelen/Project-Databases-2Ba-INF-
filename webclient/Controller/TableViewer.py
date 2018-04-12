@@ -23,7 +23,7 @@ class TableViewer:
         self.engine = engine
         self.setid = setid
         self.tablename = tablename
-        self.db_connection = db_connection
+        self.db_connection = get_db()
         self.maxrows = None
 
 
@@ -52,14 +52,17 @@ class TableViewer:
         max_index = math.ceil(table_size / display_nr)
         #At this point the table is too large to just show all the indices, we have to minimize clutter
         if(max_index > 5):
-            if page_nr > 3:
+            if page_nr > 4:
                 indices = ['1', '...', ]
-                start = page_nr
+                start = page_nr - 1 #Get index before current
             else:
                 indices = []
                 start = 1
 
             end = start + 3 #Show 3 indices including current page
+            if(start == 1):
+                end += 1
+            
             if (end >= max_index):
                 start = max_index -3 #Keep last pages from being isolated
                 end = max_index + 1 
@@ -100,8 +103,24 @@ class TableViewer:
         else:
             return True
 
+    def __translate_system_type(self, systype):
+        """Method that translates a type known to postgres' system to its standard SQL name"""
+        translations = {
+            'character varying' : 'VARCHAR',
+            'character'         : 'CHAR',
+            'integer'           : 'INTEGER',
+            'double precision'  : 'FLOAT',
+            'date'              : 'DATE',
+            'time without time zone' : 'TIME',
+            'timestamp without time zone' : 'TIMESTAMP'
+            }
 
-    def render_table(self, page_nr, nr_rows):
+        return translations.setdefault(systype, 'UNKNOWN TYPE')
+
+        
+
+
+    def render_table(self, page_nr, nr_rows, show_types=False):
         """This method returns a html table representing the page of the SQL table.
 
         Parameters:
@@ -113,6 +132,16 @@ class TableViewer:
         SQL_query = "SELECT * FROM \"%s\".\"%s\" LIMIT %s OFFSET %s" % (str(self.setid), self.tablename, nr_rows, offset)
         data_frame = pd.read_sql(SQL_query, self.engine)
         html_table = re.sub(' mytable', '" id="mytable', data_frame.to_html(None, None, None, True, False, classes='mytable'))
+        if show_types is False:
+            return html_table
+        attributes = self.get_attributes()
+        for string in attributes: #Let's add the types to the tablenames
+            cur = self.db_connection.cursor()
+            cur.execute(sql.SQL("SELECT pg_typeof({}) FROM {}.{} LIMIT 1").format(sql.Identifier(string), sql.Identifier(str(self.setid)),
+                                                                                  sql.Identifier(self.tablename)))
+            sqltype = self.__translate_system_type(cur.fetchone()[0])
+            new_string = string + "\n(" + sqltype + ")"
+            html_table = html_table.replace(string, new_string, 1)
         return html_table
 
 
