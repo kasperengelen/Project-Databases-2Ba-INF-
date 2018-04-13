@@ -146,7 +146,7 @@ class OneHotEncoding(FlaskForm):
     # ENDMETHOD
 # ENDCLASS
 
-class discretizeEqualWidth(FlaskForm):
+class DiscretizeEqualWidth(FlaskForm):
     """Form to discretize values into equidistant intervals."""
     select_attr = SelectField('Attribute', choices=[])
 
@@ -155,7 +155,7 @@ class discretizeEqualWidth(FlaskForm):
     # ENDMETHOD
 # ENDCLASS
 
-class discretizeEqualFreq(FlaskForm):
+class DiscretizeEqualFreq(FlaskForm):
     """Form to discretize values into equifrequent intervals."""
     select_attr = SelectField('Attribute', choices=[])
 
@@ -164,11 +164,11 @@ class discretizeEqualFreq(FlaskForm):
     # ENDMETHOD
 # ENDCLASS
 
-class discretizeCustomRange(FlaskForm):
+class DiscretizeCustomRange(FlaskForm):
     pass
 # ENDCLASS
 
-class deleteOutlier(FlaskForm):
+class DeleteOutlier(FlaskForm):
     """Form to replace outlier values with NULL."""
     select_attr = SelectField('Attribute', choices=[])
     select_comparison = SelectField('Larger/Smaller', choices=[(True, 'Larger'), (False, 'Smaller')])
@@ -179,7 +179,7 @@ class deleteOutlier(FlaskForm):
     # ENDMETHOD
 # ENDCLASS
 
-class fillNullsWithMean(FlaskForm):
+class FillNullsMean(FlaskForm):
     """Form to fill all NULL values with the mean value."""
     select_attr = SelectField('Attribute', choices=[])
 
@@ -188,7 +188,7 @@ class fillNullsWithMean(FlaskForm):
     # ENDMETHOD
 # ENDCLASS
 
-class fillNullsWithMedian(FlaskForm):
+class FillNullsMedian(FlaskForm):
     """Form to fill all NULL values with the median value."""
     select_attr = SelectField('Attribute', choices=[])
 
@@ -197,7 +197,7 @@ class fillNullsWithMedian(FlaskForm):
     # ENDMETHOD
 # ENDCLASS
 
-class fillNullCustomValue(FlaskForm):
+class FillNullCustomValue(FlaskForm):
     """Form to fill all NULL values with custom value."""
     select_attr = SelectField('Attribute', choices=[])
     replacement = StringField('Replacement', [InputRequired(message="Input is required.")])
