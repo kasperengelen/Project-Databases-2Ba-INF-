@@ -5,8 +5,6 @@ import math
 import re
 import os
 import csv
-from utils import get_db
-import db_wrapper
 from psycopg2 import sql
 
 class TableViewer:
@@ -23,7 +21,7 @@ class TableViewer:
         self.engine = engine
         self.setid = setid
         self.tablename = tablename
-        self.db_connection = get_db()
+        self.db_connection = db_connection
         self.maxrows = None
 
 
@@ -120,13 +118,13 @@ class TableViewer:
         
 
 
-    def render_table(self, page_nr, nr_rows, show_types=True):
+    def render_table(self, page_nr, nr_rows, show_types=False):
         """This method returns a html table representing the page of the SQL table.
 
         Parameters:
             page_nr: Integer indicating which page we're viewing.
             nr_rows: The number of rows that are being showed per page.
-            show_types: Boolean indicating whether data types should be included in the column header
+            show_types: Boolean indicating whether data types should be included in the column header.
         """
         offset = 0
         offset = (page_nr - 1) * nr_rows
@@ -156,8 +154,7 @@ class TableViewer:
 
         with open(filename, 'w') as outfile:
             outcsv = csv.writer(outfile, delimiter=delimiter, quotechar=quotechar)
-            conn = get_db()
-            # conn = db_wrapper.DBWrapper()
+            conn = self.db_connection
 
             conn.cursor().execute("SELECT column_name FROM information_schema.columns WHERE table_schema = '{}' AND table_name = '{}'".format(self.setid, self.tablename))
 
@@ -181,7 +178,7 @@ class TableViewer:
 
     def get_most_frequent_value(self, columnname):
         """Return the value that appears most often in the column"""
-        conn = get_db() # = self.db_connection
+        conn = self.db_connection
 
         # get the frequence of every value and select the one that has the highest one
         conn.cursor().execute(sql.SQL("SELECT {}, COUNT(*) FROM {}.{} GROUP BY {} ORDER BY COUNT(*) DESC,"
@@ -194,7 +191,7 @@ class TableViewer:
 
     def get_null_frequency(self, columnname):
         """Return the amount of times NULL appears in the column"""
-        conn = get_db() # = self.db_connection
+        conn = self.db_connection
 
         conn.cursor().execute(sql.SQL("SELECT {}, COUNT(*) FROM {}.{} WHERE {} IS NULL GROUP BY {}"
                                       "").format(sql.Identifier(columnname), sql.Identifier(str(self.setid)),
@@ -205,7 +202,7 @@ class TableViewer:
 
     def __aggregate_function(self, columnname, aggregate):
         """Wrapper that returns result of aggregate function"""
-        conn = get_db() # = self.db_connection
+        conn = self.db_connection
 
         conn.cursor().execute(sql.SQL("SELECT " + aggregate + "({}) FROM {}.{}").format(sql.Identifier(columnname),
                                                                           sql.Identifier(str(self.setid)),

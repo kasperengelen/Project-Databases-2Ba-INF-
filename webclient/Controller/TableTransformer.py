@@ -376,7 +376,7 @@ class TableTransformer:
         """
         #Let's check if the attribute is a numeric type, this should not be performed on non-numeric types
         attr_type = self.get_attribute_type(tablename, attribute)
-        if attr_type not in ['integer', 'double precision']:
+        if attr_type[0] not in ['integer', 'double precision']:
             raise self.AttrTypeError("Normalization failed due attribute not being of numeric type (neither integer or float)")
         
         internal_ref = self.get_internal_reference(tablename)
@@ -666,5 +666,5 @@ if __name__ == '__main__':
     connection_string = "dbname='{}' user='{}' host='{}' password='{}'".format(*(DatabaseConfiguration().get_packed_values()))
     db_connection = psycopg2.connect(connection_string)
     engine = DatabaseConfiguration().get_engine()
-    tt = TableTransformer(6, db_connection, engine)
-    tt.one_hot_encode('workingtable', 'first_name')
+    tt = TableTransformer(7, db_connection, engine)
+    tt.normalize_using_zscore('workingtable', 'age')
