@@ -202,7 +202,7 @@ def transform_findreplace(dataset_id, tablename):
     tt = dataset.getTableTransformer(tablename)
 
     try:
-        tt.find_and_replace(tablename, form.select_attr.data, form.search.data, form.replacement.data)
+        tt.find_and_replace(tablename, form.select_attr.data, form.search.data, form.replacement.data, form.exactmatch.data, form.replace_full_match.data)
     except:
         flash(message="No matches found.", category="error")
 
