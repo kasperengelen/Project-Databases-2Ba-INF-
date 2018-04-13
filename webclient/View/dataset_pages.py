@@ -29,6 +29,7 @@ def view_dataset_home(dataset_id):
 
     dataset_info = dataset.toDict()
     table_list = dataset.getTableNames()
+    tablename = table_list[0]
 
     upload_form = TableUploadForm()
     joinform = JoinForm()
@@ -36,7 +37,7 @@ def view_dataset_home(dataset_id):
 
     perm_type = dataset.getPermForUserID(session['userdata']['userid'])
 
-    return render_template('dataset_pages.home.html', dataset_info = dataset_info, table_list = table_list, form = upload_form, join_form=joinform, perm_type=perm_type, downloadform = DownloadForm())
+    return render_template('dataset_pages.home.html', dataset_info = dataset_info, table_list = table_list, tablename=tablename, form = upload_form, join_form=joinform, perm_type=perm_type, downloadform = DownloadForm())
 # ENDFUNCTION
 
 @dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>', defaults = {'page_nr': 1})
@@ -115,6 +116,33 @@ def view_dataset_table(dataset_id, tablename, page_nr):
                                                 current_page=page_nr,
                                                 colstats=colstats)
 # ENDFUNCTION
+
+@dataset_pages.route('/dataset/<int:dataset_id>/jointables', methods=['POST'])
+@require_login
+@require_writeperm
+def transform_join_tables(dataset_id):
+    """Callback for joining tables"""
+
+    if not DatasetManager.existsID(dataset_id):
+        abort(404)
+
+    dataset = DatasetManager.getDataset(dataset_id)
+
+    form = JoinForm(request.form)
+    form.fillForm(dataset.getTableNames())
+
+    if not form.validate():
+        print(form.tablename1.data, form.tablename2.data, form.attribute1.data, form.attribute2.data, form.newname.data)
+        flash(message="Invalid form.", category="error")
+        return redirect(url_for('dataset_pages.view_dataset_home', dataset_id=dataset_id))
+
+    tt = dataset.getTableTransformer(tablename)
+
+    tt.join_tables(form.tablename1.data, form.tablename2.data, form.attribute1.data, form.attribute2.data, form.newname.data)
+    flash(message="Tables joined", category="success")
+
+    return redirect(url_for('dataset_pages.view_dataset_home', dataset_id=dataset_id, tablename=tablename))
+
 
 @dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/deleteattr', methods=['POST'])
 @require_login
@@ -202,6 +230,8 @@ def transform_typeconversion(dataset_id, tablename):
 
     if not form.validate():
         flash(message="Invalid form.", category="error")
+        print(form.select_attr.data)
+        print(form.new_datatype.data)
         return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 
     print("type", tt.get_attribute_type(tablename, form.select_attr.data))
@@ -638,8 +668,6 @@ def _get_options(dataset_id, tablename):
     dataset = DatasetManager.getDataset(dataset_id)
     tt = dataset.getTableTransformer(tablename)
 
-    print(attr)
-
     options = [(option, option) for option in tt.get_conversion_options(tablename, attribute=attr)]
     return jsonify(options)
 
@@ -670,6 +698,7 @@ def _get_attr2_options(dataset_id):
     tv = dataset.getTableViewer(info)
 
     options = [(option, option) for option in tv.get_attributes()]
+    options.insert(0, ('', ''))
 
     return jsonify(options)
 

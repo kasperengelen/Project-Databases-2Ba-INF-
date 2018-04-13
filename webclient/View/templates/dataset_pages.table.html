@@ -65,7 +65,7 @@
 
 						<!-- Type Conversion -->
 						<form method="post" action="{{ url_for('dataset_pages.transform_typeconversion', dataset_id=dataset_info.setid, tablename=table_name) }}">
-						{{ typeconversion_form.csrf_token }}
+						{{ typeconversion_form.hidden_tag() }}
 						<div class="form-group" style="width: 30%; display: inline-block;">
 							{{render_field(typeconversion_form.select_attr, class_="form-control") }}
 						</div>

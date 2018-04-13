@@ -69,6 +69,7 @@ class JoinForm(FlaskForm):
     attribute1 = SelectField('First Table Attribute', choices=[], id='attribute1')
     tablename2 = SelectField('Second Table', choices=[], id='tablename2')
     attribute2 = SelectField('Second Table Attribute', choices=[], id='attribute2')
+    newname = StringField('New Table Name', [InputRequired(message="Input is required.")])
 
     def fillForm(self, tables):
         self.tablename1.choices = [(table, table) for table in tables]
