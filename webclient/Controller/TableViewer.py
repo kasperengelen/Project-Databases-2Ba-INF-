@@ -8,6 +8,7 @@ import csv
 from utils import get_db
 import db_wrapper
 from psycopg2 import sql
+import mpld3
 
 class TableViewer:
     """Class that extracts table information for viewing purposes.
@@ -23,7 +24,7 @@ class TableViewer:
         self.engine = engine
         self.setid = setid
         self.tablename = tablename
-        self.db_connection = get_db()
+        self.db_connection = db_wrapper.DBWrapper("projectdb18", "dbadmin", "localhost", "AdminPass123")
         self.maxrows = None
 
 
@@ -176,12 +177,17 @@ class TableViewer:
             # write rows
             outcsv.writerows(rows)
 
-    def show_histogram(self, columnname):
-        pass
+    def show_histogram(self, columnname, bar_nr):
+        sql_query = "SELECT \"{}\" FROM \"{}\".\"{}\"".format(columnname, str(self.setid), self.tablename)
+        df = pd.read_sql(sql_query, self.engine)
+        fig = plt.figure()
+        plt.hist(df[columnname], bins=bar_nr, align='left', alpha=0.8, color='grey')
+        plt.show()
+        return mpld3.fig_to_html(fig)
 
     def get_most_frequent_value(self, columnname):
         """Return the value that appears most often in the column"""
-        conn = get_db() # = self.db_connection
+        conn = self.db_connection
 
         # get the frequence of every value and select the one that has the highest one
         conn.cursor().execute(sql.SQL("SELECT {}, COUNT(*) FROM {}.{} GROUP BY {} ORDER BY COUNT(*) DESC,"
@@ -194,7 +200,7 @@ class TableViewer:
 
     def get_null_frequency(self, columnname):
         """Return the amount of times NULL appears in the column"""
-        conn = get_db() # = self.db_connection
+        conn = self.db_connection
 
         conn.cursor().execute(sql.SQL("SELECT {}, COUNT(*) FROM {}.{} WHERE {} IS NULL GROUP BY {}"
                                       "").format(sql.Identifier(columnname), sql.Identifier(str(self.setid)),
@@ -205,7 +211,7 @@ class TableViewer:
 
     def __aggregate_function(self, columnname, aggregate):
         """Wrapper that returns result of aggregate function"""
-        conn = get_db() # = self.db_connection
+        conn = self.db_connection
 
         conn.cursor().execute(sql.SQL("SELECT " + aggregate + "({}) FROM {}.{}").format(sql.Identifier(columnname),
                                                                           sql.Identifier(str(self.setid)),
@@ -225,7 +231,8 @@ class TableViewer:
         return self.__aggregate_function(columnname, "AVG")
 
 if __name__ == '__main__':
-    tv = TableViewer(1, 'test', None)
-    print(tv.get_avg("dept_name"))
+    engine = create_engine('postgresql://dbadmin:AdminPass123@localhost/projectdb18')
+    tv = TableViewer(1, "Sales(1)", engine)
+    tv.show_histogram("Unit_Price", 20)
     # print(tv.get_page_indices(50, 88))
 
