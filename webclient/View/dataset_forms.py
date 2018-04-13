@@ -130,7 +130,6 @@ class DataTypeTransform(FlaskForm):
 
 class NormalizeZScore(FlaskForm):
     """Form to normalize an attribute by it's z-score."""
-
     select_attr = SelectField('Attribute', choices=[])
 
     def fillForm(self, attrs):
@@ -170,8 +169,14 @@ class discretizeCustomRange(FlaskForm):
 # ENDCLASS
 
 class deleteOutlier(FlaskForm):
-    pass
+    """Form to replace outlier values with NULL."""
+    select_attr = SelectField('Attribute', choices=[])
+    select_comparison = SelectField('Larger/Smaller', choices=[(True, 'Larger'), (False, 'Smaller')])
+    value = StringField('Value', [InputRequired(message="Input is required.")])
     
+    def fillForm(self, attrs):
+        self.select_attr.choices = [(attrname, attrname) for attrname in attrs]
+    # ENDMETHOD
 # ENDCLASS
 
 class fillNullsWithMean(FlaskForm):
@@ -193,5 +198,11 @@ class fillNullsWithMedian(FlaskForm):
 # ENDCLASS
 
 class fillNullCustomValue(FlaskForm):
-    pass
+    """Form to fill all NULL values with custom value."""
+    select_attr = SelectField('Attribute', choices=[])
+    replacement = StringField('Replacement', [InputRequired(message="Input is required.")])
+
+    def fillForm(self, attrs):
+        self.select_attr.choices = [(attrname, attrname) for attrname in attrs]
+    # ENDMETHOD
 # ENDCLASS
