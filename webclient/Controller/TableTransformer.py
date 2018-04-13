@@ -522,6 +522,9 @@ class TableTransformer:
             exclude_right: A boolean indicating whether the rightmost edge should be included
                            True if the rightmost edge is excluded [X - Y[, False if rightmost edge is included ]X - Y]
         """
+        attr_type = self.get_attribute_type(tablename, attribute)
+        if attr_type[0] not in ['integer', 'double precision']:
+            raise self.AttrTypeError("Normalization failed due attribute not being of numeric type (neither integer or float)")
         internal_ref = self.get_internal_reference(tablename)
         sql_query = "SELECT * FROM \"{}\".\"{}\"".format(*internal_ref)
         df = pd.read_sql(sql_query, self.engine)
