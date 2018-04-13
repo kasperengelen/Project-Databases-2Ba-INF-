@@ -1,4 +1,5 @@
-from flask import Blueprint, render_template, request, url_for, redirect, session, flash, abort, send_from_directory, jsonify
+iew_dataset_home
+￼ from flask import Blueprint, render_template, request, url_for, redirect, session, flash, abort, send_from_directory, jsonify
 from flask import current_app as app
 from utils import require_admin
 from utils import require_login
@@ -37,7 +38,13 @@ def view_dataset_home(dataset_id):
 
     perm_type = dataset.getPermForUserID(session['userdata']['userid'])
 
-    return render_template('dataset_pages.home.html', dataset_info = dataset_info, table_list = table_list, tablename=tablename, form = upload_form, join_form=joinform, perm_type=perm_type, downloadform = DownloadForm())
+    return render_template('dataset_pages.home.html', dataset_info = dataset_info, 
+                                                      table_list = table_list, 
+                                                      tablename=tablename, 
+                                                      uploadform = upload_form, 
+                                                      join_form=joinform, 
+                                                      perm_type=perm_type, 
+                                                      downloadform = DownloadForm())
 # ENDFUNCTION
 
 @dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>', defaults = {'page_nr': 1})
