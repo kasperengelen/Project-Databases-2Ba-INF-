@@ -30,19 +30,14 @@ def view_dataset_home(dataset_id):
 
     dataset_info = dataset.toDict()
     table_list = dataset.getTableNames()
-    tablename = table_list[0]
 
     upload_form = TableUploadForm()
-    joinform = JoinForm()
-    joinform.fillForm(table_list)
 
     perm_type = dataset.getPermForUserID(session['userdata']['userid'])
 
     return render_template('dataset_pages.home.html', dataset_info = dataset_info, 
-                                                      table_list = table_list, 
-                                                      tablename=tablename, 
+                                                      table_list = table_list,
                                                       uploadform = upload_form, 
-                                                      join_form=joinform, 
                                                       perm_type=perm_type, 
                                                       downloadform = DownloadForm())
 # ENDFUNCTION
