@@ -108,9 +108,9 @@ class DataTypeTransform(FlaskForm):
     select_attr = SelectField('Attribute', choices=[], id='attribute')
     new_datatype = SelectField('New datatype', choices=[], id='typeOptions')
 
-    def fillForm(self, attrs):
+    def fillForm(self, attrs, datatypes):
         self.select_attr.choices = [(attrname, attrname) for attrname in attrs]
-        self.new_datatype.choices = []
+        self.new_datatype.choices = [(datatype, datatype) for datatype in datatypes]
     # ENDMETHOD
 # ENDCLASS
 

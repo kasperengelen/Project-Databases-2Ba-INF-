@@ -1,5 +1,4 @@
-iew_dataset_home
-￼ from flask import Blueprint, render_template, request, url_for, redirect, session, flash, abort, send_from_directory, jsonify
+from flask import Blueprint, render_template, request, url_for, redirect, session, flash, abort, send_from_directory, jsonify
 from flask import current_app as app
 from utils import require_admin
 from utils import require_login
@@ -78,7 +77,7 @@ def view_dataset_table(dataset_id, tablename, page_nr):
     zscoreform = NormalizeZScore()
     findrepl_form.fillForm(attrs)
     delete_form.fillForm(attrs)
-    typeconversion_form.fillForm(attrs)
+    typeconversion_form.fillForm(attrs, [])
     onehotencodingform.fillForm(attrs)
     zscoreform.fillForm(attrs)
 
@@ -119,6 +118,7 @@ def view_dataset_table(dataset_id, tablename, page_nr):
                                                 colstats=colstats)
 # ENDFUNCTION
 
+################ TODO !!!!! ##############
 @dataset_pages.route('/dataset/<int:dataset_id>/jointables', methods=['POST'])
 @require_login
 @require_writeperm
@@ -134,7 +134,6 @@ def transform_join_tables(dataset_id):
     form.fillForm(dataset.getTableNames())
 
     if not form.validate():
-        print(form.tablename1.data, form.tablename2.data, form.attribute1.data, form.attribute2.data, form.newname.data)
         flash(message="Invalid form.", category="error")
         return redirect(url_for('dataset_pages.view_dataset_home', dataset_id=dataset_id))
 
@@ -144,7 +143,7 @@ def transform_join_tables(dataset_id):
     flash(message="Tables joined", category="success")
 
     return redirect(url_for('dataset_pages.view_dataset_home', dataset_id=dataset_id, tablename=tablename))
-
+################ TODO !!!!! ##############
 
 @dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/deleteattr', methods=['POST'])
 @require_login
@@ -228,24 +227,21 @@ def transform_typeconversion(dataset_id, tablename):
     tt = dataset.getTableTransformer(tablename)
 
     form = DataTypeTransform(request.form)
-    form.fillForm(tv.get_attributes())
+    form.fillForm(tv.get_attributes(), tt.get_conversion_options(tablename, form.select_attr.data))
+
 
     if not form.validate():
         flash(message="Invalid form.", category="error")
-        print(form.select_attr.data)
-        print(form.new_datatype.data)
         return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
-
-    print("type", tt.get_attribute_type(tablename, form.select_attr.data))
 
     if not form.new_datatype.data in tt.get_conversion_options(tablename, form.select_attr.data):
         flash(message="Selected datatype not compatible with the selected attribute.", category="error")
     else:
-        try:
-            tt.change_attribute_type(tablename, form.select_attr.data, form.new_datatype.data)
-            flash(message="Attribute type changed.", category="success")
-        except:
-            flash(message="An error occurred.", category="error")
+        #try:
+        tt.change_attribute_type(tablename, form.select_attr.data, form.new_datatype.data)
+        flash(message="Attribute type changed.", category="success")
+        #except Exception:
+        #    flash(message="An error occurred.", category="error")
 
     return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 # ENDFUNCTION
@@ -618,7 +614,6 @@ def download(dataset_id, tablename):
     form = DownloadForm(request.args)
 
     if not form.validate():
-        print(form.errors)
         flash(message="Invalid parameters.", category="error")
         return redirect(url_for('dataset_pages.view_dataset_home', dataset_id=dataset_id))
 
