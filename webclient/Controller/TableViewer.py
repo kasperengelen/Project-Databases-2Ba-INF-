@@ -141,7 +141,7 @@ class TableViewer:
             cur.execute(sql.SQL("SELECT pg_typeof({}) FROM {}.{} LIMIT 1").format(sql.Identifier(string), sql.Identifier(str(self.setid)),
                                                                                   sql.Identifier(self.tablename)))
             sqltype = self.__translate_system_type(cur.fetchone()[0])
-            new_string = string + "(" + sqltype + ")"
+            new_string = string + "<br>(" + sqltype + ")"
             html_table = html_table.replace(string, new_string, 1)
         return html_table
 

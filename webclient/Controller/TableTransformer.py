@@ -2,7 +2,7 @@ import pandas as pd
 import math
 import psycopg2
 from psycopg2 import sql
-from sqlalchemy import create_engine
+import sqlalchemy
 import sys, os
 sys.path.append(os.path.join(sys.path[0],'..', 'Model'))
 from DatabaseConfiguration import DatabaseConfiguration
@@ -115,13 +115,24 @@ class TableTransformer:
         #In case it's a data type unknown to this class, we can almost certainly convert to varchar(255)
         return options.setdefault(data_type, ['VARCHAR(255)'])
 
-    def get_attribute_type(self, tablename, attribute):
-        """Return the postgres data type of an attribute."""
+    def get_attribute_type(self, tablename, attribute, detailed=False):
+        """Return the postgres data type of an attribute.
+        Parameters:
+            detailed: A boolean indicating if the method should return a detailed description of the type (include size limits etc.
+        """
         internal_ref = self.get_internal_reference(tablename)
         cur = self.db_connection.cursor()
-        cur.execute(sql.SQL("SELECT pg_typeof({}) FROM {}.{}").format(sql.Identifier(attribute), sql.Identifier(internal_ref[0]),
-                                                                                   sql.Identifier(internal_ref[1])))
-        return (cur.fetchone()[0], internal_ref)
+        query = ("SELECT data_type, character_maximum_length FROM information_schema.columns"
+                " WHERE table_schema = %s AND table_name =  %s AND column_name = %s LIMIT 1")
+        cur.execute(sql.SQL(query), [internal_ref[0], tablename, attribute])
+
+        row = cur.fetchone()
+        if row is None: #Nothing fetched? Return None
+            return None
+        if detailed is False:
+            return (row[0], internal_ref)
+        else:
+            return (row[0], row[1])
 
 
     def __convert_numeric(self, internal_ref, attribute, to_type):
@@ -136,21 +147,31 @@ class TableTransformer:
     def __convert_character(self, internal_ref, attribute, to_type, data_format):
         """Conversion of a character type (VARCHAR and CHAR)"""
         patterns = { 
-                     'INTEGER'      : 'INTEGER USING %s::integer%s',
-                     'FLOAT'        : 'FLOAT USING %s::float%s',
-                     'DATE'         : 'DATE USING to_date(\"%s\" , %s)',
-                     'TIME'         : 'TIME USING to_timestamp(\"%s\", %s)::time',
-                     'TIMESTAMP'    : 'TIMESTAMP USING to_timestamp(\"%s\", %s)'
+                     'INTEGER'      : 'INTEGER USING {}::integer{}',
+                     'FLOAT'        : 'FLOAT USING {}::float{}',
+                     'DATE'         : 'DATE USING to_date({} , {})',
+                     'TIME'         : 'TIME USING to_timestamp({}, {})::time',
+                     'TIMESTAMP'    : 'TIMESTAMP USING to_timestamp({}, {})',
+                     'CHAR(255)'    : 'CHAR',
+                     'VARCHAR(255)' : 'VARCHAR'
+
                      }
         temp = patterns.setdefault(to_type, '')
         if temp == '':
+            error_msg = "Converting to the type " + to_type + "is not supported!"
+            raise self.ValueError(error_msg)
+        if to_type not in ['DATE', 'TIME', 'TIMESTAMP']: #Make sure no accidental data_format is provided
+            data_format = ''
+        #Maybe sanity check on these parameters? I'll look into it, note: 32
+        casting_var = temp.format(attribute, data_format)
+
+        if temp in ['CHAR' , 'VARCHAR']: #Char and varchar don't need special parameters
             casting_var = to_type
-        else:
-            casting_var = temp % (attribute, data_format)
             
-        sql_query = "ALTER TABLE \"%s\".\"%s\" ALTER COLUMN \"%s\" TYPE " % (internal_ref[0], internal_ref[1], attribute)
-        sql_query += casting_var
-        self.db_connection.cursor().execute(sql_query)
+        sql_query = "ALTER TABLE {}.{} ALTER COLUMN {} TYPE " + casting_var
+        cur = self.db_connection.cursor()
+        cur.execute(sql.SQL(sql_query).format(sql.Identifier(internal_ref[0]), sql.Identifier(internal_ref[1]),
+                                              sql.Identifier(attribute)))
         self.db_connection.commit()
 
 
@@ -285,6 +306,44 @@ class TableTransformer:
         self.db_connection.commit()
 
 
+    def __get_simplified_types(self, tablename, data_frame):
+        """Method that limits the types of column the pandas dataframe can use for to_sql.
+        Our system handles only the base data types, but pandas might use types not supported
+        by our code. With this method we force it to comply to our limit set of data types.
+        """
+
+        new_attributes = data_frame.columns.values.tolist()
+        new_types = {}
+        for elem in new_attributes:
+            psql_type = self.get_attribute_type(tablename, elem, True)
+            sqla_type = None
+            if psql_type is None: #This means it's an attribute made in the pandas df but not yet in the SQL table
+                temp = str(data_frame[elem].dtype)
+                if temp == 'uint8':
+                    sqla_type = sqlalchemy.types.INTEGER()
+                elif temp == 'int64':
+                    sqla_type = sqlalchemy.types.INTEGER()
+                elif temp == 'float64':
+                    sqla_type = sqlalchemy.types.Float(precision=25, asdecimal=True)
+                elif temp == 'object':
+                    sqla_type = sqlalchemy.types.VARCHAR(length=255)
+            else:
+                if psql_type[0] == 'character varying':
+                    sqla_type = sqlalchemy.types.VARCHAR(psql_type[1])
+                elif psql_type[0] == 'character':
+                    sqla_type = sqlalchemy.types.CHAR(psql_type[1])
+                elif psql_type[0] == 'double precision':
+                    sqla_type = sqlalchemy.types.Float(precision=25, asdecimal=True)
+                elif psql_type[0] == 'integer':
+                    sqla_type = sqlalchemy.types.INTEGER()
+                    
+            if sqla_type is None:
+                raise ValueError("Couldn't convert to a value!")
+            new_types[elem] = sqla_type
+
+        return new_types
+
+
 
     def one_hot_encode(self, tablename, attribute, new_name=""):
         """Method that performs one hot encoding given an attribute"""
@@ -294,9 +353,11 @@ class TableTransformer:
         encoded = pd.get_dummies(df[attribute]) #Perfom one-hot-encoding
         df = df.drop(attribute, axis=1) #Drop the attribute used for encoding
         df = df.join(encoded) #Join the original attributes with the encoded table
+        new_dtypes = self.__get_simplified_types(tablename, df)
+        #print("zamzaaaar")
         if self.replace is True:
             #If the table should be replaced, drop it and recreate it.
-            df.to_sql(tablename, self.engine, None, internal_ref[0], 'replace', index = False)
+            df.to_sql(tablename, self.engine, None, internal_ref[0], 'replace', index = False, dtype = new_dtypes)
         elif self.replace is False:
             #We need to create a new table and leave the original untouched
             df.to_sql(new_name, self.engine, None, internal_ref[0], 'fail', index = False)
@@ -351,7 +412,7 @@ class TableTransformer:
 
 
 
-    def discretizise_using_equal_width(self, tablename, attribute, new_name=""):
+    def discretize_using_equal_width(self, tablename, attribute, new_name=""):
         """Method that calulates the bins for an equi-distant discretizisation and performs it"""
         internal_ref = self.get_internal_reference(tablename)
         sql_query = "SELECT * FROM \"{}\".\"{}\"".format(*internal_ref)
@@ -395,7 +456,7 @@ class TableTransformer:
             df.to_sql(new_name, self.engine, None, internal_ref[0], 'fail', index = False)
 
 
-    def discretizise_using_equal_frequency(self, tablename, attribute, new_name=""):
+    def discretize_using_equal_frequency(self, tablename, attribute, new_name=""):
         """Method that calulates the bins for an equi-frequent discretizisation and performs it"""
         #The initial steps are similar to equi-distant discretizisation
         internal_ref = self.get_internal_reference(tablename)
@@ -446,7 +507,7 @@ class TableTransformer:
             df.to_sql(new_name, self.engine, None, internal_ref[0], 'fail', index = False)
 
 
-    def discretizise_using_custom_ranges(self, tablename, attribute, ranges, exclude_right=True, new_name=""):
+    def discretize_using_custom_ranges(self, tablename, attribute, ranges, exclude_right=True, new_name=""):
         """Method that discretizises given a a list representing the bins.
 
         Parameters:
@@ -604,7 +665,6 @@ class TableTransformer:
 if __name__ == '__main__':
     connection_string = "dbname='{}' user='{}' host='{}' password='{}'".format(*(DatabaseConfiguration().get_packed_values()))
     db_connection = psycopg2.connect(connection_string)
-    tt = TableTransformer(1, db_connection, None)
-    tt.change_attribute_type('LAIO', 'random', 'VARCHAR(255)')
-    #tt.regex_find_and_replace('LAIO', 'random', 'aba\\', '25')
-    tt.find_and_replace('LAIO', 'random', '8', 'acht', False, False)
+    engine = DatabaseConfiguration().get_engine()
+    tt = TableTransformer(6, db_connection, engine)
+    tt.one_hot_encode('workingtable', 'first_name')
