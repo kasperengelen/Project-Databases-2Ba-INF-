@@ -197,7 +197,7 @@ class FillNullsMedian(FlaskForm):
     # ENDMETHOD
 # ENDCLASS
 
-class FillNullCustomValue(FlaskForm):
+class FillNullsCustomValue(FlaskForm):
     """Form to fill all NULL values with custom value."""
     select_attr = SelectField('Attribute', choices=[])
     replacement = StringField('Replacement', [InputRequired(message="Input is required.")])

@@ -232,7 +232,7 @@ def transform_findreplace(dataset_id, tablename):
 @dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/transform/regexfindreplace', methods=['POST'])
 @require_login
 @require_writeperm
-def transform_findreplace(dataset_id, tablename):
+def transform_findreplaceregex(dataset_id, tablename):
     pass
 # ENDFUNCTION
 
