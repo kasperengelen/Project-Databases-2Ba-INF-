@@ -413,8 +413,11 @@ class TableTransformer:
 
 
     def discretize_using_equal_width(self, tablename, attribute, new_name=""):
-        """Method that calulates the bins for an equi-distant discretizisation and performs it"""
+        """Method that calulates the bins for an equi-distant discretization and performs it"""
         internal_ref = self.get_internal_reference(tablename)
+        attr_type = self.get_attribute_type(tablename, attribute)
+        if attr_type[0] not in ['integer', 'double precision']:
+            raise self.AttrTypeError("Normalization failed due attribute not being of numeric type (neither integer or float)")
         sql_query = "SELECT * FROM \"{}\".\"{}\"".format(*internal_ref)
         df = pd.read_sql(sql_query, self.engine)
 
@@ -457,8 +460,12 @@ class TableTransformer:
 
 
     def discretize_using_equal_frequency(self, tablename, attribute, new_name=""):
-        """Method that calulates the bins for an equi-frequent discretizisation and performs it"""
-        #The initial steps are similar to equi-distant discretizisation
+        """Method that calulates the bins for an equi-frequent discretization and performs it"""
+        #The initial steps are similar to equi-distant discretization
+        attr_type = self.get_attribute_type(tablename, attribute)
+        if attr_type[0] not in ['integer', 'double precision']:
+            raise self.AttrTypeError("Normalization failed due attribute not being of numeric type (neither integer or float)")
+        
         internal_ref = self.get_internal_reference(tablename)
         sql_query = "SELECT * FROM \"{}\".\"{}\"".format(*internal_ref)
         df = pd.read_sql(sql_query, self.engine)
@@ -508,13 +515,16 @@ class TableTransformer:
 
 
     def discretize_using_custom_ranges(self, tablename, attribute, ranges, exclude_right=True, new_name=""):
-        """Method that discretizises given a a list representing the bins.
+        """Method that discretizes given a a list representing the bins.
 
         Parameters:
             ranges: A python list that represents the bins that the user has provided
             exclude_right: A boolean indicating whether the rightmost edge should be included
                            True if the rightmost edge is excluded [X - Y[, False if rightmost edge is included ]X - Y]
         """
+        attr_type = self.get_attribute_type(tablename, attribute)
+        if attr_type[0] not in ['integer', 'double precision']:
+            raise self.AttrTypeError("Normalization failed due attribute not being of numeric type (neither integer or float)")
         internal_ref = self.get_internal_reference(tablename)
         sql_query = "SELECT * FROM \"{}\".\"{}\"".format(*internal_ref)
         df = pd.read_sql(sql_query, self.engine)

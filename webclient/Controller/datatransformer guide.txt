@@ -107,7 +107,7 @@ Front-end implementatie is evident.
 --------------------------------------------------------------------------------------
 
 #############################################
-# discretizise_using_equal_width(tablename, attribute, new_name="")
+# discretize_using_equal_width(tablename, attribute, new_name="")
 #############################################
 
 Deze method discretiseert in equi-distant intervallen zoals in een histogram.
@@ -118,7 +118,7 @@ Front-end implementatie is evident.
 --------------------------------------------------------------------------------------
 
 #############################################
-# discretizise_using_equal_frequency(tablename, attribute, new_name="")
+# discretize_using_equal_frequency(tablename, attribute, new_name="")
 #############################################
 
 Deze method discretiseert in equi-frequent intervallen zoals in een histogram.
@@ -129,7 +129,7 @@ Front-end implementatie is evident.
 --------------------------------------------------------------------------------------
 
 #############################################
-# discretizise_using_custom_ranges(tablename, attribute, ranges, exclude_right=True, new_name="")
+# discretize_using_custom_ranges(tablename, attribute, ranges, exclude_right=True, new_name="")
 #############################################
 
 Deze method discretiseert in intervallen die gegeven zijn door de gebruiker. De front-end implementatie is dus niet
@@ -181,7 +181,7 @@ Front-end implementatie is evident.
 -----------------------------------------------------------------------------------------
 
 #############################################
-# fill_nulls_with_custom_value(tablename, attribute, new_name="")
+# fill_nulls_with_custom_value(tablename, attribute, value, new_name="")
 #############################################
 
 Deze method vult alle nulls in een attribute met de gegeven waarde.
