@@ -88,10 +88,16 @@ class FindReplaceForm(FlaskForm):
     select_attr = SelectField('Attribute', choices=[])
     search = StringField('Search', [InputRequired(message="Input is required.")])
     replacement = StringField('Replacement', [InputRequired(message="Input is required.")])
+    exactmatch = BooleanField('Exact match')
+    replace_full_match = BooleanField('Replace the full match')
 
     def fillForm(self, attrs):
         self.select_attr.choices = [(attrname, attrname) for attrname in attrs]
     # ENDMETHOD
+# ENDCLASS
+
+class RegexFindReplace(FlaskForm):
+    pass
 # ENDCLASS
 
 class DeleteAttrForm(FlaskForm):
@@ -131,4 +137,32 @@ class OneHotEncoding(FlaskForm):
     def fillForm(self, attrs):
         self.select_attr.choices = [(attrname, attrname) for attrname in attrs]
     # ENDMETHOD
+# ENDCLASS
+
+class discretizeEqualWidth(FlaskForm):
+    pass
+# ENCLASS
+
+class discretizeEqualFreq(FlaskFrom):
+    pass
+# ENDCLASS
+
+class discretizeCustomRange(FlaskForm):
+    pass
+# ENDCLASS
+
+class deleteOutlier(FlaskForm):
+    pass
+# ENDCLASS
+
+class fillNullsWithMean(FlaskForm):
+    pass
+# ENDCLASS
+
+class fillNullsWithMedian(FlaskForm):
+    pass
+# ENDCLASS
+
+class fillNullCustomValue(FlaskForm):
+    pass
 # ENDCLASS
