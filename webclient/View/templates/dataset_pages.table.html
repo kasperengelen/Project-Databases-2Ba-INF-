@@ -65,7 +65,7 @@
 
 						<!-- Type Conversion -->
 						<form method="post" action="{{ url_for('dataset_pages.transform_typeconversion', dataset_id=dataset_info.setid, tablename=table_name) }}">
-						{{ typeconversion_form.csrf_token }}
+						{{ typeconversion_form.hidden_tag() }}
 						<div class="form-group" style="width: 30%; display: inline-block;">
 							{{render_field(typeconversion_form.select_attr, class_="form-control") }}
 						</div>
@@ -74,21 +74,6 @@
 						</div>
 						<p style="display: inline-block;"><input type="submit" id="typeconversion" class="btn btn-primary" value="Convert Attribute Type"></p>
 						</form>
-						<!-- Type Conversion -->
-
-						<!-- Type Conversion -->
-						<p> TESTFORM </p>
-						<form method="post" action="{{ url_for('dataset_pages.transform_typeconversion', dataset_id=dataset_info.setid, tablename=table_name) }}">
-						{{ testform.csrf_token }}
-						<div class="form-group" style="width: 30%; display: inline-block;">
-							{{render_field(testform.select_attr, class_="form-control") }}
-						</div>
-						<div class="form-group" style="width: 30%; display: inline-block;">
-							{{render_field(testform.new_datatype, class_="form-control") }}
-						</div>
-						<p style="display: inline-block;"><input type="submit" id="typeconversion" class="btn btn-primary" value="Convert Attribute Type"></p>
-						</form>
-						<p> TESTFORM </p>
 						<!-- Type Conversion -->
 
 		      			<!-- Delete Attribute -->
@@ -224,9 +209,11 @@
 	</div>
 
 	<script charset="utf-8" type="text/javascript">
+
 		$(function() {
+
 			var dropdown = {
-				attr: $('#attr'),
+				attribute: $('#attribute'),
 				options: $('#typeOptions')
 			};
 
@@ -234,28 +221,27 @@
 
 			function updateOptions() {
 				var send = {
-					attr: dropdown.attr.val()
+					attribute: dropdown.attribute.val()
 				};
 				dropdown.options.attr('disabled', 'disabled');
 				dropdown.options.empty();
-				$.getJSON("{{ url_for('dataset_pages._get_options', dataset_id=dataset_info.setid, tablename=table_name) }}", send, function(data) {
-					data.forEach(function(item)) {
-						dropdown.options.append(
+				$.getJSON("{{ url_for('dataset_pages._get_options', dataset_id=dataset_info.setid, tablename=table_name, attr=send) }}", send, function(data) {
+					data.forEach(function(item) {
+						dropdown.options.append (
 							$('<option>', {
 								value: item[0],
 								text: item[1]
 							})
 						);
-					}
+					});
 					dropdown.options.removeAttr('disabled');
 				});
 			}
-			dropdown.attr.on('change', function() {
+			$('#attribute').change(function() {
 				updateOptions();
 			});
 		});
-	</script>
 
-	
+	</script>
 
 {% endblock %}

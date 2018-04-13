@@ -120,7 +120,7 @@ class TableViewer:
         
 
 
-    def render_table(self, page_nr, nr_rows, show_types=False):
+    def render_table(self, page_nr, nr_rows, show_types=True):
         """This method returns a html table representing the page of the SQL table.
 
         Parameters:

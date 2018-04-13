@@ -60,7 +60,26 @@ class DownloadForm(FlaskForm):
     delimiter = StringField('Delimiter', [InputRequired('Input is required.'), Length(min=1, max=1)])
     quotechar = StringField('Qoute character', [InputRequired('Input is required.'), Length(min=1, max=1)])
     nullrep = StringField('NULL representation', [InputRequired('Input is required.'), Length(min=1, max=10)])
+
 # ENDCLASS
+
+class JoinForm(FlaskForm):
+    '''Test Form for Dynamic Fields'''
+    tablename1 = SelectField('First Table', choices=[], id='tablename1')
+    attribute1 = SelectField('First Table Attribute', choices=[], id='attribute1')
+    tablename2 = SelectField('Second Table', choices=[], id='tablename2')
+    attribute2 = SelectField('Second Table Attribute', choices=[], id='attribute2')
+    newname = StringField('New Table Name', [InputRequired(message="Input is required.")])
+
+    def fillForm(self, tables):
+        self.tablename1.choices = [(table, table) for table in tables]
+        self.attribute1.choices = []
+        self.tablename2.choices = [(table, table) for table in tables]
+        self.attribute2.choices = []
+    # ENDMETHOD
+# ENDCLASS
+
+
 
 ################################################################# TRANSFORMATION FORMS #################################################################
 
@@ -85,26 +104,15 @@ class DeleteAttrForm(FlaskForm):
 # ENDCLASS
 
 class DataTypeTransform(FlaskForm):
-    """Form to change the datatype of a table attribute."""
-
-    select_attr = SelectField('Attribute', choices=[])
-    new_datatype = SelectField('New datatype', choices=[])
-
-    def fillForm(self, attrs):
-        self.select_attr.choices = [(attrname, attrname) for attrname in attrs]
-        self.new_datatype.choices = [(typename, typename) for typename in ['VARCHAR(255)', 'CHAR(255)', 'INTEGER', 'FLOAT', 'DATE', 'TIME', 'TIMESTAMP']]
-    # ENDMETHOD
-# ENDCLASS
-
-class TypeConversionTestForm(FlaskForm):
     '''Test Form for Dynamic Fields'''
-    select_attr = SelectField('Attribute', choices=[], id='attr')
+    select_attr = SelectField('Attribute', choices=[], id='attribute')
     new_datatype = SelectField('New datatype', choices=[], id='typeOptions')
 
-    def fillForm(self, attrs):
+    def fillForm(self, attrs, datatypes):
         self.select_attr.choices = [(attrname, attrname) for attrname in attrs]
-        self.new_datatype.choices = [(typename, typename) for typename in ['VARCHAR(255)', 'CHAR(255)', 'INTEGER', 'FLOAT', 'DATE', 'TIME', 'TIMESTAMP']]
-
+        self.new_datatype.choices = [(datatype, datatype) for datatype in datatypes]
+    # ENDMETHOD
+# ENDCLASS
 
 class NormalizeZScore(FlaskForm):
     """Form to normalize an attribute by it's z-score."""
