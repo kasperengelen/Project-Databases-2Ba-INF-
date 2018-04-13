@@ -6,7 +6,9 @@ from utils import require_adminperm, require_writeperm, require_readperm
 from DatasetInfo import DatasetInfo
 from DatasetManager import DatasetManager
 from UserManager import UserManager
-from dataset_forms import FindReplaceForm, DeleteAttrForm, DatasetForm, AddUserForm, RemoveUserForm, DatasetListEntryForm, TableUploadForm, DownloadForm, DataTypeTransform, NormalizeZScore, OneHotEncoding, JoinForm
+from dataset_forms import FindReplaceForm, DeleteAttrForm, DatasetForm, AddUserForm, RemoveUserForm, DatasetListEntryForm, TableUploadForm
+from dataset_forms import DownloadForm, DataTypeTransform, NormalizeZScore, OneHotEncoding, JoinForm, RegexFindReplace, DiscretizeEqualWidth
+from dataset_forms import DiscretizeEqualFreq, DiscretizeCustomRange, DeleteOutlier, FillNullsMean, FillNullsMedian, FillNullsCustomValue
 from TableViewer import TableViewer
 from werkzeug.utils import secure_filename
 import os
@@ -31,12 +33,14 @@ def view_dataset_home(dataset_id):
     table_list = dataset.getTableNames()
 
     upload_form = TableUploadForm()
-    joinform = JoinForm()
-    joinform.fillForm(table_list)
 
     perm_type = dataset.getPermForUserID(session['userdata']['userid'])
 
-    return render_template('dataset_pages.home.html', dataset_info = dataset_info, table_list = table_list, form = upload_form, join_form=joinform, perm_type=perm_type, downloadform = DownloadForm())
+    return render_template('dataset_pages.home.html', dataset_info = dataset_info, 
+                                                      table_list = table_list,
+                                                      uploadform = upload_form, 
+                                                      perm_type=perm_type, 
+                                                      downloadform = DownloadForm())
 # ENDFUNCTION
 
 @dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>', defaults = {'page_nr': 1})
@@ -73,9 +77,19 @@ def view_dataset_table(dataset_id, tablename, page_nr):
     typeconversion_form = DataTypeTransform()
     onehotencodingform = OneHotEncoding()
     zscoreform = NormalizeZScore()
+    regexfindreplace_form = RegexFindReplace()
+    discretizeWidth_form = DiscretizeEqualWidth()
+    discretizeFreq_form = DiscretizeEqualFreq()
+    discretizeCustom_form = DiscretizeCustomRange()
+    deleteoutlier_form = DeleteOutlier()
+    fillnullmean_form = FillNullsMean()
+    fillnullmedian_form = FillNullsMedian()
+    fillnullcustom_form = FillNullsCustomValue()
+
+    # fill forms with data
     findrepl_form.fillForm(attrs)
     delete_form.fillForm(attrs)
-    typeconversion_form.fillForm(attrs)
+    typeconversion_form.fillForm(attrs, [])
     onehotencodingform.fillForm(attrs)
     zscoreform.fillForm(attrs)
 
@@ -111,12 +125,47 @@ def view_dataset_table(dataset_id, tablename, page_nr):
                                                 typeconversion_form = typeconversion_form,
                                                 onehotencodingform = onehotencodingform,
                                                 zscoreform = zscoreform,
+                                                regexfindreplace_form = regexfindreplace_form,
+                                                discretizeWidth_form = discretizeWidth_form,
+                                                discretizeFreq_form = discretizeFreq_form,
+                                                discretizeCustom_form = discretizeCustom_form,
+                                                deleteoutlier_form = deleteoutlier_form,
+                                                fillnullmean_form = fillnullmean_form,
+                                                fillnullmedian_form = fillnullmedian_form,
+                                                fillnullcustom_form = fillnullcustom_form,
                                                 perm_type = perm_type,
                                                 current_page=page_nr,
                                                 colstats=colstats)
 # ENDFUNCTION
 
-@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/deleteattr', methods=['POST'])
+################ TODO !!!!! ##############
+@dataset_pages.route('/dataset/<int:dataset_id>/jointables', methods=['POST'])
+@require_login
+@require_writeperm
+def transform_join_tables(dataset_id):
+    """Callback for joining tables"""
+
+    if not DatasetManager.existsID(dataset_id):
+        abort(404)
+
+    dataset = DatasetManager.getDataset(dataset_id)
+
+    form = JoinForm(request.form)
+    form.fillForm(dataset.getTableNames())
+
+    if not form.validate():
+        flash(message="Invalid form.", category="error")
+        return redirect(url_for('dataset_pages.view_dataset_home', dataset_id=dataset_id))
+
+    tt = dataset.getTableTransformer(tablename)
+
+    tt.join_tables(form.tablename1.data, form.tablename2.data, form.attribute1.data, form.attribute2.data, form.newname.data)
+    flash(message="Tables joined", category="success")
+
+    return redirect(url_for('dataset_pages.view_dataset_home', dataset_id=dataset_id, tablename=tablename))
+################ TODO !!!!! ##############
+
+@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/transform/deleteattr', methods=['POST'])
 @require_login
 @require_writeperm
 def transform_deleteattr(dataset_id, tablename):
@@ -147,7 +196,7 @@ def transform_deleteattr(dataset_id, tablename):
     return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 # ENDFUNCTION
 
-@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/findreplace', methods=['POST'])
+@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/transform/findreplace', methods=['POST'])
 @require_login
 @require_writeperm
 def transform_findreplace(dataset_id, tablename):
@@ -173,14 +222,21 @@ def transform_findreplace(dataset_id, tablename):
     tt = dataset.getTableTransformer(tablename)
 
     try:
-        tt.find_and_replace(tablename, form.select_attr.data, form.search.data, form.replacement.data)
+        tt.find_and_replace(tablename, form.select_attr.data, form.search.data, form.replacement.data, form.exactmatch.data, form.replace_full_match.data)
     except:
         flash(message="No matches found.", category="error")
 
     return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 # ENDFUNCTION
 
-@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/typeconversion', methods = ['POST'])
+@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/transform/regexfindreplace', methods=['POST'])
+@require_login
+@require_writeperm
+def transform_findreplaceregex(dataset_id, tablename):
+    pass
+# ENDFUNCTION
+
+@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/transform/typeconversion', methods = ['POST'])
 @require_login
 @require_writeperm
 def transform_typeconversion(dataset_id, tablename):
@@ -198,27 +254,26 @@ def transform_typeconversion(dataset_id, tablename):
     tt = dataset.getTableTransformer(tablename)
 
     form = DataTypeTransform(request.form)
-    form.fillForm(tv.get_attributes())
+    form.fillForm(tv.get_attributes(), tt.get_conversion_options(tablename, form.select_attr.data))
+
 
     if not form.validate():
         flash(message="Invalid form.", category="error")
         return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 
-    print("type", tt.get_attribute_type(tablename, form.select_attr.data))
-
     if not form.new_datatype.data in tt.get_conversion_options(tablename, form.select_attr.data):
         flash(message="Selected datatype not compatible with the selected attribute.", category="error")
     else:
-        try:
-            tt.change_attribute_type(tablename, form.select_attr.data, form.new_datatype.data)
-            flash(message="Attribute type changed.", category="success")
-        except:
-            flash(message="An error occurred.", category="error")
+        #try:
+        tt.change_attribute_type(tablename, form.select_attr.data, form.new_datatype.data)
+        flash(message="Attribute type changed.", category="success")
+        #except Exception:
+        #    flash(message="An error occurred.", category="error")
 
     return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 # ENDFUNCTION
 
-@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/onehotencoding', methods = ['POST'])
+@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/transform/onehotencoding', methods = ['POST'])
 @require_login
 @require_writeperm
 def transform_onehotencoding(dataset_id, tablename):
@@ -251,7 +306,7 @@ def transform_onehotencoding(dataset_id, tablename):
     return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 # ENDFUNCTION
 
-@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/zscorenormalisation', methods = ['POST'])
+@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/transform/zscorenormalisation', methods = ['POST'])
 @require_login
 @require_writeperm
 def transform_zscorenormalisation(dataset_id, tablename):
@@ -282,6 +337,55 @@ def transform_zscorenormalisation(dataset_id, tablename):
         flash(message="An error occurred.", category="error")
 
     return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
+# ENDFUNCTION
+
+@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/transform/discretize/equalwidth', methods = ['POST'])
+@require_login
+@require_writeperm
+def transform_discretizeEqualWidth():
+    pass
+# ENDFUNCTION
+
+@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/transform/discretize/equalfreq', methods = ['POST'])
+@require_login
+@require_writeperm
+def transform_discretizeEqualFreq():
+    pass
+# ENDFUNCTION
+
+@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/transform/discretize/customrange', methods = ['POST'])
+@require_login
+@require_writeperm
+def transform_discretizeCustomRange():
+    pass
+# ENDFUNCTION
+
+@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/transform/delete_outlier', methods = ['POST'])
+@require_login
+@require_writeperm
+def transform_deleteOutlier():
+    pass
+# ENDFUNCTION
+
+@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/transform/fill_null/mean', methods = ['POST'])
+@require_login
+@require_writeperm
+def transform_fillNullsMean():
+    pass
+# ENDFUNCTION
+
+@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/transform/fill_null/median', methods = ['POST'])
+@require_login
+@require_writeperm
+def transform_fillNullsMedian():
+    pass
+# ENDFUNCTION
+
+@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/transform/fill_null/custom', methods = ['POST'])
+@require_login
+@require_writeperm
+def transform_fillNullsCustomValue():
+    pass
 # ENDFUNCTION
 
 @dataset_pages.route('/dataset/create', methods=['GET', 'POST'])
@@ -503,8 +607,6 @@ def delete(dataset_id):
     return redirect(url_for('dataset_pages.list_dataset'))
 # ENDFUNCTION
 
-
-
 @dataset_pages.route('/dataset/<int:dataset_id>/upload', methods=['POST'])
 @require_login
 @require_writeperm
@@ -586,7 +688,6 @@ def download(dataset_id, tablename):
     form = DownloadForm(request.args)
 
     if not form.validate():
-        print(form.errors)
         flash(message="Invalid parameters.", category="error")
         return redirect(url_for('dataset_pages.view_dataset_home', dataset_id=dataset_id))
 
@@ -638,8 +739,6 @@ def _get_options(dataset_id, tablename):
     dataset = DatasetManager.getDataset(dataset_id)
     tt = dataset.getTableTransformer(tablename)
 
-    print(attr)
-
     options = [(option, option) for option in tt.get_conversion_options(tablename, attribute=attr)]
     return jsonify(options)
 
@@ -657,7 +756,6 @@ def _get_attr1_options(dataset_id):
     options = [(option, option) for option in tv.get_attributes()]
 
     return jsonify(options)
-
 # ENDFUNCTION
 
 @dataset_pages.route('/dataset/<int:dataset_id>/_get_attr2_options')
@@ -670,9 +768,9 @@ def _get_attr2_options(dataset_id):
     tv = dataset.getTableViewer(info)
 
     options = [(option, option) for option in tv.get_attributes()]
+    options.insert(0, ('', ''))
 
     return jsonify(options)
-
 # ENDFUNCTION
 
 @dataset_pages.route('/dataset/<int:dataset_id>/_get_table2_options')
@@ -690,6 +788,4 @@ def _get_table2_options(dataset_id):
     options.insert(0, ('', ''))
 
     return jsonify(options)
-
 # ENDFUNCTION
-

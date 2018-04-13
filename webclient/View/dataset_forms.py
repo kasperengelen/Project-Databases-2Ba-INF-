@@ -69,6 +69,7 @@ class JoinForm(FlaskForm):
     attribute1 = SelectField('First Table Attribute', choices=[], id='attribute1')
     tablename2 = SelectField('Second Table', choices=[], id='tablename2')
     attribute2 = SelectField('Second Table Attribute', choices=[], id='attribute2')
+    newname = StringField('New Table Name', [InputRequired(message="Input is required.")])
 
     def fillForm(self, tables):
         self.tablename1.choices = [(table, table) for table in tables]
@@ -87,6 +88,20 @@ class FindReplaceForm(FlaskForm):
     select_attr = SelectField('Attribute', choices=[])
     search = StringField('Search', [InputRequired(message="Input is required.")])
     replacement = StringField('Replacement', [InputRequired(message="Input is required.")])
+    exactmatch = BooleanField('Exact match', default=True)
+    replace_full_match = BooleanField('Replace the full match', default=True)
+
+    def fillForm(self, attrs):
+        self.select_attr.choices = [(attrname, attrname) for attrname in attrs]
+    # ENDMETHOD
+# ENDCLASS
+
+class RegexFindReplace(FlaskForm):
+    """Form for the regex find and replace transformation."""
+    select_attr = SelectField('Attribute', choises=[])
+    regex = StringField('Search regex', [InputRequired(message="Input is required.")])
+    replacement = StringField('Replacement', [InputRequired(message="Input is required.")])
+    case_sens = BooleanField('Case sensitive', [InputRequired(message="Input is required.")], default=False)
 
     def fillForm(self, attrs):
         self.select_attr.choices = [(attrname, attrname) for attrname in attrs]
@@ -103,19 +118,18 @@ class DeleteAttrForm(FlaskForm):
 # ENDCLASS
 
 class DataTypeTransform(FlaskForm):
-    '''Test Form for Dynamic Fields'''
+    """Form for datatype conversion transformation."""
     select_attr = SelectField('Attribute', choices=[], id='attribute')
     new_datatype = SelectField('New datatype', choices=[], id='typeOptions')
 
-    def fillForm(self, attrs):
+    def fillForm(self, attrs, datatypes):
         self.select_attr.choices = [(attrname, attrname) for attrname in attrs]
-        self.new_datatype.choices = []
+        self.new_datatype.choices = [(datatype, datatype) for datatype in datatypes]
     # ENDMETHOD
 # ENDCLASS
 
 class NormalizeZScore(FlaskForm):
     """Form to normalize an attribute by it's z-score."""
-
     select_attr = SelectField('Attribute', choices=[])
 
     def fillForm(self, attrs):
@@ -126,6 +140,67 @@ class NormalizeZScore(FlaskForm):
 class OneHotEncoding(FlaskForm):
     """Form to perform the one-hot-encoding transformation."""
     select_attr = SelectField('Attribute', choices=[])
+
+    def fillForm(self, attrs):
+        self.select_attr.choices = [(attrname, attrname) for attrname in attrs]
+    # ENDMETHOD
+# ENDCLASS
+
+class DiscretizeEqualWidth(FlaskForm):
+    """Form to discretize values into equidistant intervals."""
+    select_attr = SelectField('Attribute', choices=[])
+
+    def fillForm(self, attrs):
+        self.select_attr.choices = [(attrname, attrname) for attrname in attrs]
+    # ENDMETHOD
+# ENDCLASS
+
+class DiscretizeEqualFreq(FlaskForm):
+    """Form to discretize values into equifrequent intervals."""
+    select_attr = SelectField('Attribute', choices=[])
+
+    def fillForm(self, attrs):
+        self.select_attr.choices = [(attrname, attrname) for attrname in attrs]
+    # ENDMETHOD
+# ENDCLASS
+
+class DiscretizeCustomRange(FlaskForm):
+    pass
+# ENDCLASS
+
+class DeleteOutlier(FlaskForm):
+    """Form to replace outlier values with NULL."""
+    select_attr = SelectField('Attribute', choices=[])
+    select_comparison = SelectField('Larger/Smaller', choices=[(True, 'Larger'), (False, 'Smaller')])
+    value = StringField('Value', [InputRequired(message="Input is required.")])
+    
+    def fillForm(self, attrs):
+        self.select_attr.choices = [(attrname, attrname) for attrname in attrs]
+    # ENDMETHOD
+# ENDCLASS
+
+class FillNullsMean(FlaskForm):
+    """Form to fill all NULL values with the mean value."""
+    select_attr = SelectField('Attribute', choices=[])
+
+    def fillForm(self, attrs):
+        self.select_attr.choices = [(attrname, attrname) for attrname in attrs]
+    # ENDMETHOD
+# ENDCLASS
+
+class FillNullsMedian(FlaskForm):
+    """Form to fill all NULL values with the median value."""
+    select_attr = SelectField('Attribute', choices=[])
+
+    def fillForm(self, attrs):
+        self.select_attr.choices = [(attrname, attrname) for attrname in attrs]
+    # ENDMETHOD
+# ENDCLASS
+
+class FillNullsCustomValue(FlaskForm):
+    """Form to fill all NULL values with custom value."""
+    select_attr = SelectField('Attribute', choices=[])
+    replacement = StringField('Replacement', [InputRequired(message="Input is required.")])
 
     def fillForm(self, attrs):
         self.select_attr.choices = [(attrname, attrname) for attrname in attrs]

@@ -13,13 +13,17 @@ DataTransformer(userid, setid, db_connection, engine, False) => Zal een nieuwe t
 
 ----------------------------------------------------------------------------------
 
-delete_attribute(tablename, attribute, new_name=""):
+#############################################
+# delete_attribute(tablename, attribute, new_name=""):
+#############################################
 (REEDS GEÏMPLEMENTEERD EN VANZELFSPREKEND)
 
 
 -----------------------------------------------------------------------------------
 
-find_and_replace(tablename, attribute, value, replacement, exact=True, replace_all=True, new_name="")
+#############################################
+# find_and_replace(tablename, attribute, value, replacement, exact=True, replace_all=True, new_name="")
+#############################################
 
 (AANGEPAST!!!)
 
@@ -34,8 +38,9 @@ replace_all is een boolean om de replace behaviour in het gevan van een substrin
 	False zal enkel de substring vervangen dus find and replace ("appel", "kiwi") zal "appelboom" vervangen door "kiwiboom"
 
 ------------------------------------------------------------------------------------
-
-regex_find_and_replace(self, tablename, attribute, regex, replacement, case_sens=False, new_name="")
+#############################################
+# regex_find_and_replace(self, tablename, attribute, regex, replacement, case_sens=False, new_name="")
+#############################################
 
 Redelijk gelijkaardig aan find_and_replace
 
@@ -49,14 +54,18 @@ case_sens is een boolean die de optie geeft om case sensitive te werken of niet.
 
 ------------------------------------------------------------------------------------
 
-get_conversion_options(self, tablename, attribute):
+#############################################
+# get_conversion_options(self, tablename, attribute):
+#############################################
 
 Deze method returnt een lijst van alle mogelijke conversies voor een attribuut dat ondersteunt wordt door
 DataTransformer. De parameters zijn vrij duidelijk.
 
 ------------------------------------------------------------------------------------
 
-change_attribute_type(tablename, attribute, to_type, data_format="", new_name=""):
+#############################################
+# change_attribute_type(tablename, attribute, to_type, data_format="", new_name=""):
+#############################################
 
 Deze method converteert een attribuut naar een andere type.
 setname, tablename, attribute zijn van vanzelfsprekend. to_type is een string die de POSTGRES type accepteert.
@@ -74,7 +83,9 @@ en de conversie uitvoeren.
 
 -------------------------------------------------------------------------------------
 
-one_hot_encode(tablename, attribute, new_name="")
+#############################################
+# one_hot_encode(tablename, attribute, new_name="")
+#############################################
 
 Deze method voert one-hot-encoding uit op een table.
 De parameters zijn vanzelfsprekend. new_name enkel assignen
@@ -83,7 +94,9 @@ Front-end implementatie is evident.
 
 --------------------------------------------------------------------------------------
 
-normalize_using_zscore(tablename, attribute, new_name="")
+#############################################
+# normalize_using_zscore(tablename, attribute, new_name="")
+#############################################
 
 Deze method normaliseert alle waarde van een kolom in range [0, 1].
 Dit werkt alleen maar op numerieke waardes. Een call op een niet numerieke waarde raiset een custom
@@ -93,7 +106,9 @@ Front-end implementatie is evident.
 
 --------------------------------------------------------------------------------------
 
-discretizise_using_equal_width(tablename, attribute, new_name="")
+#############################################
+# discretize_using_equal_width(tablename, attribute, new_name="")
+#############################################
 
 Deze method discretiseert in equi-distant intervallen zoals in een histogram.
 Dit werkt alleen maar op numerieke waardes. Een call op een niet numerieke waarde raiset een custom
@@ -102,7 +117,9 @@ Front-end implementatie is evident.
 
 --------------------------------------------------------------------------------------
 
-discretizise_using_equal_frequency(tablename, attribute, new_name="")
+#############################################
+# discretize_using_equal_frequency(tablename, attribute, new_name="")
+#############################################
 
 Deze method discretiseert in equi-frequent intervallen zoals in een histogram.
 Dit werkt alleen maar op numerieke waardes. Een call op een niet numerieke waarde raiset een custom
@@ -111,7 +128,9 @@ Front-end implementatie is evident.
 
 --------------------------------------------------------------------------------------
 
-discretizise_using_custom_ranges(tablename, attribute, ranges, exclude_right=True, new_name="")
+#############################################
+# discretize_using_custom_ranges(tablename, attribute, ranges, exclude_right=True, new_name="")
+#############################################
 
 Deze method discretiseert in intervallen die gegeven zijn door de gebruiker. De front-end implementatie is dus niet
 evident. Er moet vanuit de front-end op een of andere manier de mogelijkheid gegeven worden om de gebruiker een lijst
@@ -126,7 +145,9 @@ True geeft intervallen als het eerste voorbeeld en False geeft intervallen als h
 
 ---------------------------------------------------------------------------------------
 
-delete_outlier(self, tablename, attribute, larger, value, new_name="")
+#############################################
+# delete_outlier(self, tablename, attribute, larger, value, new_name="")
+#############################################
 
 Deze method zet outliers op null. Deze keuze werd tactisch gemaakt omdat dan de gebruiker
 via andere methods (die later beschreven worden) die null values kunnen vervangen door
@@ -140,7 +161,9 @@ Value is natuurlijk de waarde die als comparison gebruikt wordt om de outliers t
 
 ----------------------------------------------------------------------------------------
 
-fill_nulls_with_mean(tablename, attribute, new_name="")
+#############################################
+# fill_nulls_with_mean(tablename, attribute, new_name="")
+#############################################
 
 Deze method vult alle nulls in een attribute met het gemiddelde.
 Front-end implementatie is evident.
@@ -148,14 +171,18 @@ Front-end implementatie is evident.
 
 -----------------------------------------------------------------------------------------
 
-fill_nulls_with_median(tablename, attribute, new_name="")
+#############################################
+# fill_nulls_with_median(tablename, attribute, new_name="")
+#############################################
 
 Deze method vult alle nulls in een attribute met de mediaan.
 Front-end implementatie is evident.
 
 -----------------------------------------------------------------------------------------
 
-fill_nulls_with_custom_value(tablename, attribute, new_name="")
+#############################################
+# fill_nulls_with_custom_value(tablename, attribute, value, new_name="")
+#############################################
 
 Deze method vult alle nulls in een attribute met de gegeven waarde.
 Front-end implementatie is evident.

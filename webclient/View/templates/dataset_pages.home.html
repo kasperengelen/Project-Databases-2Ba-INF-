@@ -38,13 +38,12 @@
 		        		{% from "includes/_formhelpers.html" import render_field %}
 						<form method="post" enctype="multipart/form-data" action="{{ url_for('dataset_pages.upload', 
 						dataset_id=dataset_info.setid) }}">
-							{{ form.hidden_tag() }}
+							{{ uploadform.hidden_tag() }}
 							<div class="form-group" style="width: 50%;">
-	                 			{{render_field(form.data_file, class_="form-control")}}  
+	                 			{{render_field(uploadform.data_file, class_="form-control")}}  
 	                		</div>
-	                		<p style="display: inline-block;">Column names included? (Only CSV)     </p>
-	                		<div class="form-group" style="display: inline-block;">
-	                			{{ form.columnnames_included }}
+                            <div class="form-group" style="width: 50%;">
+                                {{render_field(uploadform.columnnames_included, class_="checkbox-inline")}}  
 	                		</div>
 							<p><input type="submit" class="btn btn-primary" value="Upload File"></p>
 						</form>
@@ -60,25 +59,8 @@
 		      	</div>
 		      	<div id="join" class="panel-collapse collapse">
 		        	<div class="panel-body">	
-		        		{% from "includes/_formhelpers.html" import render_field %}
-		      			<!-- Join Form -->
-						<form method="post" action="{{ url_for('dataset_pages.transform_findreplace', dataset_id=dataset_info.setid, tablename=table_name) }}">
-						{{ join_form.csrf_token }}
-						<div class="form-group" style="width: 20%; display: inline-block;">
-							{{render_field(join_form.tablename1, class_="form-control")}}
-						</div>
-						<div class="form-group" style="width: 20%; display: inline-block;">
-							{{render_field(join_form.attribute1, class_="form-control", placeholder="Searchterm")}}
-						</div>
-						<div class="form-group" style="width: 20%; display: inline-block;">
-							{{render_field(join_form.tablename2, class_="form-control", placeholder="Searchterm")}}
-						</div>
-						<div class="form-group" style="width: 20%; display: inline-block;">
-							{{render_field(join_form.attribute2, class_="form-control", placeholder="Searchterm")}}
-						</div>
-						<p style="display: inline-block;"><input type="submit" id="join" class="btn btn-primary" value="Join Tables"></p>
-						</form>
-						<!-- Join Form -->
+		        		<!-- JOIN FORM -->
+
 		        	</div>
 	     		</div>
 	    	</div>
@@ -182,7 +164,6 @@
 				var send = {
 					tablename1: dropdown.tablename1.val()
 				};
-				dropdown.tablename2.attr('disabled', 'disabled');
 				dropdown.tablename2.empty();
 				$.getJSON("{{ url_for('dataset_pages._get_table2_options', dataset_id=dataset_info.setid, tablename=table_name, table=send) }}", send, function(data) {
 					data.forEach(function(item) {
@@ -193,7 +174,6 @@
 							})
 						);
 					});
-					dropdown.tablename2.removeAttr('disabled');
 				});
 			}
 
@@ -219,7 +199,6 @@
 			$('#tablename1').change(function() {
 				updateAttr1();
 				updateTable2();
-				updateAttr2();
 			});
 			$('#tablename2').change(function() {
 				updateAttr2();

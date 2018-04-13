@@ -1,9 +1,11 @@
 import unittest
 import sys, os
 sys.path.append(os.path.join(sys.path[0],'..', 'Controller'))
+sys.path.append(os.path.join(sys.path[0],'..', 'Model'))
 import psycopg2
 from sqlalchemy import create_engine
 import TableViewer as tv
+from DatabaseConfiguration import DatabaseConfiguration
 
 
 
@@ -17,8 +19,8 @@ class TestTableViewer(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         #Make all the connections and objects needed
-        cls.db_connection = psycopg2.connect("dbname='hmtbpols' user='hmtbpols' host='baasu.db.elephantsql.com' password='yIje-2zT-zF0YyJywkAy57h6ob3ZnoV2'")
-        cls.engine = create_engine("postgresql://hmtbpols:yIje-2zT-zF0YyJywkAy57h6ob3ZnoV2@baasu.db.elephantsql.com/hmtbpols")
+        cls.db_connection = DatabaseConfiguration().get_db()
+        cls.engine = DatabaseConfiguration().get_engine()
         cls.test_object = tv.TableViewer('TEST', 'test_table', cls.engine)
 
         cur = cls.db_connection.cursor()
@@ -99,16 +101,16 @@ class TestTableViewer(unittest.TestCase):
         self.test_object.maxrows = 50000
         #Get indices when being on page 1 when displaying 50 rows per page
         indices = self.test_object.get_page_indices(50, 1)
-        self.assertEqual(indices, ['1', '2', '3', '...', '1000'])
+        self.assertEqual(indices, ['1', '2', '3', '4', '...', '1000'])
         #Get indices when being on page 2 when displaying 50 rows per page
         indices = self.test_object.get_page_indices(50, 2)
-        self.assertEqual(indices, ['1', '2', '3', '...', '1000'])
+        self.assertEqual(indices, ['1', '2', '3', '4', '...', '1000'])
         #Get indices when being on page 72 when displaying 50 rows per page
         indices = self.test_object.get_page_indices(50, 72)
-        self.assertEqual(indices, ['1', '...', '72', '73', '74', '...', '1000'])
+        self.assertEqual(indices, ['1', '...', '71', '72', '73', '...', '1000'])
         #Get indices when being on page 997 when displaying 50 rows per page
         indices = self.test_object.get_page_indices(50, 997)
-        self.assertEqual(indices, ['1', '...', '997', '998', '999', '1000'])
+        self.assertEqual(indices, ['1', '...', '996', '997', '998', '...', '1000'])
         #Get indices when being on page 1000 when displaying 50 rows per page
         indices = self.test_object.get_page_indices(50, 997)
         self.assertEqual(indices, ['1', '...', '997', '998', '999', '1000'])

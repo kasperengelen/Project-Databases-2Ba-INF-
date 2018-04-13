@@ -50,7 +50,7 @@ class DatasetInfo:
         
         if not tablename in self.getTableNames():
             raise RuntimeError("Invalid tablename.")
-        return TableViewer(self.setid, tablename, get_sqla_eng())
+        return TableViewer(self.setid, tablename, get_sqla_eng(), get_db())
     # ENDMETHOD
 
     def getTableTransformer(self, tablename):

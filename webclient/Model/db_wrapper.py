@@ -17,6 +17,10 @@ class DBWrapper:
         same cursor object."""
         return self.cur
 
+    def rollback(self):
+        """Perform a rollback on the internal database connection"""
+        self.conn.rollback()
+
     def close(self):
         """Close the connection."""
         self.cur.close()

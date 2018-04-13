@@ -5,8 +5,6 @@ import math
 import re
 import os
 import csv
-from utils import get_db
-import db_wrapper
 from psycopg2 import sql
 import mpld3
 
@@ -24,10 +22,8 @@ class TableViewer:
         self.engine = engine
         self.setid = setid
         self.tablename = tablename
-        self.db_connection = db_wrapper.DBWrapper("projectdb18", "dbadmin", "localhost", "AdminPass123")
+        self.db_connection = db_connection
         self.maxrows = None
-
-
 
     def get_attributes(self):
         """Method that returns a list of all attributes of the table."""
@@ -121,13 +117,13 @@ class TableViewer:
         
 
 
-    def render_table(self, page_nr, nr_rows, show_types=True):
+    def render_table(self, page_nr, nr_rows, show_types=False):
         """This method returns a html table representing the page of the SQL table.
 
         Parameters:
             page_nr: Integer indicating which page we're viewing.
             nr_rows: The number of rows that are being showed per page.
-            show_types: Boolean indicating whether data types should be included in the column header
+            show_types: Boolean indicating whether data types should be included in the column header.
         """
         offset = 0
         offset = (page_nr - 1) * nr_rows
@@ -142,7 +138,7 @@ class TableViewer:
             cur.execute(sql.SQL("SELECT pg_typeof({}) FROM {}.{} LIMIT 1").format(sql.Identifier(string), sql.Identifier(str(self.setid)),
                                                                                   sql.Identifier(self.tablename)))
             sqltype = self.__translate_system_type(cur.fetchone()[0])
-            new_string = string + "(" + sqltype + ")"
+            new_string = string + "<br>(" + sqltype + ")"
             html_table = html_table.replace(string, new_string, 1)
         return html_table
 
@@ -157,8 +153,7 @@ class TableViewer:
 
         with open(filename, 'w') as outfile:
             outcsv = csv.writer(outfile, delimiter=delimiter, quotechar=quotechar)
-            conn = get_db()
-            # conn = db_wrapper.DBWrapper()
+            conn = self.db_connection
 
             conn.cursor().execute("SELECT column_name FROM information_schema.columns WHERE table_schema = '{}' AND table_name = '{}'".format(self.setid, self.tablename))
 
@@ -231,6 +226,7 @@ class TableViewer:
         return self.__aggregate_function(columnname, "AVG")
 
 if __name__ == '__main__':
+    # db_connection = db_wrapper.DBWrapper("projectdb18", "dbadmin", "localhost", "AdminPass123")
     engine = create_engine('postgresql://dbadmin:AdminPass123@localhost/projectdb18')
     tv = TableViewer(1, "Sales(1)", engine)
     tv.show_histogram("Unit_Price", 20)
