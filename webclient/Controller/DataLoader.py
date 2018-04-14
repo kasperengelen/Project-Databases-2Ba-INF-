@@ -141,8 +141,8 @@ class DataLoader:
         self.__make_backup(tablename)
 
     def __dump(self, filename):
-        # check if any tables were created
-        table_count = 0
+        # keep track of tables created for backups
+        table_names = []
 
         with open(filename, 'r') as dump:
             for command in dump.read().strip().split(';'):
@@ -159,9 +159,7 @@ class DataLoader:
                     except psycopg2.ProgrammingError:
                         raise DumpInconsistencyException
 
-                    self.__make_backup(tablename)
-
-                    table_count += 1
+                    table_names.append(tablename)
 
                 elif re.search("INSERT INTO.*", command, re.DOTALL | re.IGNORECASE):
                     tablename = command.split()[2]
@@ -176,8 +174,11 @@ class DataLoader:
                         raise DumpInconsistencyException
 
         # if no tables were created, raise error
-        if table_count == 0:
+        if len(table_names) == 0:
             raise EODException
+        else:
+            for tablename in table_names:
+                self.__make_backup(tablename)
 
     def __unzip(self, filename):
         # unzip the file
