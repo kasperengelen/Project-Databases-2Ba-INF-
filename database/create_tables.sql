@@ -1,3 +1,4 @@
+CREATE SCHEMA DATASET_HISTORY;
 CREATE SCHEMA SYSTEM;
 
 -- Table for keeping track of users
