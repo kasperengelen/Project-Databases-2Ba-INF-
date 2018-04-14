@@ -367,10 +367,11 @@ class TableTransformer:
         if self.replace is True:
             #If the table should be replaced, drop it and recreate it.
             df.to_sql(tablename, self.engine, None, internal_ref[0], 'replace', index = False)
+            print("what's the deal then?!")
         elif self.replace is False:
             #We need to create a new table and leave the original untouched
             df.to_sql(new_name, self.engine, None, internal_ref[0], 'fail', index = False)
-        print("what's the deal then?!")
+        
 
         
     def __calculate_zscore(self, mean, standard_dev, value):

@@ -18,7 +18,8 @@ class TestTableTransformer(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.db_connection = DatabaseConfiguration().get_db()
-        cls.test_object = transformer.TableTransformer('TEST', cls.db_connection, None, True)
+        cls.engine = DatabaseConfiguration().get_engine()
+        cls.test_object = transformer.TableTransformer('TEST', cls.db_connection, cls.engine, True)
         cur = cls.db_connection.cursor()
         cur.execute("CREATE SCHEMA IF NOT EXISTS \"TEST\"")
         cls.db_connection.commit()
@@ -47,8 +48,11 @@ class TestTableTransformer(unittest.TestCase):
             cls.db_connection.commit()
             
             
-        values = [('C-Corp', 1, '08/08/1997'), ('Apple', 10, '01/04/1976'), ('Microsoft', 8, '04/04/1975') , ('Nokia', 3000, '12/05/1865') , ('Samsung', 7, '01/03/1938'),
-                  ('Huawei', 4521, '15/09/1987'), ('Razer', 9000, '01/01/1998')]
+        values = [('C-Corp', 1, '08/08/1997'), ('Apple', 22, '01/04/1976'), ('Microsoft', 8, '04/04/1975') , ('Nokia', 18, '12/05/1865') ,
+                  ('Samsung', 7, '01/03/1938'),('Huawei', 10, '15/09/1987'), ('Razer', 3, '01/01/1998'),
+                  ('Imagine Breakers', 14, '21/09/1996/'), ('Sony', 9, '07/05/1946'), ('Asus', 12, '02/04/1989'),
+                  ('Hewlett-Packard', 5, '01/01/1939'), ('Toshiba', 8,  '01/07/1975'), ('LG Electronics', -3, '01/10/1958'),
+                  ('Nintendo', 21, '23/09/1989'), ('Elevate ltd', 41, '08/08/1997'), ('Dummy', -17, '01/07/1975')]
 
         for v in values:
             cur.execute("INSERT INTO \"TEST\".test_table VALUES(%s, %s, %s)", v)
@@ -91,17 +95,6 @@ class TestTableTransformer(unittest.TestCase):
         self.assertEqual(result[1], 1)
         self.assertEqual(result[2], '08/08/1997')
 
-    def test_get_attribute_type(self):
-        #Test whether the method can correctly return the type of an attribute
-        obj = self.test_object
-        self.assertEqual(obj.get_attribute_type('test_table', 'string')[0], 'character varying')
-        self.assertEqual(obj.get_attribute_type('test_table', 'number')[0],'integer')
-        #Currently fails, so I have to investigate this case.
-        #self.assertEqual(obj.get_attribute_type('test_table', 'garbage')[0], 'character')
-        self.assertEqual(obj.get_attribute_type('test_table', 'fpoint')[0], 'double precision')
-        self.assertEqual(obj.get_attribute_type('test_table', 'raw_time')[0], 'time without time zone')
-        self.assertEqual(obj.get_attribute_type('test_table', 'date_time')[0], 'timestamp without time zone')
-
 
     def test_get_conversion_options(self):
         obj = self.test_object
@@ -113,22 +106,19 @@ class TestTableTransformer(unittest.TestCase):
         self.assertEqual(obj.get_conversion_options('test_table', 'raw_time'), ['CHAR(255)', 'VARCHAR(255)'])
         self.assertEqual(obj.get_conversion_options('test_table', 'date_time'), ['CHAR(255)', 'VARCHAR(255)'])
 
-    def incomplete_test_one_hot_encode(self):
-        """
-        This will be a test for the one hot encoding method. This method will not be included in the tests.
-        It's a temporary placeholder
-        """
-        pass
+        
 
-    def incomplete_test_normalize_using_zscore(self):
-        """
-        This will be a test for the one hot encoding method. This method will not be included in the tests.
-        It's a temporary placeholder
-        """
-        pass
-        
-        
-        
+    def test_get_attribute_type(self):
+        #Test whether the method can correctly return the type of an attribute
+        obj = self.test_object
+        self.assertEqual(obj.get_attribute_type('test_table', 'string')[0], 'character varying')
+        self.assertEqual(obj.get_attribute_type('test_table', 'number')[0],'integer')
+        #Currently fails, so I have to investigate this case.
+        #self.assertEqual(obj.get_attribute_type('test_table', 'garbage')[0], 'character')
+        self.assertEqual(obj.get_attribute_type('test_table', 'fpoint')[0], 'double precision')
+        self.assertEqual(obj.get_attribute_type('test_table', 'raw_time')[0], 'time without time zone')
+        self.assertEqual(obj.get_attribute_type('test_table', 'date_time')[0], 'timestamp without time zone')
+
         
 
     #Test the conversion of numeric types (INTEGER, FLOAT)
@@ -181,6 +171,31 @@ class TestTableTransformer(unittest.TestCase):
         cur.execute("SELECT pg_typeof(number) FROM \"TEST\".test_table")
         result = cur.fetchone()[0]
         self.assertEqual(result, 'integer')
+
+
+
+    def incomplete_test_one_hot_encode(self):
+        cur = self.db_connection.cursor()
+        print("entering")
+        self.test_object.one_hot_encode('test_table', 'string')
+        print("leaving")
+        """
+        print("leaving")
+        query ("SELECT column_name FROM information_schema.columns "
+               "WHERE table_schema = 'TEST' AND table_name =  'test_table'")
+        cur.execute(query)
+        all_columns  = cur.fetchall()
+        print(all_columns)
+        self.assertEqual(1, 1)"""
+
+
+    def incomplete_test_normalize_using_zscore(self):
+        """cur = self.db_connection.cursor()
+        print("entering")
+        self.test_object.one_hot_encode('test_table', 'number')
+        self.assertEqual(1, 1)
+        pass"""
+        
         
         
 
