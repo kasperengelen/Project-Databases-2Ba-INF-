@@ -57,6 +57,11 @@ class DatasetManager:
         get_db().cursor().execute("CREATE SCHEMA \"original_{}\";".format(int(setid)))
         get_db().commit()
 
+        # create the history table
+        get_db().cursor().execute(open("Controller/dataset_history.sql", 'r').read())
+        get_db().cursor().execute("ALTER TABLE DATASET_HISTORY.temp RENAME TO \"{}\"".format(str(setid)))
+        get_db().commit()
+
         return setid
     # ENDMETHOD
 
