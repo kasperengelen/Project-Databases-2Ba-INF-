@@ -150,7 +150,7 @@ class DataLoader:
                 if re.search("CREATE TABLE.*\(.*\)", command, re.DOTALL | re.IGNORECASE):
                     tablename = command.split()[2]
                     # raise error if the table name is not alphanumeric, this is to not cause problems with url's
-                    if tablename.isalnum():
+                    if not tablename.isalnum():
                         raise ValueError("Table names should be alphanumeric")
 
                     self.db_conn.cursor().execute("SET search_path TO {};".format(self.setid))
@@ -166,7 +166,7 @@ class DataLoader:
                 elif re.search("INSERT INTO.*", command, re.DOTALL | re.IGNORECASE):
                     tablename = command.split()[2]
                     # raise error if the table name is not alphanumeric, this is to not cause problems with url's
-                    if tablename.isalnum():
+                    if not tablename.isalnum():
                         raise ValueError("Table names should be alphanumeric")
 
                     self.__make_backup(tablename)
