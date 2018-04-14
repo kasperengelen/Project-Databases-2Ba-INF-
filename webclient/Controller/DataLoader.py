@@ -111,7 +111,7 @@ class DataLoader:
         tablename = os.path.basename(filename.replace(".csv", ""))
 
         # raise error if the table name is not alphanumeric, this is to not cause problems with url's
-        if not tablename.isalnum():
+        if not self.__check_alnum(tablename):
             raise ValueError("Table names should be alphanumeric")
 
         # get a name that is not in use
@@ -150,7 +150,7 @@ class DataLoader:
                 if re.search("CREATE TABLE.*\(.*\)", command, re.DOTALL | re.IGNORECASE):
                     tablename = command.split()[2]
                     # raise error if the table name is not alphanumeric, this is to not cause problems with url's
-                    if not tablename.isalnum():
+                    if not self.__check_alnum(tablename):
                         raise ValueError("Table names should be alphanumeric")
 
                     self.db_conn.cursor().execute("SET search_path TO {};".format(self.setid))
@@ -166,7 +166,7 @@ class DataLoader:
                 elif re.search("INSERT INTO.*", command, re.DOTALL | re.IGNORECASE):
                     tablename = command.split()[2]
                     # raise error if the table name is not alphanumeric, this is to not cause problems with url's
-                    if not tablename.isalnum():
+                    if not self.__check_alnum(tablename):
                         raise ValueError("Table names should be alphanumeric")
 
                     self.__make_backup(tablename)
@@ -209,6 +209,11 @@ class DataLoader:
         self.db_conn.cursor().execute(sql.SQL("SELECT * INTO {} FROM {}.{}").format(sql.Identifier(tablename),
                                                                                     sql.Identifier(str(self.setid)),
                                                                                     sql.Identifier(tablename)))
+
+    def __check_alnum(self, tablename):
+        # isalnum() that also allows underscores
+        tablename.replace('_', 'a')
+        return tablename.isalnum()
 
     def __get_valid_name(self, tablename):
         # create a new tablename if the current one is already in use
