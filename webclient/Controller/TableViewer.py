@@ -1,6 +1,7 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 from sqlalchemy import create_engine
+from db_wrapper import DBWrapper
 import math
 import re
 import os
@@ -172,7 +173,7 @@ class TableViewer:
             # write rows
             outcsv.writerows(rows)
 
-    def show_histogram(self, columnname, bar_nr):
+    def get_numerical_histogram(self, columnname, bar_nr=10):
         sql_query = "SELECT \"{}\" FROM \"{}\".\"{}\"".format(columnname, str(self.setid), self.tablename)
         df = pd.read_sql(sql_query, self.engine)
         fig = plt.figure()
@@ -180,11 +181,39 @@ class TableViewer:
         plt.show()
         return mpld3.fig_to_html(fig)
 
+    def get_frequency_pie_chart(self, columnname):
+        conn = self.db_connection
+
+        # get the frequency of every value
+        conn.cursor().execute(sql.SQL("SELECT {}, COUNT(*) FROM {}.{} GROUP BY {} ORDER BY COUNT(*) DESC,"
+                                      " {}").format(sql.Identifier(columnname), sql.Identifier(str(self.setid)),
+                                                            sql.Identifier(self.tablename),
+                                                            sql.Identifier(columnname),
+                                                            sql.Identifier(columnname)))
+        data = conn.cursor().fetchall()
+
+        # taken from https://stackoverflow.com/questions/6170246/how-do-i-use-matplotlib-autopct
+        def make_autopct(values):
+            def my_autopct(pct):
+                total = sum(values)
+                val = int(round(pct * total / 100.0))
+                return '{p:.1f}%  ({v:d})'.format(p=pct, v=val)
+
+            return my_autopct
+
+        labels = [x[0] for x in data]
+        sizes = [x[1] for x in data]
+        fig, ax = plt.subplots()
+        ax.pie(sizes, labels=labels, autopct=make_autopct(sizes))
+        ax.axis('equal')
+        plt.show()
+        return mpld3.fig_to_html(fig)
+
     def get_most_frequent_value(self, columnname):
         """Return the value that appears most often in the column"""
         conn = self.db_connection
 
-        # get the frequence of every value and select the one that has the highest one
+        # get the frequency of every value and select the one that has the highest one
         conn.cursor().execute(sql.SQL("SELECT {}, COUNT(*) FROM {}.{} GROUP BY {} ORDER BY COUNT(*) DESC,"
                                       " {} LIMIT 1").format(sql.Identifier(columnname), sql.Identifier(str(self.setid)),
                                                             sql.Identifier(self.tablename),
@@ -226,9 +255,9 @@ class TableViewer:
         return self.__aggregate_function(columnname, "AVG")
 
 if __name__ == '__main__':
-    # db_connection = db_wrapper.DBWrapper("projectdb18", "dbadmin", "localhost", "AdminPass123")
+    db_connection = DBWrapper("projectdb18", "dbadmin", "localhost", "AdminPass123")
     engine = create_engine('postgresql://dbadmin:AdminPass123@localhost/projectdb18')
-    tv = TableViewer(1, "Sales(1)", engine)
-    tv.show_histogram("Unit_Price", 20)
+    tv = TableViewer(1, "workingtable", engine, db_connection)
+    tv.get_frequency_pie_chart("age")
     # print(tv.get_page_indices(50, 88))
 
