@@ -98,7 +98,7 @@ class FindReplaceForm(FlaskForm):
 
 class RegexFindReplace(FlaskForm):
     """Form for the regex find and replace transformation."""
-    select_attr = SelectField('Attribute', choises=[])
+    select_attr = SelectField('Attribute', choices=[])
     regex = StringField('Search regex', [InputRequired(message="Input is required.")])
     replacement = StringField('Replacement', [InputRequired(message="Input is required.")])
     case_sens = BooleanField('Case sensitive', [InputRequired(message="Input is required.")], default=False)
