@@ -336,9 +336,16 @@ class TableTransformer:
                     sqla_type = sqlalchemy.types.Float(precision=25, asdecimal=True)
                 elif psql_type[0] == 'integer':
                     sqla_type = sqlalchemy.types.INTEGER()
+                elif psql_type[0] == 'date':
+                    sqla_type = sqlalchemy.types.Date()
+                elif psql_type[0] == 'timestamp without time zone':
+                    sqla_type = sqlalchemy.types.DateTime()
+                elif psql_type[0] == 'time without time zone':
+                    sqla_type = sqlalchemy.types.TIME()
                     
             if sqla_type is None:
-                raise ValueError("Couldn't convert to a value!")
+                error_msg = "Couldn't convert to a value! " + str(psql_type[0]) + " is unknown to the system."
+                raise ValueError(error_msg)
             new_types[elem] = sqla_type
 
         return new_types
@@ -350,17 +357,20 @@ class TableTransformer:
         internal_ref = self.get_internal_reference(tablename)
         sql_query = "SELECT * FROM \"{}\".\"{}\"".format(*internal_ref)
         df = pd.read_sql(sql_query, self.engine)
+        print("the dummies are coming...")
         encoded = pd.get_dummies(df[attribute]) #Perfom one-hot-encoding
+        print("the dummies are here!")
         df = df.drop(attribute, axis=1) #Drop the attribute used for encoding
         df = df.join(encoded) #Join the original attributes with the encoded table
-        new_dtypes = self.__get_simplified_types(tablename, df)
-        #print("zamzaaaar")
+        #new_dtypes = self.__get_simplified_types(tablename, df)
+        print('lmao')
         if self.replace is True:
             #If the table should be replaced, drop it and recreate it.
-            df.to_sql(tablename, self.engine, None, internal_ref[0], 'replace', index = False, dtype = new_dtypes)
+            df.to_sql(tablename, self.engine, None, internal_ref[0], 'replace', index = False)
         elif self.replace is False:
             #We need to create a new table and leave the original untouched
             df.to_sql(new_name, self.engine, None, internal_ref[0], 'fail', index = False)
+        print("what's the deal then?!")
 
         
     def __calculate_zscore(self, mean, standard_dev, value):
