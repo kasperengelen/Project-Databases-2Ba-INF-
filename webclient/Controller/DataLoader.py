@@ -169,7 +169,6 @@ class DataLoader:
                     if not self.__check_alnum(tablename):
                         raise ValueError("Table names should be alphanumeric")
 
-                    self.__make_backup(tablename)
                     self.db_conn.cursor().execute("SET search_path TO {};".format(self.setid))
                     try:
                         self.db_conn.cursor().execute(command.replace("\n", ""))
