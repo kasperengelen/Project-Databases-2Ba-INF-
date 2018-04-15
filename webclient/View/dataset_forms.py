@@ -51,7 +51,7 @@ class DatasetListEntryForm(FlaskForm):
 class TableUploadForm(FlaskForm):
     """Form to upload tables."""
     data_file = FWFileField('File', [FWFileRequired("No file selected."), FilenameCheck("Invalid filename. Only alphanumeric characters and underscore allowed. Only csv, zip, sql and dump files allowed.", "[A-Za-z0-9][A-Za-z0-9_]+\\.(sql|csv|zip|dump)")])
-    columnnames_included = BooleanField('Column names included in files? (CSV only)')
+    columnnames_included = BooleanField('Column names included in files? (CSV only)', default = True)
 # ENDCLASS
 
 class DownloadForm(FlaskForm):
