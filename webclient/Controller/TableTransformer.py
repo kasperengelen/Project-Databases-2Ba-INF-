@@ -46,6 +46,20 @@ class TableTransformer:
         """
 
 
+    def __create_history(self, tablename, attribute, trans_type, parameter, origin=""):
+        """Create a DatasetHistory entry with the given parameters, this function gets called
+        every time a transformation is completed"""
+
+        origin_table = ""
+        if self.replace:
+            origin_table = tablename
+        else:
+            origin_table = origin
+
+        self.db_connection.cursor().execute(sql.SQL("INSERT INTO DATASET_HISTORY.{} VALUES (%s, %s, %s, %s, %s, %s)").format(sql.Identifier(str(self.setid))),
+                                                    [self.setid, tablename, attribute, trans_type, str(parameter), origin_table])
+        self.db_connection.commit()
+
 
     def __integrity_check(self, tablename, setid):
         """Extra option to check whether deleting the attribute will destroy integrity constraints.
@@ -94,6 +108,9 @@ class TableTransformer:
         self.db_connection.cursor().execute(sql.SQL("ALTER TABLE {}.{} DROP COLUMN {}").format(sql.Identifier(internal_ref[0]), sql.Identifier(internal_ref[1]),
                                                                                     sql.Identifier(attribute)))
         self.db_connection.commit()
+
+        # create history entry
+        self.__create_history(tablename, attribute, "delete_attribute", None, new_name)
 
 
     def get_supported_types(self):
@@ -371,6 +388,9 @@ class TableTransformer:
         elif self.replace is False:
             #We need to create a new table and leave the original untouched
             df.to_sql(new_name, self.engine, None, internal_ref[0], 'fail', index = False)
+
+        # create history entry
+        self.__create_history(tablename, attribute, "one_hot_encode", None, new_name)
         
 
         
@@ -420,6 +440,9 @@ class TableTransformer:
             #We need to create a new table and leave the original untouched
             df.to_sql(new_name, self.engine, None, internal_ref[0], 'fail', index = False)
 
+        # create history entry
+        self.__create_history(tablename, attribute, "normalize_using_zscore", None, new_name)
+
 
 
 
@@ -468,6 +491,9 @@ class TableTransformer:
         elif self.replace is False:
             #We need to create a new table and leave the original untouched
             df.to_sql(new_name, self.engine, None, internal_ref[0], 'fail', index = False)
+
+        # create history entry
+        self.__create_history(tablename, attribute, "discretize_using_equal_width", None, new_name)
 
 
     def discretize_using_equal_frequency(self, tablename, attribute, new_name=""):
@@ -523,6 +549,9 @@ class TableTransformer:
         elif self.replace is False:
             #We need to create a new table and leave the original untouched
             df.to_sql(new_name, self.engine, None, internal_ref[0], 'fail', index = False)
+
+        # create history entry
+        self.__create_history(tablename, attribute, "discretize_using_equal_frequency", None, new_name)
 
 
     def discretize_using_custom_ranges(self, tablename, attribute, ranges, exclude_right=True, new_name=""):
@@ -617,6 +646,9 @@ class TableTransformer:
 
         self.__fill_nulls_with_x(attribute, internal_ref, mean)
 
+        # create history entry
+        self.__create_history(tablename, attribute, "fill_nulls_with_mean", None, new_name)
+
 
     def fill_nulls_with_median(self, tablename, attribute, new_name=""):
         """Method that fills null values of an attribute with the median."""
@@ -630,6 +662,9 @@ class TableTransformer:
 
         self.__fill_nulls_with_x(attribute, internal_ref, median)
 
+        # create history entry
+        self.__create_history(tablename, attribute, "fill_nulls_with_median", None, new_name)
+
 
     def fill_nulls_with_custom_value(self, tablename, attribute, value, new_name=""):
         """Method that fills null values of an attribute with a custom value"""
@@ -640,6 +675,9 @@ class TableTransformer:
         #Perhaps do a sanity check here? I'll see later on.
 
         self.__fill_nulls_with_x(attribute, internal_ref, value)
+
+        # create history entry
+        self.__create_history(tablename, attribute, "fill_nulls_with_custom_value", value, new_name)
 
 
     #INCOMPLETE    
@@ -661,6 +699,7 @@ class TableTransformer:
                                                                sql.Identifier(old_name),
                                                                sql.Identifier(new_name)))
         self.db_connection.commit()
+
 
     def join_tables(self, table1, table2, table1_columns, table2_columns, new_table):
         # not complete
