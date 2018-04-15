@@ -127,6 +127,7 @@ class TableTransformer:
         cur.execute(sql.SQL(query), [internal_ref[0], tablename, attribute])
 
         row = cur.fetchone()
+        self.db_connection.commit()
         if row is None: #Nothing fetched? Return None
             return None
         if detailed is False:
@@ -328,7 +329,7 @@ class TableTransformer:
                 elif temp == 'object':
                     sqla_type = sqlalchemy.types.VARCHAR(length=255)
             else:
-                if psql_type[0] == 'character varying':
+                if psql_type[0] == 'character varying' or psql_type[0] == 'text':
                     sqla_type = sqlalchemy.types.VARCHAR(psql_type[1])
                 elif psql_type[0] == 'character':
                     sqla_type = sqlalchemy.types.CHAR(psql_type[1])
@@ -344,7 +345,7 @@ class TableTransformer:
                     sqla_type = sqlalchemy.types.TIME()
                     
             if sqla_type is None:
-                error_msg = "Couldn't convert to a value! " + str(psql_type[0]) + " is unknown to the system."
+                error_msg = "Couldn't convert to a value! " + str(psql_type[0]) + " from " + elem +  " is unknown to the system."
                 raise ValueError(error_msg)
             new_types[elem] = sqla_type
 
@@ -357,20 +358,16 @@ class TableTransformer:
         internal_ref = self.get_internal_reference(tablename)
         sql_query = "SELECT * FROM \"{}\".\"{}\"".format(*internal_ref)
         df = pd.read_sql(sql_query, self.engine)
-        print("the dummies are coming...")
         encoded = pd.get_dummies(df[attribute]) #Perfom one-hot-encoding
-        print("the dummies are here!")
         df = df.drop(attribute, axis=1) #Drop the attribute used for encoding
         df = df.join(encoded) #Join the original attributes with the encoded table
-        #new_dtypes = self.__get_simplified_types(tablename, df)
-        print('lmao')
+        new_dtypes = self.__get_simplified_types(tablename, df)
         if self.replace is True:
             #If the table should be replaced, drop it and recreate it.
-            df.to_sql(tablename, self.engine, None, internal_ref[0], 'replace', index = False)
-            print("what's the deal then?!")
+            df.to_sql(tablename, self.engine, None, internal_ref[0], 'replace', index = False, dtype = new_dtypes)
         elif self.replace is False:
             #We need to create a new table and leave the original untouched
-            df.to_sql(new_name, self.engine, None, internal_ref[0], 'fail', index = False)
+            df.to_sql(new_name, self.engine, None, internal_ref[0], 'fail', index = False, dtype = new_dtypes)
         
 
         
