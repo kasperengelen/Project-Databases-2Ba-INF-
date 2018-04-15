@@ -57,9 +57,13 @@ class TableViewer:
                 indices = []
                 start = 1
 
+                
+
             end = start + 3 #Show 3 indices including current page
             if(start == 1):
                 end += 1
+                if(page_nr == 4): #At this point only index = 2 will be '...', we only want to skip 2 or more values.
+                    end += 1
             
             if (end >= max_index):
                 start = max_index -3 #Keep last pages from being isolated
