@@ -147,7 +147,7 @@
 				};
 				dropdown.attribute1.attr('disabled', 'disabled');
 				dropdown.attribute1.empty();
-				$.getJSON("{{ url_for('dataset_pages._get_attr1_options', dataset_id=dataset_info.setid, tablename=table_name, info=send) }}", send, function(data) {
+				$.getJSON("{{ url_for('dataset_pages._get_attr_options', dataset_id=dataset_info.setid, tablename=table_name, info=send) }}", send, function(data) {
 					data.forEach(function(item) {
 						dropdown.attribute1.append (
 							$('<option>', {
@@ -182,7 +182,6 @@
 			
 			$('#tablename1').change(function() {
 				updateAttr1();
-				updateTable2();
 			});
 			$('#tablename2').change(function() {
 				updateAttr2();
