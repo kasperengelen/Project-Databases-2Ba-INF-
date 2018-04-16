@@ -63,7 +63,7 @@ class DownloadForm(FlaskForm):
 
 # ENDCLASS
 
-class JoinForm(FlaskForm):
+class TableJoinForm(FlaskForm):
     '''Test Form for Dynamic Fields'''
     tablename1 = SelectField('First Table', choices=[], id='tablename1')
     attribute1 = SelectField('First Table Attribute', choices=[], id='attribute1')

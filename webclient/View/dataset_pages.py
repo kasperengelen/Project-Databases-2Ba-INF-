@@ -7,7 +7,7 @@ from DatasetInfo import DatasetInfo
 from DatasetManager import DatasetManager
 from UserManager import UserManager
 from dataset_forms import FindReplaceForm, DeleteAttrForm, DatasetForm, AddUserForm, RemoveUserForm, DatasetListEntryForm, TableUploadForm
-from dataset_forms import DownloadForm, DataTypeTransform, NormalizeZScore, OneHotEncoding, JoinForm, RegexFindReplace, DiscretizeEqualWidth
+from dataset_forms import DownloadForm, DataTypeTransform, NormalizeZScore, OneHotEncoding, TableJoinForm, RegexFindReplace, DiscretizeEqualWidth
 from dataset_forms import DiscretizeEqualFreq, DiscretizeCustomRange, DeleteOutlier, FillNullsMean, FillNullsMedian, FillNullsCustomValue
 from TableViewer import TableViewer
 from werkzeug.utils import secure_filename
@@ -33,12 +33,15 @@ def view_dataset_home(dataset_id):
     table_list = dataset.getTableNames()
 
     upload_form = TableUploadForm()
+    join_form = TableJoinForm()
+    join_form.fillForm(table_list)
 
     perm_type = dataset.getPermForUserID(session['userdata']['userid'])
 
     return render_template('dataset_pages.home.html', dataset_info = dataset_info, 
                                                       table_list = table_list,
-                                                      uploadform = upload_form, 
+                                                      uploadform = upload_form,
+                                                      join_form = join_form,
                                                       perm_type=perm_type, 
                                                       downloadform = DownloadForm())
 # ENDFUNCTION
