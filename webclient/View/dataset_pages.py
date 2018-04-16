@@ -115,10 +115,10 @@ def view_dataset_table(dataset_id, tablename, page_nr):
     perm_type = dataset.getPermForUserID(session['userdata']['userid'])
 
     # RETRIEVE COLUMN STATISTICS
-    colstats = {}
+    colstats = []
 
     for attr_name in tv.get_attributes():
-        colstats[attr_name] = {
+        colstats.append({
             "nullfreq": tv.get_null_frequency(attr_name),
             "mostfreq": tv.get_most_frequent_value(attr_name),
             "max": tv.get_max(attr_name),
@@ -126,8 +126,10 @@ def view_dataset_table(dataset_id, tablename, page_nr):
             "avg": tv.get_avg(attr_name),
             "hist_num": tv.get_numerical_histogram(attr_name),
             "chart_freq": tv.get_frequency_pie_chart(attr_name)
-        }
+        })
     # ENDFOR
+
+    attributes = tv.get_attributes()
 
     return render_template('dataset_pages.table.html', 
                                                 table_name = tablename,
@@ -149,7 +151,8 @@ def view_dataset_table(dataset_id, tablename, page_nr):
                                                 fillnullcustom_form = fillnullcustom_form,
                                                 perm_type = perm_type,
                                                 current_page=page_nr,
-                                                colstats=colstats)
+                                                colstats=colstats,
+                                                attributes=attributes)
 # ENDFUNCTION
 
 @dataset_pages.route('/dataset/<int:dataset_id>/jointables', methods=['POST'])
