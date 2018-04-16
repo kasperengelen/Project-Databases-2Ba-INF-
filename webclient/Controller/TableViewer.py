@@ -2,10 +2,13 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from sqlalchemy import create_engine
 from db_wrapper import DBWrapper
+from TableTransformer import TableTransformer
+from DatabaseConfiguration import DatabaseConfiguration
 import math
 import re
 import os
 import csv
+import psycopg2
 from psycopg2 import sql
 import mpld3
 
@@ -178,11 +181,16 @@ class TableViewer:
             outcsv.writerows(rows)
 
     def get_numerical_histogram(self, columnname, bar_nr=10):
+        # first check if the attribute type is numerical
+        tt = TableTransformer(self.setid, self.db_connection, DatabaseConfiguration().get_engine())
+        type = tt.get_attribute_type(self.tablename, columnname)
+        if not (type == "integer" or type == "double precision"):
+            return "N/A"
+
         sql_query = "SELECT \"{}\" FROM \"{}\".\"{}\"".format(columnname, str(self.setid), self.tablename)
         df = pd.read_sql(sql_query, self.engine)
         fig = plt.figure()
         plt.hist(df[columnname], bins=bar_nr, align='left', alpha=0.8, color='grey')
-        plt.show()
         return mpld3.fig_to_html(fig)
 
     def get_frequency_pie_chart(self, columnname):
@@ -210,7 +218,6 @@ class TableViewer:
         fig, ax = plt.subplots()
         ax.pie(sizes, labels=labels, autopct=make_autopct(sizes))
         ax.axis('equal')
-        plt.show()
         return mpld3.fig_to_html(fig)
 
     def get_most_frequent_value(self, columnname):
@@ -245,9 +252,15 @@ class TableViewer:
         """Wrapper that returns result of aggregate function"""
         conn = self.db_connection
 
-        conn.cursor().execute(sql.SQL("SELECT " + aggregate + "({}) FROM {}.{}").format(sql.Identifier(columnname),
+        try:
+            conn.cursor().execute(sql.SQL("SELECT " + aggregate + "({}) FROM {}.{}").format(sql.Identifier(columnname),
                                                                           sql.Identifier(str(self.setid)),
                                                                           sql.Identifier(self.tablename)))
+            # if the attribute type is not valid for aggregate functions
+        except psycopg2.ProgrammingError:
+            conn.rollback()
+            return "N/A"
+
         return conn.cursor().fetchone()[0]
 
     def get_max(self, columnname):
