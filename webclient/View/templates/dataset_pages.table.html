@@ -34,7 +34,71 @@
 	        	</h4>
 	      	</div>
 	      	<div id="view" class="panel-collapse collapse">
-	        	<div class="panel-body">View</div>
+	        	<div class="panel-body">
+	        		{% from "includes/_formhelpers.html" import render_field %}
+	        		<table>
+	        			{% if colstats %}
+	        				<tr>
+		        				<th>Attribute</th>
+		        				<th>Average</th>
+		        				<th>Minimum</th>
+		        				<th>Maximum</th>
+		        				<th>Null Frequency</th>
+		        				<th>Most Frequent</th>
+		        				<th></th>
+	        				</tr>
+	        				{% for col in colstats %}
+	        					<tr>
+			        				<td>{{ col.attr_name }}</td>
+			        				<td>{{ col.avg }}</td>
+			        				<td>{{ col.min }}</td>
+			        				<td>{{ col.max }}</td>
+			        				<td>{{ col.nullfreq }}</td>
+			        				<td>{{ col.mostfreq }}</td>
+			        				{% if (col.hist_num != "N/A") or (col.chart_freq !="N/A") %}
+			        					<td><a id="plot" href="#" data-toggle="modal" data-target="#plots_{{ col.attr_name }}">Show Plots</a>
+			        				{% endif %}
+			        				</td>
+			        			</tr>
+
+			        			<div id="plots_{{ col.attr_name }}" class="modal fade" role="dialog">
+							        <div class="modal-dialog">
+							        
+							            <!-- Modal content-->
+							            <div class="modal-content">
+							                <div class="modal-header">
+							                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+							                    <h4 class="modal-title">Plots for {{ col.attr_name }}</h4>
+							                </div>
+							                <div class="modal-body">
+							                	{% if col.hist_num != "N/A" %}
+								                	<div>
+								                		<h5><strong>Numerical Histogram</strong></h5>
+								                		{{ col.hist_num|safe }}
+								                	</div>
+								                {% endif %}
+
+								                {% if col.chart_freq != "N/A" %}
+								                	<div>
+								                		<h5><strong>Frequency Pie Chart</strong></h5>
+								                		{{ col.chart_freq|safe }}
+								                	</div>
+								                {% endif %}
+							                </div>
+							                <div class="modal-footer">
+							                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+							                </div>
+							            </div>
+							            <!-- Modal content -->
+							        </div>
+								</div>
+	        				{% endfor %}
+	        				<tr>
+
+	        				</tr>
+	        			{% endif %}
+	        		</table>
+	        	</div>
 	      	</div>
 	    </div>
 	    {% if (perm_type == 'admin' or perm_type == 'write') %}
@@ -54,7 +118,7 @@
 							<form method="post" action="{{ url_for('dataset_pages.transform_findreplace', dataset_id=dataset_info.setid, tablename=table_name) }}">
 							{{ findrepl_form.csrf_token }}
 							<div class="form-group" style="width: 20%; display: inline-block;">
-								{{render_field(findrepl_form.select_attr, class_="form-control", placeholder="Select Attribute")}}
+								{{render_field(findrepl_form.select_attr, class_="form-control")}}
 							</div>
 							<div class="form-group" style="width: 30%; display: inline-block;">
 								{{render_field(findrepl_form.search, class_="form-control", placeholder="Searchterm")}}
@@ -82,7 +146,7 @@
 								{{render_field(regexfindreplace_form.select_attr, class_="form-control")}}
 							</div>
 							<div class="form-group" style="width: 30%; display: inline-block;">
-								{{render_field(regexfindreplace_form.regex, class_="form-control", placeholder="Searchterm")}}
+								{{render_field(regexfindreplace_form.regex, class_="form-control", placeholder="Search Regex")}}
 							</div>
 							<div class="form-group" style="width: 30%; display: inline-block;">
 								{{render_field(regexfindreplace_form.replacement, class_="form-control", placeholder="Replacement")}}  
@@ -94,6 +158,26 @@
 							</form>
 						</div>
 						<!-- Regex Find & Replace  -->
+
+						<!-- Delete Outliers -->
+		      			<div class="col-sm-12" style="border-bottom: 1px solid lightgrey; overflow-x: auto;">
+		      				<h5><u><strong>Delete Outlier</strong></u></h5>
+							<form method="post" action="{{ url_for('dataset_pages.transform_deleteOutlier', dataset_id=dataset_info.setid,
+								tablename=table_name) }}">
+							{{ deleteoutlier_form.csrf_token }}
+							<div class="form-group" style="width: 30%; display: inline-block;">
+								{{render_field(deleteoutlier_form.select_attr, class_="form-control")}}
+							</div>
+							<div class="form-group" style="width: 20%; display: inline-block;">
+								{{render_field(deleteoutlier_form.select_comparison, class_="form-control")}}
+							</div>
+							<div class="form-group" style="width: 30%; display: inline-block;">
+								{{render_field(deleteoutlier_form.value, class_="form-control", placeholder="Value")}}
+							</div>
+							<p style="display: inline-block;"><input type="submit" id="delete" class="btn btn-primary" value="Delete Outlier"></p>
+							</form>
+						</div>
+						<!-- Delete Outliers -->
 
 		      			<!-- Delete Attribute -->
 		      			<div class="col-sm-6" style="border-bottom: 1px solid lightgrey; overflow-x: auto;">
@@ -152,26 +236,6 @@
 						</div>
 						<!-- Normalize Using Z-Score -->
 
-						<!-- Delete Outliers -->
-		      			<div class="col-sm-12" style="border-bottom: 1px solid lightgrey; overflow-x: auto;">
-		      				<h5><u><strong>Delete Outlier</strong></u></h5>
-							<form method="post" action="{{ url_for('dataset_pages.transform_deleteOutlier', dataset_id=dataset_info.setid,
-								tablename=table_name) }}">
-							{{ deleteoutlier_form.csrf_token }}
-							<div class="form-group" style="width: 30%; display: inline-block;">
-								{{render_field(deleteoutlier_form.select_attr, class_="form-control")}}
-							</div>
-							<div class="form-group" style="width: 20%; display: inline-block;">
-								{{render_field(deleteoutlier_form.select_comparison, class_="form-control")}}
-							</div>
-							<div class="form-group" style="width: 30%; display: inline-block;">
-								{{render_field(deleteoutlier_form.value, class_="form-control")}}
-							</div>
-							<p style="display: inline-block;"><input type="submit" id="delete" class="btn btn-primary" value="Delete Outlier"></p>
-							</form>
-						</div>
-						<!-- Delete Outliers -->
-
 						<!-- Fill Nulls Mean -->
 		      			<div class="col-sm-6" style="border-bottom: 1px solid lightgrey; overflow-x: auto;">
 		      				<h5><u><strong>Fill Nulls - Mean</strong></u></h5>
@@ -210,7 +274,7 @@
 								{{render_field(fillnullcustom_form.select_attr, class_="form-control")}}
 							</div>
 							<div class="form-group" style="width: 30%; display: inline-block;">
-								{{render_field(fillnullcustom_form.replacement, class_="form-control")}}
+								{{render_field(fillnullcustom_form.replacement, class_="form-control", placeholder="Replacement")}}
 							</div>
 							<p style="display: inline-block;"><input type="submit" id="delete" class="btn btn-primary" value="Fill Nulls Custom"></p>
 							</form>
@@ -231,7 +295,7 @@
 						<!-- Discretize Equal Width  -->
 
 						<!-- Discretize Equal Frequency -->
-		      			<div class="col-sm-6" style="border-bottom: 1px solid lightgrey; overflow-x: auto;">
+		      			<div class="col-sm-6" style="overflow-x: auto;">
 		      				<h5><u><strong>Discretize with Equal Frequency</strong></u></h5>
 							<form method="post" action="{{ url_for('dataset_pages.transform_discretizeEqualFreq', dataset_id=dataset_info.setid, tablename=table_name) }}">
 							{{ discretizeFreq_form.csrf_token }}
@@ -256,7 +320,10 @@
 
 				<script type="text/javascript">
 				function page_search(){
-				    window.location.href = '/dataset/{{ dataset_info.setid }}/{{ table_name }}/' + document.getElementById('input').value;
+					if(document.getElementById('input').value != "") {
+				    	if(!isNaN(document.getElementById('input').value))
+				    		window.location.href = '/dataset/{{ dataset_info.setid }}/{{ table_name }}/' + document.getElementById('input').value;
+					}
 				 }
 				</script>
 			</div>
@@ -303,13 +370,21 @@
         		width: 20%;
         		float:left;
 				padding:3px;
+				border-radius: 3px;
 				}
 
 	        td, th {
 	         	font-size: 15px;
 	            text-align: left;
 	            padding: 8px;
-	            background-color: white;
+	        }
+
+	        table thead {
+	        	background-color: lightgrey;
+	        }
+
+	        table tbody tr:nth-child(even) {
+	        	background-color: #eaeaea;
 	        }
 
 	        .dataTables_filter {

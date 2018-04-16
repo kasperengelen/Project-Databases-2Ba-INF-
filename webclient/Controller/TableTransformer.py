@@ -135,7 +135,7 @@ class TableTransformer:
     def get_attribute_type(self, tablename, attribute, detailed=False):
         """Return the postgres data type of an attribute.
         Parameters:
-            detailed: A boolean indicating if the method should return a detailed description of the type (include size limt).
+            detailed: A boolean indicating if the method should return a detailed description of the type (include size limit).
         """
         internal_ref = self.get_internal_reference(tablename)
         cur = self.db_connection.cursor()

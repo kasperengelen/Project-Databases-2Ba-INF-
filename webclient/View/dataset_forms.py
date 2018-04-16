@@ -69,13 +69,21 @@ class TableJoinForm(FlaskForm):
     attribute1 = SelectField('First Table Attribute', choices=[], id='attribute1')
     tablename2 = SelectField('Second Table', choices=[], id='tablename2')
     attribute2 = SelectField('Second Table Attribute', choices=[], id='attribute2')
-    newname = StringField('New Table Name', [InputRequired(message="Input is required.")])
+    newname = StringField('New Table Name', [InputRequired(message="Input is required."), Regexp('^[A-Za-z0-9][A-Za-z0-9]+$')])
 
     def fillForm(self, tables):
         self.tablename1.choices = [(table, table) for table in tables]
         self.attribute1.choices = []
         self.tablename2.choices = [(table, table) for table in tables]
         self.attribute2.choices = []
+    # ENDMETHOD
+
+    def fillTable1(self, attrs):
+        self.attribute1.choices = [(attr, attr) for attr in attrs]
+    # ENDMETHOD
+
+    def fillTable2(self, attrs):
+        self.attribute2.choices = [(attr, attr) for attr in attrs]
     # ENDMETHOD
 # ENDCLASS
 

@@ -115,17 +115,22 @@ def view_dataset_table(dataset_id, tablename, page_nr):
     perm_type = dataset.getPermForUserID(session['userdata']['userid'])
 
     # RETRIEVE COLUMN STATISTICS
-    colstats = {}
+    colstats = []
 
     for attr_name in tv.get_attributes():
-        colstats[attr_name] = {
-            "nullfreq": 0, #tv.get_null_frequency(attr_name),
-            "mostfreq": 0, #tv.get_most_frequent_value(attr_name),
-            "max": 0, #tv.get_max(attr_name),
-            "min": 0, #tv.get_min(attr_name),
-            "avg": 0 #tv.get_avg(attr_name)
-        }
+        colstats.append({
+            "attr_name": attr_name,
+            "nullfreq": tv.get_null_frequency(attr_name),
+            "mostfreq": tv.get_most_frequent_value(attr_name),
+            "max": tv.get_max(attr_name),
+            "min": tv.get_min(attr_name),
+            "avg": tv.get_avg(attr_name),
+            "hist_num": tv.get_numerical_histogram(attr_name),
+            "chart_freq": tv.get_frequency_pie_chart(attr_name)
+        })
     # ENDFOR
+
+    attributes = tv.get_attributes()
 
     return render_template('dataset_pages.table.html', 
                                                 table_name = tablename,
@@ -147,10 +152,10 @@ def view_dataset_table(dataset_id, tablename, page_nr):
                                                 fillnullcustom_form = fillnullcustom_form,
                                                 perm_type = perm_type,
                                                 current_page=page_nr,
-                                                colstats=colstats)
+                                                colstats=colstats,
+                                                attributes=attributes)
 # ENDFUNCTION
 
-################ TODO !!!!! ##############
 @dataset_pages.route('/dataset/<int:dataset_id>/jointables', methods=['POST'])
 @require_login
 @require_writeperm
@@ -162,20 +167,38 @@ def transform_join_tables(dataset_id):
 
     dataset = DatasetManager.getDataset(dataset_id)
 
-    form = JoinForm(request.form)
+    form = TableJoinForm(request.form)
     form.fillForm(dataset.getTableNames())
+
+    # determine valid attribute choices for tables
+
+    table1_name = str(form.tablename1.data)
+    table2_name = str(form.tablename2.data)
+
+    # check if tables exist.
+    if not (table1_name in dataset.getTableNames() and table2_name in dataset.getTableNames()):
+        abort(404)
+
+    table1_info = dataset.getTableViewer(table1_name)
+    table2_info = dataset.getTableViewer(table2_name)
+
+    form.fillTable1(table1_info.get_attributes())
+    form.fillTable2(table2_info.get_attributes())
 
     if not form.validate():
         flash(message="Invalid form.", category="error")
+        print(form.errors)
         return redirect(url_for('dataset_pages.view_dataset_home', dataset_id=dataset_id))
 
-    tt = dataset.getTableTransformer(tablename)
+    tt = dataset.getTableTransformer(table2_name)
 
-    tt.join_tables(form.tablename1.data, form.tablename2.data, form.attribute1.data, form.attribute2.data, form.newname.data)
-    flash(message="Tables joined", category="success")
-
-    return redirect(url_for('dataset_pages.view_dataset_home', dataset_id=dataset_id, tablename=tablename))
-################ TODO !!!!! ##############
+    try:
+        tt.join_tables(form.tablename1.data, form.tablename2.data, [form.attribute1.data], [form.attribute2.data], form.newname.data)
+        flash(message="Tables joined", category="success")
+    except:
+        flash(message="An error occurred", category="error")
+    return redirect(url_for('dataset_pages.view_dataset_home', dataset_id=dataset_id))
+# ENDFUNCTION
 
 @dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/transform/deleteattr', methods=['POST'])
 @require_login

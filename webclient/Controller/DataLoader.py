@@ -227,7 +227,6 @@ class DataLoader:
             name_count = 0
 
             while not name_available:
-                print(table_names)
                 for i in range(len(table_names)):
                     # if every name has been checked
                     if i == len(table_names) - 1:
@@ -238,7 +237,7 @@ class DataLoader:
 
                 if not name_available:
                     name_count += 1
-                    new_name = tablename + '(' + str(name_count) + ')'
+                    new_name = tablename + '_' + str(name_count)
 
         return new_name
 

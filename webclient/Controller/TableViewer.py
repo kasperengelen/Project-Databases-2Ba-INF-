@@ -2,10 +2,13 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from sqlalchemy import create_engine
 from db_wrapper import DBWrapper
+from TableTransformer import TableTransformer
+from DatabaseConfiguration import DatabaseConfiguration
 import math
 import re
 import os
 import csv
+import psycopg2
 from psycopg2 import sql
 import mpld3
 
@@ -183,15 +186,26 @@ class TableViewer:
             outcsv.writerows(rows)
 
     def get_numerical_histogram(self, columnname, bar_nr=10):
+        # first check if the attribute type is numerical
+        tt = TableTransformer(self.setid, self.db_connection, DatabaseConfiguration().get_engine())
+        type = tt.get_attribute_type(self.tablename, columnname)[0]
+        if not (type == "bigint" or type == "double precision"):
+            return "N/A"
+
         sql_query = "SELECT \"{}\" FROM \"{}\".\"{}\"".format(columnname, str(self.setid), self.tablename)
         df = pd.read_sql(sql_query, self.engine)
         fig = plt.figure()
         plt.hist(df[columnname], bins=bar_nr, align='left', alpha=0.8, color='grey')
-        plt.show()
-        return mpld3.fig_to_html(fig)
+        html = mpld3.fig_to_html(fig)
+
+        # close the figure to free memory
+        plt.close(fig)
+
+        return html
 
     def get_frequency_pie_chart(self, columnname):
         conn = self.db_connection
+        print(columnname)
 
         # get the frequency of every value
         conn.cursor().execute(sql.SQL("SELECT {}, COUNT(*) FROM {}.{} GROUP BY {} ORDER BY COUNT(*) DESC,"
@@ -200,6 +214,10 @@ class TableViewer:
                                                             sql.Identifier(columnname),
                                                             sql.Identifier(columnname)))
         data = conn.cursor().fetchall()
+
+        if len(data) > 100:
+            # you don't have enough friends to give all these pieces to
+            return "N/A"
 
         # taken from https://stackoverflow.com/questions/6170246/how-do-i-use-matplotlib-autopct
         def make_autopct(values):
@@ -215,8 +233,12 @@ class TableViewer:
         fig, ax = plt.subplots()
         ax.pie(sizes, labels=labels, autopct=make_autopct(sizes))
         ax.axis('equal')
-        plt.show()
-        return mpld3.fig_to_html(fig)
+        html =  mpld3.fig_to_html(fig)
+
+        # close the figure to free memory
+        plt.close(fig)
+
+        return html
 
     def get_most_frequent_value(self, columnname):
         """Return the value that appears most often in the column"""
@@ -240,15 +262,25 @@ class TableViewer:
                                                             sql.Identifier(self.tablename),
                                                             sql.Identifier(columnname),
                                                             sql.Identifier(columnname)))
-        return conn.cursor().fetchone()[1]
+        frequency_tuple = conn.cursor().fetchone()
+        if frequency_tuple is None:
+            return 0
+        else:
+            return frequency_tuple[1]
 
     def __aggregate_function(self, columnname, aggregate):
         """Wrapper that returns result of aggregate function"""
         conn = self.db_connection
 
-        conn.cursor().execute(sql.SQL("SELECT " + aggregate + "({}) FROM {}.{}").format(sql.Identifier(columnname),
+        try:
+            conn.cursor().execute(sql.SQL("SELECT " + aggregate + "({}) FROM {}.{}").format(sql.Identifier(columnname),
                                                                           sql.Identifier(str(self.setid)),
                                                                           sql.Identifier(self.tablename)))
+            # if the attribute type is not valid for aggregate functions
+        except psycopg2.ProgrammingError:
+            conn.rollback()
+            return "N/A"
+
         return conn.cursor().fetchone()[0]
 
     def get_max(self, columnname):
@@ -266,7 +298,7 @@ class TableViewer:
 if __name__ == '__main__':
     db_connection = DBWrapper("projectdb18", "dbadmin", "localhost", "AdminPass123")
     engine = create_engine('postgresql://dbadmin:AdminPass123@localhost/projectdb18')
-    tv = TableViewer(1, "workingtable", engine, db_connection)
-    tv.get_frequency_pie_chart("age")
+    tv = TableViewer(1, "Sales(1)", engine, db_connection)
+    print(tv.get_most_frequent_value("Units_Sold"))
     # print(tv.get_page_indices(50, 88))
 
