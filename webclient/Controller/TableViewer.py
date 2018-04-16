@@ -266,6 +266,6 @@ if __name__ == '__main__':
     db_connection = DBWrapper("projectdb18", "dbadmin", "localhost", "AdminPass123")
     engine = create_engine('postgresql://dbadmin:AdminPass123@localhost/projectdb18')
     tv = TableViewer(1, "Sales(1)", engine, db_connection)
-    print(tv.get_null_frequency("Units_Sold"))
+    print(tv.get_most_frequent_value("Units_Sold"))
     # print(tv.get_page_indices(50, 88))
 

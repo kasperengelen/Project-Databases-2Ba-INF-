@@ -238,7 +238,7 @@ class DataLoader:
 
                 if not name_available:
                     name_count += 1
-                    new_name = tablename + '(' + str(name_count) + ')'
+                    new_name = tablename + '_' + str(name_count)
 
         return new_name
 
