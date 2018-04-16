@@ -61,6 +61,7 @@
 		        	<div class="panel-body">	
 		        		<!-- JOIN FORM -->
 
+		        		<!-- JOIN FORM -->
 		        	</div>
 	     		</div>
 	    	</div>
@@ -138,7 +139,6 @@
 			};
 
 			updateAttr1();
-			updateTable2();
 			updateAttr2();
 
 			function updateAttr1() {
@@ -160,29 +160,13 @@
 				});
 			}
 
-			function updateTable2() {
-				var send = {
-					tablename1: dropdown.tablename1.val()
-				};
-				dropdown.tablename2.empty();
-				$.getJSON("{{ url_for('dataset_pages._get_table2_options', dataset_id=dataset_info.setid, tablename=table_name, table=send) }}", send, function(data) {
-					data.forEach(function(item) {
-						dropdown.tablename2.append (
-							$('<option>', {
-								value: item[0],
-								text: item[1]
-							})
-						);
-					});
-				});
-			}
 
 			function updateAttr2() {
 				var send = {
 					tablename2: dropdown.tablename2.val()
 				};
 				dropdown.attribute2.empty();
-				$.getJSON("{{ url_for('dataset_pages._get_attr2_options', dataset_id=dataset_info.setid, tablename=table_name, info=send) }}", send, function(data) {
+				$.getJSON("{{ url_for('dataset_pages._get_attr_options', dataset_id=dataset_info.setid, tablename=table_name, info=send) }}", send, function(data) {
 					data.forEach(function(item) {
 						dropdown.attribute2.append (
 							$('<option>', {
