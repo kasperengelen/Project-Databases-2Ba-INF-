@@ -150,7 +150,6 @@ def view_dataset_table(dataset_id, tablename, page_nr):
                                                 colstats=colstats)
 # ENDFUNCTION
 
-################ TODO !!!!! ##############
 @dataset_pages.route('/dataset/<int:dataset_id>/jointables', methods=['POST'])
 @require_login
 @require_writeperm
@@ -171,11 +170,13 @@ def transform_join_tables(dataset_id):
 
     tt = dataset.getTableTransformer(tablename)
 
-    tt.join_tables(form.tablename1.data, form.tablename2.data, form.attribute1.data, form.attribute2.data, form.newname.data)
-    flash(message="Tables joined", category="success")
-
+    try:
+        tt.join_tables(form.tablename1.data, form.tablename2.data, form.attribute1.data, form.attribute2.data, form.newname.data)
+        flash(message="Tables joined", category="success")
+    except:
+        flash(message="An error occurred", category="error")
     return redirect(url_for('dataset_pages.view_dataset_home', dataset_id=dataset_id, tablename=tablename))
-################ TODO !!!!! ##############
+# ENDFUNCTION
 
 @dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/transform/deleteattr', methods=['POST'])
 @require_login
