@@ -131,7 +131,7 @@ class TableViewer:
     def is_numerical(self, attr_type):
         """Method that returns whether a postgres attribute type is a numerical type."""
         
-        numericals = ['integer', 'double precision', 'bigint', 'bigserial', 'real, smallint', 'smallserial', 'serial']
+        numericals = ['integer', 'double precision', 'bigint', 'bigserial', 'real', 'smallint', 'smallserial', 'serial']
         if attr_type in numericals:
             return True
         else:
