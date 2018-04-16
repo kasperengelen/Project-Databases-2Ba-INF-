@@ -135,7 +135,7 @@ class TableTransformer:
     def get_attribute_type(self, tablename, attribute, detailed=False):
         """Return the postgres data type of an attribute.
         Parameters:
-            detailed: A boolean indicating if the method should return a detailed description of the type (include size limits etc.
+            detailed: A boolean indicating if the method should return a detailed description of the type (include size limt).
         """
         internal_ref = self.get_internal_reference(tablename)
         cur = self.db_connection.cursor()
@@ -311,9 +311,9 @@ class TableTransformer:
                                      "Please convert the needed attribute to VARCHAR or CHAR.")
         
         if case_sens is False:
-            sql_query = "UPDATE {0}.{1} SET {2} = %s WHERE {2} ~ %s"
-        elif case_sens is True:
             sql_query = "UPDATE {0}.{1} SET {2} = %s WHERE {2} ~* %s"
+        elif case_sens is True:
+            sql_query = "UPDATE {0}.{1} SET {2} = %s WHERE {2} ~ %s"
 
         try:
             self.db_connection.cursor().execute(sql.SQL(sql_query).format(sql.Identifier(internal_ref[0]), sql.Identifier(internal_ref[1]),
@@ -431,13 +431,16 @@ class TableTransformer:
         column = column.divide(4) #Divide all the values by 4 to get a 1-point range
         column = column.add(0.5) #Now the mean is 0, so add 0.5 to have the mean at 0.5
         df.update(column)
+        new_dtypes = self.__get_simplified_types(tablename, df)
+        #Casting the attribute back to int would be problematic so make sure it's float
+        new_dtypes[attribute] = sqlalchemy.types.Float(precision=25, asdecimal=True)
 
         if self.replace is True:
             #If the table should be replaced, drop it and recreate it.
-            df.to_sql(tablename, self.engine, None, internal_ref[0], 'replace', index = False)
+            df.to_sql(tablename, self.engine, None, internal_ref[0], 'replace', index = False, dtype = new_dtypes)
         elif self.replace is False:
             #We need to create a new table and leave the original untouched
-            df.to_sql(new_name, self.engine, None, internal_ref[0], 'fail', index = False)
+            df.to_sql(new_name, self.engine, None, internal_ref[0], 'fail', index = False, dtype = new_dtypes)
 
         # create history entry
         #self.__create_history(tablename, attribute, "normalize_using_zscore", None, new_name)
