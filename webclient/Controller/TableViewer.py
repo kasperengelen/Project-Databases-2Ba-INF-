@@ -235,7 +235,11 @@ class TableViewer:
                                                             sql.Identifier(self.tablename),
                                                             sql.Identifier(columnname),
                                                             sql.Identifier(columnname)))
-        return conn.cursor().fetchone()[1]
+        frequency_tuple = conn.cursor().fetchone()
+        if frequency_tuple is None:
+            return 0
+        else:
+            return frequency_tuple[1]
 
     def __aggregate_function(self, columnname, aggregate):
         """Wrapper that returns result of aggregate function"""
@@ -261,7 +265,7 @@ class TableViewer:
 if __name__ == '__main__':
     db_connection = DBWrapper("projectdb18", "dbadmin", "localhost", "AdminPass123")
     engine = create_engine('postgresql://dbadmin:AdminPass123@localhost/projectdb18')
-    tv = TableViewer(1, "workingtable", engine, db_connection)
-    tv.get_frequency_pie_chart("age")
+    tv = TableViewer(1, "Sales(1)", engine, db_connection)
+    print(tv.get_null_frequency("Units_Sold"))
     # print(tv.get_page_indices(50, 88))
 
