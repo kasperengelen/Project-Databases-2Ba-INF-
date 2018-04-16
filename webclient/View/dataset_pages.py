@@ -119,11 +119,13 @@ def view_dataset_table(dataset_id, tablename, page_nr):
 
     for attr_name in tv.get_attributes():
         colstats[attr_name] = {
-            "nullfreq": 0, #tv.get_null_frequency(attr_name),
-            "mostfreq": 0, #tv.get_most_frequent_value(attr_name),
-            "max": 0, #tv.get_max(attr_name),
-            "min": 0, #tv.get_min(attr_name),
-            "avg": 0 #tv.get_avg(attr_name)
+            "nullfreq": tv.get_null_frequency(attr_name),
+            "mostfreq": tv.get_most_frequent_value(attr_name),
+            "max": tv.get_max(attr_name),
+            "min": tv.get_min(attr_name),
+            "avg": tv.get_avg(attr_name),
+            "hist_num": tv.get_numerical_histogram(attr_name),
+            "chart_freq": tv.get_frequency_pie_chart(attr_name)
         }
     # ENDFOR
 
@@ -180,14 +182,14 @@ def transform_join_tables(dataset_id):
     form.fillTable2(table2_info.get_attributes())
 
     if not form.validate():
-        flash(message="*tips fedora*", category="error")
+        flash(message="Invalid form.", category="error")
         print(form.errors)
         return redirect(url_for('dataset_pages.view_dataset_home', dataset_id=dataset_id))
 
     tt = dataset.getTableTransformer(table2_name)
 
     try:
-        tt.join_tables(form.tablename1.data, form.tablename2.data, form.attribute1.data, form.attribute2.data, form.newname.data)
+        tt.join_tables(form.tablename1.data, form.tablename2.data, [form.attribute1.data], [form.attribute2.data], form.newname.data)
         flash(message="Tables joined", category="success")
     except:
         flash(message="An error occurred", category="error")
