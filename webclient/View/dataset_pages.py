@@ -119,6 +119,7 @@ def view_dataset_table(dataset_id, tablename, page_nr):
 
     for attr_name in tv.get_attributes():
         colstats.append({
+            "attr_name": attr_name,
             "nullfreq": tv.get_null_frequency(attr_name),
             "mostfreq": tv.get_most_frequent_value(attr_name),
             "max": tv.get_max(attr_name),
