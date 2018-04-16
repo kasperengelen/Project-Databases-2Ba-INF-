@@ -183,8 +183,8 @@ class TableViewer:
     def get_numerical_histogram(self, columnname, bar_nr=10):
         # first check if the attribute type is numerical
         tt = TableTransformer(self.setid, self.db_connection, DatabaseConfiguration().get_engine())
-        type = tt.get_attribute_type(self.tablename, columnname)
-        if not (type == "integer" or type == "double precision"):
+        type = tt.get_attribute_type(self.tablename, columnname)[0]
+        if not (type == "bigint" or type == "double precision"):
             return "N/A"
 
         sql_query = "SELECT \"{}\" FROM \"{}\".\"{}\"".format(columnname, str(self.setid), self.tablename)
