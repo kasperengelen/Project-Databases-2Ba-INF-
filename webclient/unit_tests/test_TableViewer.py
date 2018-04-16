@@ -109,11 +109,11 @@ class TestTableViewer(unittest.TestCase):
         indices = self.test_object.get_page_indices(50, 72)
         self.assertEqual(indices, ['1', '...', '71', '72', '73', '...', '1000'])
         #Get indices when being on page 997 when displaying 50 rows per page
-        indices = self.test_object.get_page_indices(50, 997)
-        self.assertEqual(indices, ['1', '...', '996', '997', '998', '...', '1000'])
+        indices = self.test_object.get_page_indices(50, 996)
+        self.assertEqual(indices, ['1', '...', '995', '996', '997', '...', '1000'])
         #Get indices when being on page 1000 when displaying 50 rows per page
         indices = self.test_object.get_page_indices(50, 997)
-        self.assertEqual(indices, ['1', '...', '997', '998', '999', '1000'])
+        self.assertEqual(indices, ['1', '...', '996', '997', '998', '999', '1000'])
         
         
 
