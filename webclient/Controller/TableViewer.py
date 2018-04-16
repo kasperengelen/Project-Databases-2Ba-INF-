@@ -301,4 +301,3 @@ if __name__ == '__main__':
     tv = TableViewer(1, "Sales(1)", engine, db_connection)
     print(tv.get_most_frequent_value("Units_Sold"))
     # print(tv.get_page_indices(50, 88))
-
