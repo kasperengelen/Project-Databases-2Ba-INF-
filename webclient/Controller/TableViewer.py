@@ -191,7 +191,12 @@ class TableViewer:
         df = pd.read_sql(sql_query, self.engine)
         fig = plt.figure()
         plt.hist(df[columnname], bins=bar_nr, align='left', alpha=0.8, color='grey')
-        return mpld3.fig_to_html(fig)
+        html = mpld3.fig_to_html(fig)
+
+        # close the figure to free memory
+        plt.close(fig)
+
+        return html
 
     def get_frequency_pie_chart(self, columnname):
         conn = self.db_connection
@@ -218,7 +223,12 @@ class TableViewer:
         fig, ax = plt.subplots()
         ax.pie(sizes, labels=labels, autopct=make_autopct(sizes))
         ax.axis('equal')
-        return mpld3.fig_to_html(fig)
+        html =  mpld3.fig_to_html(fig)
+
+        # close the figure to free memory
+        plt.close(fig)
+
+        return html
 
     def get_most_frequent_value(self, columnname):
         """Return the value that appears most often in the column"""
