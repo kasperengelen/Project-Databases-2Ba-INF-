@@ -64,8 +64,13 @@ class TableViewer:
                 end += 1
                 if(page_nr == 4): #At this point only index = 2 will be '...', we only want to skip 2 or more values.
                     end += 1
+
+            elif(page_nr == (max_index - 3)): #At this point the last 4 indices should always be shown
+               start = page_nr - 1
+               end = max_index + 1
+               
             
-            if (end >= max_index):
+            elif (end >= max_index):
                 start = max_index -3 #Keep last pages from being isolated
                 end = max_index + 1 
 
