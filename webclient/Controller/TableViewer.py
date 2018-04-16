@@ -127,10 +127,20 @@ class TableViewer:
 
         return translations.setdefault(systype, 'UNKNOWN TYPE')
 
+
+    def is_numerical(self, attr_type):
+        """Method that returns whether a postgres attribute type is a numerical type."""
+        
+        numericals = ['integer', 'double precision', 'bigint', 'bigserial', 'real, smallint', 'smallserial', 'serial']
+        if attr_type in numericals:
+            return True
+        else:
+            return False
+
         
 
 
-    def render_table(self, page_nr, nr_rows, show_types=False):
+    def render_table(self, page_nr, nr_rows, show_types=True):
         """This method returns a html table representing the page of the SQL table.
 
         Parameters:
