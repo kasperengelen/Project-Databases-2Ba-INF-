@@ -200,6 +200,7 @@ class TableViewer:
 
     def get_frequency_pie_chart(self, columnname):
         conn = self.db_connection
+        print(columnname)
 
         # get the frequency of every value
         conn.cursor().execute(sql.SQL("SELECT {}, COUNT(*) FROM {}.{} GROUP BY {} ORDER BY COUNT(*) DESC,"
@@ -208,6 +209,10 @@ class TableViewer:
                                                             sql.Identifier(columnname),
                                                             sql.Identifier(columnname)))
         data = conn.cursor().fetchall()
+
+        if len(data) > 100:
+            # you don't have enough friends to give all these pieces to
+            return "N/A"
 
         # taken from https://stackoverflow.com/questions/6170246/how-do-i-use-matplotlib-autopct
         def make_autopct(values):
