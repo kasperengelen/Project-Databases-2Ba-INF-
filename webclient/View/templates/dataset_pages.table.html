@@ -73,6 +73,28 @@
 						</div>
 						<!-- Find & Replace  -->
 
+						<!-- Regex Find & Replace -->
+		      			<div class="col-sm-12" style="border-bottom: 1px solid lightgrey; overflow-x: auto;">
+							<h5><u><strong>Find and Replace Using Regex</strong></u></h5>
+							<form method="post" action="{{ url_for('dataset_pages.transform_findreplaceregex', dataset_id=dataset_info.setid, tablename=table_name) }}">
+							{{ findrepl_form.csrf_token }}
+							<div class="form-group" style="width: 20%; display: inline-block;">
+								{{render_field(regexfindreplace_form.select_attr, class_="form-control")}}
+							</div>
+							<div class="form-group" style="width: 30%; display: inline-block;">
+								{{render_field(regexfindreplace_form.regex, class_="form-control", placeholder="Searchterm")}}
+							</div>
+							<div class="form-group" style="width: 30%; display: inline-block;">
+								{{render_field(regexfindreplace_form.replacement, class_="form-control", placeholder="Replacement")}}  
+							</div>
+							<p style="display: inline-block;"><input type="submit" id="findrepl" class="btn btn-primary" value="Find and Replace"></p>
+							<div class="form-group" style="width: 30%; display: inline-block;">
+								{{render_field(regexfindreplace_form.case_sens, class_="checkbox-inline", placeholder="True")}}
+							</div>
+							</form>
+						</div>
+						<!-- Regex Find & Replace  -->
+
 		      			<!-- Delete Attribute -->
 		      			<div class="col-sm-6" style="border-bottom: 1px solid lightgrey; overflow-x: auto;">
 		      				<h5><u><strong>Delete an Attribute</strong></u></h5>
@@ -131,13 +153,19 @@
 						<!-- Normalize Using Z-Score -->
 
 						<!-- Delete Outliers -->
-		      			<div class="col-sm-6" style="border-bottom: 1px solid lightgrey; overflow-x: auto;">
+		      			<div class="col-sm-12" style="border-bottom: 1px solid lightgrey; overflow-x: auto;">
 		      				<h5><u><strong>Delete Outlier</strong></u></h5>
 							<form method="post" action="{{ url_for('dataset_pages.transform_deleteOutlier', dataset_id=dataset_info.setid,
 								tablename=table_name) }}">
 							{{ deleteoutlier_form.csrf_token }}
 							<div class="form-group" style="width: 30%; display: inline-block;">
 								{{render_field(deleteoutlier_form.select_attr, class_="form-control")}}
+							</div>
+							<div class="form-group" style="width: 20%; display: inline-block;">
+								{{render_field(deleteoutlier_form.select_comparison, class_="form-control")}}
+							</div>
+							<div class="form-group" style="width: 30%; display: inline-block;">
+								{{render_field(deleteoutlier_form.value, class_="form-control")}}
 							</div>
 							<p style="display: inline-block;"><input type="submit" id="delete" class="btn btn-primary" value="Delete Outlier"></p>
 							</form>
@@ -180,6 +208,9 @@
 							{{ fillnullcustom_form.csrf_token }}
 							<div class="form-group" style="width: 30%; display: inline-block;">
 								{{render_field(fillnullcustom_form.select_attr, class_="form-control")}}
+							</div>
+							<div class="form-group" style="width: 30%; display: inline-block;">
+								{{render_field(fillnullcustom_form.replacement, class_="form-control")}}
 							</div>
 							<p style="display: inline-block;"><input type="submit" id="delete" class="btn btn-primary" value="Fill Nulls Custom"></p>
 							</form>
