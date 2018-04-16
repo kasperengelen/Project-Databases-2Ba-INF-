@@ -33,8 +33,63 @@
 	          		<a data-toggle="collapse" data-parent="#accordion" href="#view">View</a>
 	        	</h4>
 	      	</div>
-	      	<div id="view" class="panel-collapse collapse">
-	        	<div class="panel-body">View</div>
+	      	<div id="view" class="panel-collapse collapse in">
+	        	<div class="panel-body">
+	        		{% from "includes/_formhelpers.html" import render_field %}
+	        		<table>
+	        			{% if colstats %}
+	        				<tr>
+		        				<th>Attribute</th>
+		        				<th>Average</th>
+		        				<th>Minimum</th>
+		        				<th>Maximum</th>
+		        				<th>Null Frequency</th>
+		        				<th>Most Frequent</th>
+		        				<th></th>
+	        				</tr>
+	        				{% for col in colstats %}
+	        					<tr>
+			        				<td>{{ col.attr_name }}</td>
+			        				<td>{{ col.avg }}</td>
+			        				<td>{{ col.min }}</td>
+			        				<td>{{ col.max }}</td>
+			        				<td>{{ col.nullfreq }}</td>
+			        				<td>{{ col.mostfreq }}</td>
+			        				<td><a id="file" href="#" data-toggle="modal" data-target="#plots_{{ col.attr_name }}">Show Plots</a>
+			        			</tr>
+
+			        			<div id="plots_{{ col.attr_name }}" class="modal fade" role="dialog">
+							        <div class="modal-dialog">
+							        
+							            <!-- Modal content-->
+							            <div class="modal-content">
+							                <div class="modal-header">
+							                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+							                    <h4 class="modal-title">Plots for {{ col.attr_name }}</h4>
+							                </div>
+							                <div class="modal-body">
+							                	<div>
+							                		{{ col.hist_num }}
+							                	</div>
+							                	<div>
+							                		{{ col.chart_freq }}
+							                	</div>
+							                </div>
+							                <div class="modal-footer">
+							                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+							                </div>
+							            </div>
+							            <!-- Modal content -->
+							        </div>
+								</div>
+	        				{% endfor %}
+	        				<tr>
+
+	        				</tr>
+	        				{% endif %}
+	        			{% endif %}
+	        		</table>
+	        	</div>
 	      	</div>
 	    </div>
 	    {% if (perm_type == 'admin' or perm_type == 'write') %}
@@ -256,7 +311,10 @@
 
 				<script type="text/javascript">
 				function page_search(){
-				    window.location.href = '/dataset/{{ dataset_info.setid }}/{{ table_name }}/' + document.getElementById('input').value;
+					if(document.getElementById('input').value != "") {
+				    	if(!isNaN(document.getElementById('input').value))
+				    		window.location.href = '/dataset/{{ dataset_info.setid }}/{{ table_name }}/' + document.getElementById('input').value;
+					}
 				 }
 				</script>
 			</div>
