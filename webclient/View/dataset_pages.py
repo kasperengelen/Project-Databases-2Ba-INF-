@@ -402,7 +402,7 @@ def transform_zscorenormalisation(dataset_id, tablename):
 @dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/transform/discretize/equalwidth', methods = ['POST'])
 @require_login
 @require_writeperm
-def transform_discretizeEqualWidth():
+def transform_discretizeEqualWidth(dataset_id, tablename):
     """Callback for equal width discretization."""
 
     if not DatasetManager.existsID(dataset_id):
@@ -434,7 +434,7 @@ def transform_discretizeEqualWidth():
 @dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/transform/discretize/equalfreq', methods = ['POST'])
 @require_login
 @require_writeperm
-def transform_discretizeEqualFreq():
+def transform_discretizeEqualFreq(dataset_id, tablename):
     """Callback for equal frequency discretization."""
 
     if not DatasetManager.existsID(dataset_id):
@@ -473,7 +473,7 @@ def transform_discretizeCustomRange():
 @dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/transform/delete_outlier', methods = ['POST'])
 @require_login
 @require_writeperm
-def transform_deleteOutlier():
+def transform_deleteOutlier(dataset_id, tablename):
     """Callback for transformation to delete outlying values."""
 
     if not DatasetManager.existsID(dataset_id):
@@ -505,7 +505,7 @@ def transform_deleteOutlier():
 @dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/transform/fill_null/mean', methods = ['POST'])
 @require_login
 @require_writeperm
-def transform_fillNullsMean():
+def transform_fillNullsMean(dataset_id, tablename):
     """Callback for the fill nulls with mean transformation."""
 
     if not DatasetManager.existsID(dataset_id):
@@ -537,7 +537,7 @@ def transform_fillNullsMean():
 @dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/transform/fill_null/median', methods = ['POST'])
 @require_login
 @require_writeperm
-def transform_fillNullsMedian():
+def transform_fillNullsMedian(dataset_id, tablename):
     """Callback for the fill nulls with median transformation."""
 
     if not DatasetManager.existsID(dataset_id):
@@ -569,7 +569,7 @@ def transform_fillNullsMedian():
 @dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/transform/fill_null/custom', methods = ['POST'])
 @require_login
 @require_writeperm
-def transform_fillNullsCustomValue():
+def transform_fillNullsCustomValue(dataset_id, tablename):
     """Callback for the fill nulls with median transformation."""
 
     if not DatasetManager.existsID(dataset_id):
