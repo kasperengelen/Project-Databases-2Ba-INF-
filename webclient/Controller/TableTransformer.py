@@ -46,6 +46,20 @@ class TableTransformer:
         """
 
 
+    def __create_history(self, tablename, attribute, trans_type, parameter, origin=""):
+        """Create a DatasetHistory entry with the given parameters, this function gets called
+        every time a transformation is completed"""
+
+        origin_table = ""
+        if self.replace:
+            origin_table = tablename
+        else:
+            origin_table = origin
+
+        self.db_connection.cursor().execute(sql.SQL("INSERT INTO DATASET_HISTORY.{} VALUES (%s, %s, %s, %s, %s, %s)").format(sql.Identifier(str(self.setid))),
+                                                    [self.setid, tablename, attribute, trans_type, str(parameter), origin_table])
+        self.db_connection.commit()
+
 
     def __integrity_check(self, tablename, setid):
         """Extra option to check whether deleting the attribute will destroy integrity constraints.
@@ -95,6 +109,9 @@ class TableTransformer:
                                                                                     sql.Identifier(attribute)))
         self.db_connection.commit()
 
+        # create history entry
+        #self.__create_history(tablename, attribute, "delete_attribute", None, new_name)
+
 
     def get_supported_types(self):
         """Quick method that returns all the types supported by the TableTransformer for conversion purposes"""
@@ -118,7 +135,7 @@ class TableTransformer:
     def get_attribute_type(self, tablename, attribute, detailed=False):
         """Return the postgres data type of an attribute.
         Parameters:
-            detailed: A boolean indicating if the method should return a detailed description of the type (include size limits etc.
+            detailed: A boolean indicating if the method should return a detailed description of the type (include size limt).
         """
         internal_ref = self.get_internal_reference(tablename)
         cur = self.db_connection.cursor()
@@ -127,7 +144,8 @@ class TableTransformer:
         cur.execute(sql.SQL(query), [internal_ref[0], tablename, attribute])
 
         row = cur.fetchone()
-        if row is None: #Nothing fetched? Return None
+        self.db_connection.commit()
+        if row is None: #Nothing fetched? Return None.
             return None
         if detailed is False:
             return (row[0], internal_ref)
@@ -163,7 +181,8 @@ class TableTransformer:
         if to_type not in ['DATE', 'TIME', 'TIMESTAMP']: #Make sure no accidental data_format is provided
             data_format = ''
         #Maybe sanity check on these parameters? I'll look into it, note: 32
-        casting_var = temp.format(attribute, data_format)
+        ident_attr = '"{}"'.format(attribute)
+        casting_var = temp.format(ident_attr, data_format)
 
         if temp in ['CHAR' , 'VARCHAR']: #Char and varchar don't need special parameters
             casting_var = to_type
@@ -292,9 +311,9 @@ class TableTransformer:
                                      "Please convert the needed attribute to VARCHAR or CHAR.")
         
         if case_sens is False:
-            sql_query = "UPDATE {0}.{1} SET {2} = %s WHERE {2} ~ %s"
-        elif case_sens is True:
             sql_query = "UPDATE {0}.{1} SET {2} = %s WHERE {2} ~* %s"
+        elif case_sens is True:
+            sql_query = "UPDATE {0}.{1} SET {2} = %s WHERE {2} ~ %s"
 
         try:
             self.db_connection.cursor().execute(sql.SQL(sql_query).format(sql.Identifier(internal_ref[0]), sql.Identifier(internal_ref[1]),
@@ -309,7 +328,7 @@ class TableTransformer:
     def __get_simplified_types(self, tablename, data_frame):
         """Method that limits the types of column the pandas dataframe can use for to_sql.
         Our system handles only the base data types, but pandas might use types not supported
-        by our code. With this method we force it to comply to our limit set of data types.
+        by our code. With this method we force it to comply to our limited set of data types.
         """
 
         new_attributes = data_frame.columns.values.tolist()
@@ -325,10 +344,10 @@ class TableTransformer:
                     sqla_type = sqlalchemy.types.INTEGER()
                 elif temp == 'float64':
                     sqla_type = sqlalchemy.types.Float(precision=25, asdecimal=True)
-                elif temp == 'object':
+                elif temp == 'object' or temp == 'category':
                     sqla_type = sqlalchemy.types.VARCHAR(length=255)
             else:
-                if psql_type[0] == 'character varying':
+                if psql_type[0] == 'character varying' or psql_type[0] == 'text':
                     sqla_type = sqlalchemy.types.VARCHAR(psql_type[1])
                 elif psql_type[0] == 'character':
                     sqla_type = sqlalchemy.types.CHAR(psql_type[1])
@@ -344,7 +363,8 @@ class TableTransformer:
                     sqla_type = sqlalchemy.types.TIME()
                     
             if sqla_type is None:
-                error_msg = "Couldn't convert to a value! " + str(psql_type[0]) + " is unknown to the system."
+                #error_msg = "Couldn't convert to a value! " + str(psql_type[0]) + " from " + elem +  " is unknown to the system."
+                error_msg = elem + " is the problem my dude, it's a " + temp
                 raise ValueError(error_msg)
             new_types[elem] = sqla_type
 
@@ -357,20 +377,19 @@ class TableTransformer:
         internal_ref = self.get_internal_reference(tablename)
         sql_query = "SELECT * FROM \"{}\".\"{}\"".format(*internal_ref)
         df = pd.read_sql(sql_query, self.engine)
-        print("the dummies are coming...")
         encoded = pd.get_dummies(df[attribute]) #Perfom one-hot-encoding
-        print("the dummies are here!")
         df = df.drop(attribute, axis=1) #Drop the attribute used for encoding
         df = df.join(encoded) #Join the original attributes with the encoded table
-        #new_dtypes = self.__get_simplified_types(tablename, df)
-        print('lmao')
+        new_dtypes = self.__get_simplified_types(tablename, df)
         if self.replace is True:
             #If the table should be replaced, drop it and recreate it.
-            df.to_sql(tablename, self.engine, None, internal_ref[0], 'replace', index = False)
-            print("what's the deal then?!")
+            df.to_sql(tablename, self.engine, None, internal_ref[0], 'replace', index = False, dtype = new_dtypes)
         elif self.replace is False:
             #We need to create a new table and leave the original untouched
-            df.to_sql(new_name, self.engine, None, internal_ref[0], 'fail', index = False)
+            df.to_sql(new_name, self.engine, None, internal_ref[0], 'fail', index = False, dtype = new_dtypes)
+
+        # create history entry
+        #self.__create_history(tablename, attribute, "one_hot_encode", None, new_name)
         
 
         
@@ -412,16 +431,58 @@ class TableTransformer:
         column = column.divide(4) #Divide all the values by 4 to get a 1-point range
         column = column.add(0.5) #Now the mean is 0, so add 0.5 to have the mean at 0.5
         df.update(column)
+        new_dtypes = self.__get_simplified_types(tablename, df)
+        #Casting the attribute back to int would be problematic so make sure it's float
+        new_dtypes[attribute] = sqlalchemy.types.Float(precision=25, asdecimal=True)
 
         if self.replace is True:
             #If the table should be replaced, drop it and recreate it.
-            df.to_sql(tablename, self.engine, None, internal_ref[0], 'replace', index = False)
+            df.to_sql(tablename, self.engine, None, internal_ref[0], 'replace', index = False, dtype = new_dtypes)
         elif self.replace is False:
             #We need to create a new table and leave the original untouched
-            df.to_sql(new_name, self.engine, None, internal_ref[0], 'fail', index = False)
+            df.to_sql(new_name, self.engine, None, internal_ref[0], 'fail', index = False, dtype = new_dtypes)
+
+        # create history entry
+        #self.__create_history(tablename, attribute, "normalize_using_zscore", None, new_name)
 
 
 
+    def __get_categorical_name(self, tablename, categorical_name):
+        """Method that makes sure an attribute name given to a categorical variable attribute
+        is unique or else make an unique variation of it by appending a number.
+        """
+        cur = self.db_connection.cursor()
+        cur.execute(sql.SQL("SELECT column_name FROM information_schema.columns WHERE table_schema = %s "
+                            "AND table_name   = %s"), (str(self.setid), tablename))
+        query_result = cur.fetchall()
+        name_list = [x[0] for x in query_result] #List of all the column names in the table.
+        name_size = len(categorical_name)
+        count = 0
+
+        for elem in name_list:
+            if categorical_name in elem:
+                if len(elem) == name_size: #If it's the same size, it's the string itself
+                    count += 1
+                    continue #Looking for the next characters is pointless. So continue
+                if (elem[name_size] == '_') and (str.isdigit(elem[name_size:])):
+                    count += 1
+
+        if count == 0:
+            return categorical_name
+
+        else:
+            new_name = categorical_name + "_" + str(count)
+            return new_name
+        
+
+
+    def __make_binlabels(self, bins):
+        binlabels = []
+        for i in range(1, len(bins)):
+            label = "[" + str(bins[i-1]) + " , " + str(bins[i]) + "["                                
+            binlabels.append(label)
+        return binlabels
+        
 
     def discretize_using_equal_width(self, tablename, attribute, new_name=""):
         """Method that calulates the bins for an equi-distant discretization and performs it"""
@@ -431,8 +492,8 @@ class TableTransformer:
             raise self.AttrTypeError("Normalization failed due attribute not being of numeric type (neither integer or float)")
         sql_query = "SELECT * FROM \"{}\".\"{}\"".format(*internal_ref)
         df = pd.read_sql(sql_query, self.engine)
-
         minimum = df[attribute].min()
+
         maximum = df[attribute].max() + 0.0001 #Add a little bit to make sure the max element is included
         leftmost_edge = math.floor(minimum)
         rightmost_edge = math.ceil(maximum)
@@ -454,20 +515,22 @@ class TableTransformer:
             bins.append(next_interval)
 
         #Make labels for these intervals using the list of bin values
-        binlabels = []
-        for i in range(1, len(bins)):
-            label = "[" + str(bins[i-1]) + " - " + str(bins[i]) + "["                                
-            binlabels.append(label)
-            
-        column_name = attribute + "_category"
-        df['category'] = pd.cut(df[attribute], bins, right=False, labels = binlabels, include_lowest=True)
+        binlabels = self.__make_binlabels(bins)
+
+        column_name = attribute + "_categorical"
+        category = self.__get_categorical_name(tablename, column_name)
+        df[category] = pd.cut(df[attribute], bins, right=False, labels = binlabels, include_lowest=True)
+        new_dtypes = self.__get_simplified_types(tablename, df)
 
         if self.replace is True:
             #If the table should be replaced, drop it and recreate it.
-            df.to_sql(tablename, self.engine, None, internal_ref[0], 'replace', index = False)
+            df.to_sql(tablename, self.engine, None, internal_ref[0], 'replace', index = False, dtype = new_dtypes)
         elif self.replace is False:
             #We need to create a new table and leave the original untouched
-            df.to_sql(new_name, self.engine, None, internal_ref[0], 'fail', index = False)
+            df.to_sql(new_name, self.engine, None, internal_ref[0], 'fail', index = False, dtype = new_dtypes)
+
+        # create history entry
+        #self.__create_history(tablename, attribute, "discretize_using_equal_width", None, new_name)
 
 
     def discretize_using_equal_frequency(self, tablename, attribute, new_name=""):
@@ -508,21 +571,23 @@ class TableTransformer:
         for i in index_bins:
             bins.append((elements[i-1] + 1)) #The elements need to be included too so we add 1 to compensate
 
+        #Make binlabels to represent the bins.
+        binlabels = self.__make_binlabels(bins)
 
-        binlabels = []
-        for i in range(1, len(bins)):
-            label = "[" + str(bins[i-1]) + " - " + str(bins[i]) + "["                                
-            binlabels.append(label)
-
-        column_name = attribute + "_category"
-        df[column_name] = pd.cut(df[attribute], bins, right=False, labels = binlabels, include_lowest=True)
+        column_name = attribute + "_categorical"
+        category = self.__get_categorical_name(tablename, column_name)
+        df[category] = pd.cut(df[attribute], bins, right=False, labels = binlabels, include_lowest=True)
+        new_dtypes = self.__get_simplified_types(tablename, df)
 
         if self.replace is True:
             #If the table should be replaced, drop it and recreate it.
-            df.to_sql(tablename, self.engine, None, internal_ref[0], 'replace', index = False)
+            df.to_sql(tablename, self.engine, None, internal_ref[0], 'replace', index = False, dtype = new_dtypes)
         elif self.replace is False:
             #We need to create a new table and leave the original untouched
-            df.to_sql(new_name, self.engine, None, internal_ref[0], 'fail', index = False)
+            df.to_sql(new_name, self.engine, None, internal_ref[0], 'fail', index = False, dtype = new_dtypes)
+
+        # create history entry
+        #self.__create_history(tablename, attribute, "discretize_using_equal_frequency", None, new_name)
 
 
     def discretize_using_custom_ranges(self, tablename, attribute, ranges, exclude_right=True, new_name=""):
@@ -540,6 +605,7 @@ class TableTransformer:
         sql_query = "SELECT * FROM \"{}\".\"{}\"".format(*internal_ref)
         df = pd.read_sql(sql_query, self.engine)
         bracket = ""
+        bins = ranges
 
         if exclude_right is True:
             bracket = "["
@@ -548,8 +614,8 @@ class TableTransformer:
             bracket = "]"
 
         binlabels = []
-        for i in range(1, len(bins)):
-            label = bracket + str(bins[i-1]) + " - " + str(bins[i]) + bracket                           
+        for i in range(1, len(ranges)):
+            label = bracket + str(bins[i-1]) + " , " + str(bins[i]) + bracket                           
             binlabels.append(label)
 
         if exclude_right is True:
@@ -559,15 +625,17 @@ class TableTransformer:
             param_a = True
             param_b = False
 
-        column_name = attribute + "_category"
-        df[column_name] = pd.cut(df[attribute], ranges, right=param_a, labels = binlabels, include_lowest=param_b)
+        column_name = attribute + "_categorical"
+        category = self.__get_categorical_name(tablename, column_name)
+        df[category] = pd.cut(df[attribute], ranges, right=param_a, labels = binlabels, include_lowest=param_b)
+        new_dtypes = self.__get_simplified_types(tablename, df)
 
         if self.replace is True:
             #If the table should be replaced, drop it and recreate it.
-            df.to_sql(tablename, self.engine, None, internal_ref[0], 'replace', index = False)
+            df.to_sql(tablename, self.engine, None, internal_ref[0], 'replace', index = False, dtype = new_dtypes)
         elif self.replace is False:
             #We need to create a new table and leave the original untouched
-            df.to_sql(new_name, self.engine, None, internal_ref[0], 'fail', index = False)
+            df.to_sql(new_name, self.engine, None, internal_ref[0], 'fail', index = False, dtype = new_dtypes)
 
 
             
@@ -617,6 +685,9 @@ class TableTransformer:
 
         self.__fill_nulls_with_x(attribute, internal_ref, mean)
 
+        # create history entry
+        #self.__create_history(tablename, attribute, "fill_nulls_with_mean", None, new_name)
+
 
     def fill_nulls_with_median(self, tablename, attribute, new_name=""):
         """Method that fills null values of an attribute with the median."""
@@ -630,6 +701,9 @@ class TableTransformer:
 
         self.__fill_nulls_with_x(attribute, internal_ref, median)
 
+        # create history entry
+        #self.__create_history(tablename, attribute, "fill_nulls_with_median", None, new_name)
+
 
     def fill_nulls_with_custom_value(self, tablename, attribute, value, new_name=""):
         """Method that fills null values of an attribute with a custom value"""
@@ -640,6 +714,9 @@ class TableTransformer:
         #Perhaps do a sanity check here? I'll see later on.
 
         self.__fill_nulls_with_x(attribute, internal_ref, value)
+
+        # create history entry
+        #self.__create_history(tablename, attribute, "fill_nulls_with_custom_value", value, new_name)
 
 
     #INCOMPLETE    
@@ -661,6 +738,7 @@ class TableTransformer:
                                                                sql.Identifier(old_name),
                                                                sql.Identifier(new_name)))
         self.db_connection.commit()
+
 
     def join_tables(self, table1, table2, table1_columns, table2_columns, new_table):
         # not complete

@@ -934,45 +934,13 @@ def _get_options(dataset_id, tablename):
 @dataset_pages.route('/dataset/<int:dataset_id>/_get_attr1_options')
 @require_login
 @require_writeperm
-def _get_attr1_options(dataset_id):
+def _get_attr_options(dataset_id):
     info = request.args.get('tablename1', '01', type=str)
 
     dataset = DatasetManager.getDataset(dataset_id)
     tv = dataset.getTableViewer(info)
 
     options = [(option, option) for option in tv.get_attributes()]
-
-    return jsonify(options)
-# ENDFUNCTION
-
-@dataset_pages.route('/dataset/<int:dataset_id>/_get_attr2_options')
-@require_login
-@require_writeperm
-def _get_attr2_options(dataset_id):
-    info = request.args.get('tablename2', '01', type=str)
-
-    dataset = DatasetManager.getDataset(dataset_id)
-    tv = dataset.getTableViewer(info)
-
-    options = [(option, option) for option in tv.get_attributes()]
-    options.insert(0, ('', ''))
-
-    return jsonify(options)
-# ENDFUNCTION
-
-@dataset_pages.route('/dataset/<int:dataset_id>/_get_table2_options')
-@require_login
-@require_writeperm
-def _get_table2_options(dataset_id):
-    table = request.args.get('tablename1', '01', type=str)
-
-    dataset = DatasetManager.getDataset(dataset_id)
-    table_list = dataset.getTableNames()
-
-    table_list.remove(table)
-
-    options = [(option, option) for option in table_list]
-    options.insert(0, ('', ''))
 
     return jsonify(options)
 # ENDFUNCTION
