@@ -77,6 +77,14 @@ class TableJoinForm(FlaskForm):
         self.tablename2.choices = [(table, table) for table in tables]
         self.attribute2.choices = []
     # ENDMETHOD
+
+    def fillTable1(self, attrs):
+        self.attribute1.choices = [(attr, attr) for attr in attrs]
+    # ENDMETHOD
+
+    def fillTable2(self, attrs):
+        self.attribute2.choices = [(attr, attr) for attr in attrs]
+    # ENDMETHOD
 # ENDCLASS
 
 
