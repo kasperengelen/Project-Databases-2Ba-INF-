@@ -33,7 +33,7 @@
 	          		<a data-toggle="collapse" data-parent="#accordion" href="#view">View</a>
 	        	</h4>
 	      	</div>
-	      	<div id="view" class="panel-collapse collapse in">
+	      	<div id="view" class="panel-collapse collapse">
 	        	<div class="panel-body">
 	        		{% from "includes/_formhelpers.html" import render_field %}
 	        		<table>
@@ -370,13 +370,21 @@
         		width: 20%;
         		float:left;
 				padding:3px;
+				border-radius: 3px;
 				}
 
 	        td, th {
 	         	font-size: 15px;
 	            text-align: left;
 	            padding: 8px;
-	            background-color: white;
+	        }
+
+	        table thead {
+	        	background-color: lightgrey;
+	        }
+
+	        table tbody tr:nth-child(even) {
+	        	background-color: #eaeaea;
 	        }
 
 	        .dataTables_filter {
