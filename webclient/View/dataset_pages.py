@@ -150,7 +150,6 @@ def view_dataset_table(dataset_id, tablename, page_nr):
                                                 colstats=colstats)
 # ENDFUNCTION
 
-################ TODO !!!!! ##############
 @dataset_pages.route('/dataset/<int:dataset_id>/jointables', methods=['POST'])
 @require_login
 @require_writeperm
@@ -162,20 +161,38 @@ def transform_join_tables(dataset_id):
 
     dataset = DatasetManager.getDataset(dataset_id)
 
-    form = JoinForm(request.form)
+    form = TableJoinForm(request.form)
     form.fillForm(dataset.getTableNames())
 
+    # determine valid attribute choices for tables
+
+    table1_name = str(form.tablename1.data)
+    table2_name = str(form.tablename2.data)
+
+    # check if tables exist.
+    if not (table1_name in dataset.getTableNames() and table2_name in dataset.getTableNames()):
+        abort(404)
+
+    table1_info = dataset.getTableViewer(table1_name)
+    table2_info = dataset.getTableViewer(table2_name)
+
+    form.fillTable1(table1_info.get_attributes())
+    form.fillTable2(table2_info.get_attributes())
+
     if not form.validate():
-        flash(message="Invalid form.", category="error")
+        flash(message="*tips fedora*", category="error")
+        print(form.errors)
         return redirect(url_for('dataset_pages.view_dataset_home', dataset_id=dataset_id))
 
-    tt = dataset.getTableTransformer(tablename)
+    tt = dataset.getTableTransformer(table2_name)
 
-    tt.join_tables(form.tablename1.data, form.tablename2.data, form.attribute1.data, form.attribute2.data, form.newname.data)
-    flash(message="Tables joined", category="success")
-
-    return redirect(url_for('dataset_pages.view_dataset_home', dataset_id=dataset_id, tablename=tablename))
-################ TODO !!!!! ##############
+    try:
+        tt.join_tables(form.tablename1.data, form.tablename2.data, form.attribute1.data, form.attribute2.data, form.newname.data)
+        flash(message="Tables joined", category="success")
+    except:
+        flash(message="An error occurred", category="error")
+    return redirect(url_for('dataset_pages.view_dataset_home', dataset_id=dataset_id))
+# ENDFUNCTION
 
 @dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/transform/deleteattr', methods=['POST'])
 @require_login
