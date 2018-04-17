@@ -202,8 +202,10 @@ class TableTransformer:
             return (row[0], row[1])
 
 
-    def __convert_numeric(self, internal_ref, attribute, to_type):
+    def __convert_numeric(self, internal_ref, attribute, to_type, length):
         """Conversion of "numeric" things (INTEGER and FLOAT, DATE, TIME, TIMESTAMP)"""
+        if to_type in ['VARCHAR(n)', 'CHAR(n)']:
+            to_type = to_type.replace('n', length)
         sql_query = "ALTER TABLE {}.{} ALTER COLUMN  {} TYPE %s" % to_type
         self.db_connection.cursor().execute(sql.SQL(sql_query).format(sql.Identifier(internal_ref[0]), sql.Identifier(internal_ref[1]),
                                                                                               sql.Identifier(attribute)), [to_type])
@@ -211,7 +213,7 @@ class TableTransformer:
         
 
     
-    def __convert_character(self, internal_ref, attribute, to_type, data_format):
+    def __convert_character(self, internal_ref, attribute, to_type, data_format, length):
         """Conversion of a character type (VARCHAR and CHAR)"""
         patterns = { 
                      'INTEGER'      : 'INTEGER USING {}::integer{}',
@@ -219,8 +221,9 @@ class TableTransformer:
                      'DATE'         : 'DATE USING to_date({} , \'{}\')',
                      'TIME'         : 'TIME USING to_timestamp({}, \'{}\')::time',
                      'TIMESTAMP'    : 'TIMESTAMP USING to_timestamp({}, \'{}\')',
-                     'CHAR(255)'    : 'CHAR',
-                     'VARCHAR(255)' : 'VARCHAR'
+                     'VARCHAR(255)' : 'VARCHAR',
+                     'VARCHAR(n)'   : 'VARCHAR',
+                     'CHAR(n)'      : 'CHAR',
 
                      }
         temp = patterns.setdefault(to_type, '')
@@ -237,7 +240,7 @@ class TableTransformer:
         casting_var = temp.format(ident_attr, data_format)
 
         if temp in ['CHAR' , 'VARCHAR']: #Char and varchar don't need special parameters
-            casting_var = to_type
+            casting_var = to_type.replace('n', length)
             
         sql_query = "ALTER TABLE {}.{} ALTER COLUMN {} TYPE " + casting_var
         cur = self.db_connection.cursor()
@@ -247,7 +250,7 @@ class TableTransformer:
 
 
 
-    def change_attribute_type(self, tablename, attribute, to_type, data_format="", length=0, new_name=""):
+    def change_attribute_type(self, tablename, attribute, to_type, data_format="", length='1', new_name=""):
         """Change the type of a table attribute.
 
         Parameters:
@@ -261,10 +264,10 @@ class TableTransformer:
             internal_ref = self.copy_table(internal_ref, new_name)
         
         if (cur_type == 'character varying') or (cur_type == 'character'):
-            self.__convert_character(internal_ref, attribute, to_type, data_format)
+            self.__convert_character(internal_ref, attribute, to_type, data_format, length)
 
         else:
-            self.__convert_numeric(internal_ref, attribute, to_type)
+            self.__convert_numeric(internal_ref, attribute, to_type, length)
 
 
     def force_attribute_type(self, tablename, attribute, to_type, data_format="", new_name=""):

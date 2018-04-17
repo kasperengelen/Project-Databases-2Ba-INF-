@@ -235,11 +235,21 @@ class TestTableTransformer(unittest.TestCase):
         self.assertEqual(result, 'double precision')
         #Reset to varchar
         self.test_object.change_attribute_type('test_table', 'number', 'VARCHAR(255)')
-        self.test_object.change_attribute_type('test_table', 'number', 'CHAR(255)')
+        self.test_object.change_attribute_type('test_table', 'number', 'CHAR(n)', "", '255')
         cur.execute("SELECT pg_typeof(number) FROM \"TEST\".test_table")
         result = cur.fetchone()[0]
         self.assertEqual(result, 'character')
-        #Leave database in valid testing state by returning the column to integer
+        #Reset to integer
+        self.test_object.change_attribute_type('test_table', 'number', 'INTEGER')
+        cur.execute("SELECT pg_typeof(number) FROM \"TEST\".test_table")
+        result = cur.fetchone()[0]
+        self.assertEqual(result, 'integer')
+        #Change to varchar(30)
+        self.test_object.change_attribute_type('test_table', 'number', 'VARCHAR(n)', "", '30')
+        cur.execute("SELECT pg_typeof(number) FROM \"TEST\".test_table")
+        result = cur.fetchone()[0]
+        self.assertEqual(result, 'character varying')
+
         self.test_object.change_attribute_type('test_table', 'number', 'INTEGER')
         cur.execute("SELECT pg_typeof(number) FROM \"TEST\".test_table")
         result = cur.fetchone()[0]
