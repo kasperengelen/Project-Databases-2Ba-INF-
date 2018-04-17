@@ -61,6 +61,14 @@ class DatasetInfo:
         return TableTransformer(self.setid, get_db(), get_sqla_eng())
     # ENDMETHOD
 
+    def deleteTable(self, tablename):
+        """Deletes the specified table from the dataset."""
+        if not tablename in self.getTableNames():
+            raise RuntimeError("Invalid tablename.")
+
+        # delete table here
+    # ENDMETHOD
+
     def changeMetadata(self, new_name, new_desc):
         """Changes the name and description of the dataset to the 
         specified values."""

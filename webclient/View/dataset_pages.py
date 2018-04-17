@@ -813,6 +813,27 @@ def delete(dataset_id):
     return redirect(url_for('dataset_pages.list_dataset'))
 # ENDFUNCTION
 
+@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/delete', methods=['POST'])
+@require_login
+@require_adminperm
+def delete_table(dataset_id, tablename):
+    """Callback to delete a table."""
+
+    if not DatasetManager.existsID(dataset_id):
+        abort(404)
+
+    dataset = DatasetManager.getDataset(dataset_id)
+
+    if tablename not in dataset.getTableNames():
+        abort(404)
+
+    dataset.deleteTable(tablename)
+
+    flash(message="Table deleted.", category="success")
+
+    return redirect(url_for('dataset_pages.view_dataset_home', dataset_id = dataset_id))
+# ENDFUNCTION
+
 @dataset_pages.route('/dataset/<int:dataset_id>/upload', methods=['POST'])
 @require_login
 @require_writeperm
