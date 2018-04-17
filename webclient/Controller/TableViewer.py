@@ -2,10 +2,13 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from sqlalchemy import create_engine
 from db_wrapper import DBWrapper
+from TableTransformer import TableTransformer
+from DatabaseConfiguration import DatabaseConfiguration
 import math
 import re
 import os
 import csv
+import psycopg2
 from psycopg2 import sql
 import mpld3
 
@@ -64,8 +67,13 @@ class TableViewer:
                 end += 1
                 if(page_nr == 4): #At this point only index = 2 will be '...', we only want to skip 2 or more values.
                     end += 1
+
+            elif(page_nr == (max_index - 3)): #At this point the last 4 indices should always be shown
+               start = page_nr - 1
+               end = max_index + 1
+               
             
-            if (end >= max_index):
+            elif (end >= max_index):
                 start = max_index -3 #Keep last pages from being isolated
                 end = max_index + 1 
 
@@ -119,10 +127,20 @@ class TableViewer:
 
         return translations.setdefault(systype, 'UNKNOWN TYPE')
 
+
+    def is_numerical(self, attr_type):
+        """Method that returns whether a postgres attribute type is a numerical type."""
+        
+        numericals = ['integer', 'double precision', 'bigint', 'bigserial', 'real', 'smallint', 'smallserial', 'serial']
+        if attr_type in numericals:
+            return True
+        else:
+            return False
+
         
 
 
-    def render_table(self, page_nr, nr_rows, show_types=False):
+    def render_table(self, page_nr, nr_rows, show_types=True):
         """This method returns a html table representing the page of the SQL table.
 
         Parameters:
@@ -178,15 +196,26 @@ class TableViewer:
             outcsv.writerows(rows)
 
     def get_numerical_histogram(self, columnname, bar_nr=10):
+        # first check if the attribute type is numerical
+        tt = TableTransformer(self.setid, self.db_connection, DatabaseConfiguration().get_engine())
+        type = tt.get_attribute_type(self.tablename, columnname)[0]
+        if not (type == "bigint" or type == "double precision"):
+            return "N/A"
+
         sql_query = "SELECT \"{}\" FROM \"{}\".\"{}\"".format(columnname, str(self.setid), self.tablename)
         df = pd.read_sql(sql_query, self.engine)
         fig = plt.figure()
         plt.hist(df[columnname], bins=bar_nr, align='left', alpha=0.8, color='grey')
-        plt.show()
-        return mpld3.fig_to_html(fig)
+        html = mpld3.fig_to_html(fig)
+
+        # close the figure to free memory
+        plt.close(fig)
+
+        return html
 
     def get_frequency_pie_chart(self, columnname):
         conn = self.db_connection
+        print(columnname)
 
         # get the frequency of every value
         conn.cursor().execute(sql.SQL("SELECT {}, COUNT(*) FROM {}.{} GROUP BY {} ORDER BY COUNT(*) DESC,"
@@ -195,6 +224,10 @@ class TableViewer:
                                                             sql.Identifier(columnname),
                                                             sql.Identifier(columnname)))
         data = conn.cursor().fetchall()
+
+        if len(data) > 100:
+            # you don't have enough friends to give all these pieces to
+            return "N/A"
 
         # taken from https://stackoverflow.com/questions/6170246/how-do-i-use-matplotlib-autopct
         def make_autopct(values):
@@ -210,8 +243,12 @@ class TableViewer:
         fig, ax = plt.subplots()
         ax.pie(sizes, labels=labels, autopct=make_autopct(sizes))
         ax.axis('equal')
-        plt.show()
-        return mpld3.fig_to_html(fig)
+        html =  mpld3.fig_to_html(fig)
+
+        # close the figure to free memory
+        plt.close(fig)
+
+        return html
 
     def get_most_frequent_value(self, columnname):
         """Return the value that appears most often in the column"""
@@ -245,9 +282,15 @@ class TableViewer:
         """Wrapper that returns result of aggregate function"""
         conn = self.db_connection
 
-        conn.cursor().execute(sql.SQL("SELECT " + aggregate + "({}) FROM {}.{}").format(sql.Identifier(columnname),
+        try:
+            conn.cursor().execute(sql.SQL("SELECT " + aggregate + "({}) FROM {}.{}").format(sql.Identifier(columnname),
                                                                           sql.Identifier(str(self.setid)),
                                                                           sql.Identifier(self.tablename)))
+            # if the attribute type is not valid for aggregate functions
+        except psycopg2.ProgrammingError:
+            conn.rollback()
+            return "N/A"
+
         return conn.cursor().fetchone()[0]
 
     def get_max(self, columnname):
@@ -268,4 +311,3 @@ if __name__ == '__main__':
     tv = TableViewer(1, "Sales(1)", engine, db_connection)
     print(tv.get_most_frequent_value("Units_Sold"))
     # print(tv.get_page_indices(50, 88))
-

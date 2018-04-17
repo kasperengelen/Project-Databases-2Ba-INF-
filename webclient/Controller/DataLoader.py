@@ -227,7 +227,6 @@ class DataLoader:
             name_count = 0
 
             while not name_available:
-                print(table_names)
                 for i in range(len(table_names)):
                     # if every name has been checked
                     if i == len(table_names) - 1:

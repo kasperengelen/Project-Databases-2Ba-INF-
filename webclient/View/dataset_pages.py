@@ -115,10 +115,11 @@ def view_dataset_table(dataset_id, tablename, page_nr):
     perm_type = dataset.getPermForUserID(session['userdata']['userid'])
 
     # RETRIEVE COLUMN STATISTICS
-    colstats = {}
+    colstats = []
 
     for attr_name in tv.get_attributes():
-        colstats[attr_name] = {
+        colstats.append({
+            "attr_name": attr_name,
             "nullfreq": tv.get_null_frequency(attr_name),
             "mostfreq": tv.get_most_frequent_value(attr_name),
             "max": tv.get_max(attr_name),
@@ -126,8 +127,10 @@ def view_dataset_table(dataset_id, tablename, page_nr):
             "avg": tv.get_avg(attr_name),
             "hist_num": tv.get_numerical_histogram(attr_name),
             "chart_freq": tv.get_frequency_pie_chart(attr_name)
-        }
+        })
     # ENDFOR
+
+    attributes = tv.get_attributes()
 
     return render_template('dataset_pages.table.html', 
                                                 table_name = tablename,
@@ -149,7 +152,8 @@ def view_dataset_table(dataset_id, tablename, page_nr):
                                                 fillnullcustom_form = fillnullcustom_form,
                                                 perm_type = perm_type,
                                                 current_page=page_nr,
-                                                colstats=colstats)
+                                                colstats=colstats,
+                                                attributes=attributes)
 # ENDFUNCTION
 
 @dataset_pages.route('/dataset/<int:dataset_id>/jointables', methods=['POST'])
@@ -398,7 +402,7 @@ def transform_zscorenormalisation(dataset_id, tablename):
 @dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/transform/discretize/equalwidth', methods = ['POST'])
 @require_login
 @require_writeperm
-def transform_discretizeEqualWidth():
+def transform_discretizeEqualWidth(dataset_id, tablename):
     """Callback for equal width discretization."""
 
     if not DatasetManager.existsID(dataset_id):
@@ -430,7 +434,7 @@ def transform_discretizeEqualWidth():
 @dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/transform/discretize/equalfreq', methods = ['POST'])
 @require_login
 @require_writeperm
-def transform_discretizeEqualFreq():
+def transform_discretizeEqualFreq(dataset_id, tablename):
     """Callback for equal frequency discretization."""
 
     if not DatasetManager.existsID(dataset_id):
@@ -469,7 +473,7 @@ def transform_discretizeCustomRange():
 @dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/transform/delete_outlier', methods = ['POST'])
 @require_login
 @require_writeperm
-def transform_deleteOutlier():
+def transform_deleteOutlier(dataset_id, tablename):
     """Callback for transformation to delete outlying values."""
 
     if not DatasetManager.existsID(dataset_id):
@@ -501,7 +505,7 @@ def transform_deleteOutlier():
 @dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/transform/fill_null/mean', methods = ['POST'])
 @require_login
 @require_writeperm
-def transform_fillNullsMean():
+def transform_fillNullsMean(dataset_id, tablename):
     """Callback for the fill nulls with mean transformation."""
 
     if not DatasetManager.existsID(dataset_id):
@@ -533,7 +537,7 @@ def transform_fillNullsMean():
 @dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/transform/fill_null/median', methods = ['POST'])
 @require_login
 @require_writeperm
-def transform_fillNullsMedian():
+def transform_fillNullsMedian(dataset_id, tablename):
     """Callback for the fill nulls with median transformation."""
 
     if not DatasetManager.existsID(dataset_id):
@@ -565,7 +569,7 @@ def transform_fillNullsMedian():
 @dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/transform/fill_null/custom', methods = ['POST'])
 @require_login
 @require_writeperm
-def transform_fillNullsCustomValue():
+def transform_fillNullsCustomValue(dataset_id, tablename):
     """Callback for the fill nulls with median transformation."""
 
     if not DatasetManager.existsID(dataset_id):
