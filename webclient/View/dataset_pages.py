@@ -117,24 +117,15 @@ def view_dataset_table(dataset_id, tablename, page_nr):
     # RETRIEVE USER PERMISSION
     perm_type = dataset.getPermForUserID(session['userdata']['userid'])
 
+    attributes = tv.get_attributes()
+
     # RETRIEVE COLUMN STATISTICS
     colstats = []
 
     for attr_name in tv.get_attributes():
-        
-
         colstats.append({
-            "attr_name": attr_name,
-            "nullfreq": tv.get_null_frequency(attr_name),
-            "mostfreq": tv.get_most_frequent_value(attr_name),
-            "max": tv.get_max(attr_name),
-            "min": tv.get_min(attr_name),
-            "avg": tv.get_avg(attr_name)
+            "attr_name": attr_name
         })
-
-    # ENDFOR
-
-    attributes = tv.get_attributes()
 
     return render_template('dataset_pages.table.html', 
                                                 table_name = tablename,
@@ -180,10 +171,24 @@ def view_popup(dataset_id, tablename, attr_name):
     if not attr_name in tv.get_attributes():
         abort(404)
 
+    # RETRIEVE COLUMN STATISTICS
+    colstats = []
+
+    colstats.append({
+        "attr_name": attr_name,
+        "nullfreq": tv.get_null_frequency(attr_name),
+        "mostfreq": tv.get_most_frequent_value(attr_name),
+        "max": tv.get_max(attr_name),
+        "min": tv.get_min(attr_name),
+        "avg": tv.get_avg(attr_name)
+    })
+
+    # ENDFOR
+
     hist_num =  tv.get_numerical_histogram(attr_name)
     chart_freq = tv.get_frequency_pie_chart(attr_name)
 
-    return render_template("dataset_pages.view_popup.html", hist_num=hist_num, chart_freq=chart_freq, attr_name=attr_name)
+    return render_template("dataset_pages.view_popup.html", hist_num=hist_num, chart_freq=chart_freq, attr_name=attr_name, colstats=colstats)
     
 
 @dataset_pages.route('/dataset/<int:dataset_id>/jointables', methods=['POST'])
