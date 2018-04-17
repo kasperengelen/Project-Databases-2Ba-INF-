@@ -15,9 +15,10 @@ Open the test_all.py file and add the necessary lines of code to include your Te
 
 -Import your unit test as the next test. For example "import test_xxx as t3" assuming that t1 and t2 are already imported
 
--Then you add in the body of the function create_suite() a line of code like: "suite3 = unittest.TestLoader().loadTestsFromTestCase(t3.test_xxx)"
 
--Finally you just append the suite you added in the list called suites.
+-Add the testing class that is in the module you included to the tests = [] list in the main body
+
+- The idea will be clear by looking at already imported tests.
 
 -DO NOT TOUCH ANY OTHER CODE, THAT IS THE ONLY ADDITION YOU NEED TO MAKE FOR THE TESTS TO RUN
 
