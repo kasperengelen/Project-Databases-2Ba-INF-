@@ -1,4 +1,5 @@
 from psycopg2 import sql
+from psycopg2 import extensions
 from utils import get_db
 from utils import get_sqla_eng
 from UserManager import UserManager
@@ -67,7 +68,7 @@ class DatasetInfo:
         if not tablename in self.getTableNames():
             raise RuntimeError("Invalid tablename.")
 
-        get_db().execute("DROP TABLE \"{}\".{};".format(int(self.setid), sql.Identifier(tablename) ))
+        get_db().cursor().execute("DROP TABLE \"{}\".{};".format(int(self.setid), extensions.quote_ident(tablename, get_db().cursor())))
         get_db().commit()
     # ENDMETHOD
 
