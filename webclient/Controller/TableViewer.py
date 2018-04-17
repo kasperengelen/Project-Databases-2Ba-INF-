@@ -206,7 +206,7 @@ class TableViewer:
 
         sql_query = "SELECT \"{}\" FROM \"{}\".\"{}\"".format(columnname, str(self.setid), self.tablename)
         df = pd.read_sql(sql_query, self.engine)
-        fig = plt.figure()
+        fig = plt.figure(figsize=(5.12, 3.84))
         plt.hist(df[columnname], bins=bar_nr, align='left', alpha=0.8, color='grey')
         html = mpld3.fig_to_html(fig)
 
@@ -261,10 +261,10 @@ class TableViewer:
             return my_autopct
 
         fig, ax = plt.subplots()
+        fig.set_size_inches(5.12, 3.84)
         ax.pie(sizes, labels=labels, autopct=make_autopct(sizes))
         ax.axis('equal')
         html = mpld3.fig_to_html(fig)
-
         # close the figure to free memory
         plt.close(fig)
 
