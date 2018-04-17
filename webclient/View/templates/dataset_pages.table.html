@@ -44,11 +44,11 @@
 				        				<td>{{ col.max }}</td>
 				        				<td>{{ col.nullfreq }}</td>
 				        				<td>{{ col.mostfreq }}</td>
-			        					{% if col.graphs == "true" %}
+			        					
 			        						<td><a href="{{ url_for('dataset_pages.view_popup', dataset_id=dataset_info.setid, tablename=table_name, attr_name=col.attr_name) }}" target="blank">Show Graphs</a></td>
-			        					{% else %}
+			        			
 			        						<td></td>
-			        					{% endif %}
+			        					
 			        				</tr>			        			
 		        				{% endfor %}
 		        			{% endif %}

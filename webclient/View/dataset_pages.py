@@ -121,9 +121,7 @@ def view_dataset_table(dataset_id, tablename, page_nr):
     colstats = []
 
     for attr_name in tv.get_attributes():
-        graphs = "true";
-        if(tv.get_numerical_histogram(attr_name) == "N/A" and tv.get_frequency_pie_chart(attr_name) == "N/A"):
-            graphs = "false"
+        
 
         colstats.append({
             "attr_name": attr_name,
@@ -131,8 +129,7 @@ def view_dataset_table(dataset_id, tablename, page_nr):
             "mostfreq": tv.get_most_frequent_value(attr_name),
             "max": tv.get_max(attr_name),
             "min": tv.get_min(attr_name),
-            "avg": tv.get_avg(attr_name),
-            "graphs": graphs
+            "avg": tv.get_avg(attr_name)
         })
 
     # ENDFOR
@@ -160,8 +157,7 @@ def view_dataset_table(dataset_id, tablename, page_nr):
                                                 perm_type = perm_type,
                                                 current_page=page_nr,
                                                 colstats=colstats,
-                                                attributes=attributes,
-                                                graphs=graphs)
+                                                attributes=attributes)
 # ENDFUNCTION
 
 @dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/<string:attr_name>/')
