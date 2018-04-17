@@ -24,26 +24,27 @@
 	      	<div id="view" class="panel-collapse collapse">
 	        	<div class="panel-body">
 	        		{% from "includes/_formhelpers.html" import render_field %}
-	        		<div class="col-sm-12">
-		        		<table style="overflow-x: auto;">
-		        			{% if colstats %}
-		        				<tr>
-			        				<th>Attribute</th>
-			        				<th></th>
-		        				</tr>
-		        				{% for col in colstats %}
-		        					<tr>
-				        				<td>{{ col.attr_name }}</td>
-			        					
-			        						<td><a href="{{ url_for('dataset_pages.view_popup', dataset_id=dataset_info.setid, tablename=table_name, attr_name=col.attr_name) }}" target="blank">Show Graphs</a></td>
-			        			
-			        						<td></td>
-			        					
-			        				</tr>			        			
-		        				{% endfor %}
-		        			{% endif %}
-		        		</table>
-		        	</div>
+	        		<div>
+		        		<div>
+		        			<form name="select_attr">
+		        				{{ attr_form.hidden_tag() }}
+				        		<div class="form-group" style="width: 20%;">
+				        			{{render_field(attr_form.view_attr, class_="form-control")}}
+				        		</div>
+				        	</form>
+			        	</div>
+			       	    <div style="float: right;" id="col_stats"></div>
+			        	</br>
+			        	</br>
+			        	</br>
+			        	</br>
+			        	</br>
+			        	</br>
+			        	<div>
+				        	<div class="text-center" style="display: inline-block;" id="chart_freq"></div>
+				        	<div class="text-center" style="display: inline-block;" id="hist_num"></div>
+				        </div>
+				    </div>
 	        	</div>
 	      	</div>
 	    </div>
@@ -367,6 +368,66 @@
 			});
 		</script>
 	</div>
+
+	<script>	
+		$('#view_attr').ready(function() {
+			var send = {
+				view_attr: $('#view_attr option:selected').text()
+			}
+			$.get("{{ url_for('dataset_pages._get_hist_num', dataset_id=dataset_info.setid, tablename=table_name, attr_name=send) }}", send, function(response) {
+					if(response != "N/A") {
+						$('#hist_num').append("<h5>Numerical Histogram</h5>");
+						$('#hist_num').append(response);
+					}
+				})
+			$.get("{{ url_for('dataset_pages._get_chart_freq', dataset_id=dataset_info.setid, tablename=table_name, attr_name=send) }}", send, function(response) {
+				if(response != "N/A") {
+					$('#chart_freq').append("<h5>Frequency Pie Chart</h5>");
+					$('#chart_freq').append(response);
+				}
+			})
+
+			$.get("{{ url_for('dataset_pages._get_colstats', dataset_id=dataset_info.setid, tablename=table_name, attr_name=send) }}", send, function(response) {
+				if(response != "") {	
+					$('#col_stats').append(response);
+				}
+			})
+
+			send.removeAttr();
+		});
+
+		$('#view_attr').change(function() {
+			$('#hist_num').empty();
+			$('#chart_freq').empty();
+			$('#col_stats').empty();
+
+			var send = {
+				view_attr: $('#view_attr option:selected').text()
+			}
+			$.get("{{ url_for('dataset_pages._get_hist_num', dataset_id=dataset_info.setid, tablename=table_name, attr_name=send) }}", send, function(response) {
+				if(response != "N/A") {
+						$('#hist_num').append("<h5>Numerical Histogram</h5>");
+						$('#hist_num').append(response);
+				}
+			});
+			$.get("{{ url_for('dataset_pages._get_chart_freq', dataset_id=dataset_info.setid, tablename=table_name, attr_name=send) }}", send, function(response) {
+			if(response != "N/A") {
+					$('#chart_freq').append("<h5>Frequency Pie Chart</h5>");
+					$('#chart_freq').append(response);
+			}
+			});
+			$.get("{{ url_for('dataset_pages._get_colstats', dataset_id=dataset_info.setid, tablename=table_name, attr_name=send) }}", send, function(response) {
+				if(response != "") {	
+					$('#col_stats').append(response);
+				}
+			})
+
+			send.removeAttr();
+		});
+
+		
+		
+	</script>
 
 	<script charset="utf-8" type="text/javascript">
 
