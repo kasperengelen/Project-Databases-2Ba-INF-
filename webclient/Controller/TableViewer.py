@@ -229,17 +229,35 @@ class TableViewer:
             # you don't have enough friends to give all these pieces to
             return "N/A"
 
+        # pre processed data
+        temp_labels = [x[0] for x in data]
+        temp_sizes = [x[1] for x in data]
+        labels = []
+        sizes = []
+
+        # group all containers smaller than 1%
+        one_percent = sum(temp_sizes)/100
+        other = 0
+
+        for i in range(len(temp_labels)):
+            if temp_sizes[i] < one_percent:
+                other += temp_sizes[i]
+            else:
+                labels.append(temp_labels[i])
+                sizes.append(temp_sizes[i])
+
+        if other > 0:
+            sizes.append(other)
+            labels.append("< 1%")
+
         # taken from https://stackoverflow.com/questions/6170246/how-do-i-use-matplotlib-autopct
         def make_autopct(values):
             def my_autopct(pct):
-                total = sum(values)
                 val = int(round(pct * total / 100.0))
                 return '{p:.1f}%  ({v:d})'.format(p=pct, v=val)
 
             return my_autopct
 
-        labels = [x[0] for x in data]
-        sizes = [x[1] for x in data]
         fig, ax = plt.subplots()
         ax.pie(sizes, labels=labels, autopct=make_autopct(sizes))
         ax.axis('equal')
