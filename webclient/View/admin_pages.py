@@ -20,15 +20,12 @@ def manage_users():
 
     for user in user_list:
 
-        print("CUR_ACTIVATION_STATUS",user.active)
 
         deleteform = DeleteUserForm()
         activationform = ActivateDecactivateUser()
 
         deleteform.fillForm(user)
         activationform.fillForm(user)
-
-        print("NEW_ACTIVATION_STATUS",activationform.new_activation_status.data)
 
         user_forms.append({
             'deleteform': deleteform,
@@ -110,8 +107,6 @@ def set_user_activation():
 
     userid = int(form.userid.data)
     new_status = (form.new_activation_status.data == "True")
-
-    print("SETTING STATUS:", new_status)
 
     if not UserManager.existsID(userid):
         flash(message="User does not exist.", category="error")
