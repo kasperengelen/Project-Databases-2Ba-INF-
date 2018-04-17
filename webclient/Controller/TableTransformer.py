@@ -61,11 +61,22 @@ class TableTransformer:
         self.db_connection.commit()
 
 
-    def __integrity_check(self, tablename, setid):
-        """Extra option to check whether deleting the attribute will destroy integrity constraints.
-        Checks for other constraints is possible as well
+    def is_nullable(self, tablename):
+        """Extra option to check whether an attribute is nullable or not. If deleting something is impossible due to a not null
+        constraint, the row will be deleted as a whole.
         """
-        pass
+        internal_ref = self.get_internal_reference(tablename)
+        cur = self.db_connection.cursor()
+        query = ("SELECT is_nullable FROM information_schema.columns  WHERE table_schema = %s"
+                " AND table_name =  %s AND column_name = %s LIMIT 1")
+        cur.execute(sql.SQL(query), [internal_ref[0], tablename, attribute])
+        result = cur.fetchone()[0]
+        if result == 'YES':
+            return True
+        elif result == 'NO':
+            return False
+        raise ValueError("Error: is_nullabe returned else than YES or NO.")
+
 
     
     def set_to_overwrite(self):
@@ -116,6 +127,16 @@ class TableTransformer:
     def get_supported_types(self):
         """Quick method that returns all the types supported by the TableTransformer for conversion purposes"""
         return ['VARCHAR(255)', 'CHAR(255)', 'INTEGER', 'FLOAT', 'DATE', 'TIME', 'TIMESTAMP']
+
+
+    def is_numerical(self, attr_type):
+        """Method that returns whether a postgres attribute type is a numerical type."""
+        
+        numericals = ['integer', 'double precision', 'bigint', 'bigserial', 'real, smallint', 'smallserial', 'serial']
+        if attr_type in numericals:
+            return True
+        else:
+            return False
 
 
     def get_conversion_options(self, tablename, attribute):
@@ -753,8 +774,6 @@ class TableTransformer:
 
         query += sql.SQL("t1.{} = t2.{})").format(sql.Identifier(table1_columns[-1]),
                                                   sql.Identifier(table2_columns[-1]))
-
-        print(query)
 
         self.db_connection.cursor().execute("SET search_path TO {};".format(self.setid))
         self.db_connection.cursor().execute(query)

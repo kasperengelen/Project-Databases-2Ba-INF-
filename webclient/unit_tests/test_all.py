@@ -8,6 +8,6 @@ import test_TableViewer as t3
 
 if __name__ == '__main__':
     #Small script to run all tests of the project using the ProjectTester class
-    tests = [t1.TestTableTransformer, t2.TestTransformerCopy]
+    tests = [t1.TestTableTransformer, t2.TestTransformerCopy, t3.TestTableViewer]
     tester = pt.ProjectTester(tests)
     tester.run()

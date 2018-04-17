@@ -67,8 +67,13 @@ class TableViewer:
                 end += 1
                 if(page_nr == 4): #At this point only index = 2 will be '...', we only want to skip 2 or more values.
                     end += 1
+
+            elif(page_nr == (max_index - 3)): #At this point the last 4 indices should always be shown
+               start = page_nr - 1
+               end = max_index + 1
+               
             
-            if (end >= max_index):
+            elif (end >= max_index):
                 start = max_index -3 #Keep last pages from being isolated
                 end = max_index + 1 
 
@@ -122,10 +127,20 @@ class TableViewer:
 
         return translations.setdefault(systype, 'UNKNOWN TYPE')
 
+
+    def is_numerical(self, attr_type):
+        """Method that returns whether a postgres attribute type is a numerical type."""
+        
+        numericals = ['integer', 'double precision', 'bigint', 'bigserial', 'real', 'smallint', 'smallserial', 'serial']
+        if attr_type in numericals:
+            return True
+        else:
+            return False
+
         
 
 
-    def render_table(self, page_nr, nr_rows, show_types=False):
+    def render_table(self, page_nr, nr_rows, show_types=True):
         """This method returns a html table representing the page of the SQL table.
 
         Parameters:
@@ -294,6 +309,3 @@ if __name__ == '__main__':
     db_connection = DBWrapper("projectdb18", "dbadmin", "localhost", "AdminPass123")
     engine = create_engine('postgresql://dbadmin:AdminPass123@localhost/projectdb18')
     tv = TableViewer(1, "Sales(1)", engine, db_connection)
-    print(tv.get_most_frequent_value("Units_Sold"))
-    # print(tv.get_page_indices(50, 88))
-

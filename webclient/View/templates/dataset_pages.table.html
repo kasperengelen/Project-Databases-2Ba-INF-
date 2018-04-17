@@ -11,18 +11,6 @@
 				<h2>{{ dataset_info.name }}</h2>
 				<p>{{ dataset_info.desc }}</p>
 			</div>
-			{% if perm_type == 'admin' %}
-				<div class="col-sm-3 text-right">
-					<div>
-						<a href="{{ url_for('dataset_pages.manage_dataset', dataset_id=dataset_info.setid) }}" 
-							class="btn btn-primary">Manage</a>
-						</br>
-						</br>
-						<a href="{{ url_for('dataset_pages.edit_perms_dataset', dataset_id=dataset_info.setid) }}" 
-							class="btn btn-primary">Permissions</a>
-					</div>
-				</div>
-			{% endif %}
 		</div>
 	</div>    		
   
@@ -33,7 +21,7 @@
 	          		<a data-toggle="collapse" data-parent="#accordion" href="#view">View</a>
 	        	</h4>
 	      	</div>
-	      	<div id="view" class="panel-collapse collapse in">
+	      	<div id="view" class="panel-collapse collapse">
 	        	<div class="panel-body">
 	        		{% from "includes/_formhelpers.html" import render_field %}
 	        		<table>
@@ -55,10 +43,7 @@
 			        				<td>{{ col.max }}</td>
 			        				<td>{{ col.nullfreq }}</td>
 			        				<td>{{ col.mostfreq }}</td>
-			        				{% if (col.hist_num != "N/A") or (col.chart_freq !="N/A") %}
-			        					<td><a id="plot" href="#" data-toggle="modal" data-target="#plots_{{ col.attr_name }}">Show Plots</a>
-			        				{% endif %}
-			        				</td>
+		        					<td><a id="plot" href="#" data-toggle="modal" data-target="#plots_{{ col.attr_name }}">Show Plots</a></td>
 			        			</tr>
 
 			        			<div id="plots_{{ col.attr_name }}" class="modal fade" role="dialog">
@@ -71,19 +56,13 @@
 							                    <h4 class="modal-title">Plots for {{ col.attr_name }}</h4>
 							                </div>
 							                <div class="modal-body">
-							                	{% if col.hist_num != "N/A" %}
-								                	<div>
-								                		<h5><strong>Numerical Histogram</strong></h5>
-								                		{{ col.hist_num|safe }}
-								                	</div>
-								                {% endif %}
-
-								                {% if col.chart_freq != "N/A" %}
-								                	<div>
-								                		<h5><strong>Frequency Pie Chart</strong></h5>
-								                		{{ col.chart_freq|safe }}
-								                	</div>
-								                {% endif %}
+							                	<div id="graphs"></div>
+							                	<meta id="graph_url" content="{{ url_for('dataset_pages._get_graphs', dataset_id=dataset_info, tablename=table, attr_name=col.attr_name) }}">
+							                	<script>
+							                		function() {
+							                			document.getElementById('#graphs').innerHTML = window.location.replace(document.getElementById('#graph_url'))
+							                		}
+							                	</script>
 							                </div>
 							                <div class="modal-footer">
 							                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
@@ -179,6 +158,25 @@
 						</div>
 						<!-- Delete Outliers -->
 
+						<!-- Type Conversion -->
+						<div class="col-sm-12" style="border-bottom: 1px solid lightgrey; overflow-x: auto;">
+							<h5><u><strong>Attribute Type Conversion</strong></u></h5>
+							<form method="post" action="{{ url_for('dataset_pages.transform_typeconversion', dataset_id=dataset_info.setid, tablename=table_name) }}">
+							{{ typeconversion_form.hidden_tag() }}
+							<div class="form-group" style="width: 20%; display: inline-block;">
+								{{render_field(typeconversion_form.select_attr, class_="form-control") }}
+							</div>
+							<div class="form-group" style="width: 20%; display: inline-block;">
+								{{render_field(typeconversion_form.new_datatype, class_="form-control") }}
+							</div>
+							<div class="form-group" style="width: 20%; display: inline-block;" id="char_div">
+								{{render_field(typeconversion_form.char_amount, class_="form-control", placeholder="Character Amount") }}
+							</div>
+							<p style="display: inline-block;"><input type="submit" id="typeconversion" class="btn btn-primary" value="Convert Attribute Type"></p>
+							</form>
+						</div>
+						<!-- Type Conversion -->
+
 		      			<!-- Delete Attribute -->
 		      			<div class="col-sm-6" style="border-bottom: 1px solid lightgrey; overflow-x: auto;">
 		      				<h5><u><strong>Delete an Attribute</strong></u></h5>
@@ -191,22 +189,6 @@
 							</form>
 						</div>
 						<!-- Delete Attribute -->
-
-						<!-- Type Conversion -->
-						<div class="col-sm-6" style="border-bottom: 1px solid lightgrey; overflow-x: auto;">
-							<h5><u><strong>Attribute Type Conversion</strong></u></h5>
-							<form method="post" action="{{ url_for('dataset_pages.transform_typeconversion', dataset_id=dataset_info.setid, tablename=table_name) }}">
-							{{ typeconversion_form.hidden_tag() }}
-							<div class="form-group" style="width: 30%; display: inline-block;">
-								{{render_field(typeconversion_form.select_attr, class_="form-control") }}
-							</div>
-							<div class="form-group" style="width: 30%; display: inline-block;">
-								{{render_field(typeconversion_form.new_datatype, class_="form-control") }}
-							</div>
-							<p style="display: inline-block;"><input type="submit" id="typeconversion" class="btn btn-primary" value="Convert Attribute Type"></p>
-							</form>
-						</div>
-						<!-- Type Conversion -->
 
 			      		<!-- One Hot Encoding -->
 			      		<div class="col-sm-6" style="border-bottom: 1px solid lightgrey; overflow-x: auto;">
@@ -370,13 +352,21 @@
         		width: 20%;
         		float:left;
 				padding:3px;
+				border-radius: 3px;
 				}
 
 	        td, th {
 	         	font-size: 15px;
 	            text-align: left;
 	            padding: 8px;
-	            background-color: white;
+	        }
+
+	        table thead {
+	        	background-color: lightgrey;
+	        }
+
+	        table tbody tr:nth-child(even) {
+	        	background-color: #eaeaea;
 	        }
 
 	        .dataTables_filter {
@@ -413,16 +403,22 @@
 
 	<script charset="utf-8" type="text/javascript">
 
+		
+
 		$(function() {
 
 			var dropdown = {
 				attribute: $('#attribute'),
-				options: $('#typeOptions')
+				options: $('#typeOptions'),
+				char_amount: $('#char_amount')
 			};
 
 			updateOptions();
 
 			function updateOptions() {
+
+				$('#char_div').hide();
+
 				var send = {
 					attribute: dropdown.attribute.val()
 				};
@@ -438,10 +434,19 @@
 						);
 					});
 					dropdown.options.removeAttr('disabled');
-				});
+				});	
 			}
 			$('#attribute').change(function() {
 				updateOptions();
+			});
+
+			$('#typeOptions').change(function() {
+				if($('#typeOptions option:selected').text() == "CHAR(X)" || $('#typeOptions option:selected').text() == "VARCHAR(X)"){
+					$('#char_div').show();
+				}
+				else {
+					$('#char_div').hide();
+				}
 			});
 		});
 
