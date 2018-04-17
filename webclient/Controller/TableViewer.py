@@ -225,9 +225,9 @@ class TableViewer:
                                                             sql.Identifier(columnname)))
         data = conn.cursor().fetchall()
 
-        if len(data) > 100:
-            # you don't have enough friends to give all these pieces to
-            return "N/A"
+        # if len(data) > 100:
+        #     # you don't have enough friends to give all these pieces to
+        #     return "N/A"
 
         # pre processed data
         temp_labels = [x[0] for x in data]
@@ -253,6 +253,7 @@ class TableViewer:
         # taken from https://stackoverflow.com/questions/6170246/how-do-i-use-matplotlib-autopct
         def make_autopct(values):
             def my_autopct(pct):
+                total = sum(sizes)
                 val = int(round(pct * total / 100.0))
                 return '{p:.1f}%  ({v:d})'.format(p=pct, v=val)
 
@@ -261,7 +262,7 @@ class TableViewer:
         fig, ax = plt.subplots()
         ax.pie(sizes, labels=labels, autopct=make_autopct(sizes))
         ax.axis('equal')
-        html =  mpld3.fig_to_html(fig)
+        html = mpld3.fig_to_html(fig)
 
         # close the figure to free memory
         plt.close(fig)
