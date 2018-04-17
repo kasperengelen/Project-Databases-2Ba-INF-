@@ -129,7 +129,7 @@ class DataTypeTransform(FlaskForm):
     """Form for datatype conversion transformation."""
     select_attr = SelectField('Attribute', choices=[], id='attribute')
     new_datatype = SelectField('New datatype', choices=[], id='typeOptions')
-    char_amount = StringField('Character amount', [InputRequired(message="input is required.")], id="char_amount")
+    char_amount = StringField('Character amount', [InputRequired(message="input is required.")], default=0)
 
     def fillForm(self, attrs, datatypes):
         self.select_attr.choices = [(attrname, attrname) for attrname in attrs]
