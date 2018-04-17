@@ -289,7 +289,7 @@ class TestTableTransformer(unittest.TestCase):
         cur = self.db_connection.cursor()
         self.test_object.normalize_using_zscore('test_table', 'number')
         query = 'SELECT number FROM "TEST".test_table'
-        cur.execute(query)
+        cur.execute(query)ht de pret moet verpesten
         self.db_connection.commit()
         all_values = cur.fetchall()
         all_values = [x[0] for x in all_values]
