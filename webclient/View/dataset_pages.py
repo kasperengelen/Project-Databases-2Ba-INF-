@@ -187,7 +187,6 @@ def transform_join_tables(dataset_id):
 
     if not form.validate():
         flash(message="Invalid form.", category="error")
-        print(form.errors)
         return redirect(url_for('dataset_pages.view_dataset_home', dataset_id=dataset_id))
 
     tt = dataset.getTableTransformer(table2_name)

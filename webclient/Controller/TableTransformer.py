@@ -775,8 +775,6 @@ class TableTransformer:
         query += sql.SQL("t1.{} = t2.{})").format(sql.Identifier(table1_columns[-1]),
                                                   sql.Identifier(table2_columns[-1]))
 
-        print(query)
-
         self.db_connection.cursor().execute("SET search_path TO {};".format(self.setid))
         self.db_connection.cursor().execute(query)
         self.db_connection.commit()

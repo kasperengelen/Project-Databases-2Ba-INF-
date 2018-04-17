@@ -43,10 +43,7 @@
 			        				<td>{{ col.max }}</td>
 			        				<td>{{ col.nullfreq }}</td>
 			        				<td>{{ col.mostfreq }}</td>
-			        				{% if (col.hist_num != "N/A") or (col.chart_freq !="N/A") %}
-			        					<td><a id="plot" href="#" data-toggle="modal" data-target="#plots_{{ col.attr_name }}">Show Plots</a>
-			        				{% endif %}
-			        				</td>
+		        					<td><a id="plot" href="#" data-toggle="modal" data-target="#plots_{{ col.attr_name }}">Show Plots</a></td>
 			        			</tr>
 
 			        			<div id="plots_{{ col.attr_name }}" class="modal fade" role="dialog">
@@ -59,19 +56,13 @@
 							                    <h4 class="modal-title">Plots for {{ col.attr_name }}</h4>
 							                </div>
 							                <div class="modal-body">
-							                	{% if col.hist_num != "N/A" %}
-								                	<div>
-								                		<h5><strong>Numerical Histogram</strong></h5>
-								                		{{ col.hist_num|safe }}
-								                	</div>
-								                {% endif %}
-
-								                {% if col.chart_freq != "N/A" %}
-								                	<div>
-								                		<h5><strong>Frequency Pie Chart</strong></h5>
-								                		{{ col.chart_freq|safe }}
-								                	</div>
-								                {% endif %}
+							                	<div id="graphs"></div>
+							                	<meta id="graph_url" content="{{ url_for('dataset_pages._get_graphs', dataset_id=dataset_info, tablename=table, attr_name=col.attr_name) }}">
+							                	<script>
+							                		function() {
+							                			document.getElementById('#graphs').innerHTML = window.location.replace(document.getElementById('#graph_url'))
+							                		}
+							                	</script>
 							                </div>
 							                <div class="modal-footer">
 							                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
