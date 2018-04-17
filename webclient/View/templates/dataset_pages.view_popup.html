@@ -10,18 +10,50 @@
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
 
   </head>
+  <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        td, th {
+          font-size: 15px;
+            text-align: left;
+            padding: 8px;
+        }
+    </style>
   <body>   
 
     <div class="text-center">
     	<div class="jumbotron text-center" style="padding: 1%; border-bottom-right-radius: 10px; border-bottom-left-radius: 10px;">
-    		{% if (hist_num != "N/A") and (chart_freq != "N/A") %}
-    			<h2>Graphs for {{ attr_name }}</h2>
-    		{% else %}
-    			<h2>Graph for {{ attr_name }}</h2>
-    		{% endif %}
+    		<h2>Stats for {{ attr_name }}</h2>
     	</div>
 
-    	<div class="row">
+    	<div>
+    		<div>
+    			<table style="overflow-x: auto;">
+		        			{% if colstats %}
+		        				<tr>
+			        				<th>Attribute</th>
+			        				<th>Average</th>
+			        				<th>Minimum</th>
+			        				<th>Maximum</th>
+			        				<th>Null Frequency</th>
+			        				<th>Most Frequent</th>
+		        				</tr>
+		        				{% for col in colstats %}
+		        					<tr>
+				        				<td>{{ col.attr_name }}</td>
+				        				<td>{{ col.avg }}</td>
+				        				<td>{{ col.min }}</td>
+				        				<td>{{ col.max }}</td>
+				        				<td>{{ col.nullfreq }}</td>
+				        				<td>{{ col.mostfreq }}</td>			        					
+			        				</tr>			        			
+		        				{% endfor %}
+		        			{% endif %}
+		        		</table>
+    		</div>
     		{% if hist_num != "N/A" %}
 				<div>
 					<h3>Numerical Histogram</h3>
