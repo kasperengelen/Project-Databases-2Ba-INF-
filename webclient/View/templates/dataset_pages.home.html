@@ -140,11 +140,10 @@
 						</div>
 						<!-- Download dialog. -->
 						<td><input type="hidden" id="input" value="delete this table?">
-					        <form method="post" action="{{ url_for('dataset_pages.delete_table', dataset_id = dataset_info.setid, tablename=table) }}"
-					        	name="delete"
-					        	onsubmit="return check()">
-					            <a onsubmit="form.submit()">Delete</a>
-					        </form></td>
+							<form method="post" action="{{ url_for('dataset_pages.delete_table', dataset_id=dataset_info.setid, tablename=table) }}"
+										name="delete{{ table }}" onsubmit="return check()">
+									<label for="delete{{ table }}" class="glyphicon glyphicon-remove"></label>
+									<input id="delete{{ table }}" style="visibility: hidden;" type="submit"></form></td>
 					</tr>
 					{% endfor %}
 					

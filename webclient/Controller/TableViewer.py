@@ -199,7 +199,8 @@ class TableViewer:
         # first check if the attribute type is numerical
         tt = TableTransformer(self.setid, self.db_connection, DatabaseConfiguration().get_engine())
         type = tt.get_attribute_type(self.tablename, columnname)[0]
-        if not (type == "bigint" or type == "double precision"):
+        if not (type == "bigint" or type == "double precision" or type == "integer"):
+            print(type)
             return "N/A"
 
         sql_query = "SELECT \"{}\" FROM \"{}\".\"{}\"".format(columnname, str(self.setid), self.tablename)
@@ -215,7 +216,6 @@ class TableViewer:
 
     def get_frequency_pie_chart(self, columnname):
         conn = self.db_connection
-        print(columnname)
 
         # get the frequency of every value
         conn.cursor().execute(sql.SQL("SELECT {}, COUNT(*) FROM {}.{} GROUP BY {} ORDER BY COUNT(*) DESC,"
@@ -309,5 +309,3 @@ if __name__ == '__main__':
     db_connection = DBWrapper("projectdb18", "dbadmin", "localhost", "AdminPass123")
     engine = create_engine('postgresql://dbadmin:AdminPass123@localhost/projectdb18')
     tv = TableViewer(1, "Sales(1)", engine, db_connection)
-    print(tv.get_most_frequent_value("Units_Sold"))
-    # print(tv.get_page_indices(50, 88))
