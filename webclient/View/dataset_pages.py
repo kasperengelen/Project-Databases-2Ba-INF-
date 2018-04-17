@@ -8,7 +8,7 @@ from DatasetManager import DatasetManager
 from UserManager import UserManager
 from dataset_forms import FindReplaceForm, DeleteAttrForm, DatasetForm, AddUserForm, RemoveUserForm, DatasetListEntryForm, TableUploadForm
 from dataset_forms import DownloadForm, DataTypeTransform, NormalizeZScore, OneHotEncoding, TableJoinForm, RegexFindReplace, DiscretizeEqualWidth
-from dataset_forms import DiscretizeEqualFreq, DiscretizeCustomRange, DeleteOutlier, FillNullsMean, FillNullsMedian, FillNullsCustomValue
+from dataset_forms import DiscretizeEqualFreq, DiscretizeCustomRange, DeleteOutlier, FillNullsMean, FillNullsMedian, FillNullsCustomValue, AttributeForm
 from TableViewer import TableViewer
 from werkzeug.utils import secure_filename
 import os
@@ -91,6 +91,7 @@ def view_dataset_table(dataset_id, tablename, page_nr):
     fillnullmean_form = FillNullsMean()
     fillnullmedian_form = FillNullsMedian()
     fillnullcustom_form = FillNullsCustomValue()
+    attr_form = AttributeForm()
 
     # fill forms with data
     findrepl_form.fillForm(attrs)
@@ -106,6 +107,7 @@ def view_dataset_table(dataset_id, tablename, page_nr):
     fillnullmean_form.fillForm(attrs)
     fillnullmedian_form.fillForm(attrs)
     fillnullcustom_form.fillForm(attrs)
+    attr_form.fillForm(attrs)
 
 
     # render table
@@ -148,7 +150,8 @@ def view_dataset_table(dataset_id, tablename, page_nr):
                                                 perm_type = perm_type,
                                                 current_page=page_nr,
                                                 colstats=colstats,
-                                                attributes=attributes)
+                                                attributes=attributes,
+                                                attr_form=attr_form)
 # ENDFUNCTION
 
 @dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/<string:attr_name>/')
@@ -1018,6 +1021,93 @@ def _get_options(dataset_id, tablename):
     options = [(option, option) for option in tt.get_conversion_options(tablename, attribute=attr)]
     return jsonify(options)
 
+# ENDFUNCTION
+
+@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/_get_hist_num')
+@require_login
+@require_readperm
+def _get_hist_num(dataset_id, tablename):
+    """Callback for dynamic forms."""
+    attr_name = request.args.get('view_attr', '01', type=str)
+
+    if not DatasetManager.existsID(dataset_id):
+        abort(404)
+
+    dataset = DatasetManager.getDataset(dataset_id)
+
+    if tablename not in dataset.getTableNames():
+        abort(404)
+
+    tt = dataset.getTableTransformer(tablename)
+    tv = dataset.getTableViewer(tablename)
+
+    if not attr_name in tv.get_attributes():
+        abort(404)
+
+    hist_num = tv.get_numerical_histogram(attr_name)
+    return hist_num
+# ENDFUNCTION
+
+@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/_get_chart_freq')
+@require_login
+@require_readperm
+def _get_chart_freq(dataset_id, tablename):
+    """Callback for dynamic forms."""
+    attr_name = request.args.get('view_attr', '01', type=str)
+
+    if not DatasetManager.existsID(dataset_id):
+        abort(404)
+
+    dataset = DatasetManager.getDataset(dataset_id)
+
+    if tablename not in dataset.getTableNames():
+        abort(404)
+
+    tt = dataset.getTableTransformer(tablename)
+    tv = dataset.getTableViewer(tablename)
+
+    if not attr_name in tv.get_attributes():
+        abort(404)
+
+    chart_freq = tv.get_frequency_pie_chart(attr_name)
+    return chart_freq
+# ENDFUNCTION
+
+@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/_get_colstats')
+@require_login
+@require_readperm
+def _get_colstats(dataset_id, tablename):
+    """Callback for dynamic forms."""
+    attr_name = request.args.get('view_attr', '01', type=str)
+
+    if not DatasetManager.existsID(dataset_id):
+        abort(404)
+
+    dataset = DatasetManager.getDataset(dataset_id)
+
+    if tablename not in dataset.getTableNames():
+        abort(404)
+
+    tt = dataset.getTableTransformer(tablename)
+    tv = dataset.getTableViewer(tablename)
+
+    if not attr_name in tv.get_attributes():
+        abort(404)
+
+    colstats = [tv.get_avg(attr_name),
+                tv.get_min(attr_name),
+                tv.get_max(attr_name),
+                tv.get_null_frequency(attr_name),
+                tv.get_most_frequent_value(attr_name)]
+
+    colstats_string = "<table><tr><th>Average</th><th>Minimum</th><th>Maximum</th><th>Null Frequency</th><th>Most Frequent</th></tr>"
+
+    for stat in colstats:
+        colstats_string += "<td>" + str(stat) + "</td>"
+
+    colstats_string += "</table>"
+
+    return colstats_string
 # ENDFUNCTION
 
 @dataset_pages.route('/dataset/<int:dataset_id>/_get_attr1_options')
