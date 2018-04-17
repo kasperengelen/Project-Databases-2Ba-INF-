@@ -87,8 +87,6 @@ class TableJoinForm(FlaskForm):
     # ENDMETHOD
 # ENDCLASS
 
-
-
 ################################################################# TRANSFORMATION FORMS #################################################################
 
 class FindReplaceForm(FlaskForm):

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Data Cleaner</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">   
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+
+  </head>
+  <body>   
+
+    <div class="text-center">
+    	<div class="jumbotron text-center" style="padding: 1%; border-bottom-right-radius: 10px; border-bottom-left-radius: 10px;">
+    		{% if (hist_num != "N/A") and (chart_freq != "N/A") %}
+    			<h2>Graphs for {{ attr_name }}</h2>
+    		{% else %}
+    			<h2>Graph for {{ attr_name }}</h2>
+    		{% endif %}
+    	</div>
+
+    	<div class="row">
+    		{% if hist_num != "N/A" %}
+				<div>
+					<h3>Numerical Histogram</h3>
+					{{ hist_num|safe }}
+				</div>
+			{% endif %}		
+		
+			{% if (hist_num != "N/A") and (chart_freq != "N/A") %}
+				</br>
+				</br>
+			{% endif %}
+
+			{% if chart_freq != "N/A" %}
+				<div>
+					<h3>Frequency Pie Chart</h3>
+					{{ chart_freq|safe }}
+				</div>
+			{% endif %}
+    	</div>
+			
+		
+
+    </div>
+
+</body>
+</html>

@@ -14,6 +14,7 @@ from werkzeug.utils import secure_filename
 import os
 from DataLoader import DataLoader, FileException as DLFileExcept
 import shutil
+import webbrowser
 
 dataset_pages = Blueprint('dataset_pages', __name__)
 
@@ -120,14 +121,20 @@ def view_dataset_table(dataset_id, tablename, page_nr):
     colstats = []
 
     for attr_name in tv.get_attributes():
+        graphs = "true";
+        if(tv.get_numerical_histogram(attr_name) == "N/A" and tv.get_frequency_pie_chart(attr_name) == "N/A"):
+            graphs = "false"
+
         colstats.append({
             "attr_name": attr_name,
             "nullfreq": tv.get_null_frequency(attr_name),
             "mostfreq": tv.get_most_frequent_value(attr_name),
             "max": tv.get_max(attr_name),
             "min": tv.get_min(attr_name),
-            "avg": tv.get_avg(attr_name)
+            "avg": tv.get_avg(attr_name),
+            "graphs": graphs
         })
+
     # ENDFOR
 
     attributes = tv.get_attributes()
@@ -153,8 +160,35 @@ def view_dataset_table(dataset_id, tablename, page_nr):
                                                 perm_type = perm_type,
                                                 current_page=page_nr,
                                                 colstats=colstats,
-                                                attributes=attributes)
+                                                attributes=attributes,
+                                                graphs=graphs)
 # ENDFUNCTION
+
+@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/<string:attr_name>/')
+@require_login
+@require_readperm
+def view_popup(dataset_id, tablename, attr_name):
+    """Callback for graph popup"""
+
+    if not DatasetManager.getDataset(dataset_id):
+        abort(404)
+
+    dataset = DatasetManager.getDataset(dataset_id)
+
+    if tablename not in dataset.getTableNames():
+        abort(404)
+
+    # get tableviewer
+    tv = dataset.getTableViewer(tablename)
+
+    if not attr_name in tv.get_attributes():
+        abort(404)
+
+    hist_num =  tv.get_numerical_histogram(attr_name)
+    chart_freq = tv.get_frequency_pie_chart(attr_name)
+
+    return render_template("dataset_pages.view_popup.html", hist_num=hist_num, chart_freq=chart_freq, attr_name=attr_name)
+    
 
 @dataset_pages.route('/dataset/<int:dataset_id>/jointables', methods=['POST'])
 @require_login
@@ -1025,32 +1059,4 @@ def _get_attr2_options(dataset_id):
     options = [(option, option) for option in tv.get_attributes()]
 
     return jsonify(options)
-# ENDFUNCTION
-
-@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/<string:attr_name>/')
-@require_login
-@require_readperm
-def _get_graphs(dataset_id, tablename, attr_name):
-    """Dynamic callback to retrieve graphs and histograms for columns of tables."""
-
-    if not DatasetManager.existsID(dataset_id):
-        abort(404)
-
-    dataset = DatasetManager.getDataset(dataset_id)
-
-    if tablename not in dataset.getTableNames():
-        abort(404)
-
-    # get tableviewer
-    tv = dataset.getTableViewer(tablename)
-
-    if not attr_name in tv.get_attributes():
-        abort(404)
-
-    graph_map = {
-        "hist_num": tv.get_numerical_histogram(attr_name),
-        "chart_freq": tv.get_frequency_pie_chart(attr_name)
-    }
-
-    return graph_map
 # ENDFUNCTION
