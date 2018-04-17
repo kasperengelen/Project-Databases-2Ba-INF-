@@ -169,12 +169,12 @@ class TestTableTransformer(unittest.TestCase):
     def test_get_conversion_options(self):
         """A test to see whether the correct conversion options are being returned."""
         obj = self.test_object
-        self.assertEqual(obj.get_conversion_options('test_table', 'string'), ['CHAR(255)', 'INTEGER', 'FLOAT', 'DATE', 'TIME', 'TIMESTAMP'])
-        self.assertEqual(obj.get_conversion_options('test_table', 'number'), ['CHAR(255)', 'VARCHAR(255)', 'FLOAT'])
-        self.assertEqual(obj.get_conversion_options('test_table', 'garbage'), ['VARCHAR(255)', 'INTEGER', 'FLOAT', 'DATE', 'TIME', 'TIMESTAMP'])
-        self.assertEqual(obj.get_conversion_options('test_table', 'fpoint'), ['CHAR(255)', 'VARCHAR(255)', 'INTEGER'])
-        self.assertEqual(obj.get_conversion_options('test_table', 'raw_time'), ['CHAR(255)', 'VARCHAR(255)'])
-        self.assertEqual(obj.get_conversion_options('test_table', 'date_time'), ['CHAR(255)', 'VARCHAR(255)'])
+        self.assertEqual(obj.get_conversion_options('test_table', 'string'), ['INTEGER', 'FLOAT', 'DATE', 'TIME', 'TIMESTAMP',  'CHAR(n)'])
+        self.assertEqual(obj.get_conversion_options('test_table', 'number'), ['FLOAT', 'VARCHAR(255)', 'VARCHAR(n)','CHAR(n)'])
+        self.assertEqual(obj.get_conversion_options('test_table', 'garbage'),['VARCHAR(255)', 'VARCHAR(n)', 'INTEGER', 'FLOAT', 'DATE', 'TIME', 'TIMESTAMP'])
+        self.assertEqual(obj.get_conversion_options('test_table', 'fpoint'), ['INTEGER', 'VARCHAR(255)','CHAR(n)'])
+        self.assertEqual(obj.get_conversion_options('test_table', 'raw_time'), ['VARCHAR(255)', 'VARCHAR(n)', 'CHAR(n)'])
+        self.assertEqual(obj.get_conversion_options('test_table', 'date_time'), ['VARCHAR(255)', 'VARCHAR(n)', 'CHAR(n)'])
 
         
 
@@ -289,7 +289,7 @@ class TestTableTransformer(unittest.TestCase):
         cur = self.db_connection.cursor()
         self.test_object.normalize_using_zscore('test_table', 'number')
         query = 'SELECT number FROM "TEST".test_table'
-        cur.execute(query)ht de pret moet verpesten
+        cur.execute(query)
         self.db_connection.commit()
         all_values = cur.fetchall()
         all_values = [x[0] for x in all_values]
