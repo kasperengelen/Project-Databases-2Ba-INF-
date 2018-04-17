@@ -126,9 +126,7 @@ def view_dataset_table(dataset_id, tablename, page_nr):
             "mostfreq": tv.get_most_frequent_value(attr_name),
             "max": tv.get_max(attr_name),
             "min": tv.get_min(attr_name),
-            "avg": tv.get_avg(attr_name),
-            "hist_num": tv.get_numerical_histogram(attr_name),
-            "chart_freq": tv.get_frequency_pie_chart(attr_name)
+            "avg": tv.get_avg(attr_name)
         })
     # ENDFOR
 
@@ -969,8 +967,19 @@ def _get_options(dataset_id, tablename):
     """Callback for dynamic forms."""
     attr = request.args.get('attribute', '01', type=str)
 
+    if not DatasetManager.existsID(dataset_id):
+        abort(404)
+
     dataset = DatasetManager.getDataset(dataset_id)
+
+    if tablename not in dataset.getTableNames():
+        abort(404)
+
     tt = dataset.getTableTransformer(tablename)
+    tv = dataset.getTableViewer(tablename)
+
+    if not attr in tv.get_attributes():
+        abort(404)
 
     options = [(option, option) for option in tt.get_conversion_options(tablename, attribute=attr)]
     return jsonify(options)
@@ -981,10 +990,17 @@ def _get_options(dataset_id, tablename):
 @require_login
 @require_writeperm
 def _get_attr1_options(dataset_id):
-    info = request.args.get('tablename1', '01', type=str)
+    tablename = request.args.get('tablename1', '01', type=str)
+
+    if not DatasetManager.existsID(dataset_id):
+        abort(404)
 
     dataset = DatasetManager.getDataset(dataset_id)
-    tv = dataset.getTableViewer(info)
+
+    if tablename not in dataset.getTableNames():
+        abort(404)
+
+    tv = dataset.getTableViewer(tablename)
 
     options = [(option, option) for option in tv.get_attributes()]
 
@@ -995,12 +1011,47 @@ def _get_attr1_options(dataset_id):
 @require_login
 @require_writeperm
 def _get_attr2_options(dataset_id):
-    info = request.args.get('tablename2', '01', type=str)
+    tablename = request.args.get('tablename2', '01', type=str)
+
+    if not DatasetManager.existsID(dataset_id):
+        abort(404)
 
     dataset = DatasetManager.getDataset(dataset_id)
-    tv = dataset.getTableViewer(info)
+
+    if tablename not in dataset.getTableNames():
+        abort(404)
+
+    tv = dataset.getTableViewer(tablename)
 
     options = [(option, option) for option in tv.get_attributes()]
 
     return jsonify(options)
+# ENDFUNCTION
+
+@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/<string:attr_name>/')
+@require_login
+@require_readperm
+def _get_graphs(dataset_id, tablename, attr_name):
+    """Dynamic callback to retrieve graphs and histograms for columns of tables."""
+
+    if not DatasetManager.existsID(dataset_id):
+        abort(404)
+
+    dataset = DatasetManager.getDataset(dataset_id)
+
+    if tablename not in dataset.getTableNames():
+        abort(404)
+
+    # get tableviewer
+    tv = dataset.getTableViewer(tablename)
+
+    if not attr_name in tv.get_attributes():
+        abort(404)
+
+    graph_map = {
+        "hist_num": tv.get_numerical_histogram(attr_name),
+        "chart_freq": tv.get_frequency_pie_chart(attr_name)
+    }
+
+    return graph_map
 # ENDFUNCTION
