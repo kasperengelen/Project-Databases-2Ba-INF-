@@ -52,6 +52,8 @@ def view_dataset_home(dataset_id):
 @require_readperm
 def view_dataset_table(dataset_id, tablename, page_nr):
 
+    ENTRIES_PER_PAGE = 10
+
     if not DatasetManager.existsID(dataset_id):
         abort(404)
 
@@ -67,7 +69,7 @@ def view_dataset_table(dataset_id, tablename, page_nr):
     dataset_info = dataset.toDict()
 
     # CHECK IN RANGE
-    if not tv.is_in_range(page_nr, 50):
+    if not tv.is_in_range(page_nr, ENTRIES_PER_PAGE):
         flash(message="Page out of range.", category="error")
         return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename = tablename, page_nr = 1))
 
@@ -106,10 +108,10 @@ def view_dataset_table(dataset_id, tablename, page_nr):
 
 
     # render table
-    table_data = tv.render_table(page_nr, 50)
+    table_data = tv.render_table(page_nr, ENTRIES_PER_PAGE)
 
     # get indices
-    page_indices = tv.get_page_indices(display_nr = 50, page_nr = page_nr)
+    page_indices = tv.get_page_indices(display_nr = ENTRIES_PER_PAGE, page_nr = page_nr)
 
     # RETRIEVE USER PERMISSION
     perm_type = dataset.getPermForUserID(session['userdata']['userid'])
