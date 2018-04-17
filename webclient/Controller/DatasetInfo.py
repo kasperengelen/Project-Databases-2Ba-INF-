@@ -69,6 +69,7 @@ class DatasetInfo:
             raise RuntimeError("Invalid tablename.")
 
         get_db().cursor().execute("DROP TABLE \"{}\".{};".format(int(self.setid), extensions.quote_ident(tablename, get_db().cursor())))
+        get_db().cursor().execute("DROP TABLE \"original_{}\".{};".format(int(self.setid), extensions.quote_ident(tablename, get_db().cursor())))
         get_db().commit()
     # ENDMETHOD
 
