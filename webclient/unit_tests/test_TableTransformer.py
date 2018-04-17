@@ -246,6 +246,37 @@ class TestTableTransformer(unittest.TestCase):
         self.assertEqual(result, 'integer')
         self.db_connection.commit()
 
+    def test_datetime_conversion(self):
+        """Test the conversion of an attribute to  a date/time type."""
+        cur = self.db_connection.cursor()
+        #Convert date_string column to actual DATE type
+        self.test_object.change_attribute_type('test_table2', 'date_string', 'DATE', 'DD/MM/YYYY')
+        cur.execute('SELECT pg_typeof(date_string) FROM "TEST".test_table2')
+        result = cur.fetchone()[0]
+        self.assertEqual(result, 'date')
+        self.db_connection.commit()
+        #Convert the same column to a timestamp
+        self.test_object.change_attribute_type('test_table3', 'date_string', 'TIMESTAMP', 'DD/MM/YYYY TIME')
+        cur.execute('SELECT pg_typeof(date_string) FROM "TEST".test_table3')
+        result = cur.fetchone()[0]
+        self.assertEqual(result, 'timestamp without time zone')
+        self.db_connection.commit()
+        #Set date_string of another to a time string and try to convert it
+        query_1 = 'UPDATE "TEST".test_table5 SET date_string = \'08:42 PM\' WHERE date_string is NOT NULL'
+        cur.execute(query_1)
+        self.test_object.change_attribute_type('test_table5', 'date_string', 'TIME', 'HH12:MI AM/PM')
+        cur.execute('SELECT pg_typeof(date_string) FROM "TEST".test_table5')
+        result = cur.fetchone()[0]
+        self.assertEqual(result, 'time without time zone')
+        self.db_connection.commit()
+
+
+
+    def test_datetime_extraction(self):
+        """This one is for testing the extraction of parts of the date/time done by TableTransformer"""
+        self.assertEqual(1, 1)
+        
+
 
         
     def test_one_hot_encode(self):
@@ -489,6 +520,10 @@ class TestTableTransformer(unittest.TestCase):
         cur.execute('SELECT * FROM "TEST".test_table7 WHERE number = 10000 AND string = \'Dummy\'')
         result = cur.fetchall()
         self.assertIsNotNone(result)
+
+
+    def test_delete_rows_using_conditions(self):
+        self.assertEqual(1, 1)
         
         
         

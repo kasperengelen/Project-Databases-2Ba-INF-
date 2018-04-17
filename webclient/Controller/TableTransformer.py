@@ -216,9 +216,9 @@ class TableTransformer:
         patterns = { 
                      'INTEGER'      : 'INTEGER USING {}::integer{}',
                      'FLOAT'        : 'FLOAT USING {}::float{}',
-                     'DATE'         : 'DATE USING to_date({} , {})',
-                     'TIME'         : 'TIME USING to_timestamp({}, {})::time',
-                     'TIMESTAMP'    : 'TIMESTAMP USING to_timestamp({}, {})',
+                     'DATE'         : 'DATE USING to_date({} , \'{}\')',
+                     'TIME'         : 'TIME USING to_timestamp({}, \'{}\')::time',
+                     'TIMESTAMP'    : 'TIMESTAMP USING to_timestamp({}, \'{}\')',
                      'CHAR(255)'    : 'CHAR',
                      'VARCHAR(255)' : 'VARCHAR'
 
