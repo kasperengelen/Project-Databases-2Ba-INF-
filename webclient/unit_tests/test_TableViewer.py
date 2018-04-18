@@ -33,7 +33,10 @@ class TestTableViewer(unittest.TestCase):
         #In some cases the test fails in a way that tearDownClass is not called and the table still exists
         #Sadly we can't confirm if the table is still correct, so we better rebuild it.
         try:
+            # table 1
             cur.execute(creation_query)
+            # table 2
+            cur.execute('CREATE TABLE "TEST".test_table1 AS TABLE "TEST".test_table')
 
         except psycopg2.ProgrammingError:
             #If it was still present in the database we better drop the schema and rebuild it
@@ -48,9 +51,15 @@ class TestTableViewer(unittest.TestCase):
         values = [('C-Corp', 1, '08/08/1997'), ('Apple', 10, '01/04/1976'), ('Microsoft', 8, '04/04/1975') , ('Nokia', 3000, '12/05/1865') , ('Samsung', 7, '01/03/1938'),
                   ('Huawei', 4521, '15/09/1987'), ('Razer', 9000, '01/01/1998')]
 
+        values2 = [('haha', 1, '01/01/2001'), ('hihi', 2, '01/01/2001'), ('hoho', 3, '01/01/2001'), ('haha', 2, '20/05/2013'),
+                   (None, 2, None), (None, 4, '05/12/2017')]
+
         for i in range(10):
             for v in values:
                 cur.execute("INSERT INTO \"TEST\".test_table VALUES(%s, %s, %s)", v)
+
+        for v in values2:
+            cur.execute("INSERT INTO \"TEST\".test_table1 VALUES(%s, %s, %s)", v)
 
         
         cls.db_connection.commit()
@@ -114,7 +123,46 @@ class TestTableViewer(unittest.TestCase):
         #Get indices when being on page 1000 when displaying 50 rows per page
         indices = self.test_object.get_page_indices(50, 997)
         self.assertEqual(indices, ['1', '...', '996', '997', '998', '999', '1000'])
-        
+
+    def test_is_numerical(self):
+        is_numerical = self.test_object.is_numerical("double precision")
+        self.assertEqual(is_numerical, True)
+        is_numerical = self.test_object.is_numerical("bigserial")
+        self.assertEqual(is_numerical, True)
+        is_numerical = self.test_object.is_numerical("real")
+        self.assertEqual(is_numerical, True)
+        is_numerical = self.test_object.is_numerical("date")
+        self.assertEqual(is_numerical, False)
+        is_numerical = self.test_object.is_numerical("character varying")
+        self.assertEqual(is_numerical, False)
+
+    def test_get_most_frequent_value(self):
+        most_frequent = self.test_object.get_most_frequent_value("string")
+        self.assertEqual(most_frequent, "haha")
+        most_frequent = self.test_object.get_most_frequent_value("number")
+        self.assertEqual(most_frequent, 2)
+        most_frequent = self.test_object.get_most_frequent_value("date")
+        self.assertEqual(most_frequent, '01/01/2001')
+
+    def test_get_null_frequency(self):
+        null_frequency = self.test_object.get_null_frequency("string")
+        self.assertEqual(null_frequency, 2)
+        null_frequency = self.test_object.get_null_frequency("number")
+        self.assertEqual(null_frequency, 0)
+        null_frequency = self.test_object.get_null_frequency("date")
+        self.assertEqual(null_frequency, 1)
+
+    def test_get_max(self):
+        max = self.test_object.get_max("string")
+        self.assertEqual(max, "N/A")
+        max = self.test_object.get_max("number")
+        self.assertEqual(max, 4)
+        max = self.test_object.get_max("date")
+        self.assertEqual(max, "N/A")
+
+    def test_get_min(self):
+
+    def test_get_avg(self):
         
 
 

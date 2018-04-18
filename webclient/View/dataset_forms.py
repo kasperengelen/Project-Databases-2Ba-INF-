@@ -140,12 +140,14 @@ class DeleteAttrForm(FlaskForm):
 class DataTypeTransform(FlaskForm):
     """Form for datatype conversion transformation."""
     select_attr = SelectField('Attribute', choices=[], id='attribute')
-    new_datatype = SelectField('New datatype', choices=[], id='typeOptions')
-    char_amount = StringField('Character amount', [InputRequired(message="input is required.")], default=0)
+    new_datatype = SelectField('New Datatype', choices=[], id='typeOptions')
+    char_amount = StringField('Character Amount', [InputRequired(message="input is required.")], default=1)
+    date_type = SelectField('Date/Time Format', choices=[], id="date_type")
 
-    def fillForm(self, attrs, datatypes):
+    def fillForm(self, attrs, datatypes, datetimetypes):
         self.select_attr.choices = [(attrname, attrname) for attrname in attrs]
         self.new_datatype.choices = [(datatype, datatype) for datatype in datatypes]
+        self.date_type.choices = [(datetimetype, datetimetype) for datetimetype in datetimetypes]
     # ENDMETHOD
 # ENDCLASS
 
