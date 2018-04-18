@@ -96,7 +96,7 @@ def view_dataset_table(dataset_id, tablename, page_nr):
     # fill forms with data
     findrepl_form.fillForm(attrs)
     delete_form.fillForm(attrs)
-    typeconversion_form.fillForm(attrs, [])
+    typeconversion_form.fillForm(attrs, [], [])
     onehotencodingform.fillForm(attrs)
     zscoreform.fillForm(attrs)
     regexfindreplace_form.fillForm(attrs)
@@ -351,7 +351,7 @@ def transform_typeconversion(dataset_id, tablename):
     tt = dataset.getTableTransformer(tablename)
 
     form = DataTypeTransform(request.form)
-    form.fillForm(tv.get_attributes(), tt.get_conversion_options(tablename, form.select_attr.data))
+    form.fillForm(tv.get_attributes(), tt.get_conversion_options(tablename, form.select_attr.data), tt.get_datetime_formats(form.date_type.data))
 
 
     if not form.validate():
@@ -1020,6 +1020,32 @@ def _get_options(dataset_id, tablename):
 
     options = [(option, option) for option in tt.get_conversion_options(tablename, attribute=attr)]
     return jsonify(options)
+
+# ENDFUNCTION
+
+@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/_get_datetype')
+@require_login
+@require_writeperm
+def _get_datetype(dataset_id, tablename):
+    """Callback for dynamic forms."""
+
+    type = request.args.get('options', '01', type=str)
+
+    if not DatasetManager.existsID(dataset_id):
+        abort(404)
+
+    dataset = DatasetManager.getDataset(dataset_id)
+
+    if tablename not in dataset.getTableNames():
+        abort(404)
+
+    tt = dataset.getTableTransformer(tablename)
+    tv = dataset.getTableViewer(tablename)
+
+    print(type)
+
+    datetypes = [(datetype, datetype) for datetype in tt.get_datetime_formats(type)]
+    return jsonify(datetypes)
 
 # ENDFUNCTION
 

@@ -141,6 +141,9 @@
 							<div class="form-group" style="width: 20%; display: inline-block;" id="char_div">
 								{{render_field(typeconversion_form.char_amount, class_="form-control", placeholder="Character Amount") }}
 							</div>
+							<div class="form-group" style="width: 20%; display: inline-block;" id="date_div">
+								{{render_field(typeconversion_form.date_type, class_="form-control") }}
+							</div>
 							<p style="display: inline-block;"><input type="submit" id="typeconversion" class="btn btn-primary" value="Convert Attribute Type"></p>
 							</form>
 						</div>
@@ -314,62 +317,6 @@
 		</div>
 	</div>
 
-	<script>	
-		$('#view_attr').ready(function() {
-			var send = {
-				view_attr: $('#view_attr option:selected').text()
-			}
-			$.get("{{ url_for('dataset_pages._get_hist_num', dataset_id=dataset_info.setid, tablename=table_name, attr_name=send) }}", send, function(response) {
-					if(response != "N/A") {
-						$('#hist_num').append("<h5>Numerical Histogram</h5>");
-						$('#hist_num').append(response);
-					}
-				})
-			$.get("{{ url_for('dataset_pages._get_chart_freq', dataset_id=dataset_info.setid, tablename=table_name, attr_name=send) }}", send, function(response) {
-				if(response != "N/A") {
-					$('#chart_freq').append("<h5>Frequency Pie Chart</h5>");
-					$('#chart_freq').append(response);
-				}
-			})
-
-			$.get("{{ url_for('dataset_pages._get_colstats', dataset_id=dataset_info.setid, tablename=table_name, attr_name=send) }}", send, function(response) {
-				if(response != "") {	
-					$('#col_stats').append(response);
-				}
-			})
-		});
-
-		$('#view_attr').change(function() {
-			$('#hist_num').empty();
-			$('#chart_freq').empty();
-			$('#col_stats').empty();
-
-			var send = {
-				view_attr: $('#view_attr option:selected').text()
-			}
-			$.get("{{ url_for('dataset_pages._get_hist_num', dataset_id=dataset_info.setid, tablename=table_name, attr_name=send) }}", send, function(response) {
-				if(response != "N/A") {
-						$('#hist_num').append("<h5>Numerical Histogram</h5>");
-						$('#hist_num').append(response);
-				}
-			});
-			$.get("{{ url_for('dataset_pages._get_chart_freq', dataset_id=dataset_info.setid, tablename=table_name, attr_name=send) }}", send, function(response) {
-			if(response != "N/A") {
-					$('#chart_freq').append("<h5>Frequency Pie Chart</h5>");
-					$('#chart_freq').append(response);
-			}
-			});
-			$.get("{{ url_for('dataset_pages._get_colstats', dataset_id=dataset_info.setid, tablename=table_name, attr_name=send) }}", send, function(response) {
-				if(response != "") {	
-					$('#col_stats').append(response);
-				}
-			})
-		});
-
-		
-		
-	</script>
-
 	<div class="text-center">
 		<style>
 			table {
@@ -487,14 +434,16 @@
 			var dropdown = {
 				attribute: $('#attribute'),
 				options: $('#typeOptions'),
-				char_amount: $('#char_amount')
+				char_amount: $('#char_amount'),
+				date_type: $('#date_type')
 			};
 
 			updateOptions();
 
 			function updateOptions() {
-
+				
 				$('#char_div').hide();
+				$('#date_div').hide();
 
 				var send = {
 					attribute: dropdown.attribute.val()
@@ -513,6 +462,7 @@
 					dropdown.options.removeAttr('disabled');
 				});	
 			}
+
 			$('#attribute').change(function() {
 				updateOptions();
 			});
@@ -523,9 +473,62 @@
 				}
 				else {
 					$('#char_div').hide();
-				}
+				}			
 			});
 		});
+
+	</script>
+
+	<script>
+
+		$(function() {
+
+			var dropdown = {
+				attribute: $('#attribute'),
+				options: $('#typeOptions'),
+				char_amount: $('#char_amount'),
+				date_type: $('#date_type')
+			};
+
+			updateDateTime();
+
+			function updateDateTime() {
+				$('#date_div').hide();
+
+				var type = {
+					options: dropdown.options.val()
+				}
+
+				if (type.options == "") {
+					type.options = "VARCHAR(255)";
+				}
+
+				dropdown.date_type.attr('disabled', 'disabled');
+				dropdown.date_type.empty();
+				$.getJSON("{{ url_for('dataset_pages._get_datetype', dataset_id=dataset_info.setid, tablename=table_name, attr=type) }}", type, function(data) {
+					data.forEach(function(item) {
+						dropdown.date_type.append (
+							$('<option>', {
+								value: item[0],
+								text: item[1]
+							})
+						);
+					});
+					dropdown.date_type.removeAttr('disabled');
+				});
+
+			}
+			$('#typeOptions').change(function() {
+				updateDateTime();
+				if($('#typeOptions option:selected').text() == "DATE" || $('#typeOptions option:selected').text() == "TIME" || $('#typeOptions option:selected').text() == "TIMESTAMP"){
+					$('#date_div').show();
+				}
+				else {
+					$('#date_div').hide();
+				}			
+			});
+		});
+
 	</script>
 
 {% endblock %}
