@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, redirect, url_for, request, flash
-from utils import require_admin
-from utils import require_login
+from AccessController import require_admin
+from AccessController import require_login
 from UserManager import UserManager
 from DatasetManager import DatasetManager
 from admin_forms import DeleteUserForm, DeleteDatasetForm, AdminUserEditForm, ActivateDecactivateUser

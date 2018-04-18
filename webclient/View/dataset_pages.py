@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, url_for, redirect, session, flash, abort, send_from_directory, jsonify
 from flask import current_app as app
-from utils import require_login, require_admin
-from utils import require_adminperm, require_writeperm, require_readperm
+from AccessController import require_login, require_admin
+from AccessController import require_adminperm, require_writeperm, require_readperm
 from DatasetManager import DatasetManager
 from UserManager import UserManager
 from dataset_forms import FindReplaceForm, DeleteAttrForm, DatasetForm, AddUserForm, RemoveUserForm, DatasetListEntryForm, TableUploadForm
