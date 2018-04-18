@@ -44,38 +44,6 @@ class UserInfo:
         self.active = active
     # ENDMETHOD
 
-    def editInfo(self, new_email, new_fname, new_lname, new_pass):
-        """Edit the user information. The information will also be updated in the database."""
-
-        passwd_hash = sha256_crypt.hash(new_pass)
-
-        # update DB
-        get_db().cursor().execute("UPDATE SYSTEM.user_accounts SET fname=%s, lname=%s, email=%s, passwd=%s WHERE userid=%s", 
-                                                                        [new_fname, new_lname, new_email, passwd_hash, self.userid])
-        get_db().commit()
-
-         # update values
-        new = UserManager.UserManager.getUserFromID(self.userid)
-        self.fname = new.fname
-        self.lname = new.lname
-        self.email = new.email
-    # ENDMETHOD
-
-    def editInfoNoPass(self, new_email, new_fname, new_lname):
-        """Edit the user information except the password."""
-
-        get_db().cursor().execute("UPDATE SYSTEM.user_accounts SET fname=%s, lname=%s, email=%s WHERE userid=%s", 
-                                                                        [new_fname, new_lname, new_email, self.userid])
-        get_db().commit()
-
-        # update values
-        new = UserManager.UserManager.getUserFromID(self.userid)
-        self.fname = new.fname
-        self.lname = new.lname
-        self.email = new.email
-
-    # ENDMETHOD
-
     def toDict(self):
         """Retrieve a JSON-compatible dict
         that contains information about the user."""
@@ -90,5 +58,3 @@ class UserInfo:
             "active" : self.active
         }
     # ENDMETHOD
-
-import UserManager

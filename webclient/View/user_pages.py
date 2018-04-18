@@ -111,8 +111,13 @@ def edit():
         new_lname = form.lastname.data
         new_pass = form.password.data
 
-        current_user.editInfo(new_email, new_fname, new_lname, new_pass)
-        session['userdata'] = current_user.toDict()
+        #current_user.editInfo(new_email, new_fname, new_lname, new_pass)
+
+        UserManager.editUserInfo(userid, new_fname, new_lname, new_email)
+        UserManager.editUserPass(userid, new_pass)
+
+        #session['userdata'] = current_user.toDict()
+        session['userdata'] = UserManager.getUserFromID(userid).toDict()
         flash(message="Information updated.", category="success")
     else:
         form.fillFields(session['userdata'])

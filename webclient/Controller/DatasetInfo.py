@@ -73,20 +73,6 @@ class DatasetInfo:
         get_db().commit()
     # ENDMETHOD
 
-    def changeMetadata(self, new_name, new_desc):
-        """Changes the name and description of the dataset to the 
-        specified values."""
-        
-        # UPDATE INFO IN DB
-        get_db().cursor().execute("UPDATE SYSTEM.datasets SET setname = %s, description = %s WHERE setid = %s;", [new_name, new_desc, self.setid])
-        get_db().commit()
-
-        # UPDATE INFO IN CLASS
-        new  = DatasetManager.DatasetManager.getDataset(self.setid)
-        self.name = new.name
-        self.desc = new.desc
-    # ENDMETHOD
-
     def getAdminPerms(self):
         """Retrieve a list of UserInfo objects that represent
         the users that have admin access to the dataset."""
@@ -194,5 +180,3 @@ class DatasetInfo:
 
         return retval
     # ENDMETHOD
-
-import DatasetManager
