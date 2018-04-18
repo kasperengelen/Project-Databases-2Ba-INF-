@@ -13,10 +13,8 @@ class TestDatasetInfo(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         """Set up the test environment."""
-
-        
-        
-        pass
+        db_conn = DatabaseConfiguration.get_db()
+        engine = DatabaseConfiguration.get_engine()
 
     @classmethod
     def tearDownClass(cls):
