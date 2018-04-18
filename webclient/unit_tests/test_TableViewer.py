@@ -6,6 +6,7 @@ import psycopg2
 from sqlalchemy import create_engine
 import TableViewer as tv
 from DatabaseConfiguration import DatabaseConfiguration
+import math
 
 
 
@@ -13,6 +14,7 @@ class TestTableViewer(unittest.TestCase):
     db_connection = None
     engine = None
     test_object = None
+    test_object2 = None
 
 
 
@@ -21,22 +23,27 @@ class TestTableViewer(unittest.TestCase):
         #Make all the connections and objects needed
         cls.db_connection = DatabaseConfiguration().get_db()
         cls.engine = DatabaseConfiguration().get_engine()
-        cls.test_object = tv.TableViewer('TEST', 'test_table', cls.engine)
+        cls.test_object = tv.TableViewer('TEST', 'test_table', cls.engine, cls.db_connection)
+        cls.test_object2 = tv.TableViewer('TEST', 'stat_table', cls.engine, cls.db_connection)
 
         cur = cls.db_connection.cursor()
         cur.execute("CREATE SCHEMA IF NOT EXISTS \"TEST\"")
         cls.db_connection.commit()
         creation_query = """CREATE TABLE "TEST".test_table (
-        string VARCHAR(255) NOT NULL,
-        number INTEGER NOT NULL,
-        date_time VARCHAR(255) NOT NULL);"""
+        string VARCHAR(255),
+        number INTEGER,
+        date_time VARCHAR(255));"""
+        creation_query2 = creation_query.replace("test_table", "stat_table")
         #In some cases the test fails in a way that tearDownClass is not called and the table still exists
         #Sadly we can't confirm if the table is still correct, so we better rebuild it.
         try:
+            # cur.execute("GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA \"TEST\" TO dbadmin;")
+            # cur.execute("GRANT ALL PRIVILEGES ON SCHEMA \"TEST\" TO dbadmin;")
             # table 1
             cur.execute(creation_query)
             # table 2
-            cur.execute('CREATE TABLE "TEST".test_table1 AS TABLE "TEST".test_table')
+            cur.execute(creation_query2)
+            cls.db_connection.commit()
 
         except psycopg2.ProgrammingError:
             #If it was still present in the database we better drop the schema and rebuild it
@@ -45,6 +52,7 @@ class TestTableViewer(unittest.TestCase):
             cur.execute("CREATE SCHEMA \"TEST\"")
             cls.db_connection.commit()
             cur.execute(creation_query)
+            cur.execute(creation_query2)
             cls.db_connection.commit()
             
             
@@ -59,7 +67,7 @@ class TestTableViewer(unittest.TestCase):
                 cur.execute("INSERT INTO \"TEST\".test_table VALUES(%s, %s, %s)", v)
 
         for v in values2:
-            cur.execute("INSERT INTO \"TEST\".test_table1 VALUES(%s, %s, %s)", v)
+            cur.execute("INSERT INTO \"TEST\".stat_table VALUES(%s, %s, %s)", v)
 
         
         cls.db_connection.commit()
@@ -131,38 +139,50 @@ class TestTableViewer(unittest.TestCase):
         self.assertEqual(is_numerical, True)
         is_numerical = self.test_object.is_numerical("real")
         self.assertEqual(is_numerical, True)
-        is_numerical = self.test_object.is_numerical("date")
+        is_numerical = self.test_object.is_numerical("date_time")
         self.assertEqual(is_numerical, False)
         is_numerical = self.test_object.is_numerical("character varying")
         self.assertEqual(is_numerical, False)
 
     def test_get_most_frequent_value(self):
-        most_frequent = self.test_object.get_most_frequent_value("string")
+        most_frequent = self.test_object2.get_most_frequent_value("string")
         self.assertEqual(most_frequent, "haha")
-        most_frequent = self.test_object.get_most_frequent_value("number")
+        most_frequent = self.test_object2.get_most_frequent_value("number")
         self.assertEqual(most_frequent, 2)
-        most_frequent = self.test_object.get_most_frequent_value("date")
+        most_frequent = self.test_object2.get_most_frequent_value("date_time")
         self.assertEqual(most_frequent, '01/01/2001')
 
     def test_get_null_frequency(self):
-        null_frequency = self.test_object.get_null_frequency("string")
+        null_frequency = self.test_object2.get_null_frequency("string")
         self.assertEqual(null_frequency, 2)
-        null_frequency = self.test_object.get_null_frequency("number")
+        null_frequency = self.test_object2.get_null_frequency("number")
         self.assertEqual(null_frequency, 0)
-        null_frequency = self.test_object.get_null_frequency("date")
+        null_frequency = self.test_object2.get_null_frequency("date_time")
         self.assertEqual(null_frequency, 1)
 
     def test_get_max(self):
-        max = self.test_object.get_max("string")
+        max = self.test_object2.get_max("string")
         self.assertEqual(max, "N/A")
-        max = self.test_object.get_max("number")
+        max = self.test_object2.get_max("number")
         self.assertEqual(max, 4)
-        max = self.test_object.get_max("date")
+        max = self.test_object2.get_max("date_time")
         self.assertEqual(max, "N/A")
 
     def test_get_min(self):
+        min = self.test_object2.get_min("string")
+        self.assertEqual(min, "N/A")
+        min = self.test_object2.get_min("number")
+        self.assertEqual(min, 1)
+        min = self.test_object2.get_min("date_time")
+        self.assertEqual(min, "N/A")
 
     def test_get_avg(self):
+        avg = self.test_object2.get_avg("string")
+        self.assertEqual(avg, "N/A")
+        avg = self.test_object2.get_avg("number")
+        self.assertTrue(math.isclose(14/6, avg))
+        avg = self.test_object2.get_avg("date_time")
+        self.assertEqual(avg, "N/A")
         
 
 
