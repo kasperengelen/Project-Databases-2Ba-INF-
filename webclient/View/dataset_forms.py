@@ -15,7 +15,6 @@ class DatasetForm(FlaskForm):
     # ENDMETHOD
 # ENDCLASS
 
-
 class AddUserForm(FlaskForm):
     """Form to give a user permission to alter the dataset."""
     email = StringField('Email', [
@@ -88,12 +87,18 @@ class TableJoinForm(FlaskForm):
 # ENDCLASS
 
 class AttributeForm(FlaskForm):
-
+    """Form to select attribute for which stats will be displayed."""
     view_attr = SelectField('Attribute', choices=[], id="view_attr")
 
     def fillForm(self, attrs):
         self.view_attr.choices = [(attr, attr) for attr in attrs]
     # ENDMETHOD
+# ENDCLASS
+
+class EntryCount(FlaskForm):
+    """Form to select how many entries need to be displayed."""
+
+    entry_count = SelectField('Entries', choices = [(10, '10'), (20, '20'), (50, '50'), (100, '100'), (500, '500')])
 # ENDCLASS
 
 ################################################################# TRANSFORMATION FORMS #################################################################
@@ -135,12 +140,14 @@ class DeleteAttrForm(FlaskForm):
 class DataTypeTransform(FlaskForm):
     """Form for datatype conversion transformation."""
     select_attr = SelectField('Attribute', choices=[], id='attribute')
-    new_datatype = SelectField('New datatype', choices=[], id='typeOptions')
-    char_amount = StringField('Character amount', [InputRequired(message="input is required.")], default=0)
+    new_datatype = SelectField('New Datatype', choices=[], id='typeOptions')
+    char_amount = StringField('Character Amount', [InputRequired(message="input is required.")], default=1)
+    date_type = SelectField('Date/Time Format', choices=[], id="date_type")
 
-    def fillForm(self, attrs, datatypes):
+    def fillForm(self, attrs, datatypes, datetimetypes):
         self.select_attr.choices = [(attrname, attrname) for attrname in attrs]
         self.new_datatype.choices = [(datatype, datatype) for datatype in datatypes]
+        self.date_type.choices = [(datetimetype, datetimetype) for datetimetype in datetimetypes]
     # ENDMETHOD
 # ENDCLASS
 

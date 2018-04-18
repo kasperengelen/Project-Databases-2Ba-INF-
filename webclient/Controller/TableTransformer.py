@@ -153,15 +153,14 @@ class TableTransformer:
         #In case it's a data type unknown to this class, we can almost certainly convert to varchar(255)
         return options.setdefault(data_type, ['VARCHAR(255)'])
 
-    def get_datetime_formats(self, tablename, attribute):
+    def get_datetime_formats(self, data_type):
         """Returns a list of supported formats for the conversion of a character type to a date/time type."""
-        data_type = self.get_attribute_type(tablename, attribute)[0]
-        formats = { 'date'                        : ['DD/MM/YYYY', 'DD-MM-YYYY', 'MM/DD/YYYY', 'MM-DD-YYYY', 'YYYY/MM/DD', 'YYYY-MM-DD'],
-                    'time without time zone'      : ['HH24:MI:SS', 'HH12:MI:SS AM/PM', 'HH12:MI AM/PM', 'HH12 AM/PM'],
-                    'timestamp without time zone' : ['DD/MM/YYYY TIME', 'DD-MM-YYYY TIME', 'MM/DD/YYYY TIME', 'MM-DD-YYYY TIME', 'YYYY/MM/DD TIME', 'YYYY-MM-DD TIME']
+        formats = { 'DATE'      : ['DD/MM/YYYY', 'DD-MM-YYYY', 'MM/DD/YYYY', 'MM-DD-YYYY', 'YYYY/MM/DD', 'YYYY-MM-DD'],
+                    'TIME'      : ['HH24:MI:SS', 'HH12:MI:SS AM/PM', 'HH12:MI AM/PM', 'HH12 AM/PM'],
+                    'TIMESTAMP' : ['DD/MM/YYYY TIME', 'DD-MM-YYYY TIME', 'MM/DD/YYYY TIME', 'MM-DD-YYYY TIME', 'YYYY/MM/DD TIME', 'YYYY-MM-DD TIME']
                     }
 
-        return options.setdefault(data_type, [])
+        return formats.setdefault(data_type, [])
 
     def __readable_format_to_postgres(self, attr_type, readable_format):
         """Modifies the readable formats we use for the front-end to correct postgres formats in the back-end."""
