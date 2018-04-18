@@ -226,10 +226,6 @@ class TableViewer:
                                                             sql.Identifier(columnname)))
         data = conn.cursor().fetchall()
 
-        # if len(data) > 100:
-        #     # you don't have enough friends to give all these pieces to
-        #     return "N/A"
-
         # pre processed data
         temp_labels = [x[0] for x in data]
         temp_sizes = [x[1] for x in data]

@@ -212,8 +212,8 @@ class DataLoader:
 
     def __check_alnum(self, tablename):
         # isalnum() that also allows underscores
-        tablename.replace('_', 'a')
-        return tablename.isalnum()
+        temp_name = tablename.replace('_', 'a')
+        return temp_name.isalnum()
 
     def __get_valid_name(self, tablename):
         # create a new tablename if the current one is already in use
