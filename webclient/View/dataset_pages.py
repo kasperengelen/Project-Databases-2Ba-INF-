@@ -351,11 +351,12 @@ def transform_typeconversion(dataset_id, tablename):
     tt = dataset.getTableTransformer(tablename)
 
     form = DataTypeTransform(request.form)
-    form.fillForm(tv.get_attributes(), tt.get_conversion_options(tablename, form.select_attr.data), tt.get_datetime_formats(form.date_type.data))
+    form.fillForm(tv.get_attributes(), tt.get_conversion_options(tablename, form.select_attr.data), tt.get_datetime_formats(form.new_datatype.data))
 
 
     if not form.validate():
         flash(message="Invalid form.", category="error")
+        print(form.errors)
         return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 
     if not form.new_datatype.data in tt.get_conversion_options(tablename, form.select_attr.data):
