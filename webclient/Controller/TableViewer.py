@@ -304,7 +304,6 @@ class TableViewer:
                                                                      sql.Identifier(str(self.setid)),
                                                                      sql.Identifier(self.tablename)))
         type = conn.cursor().fetchone()[0]
-        print(type)
         if not self.is_numerical(type):
             return "N/A"
 

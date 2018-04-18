@@ -21,7 +21,7 @@ class TestTableViewer(unittest.TestCase):
         #Make all the connections and objects needed
         cls.db_connection = DatabaseConfiguration().get_db()
         cls.engine = DatabaseConfiguration().get_engine()
-        cls.test_object = tv.TableViewer('TEST', 'test_table', cls.engine)
+        cls.test_object = tv.TableViewer('TEST', 'test_table', cls.engine, cls.db_connection)
 
         cur = cls.db_connection.cursor()
         cur.execute("CREATE SCHEMA IF NOT EXISTS \"TEST\"")
@@ -33,10 +33,13 @@ class TestTableViewer(unittest.TestCase):
         #In some cases the test fails in a way that tearDownClass is not called and the table still exists
         #Sadly we can't confirm if the table is still correct, so we better rebuild it.
         try:
+            cur.execute("GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA \"TEST\" TO dbadmin;")
+            cur.execute("GRANT ALL PRIVILEGES ON SCHEMA \"TEST\" TO dbadmin;")
             # table 1
             cur.execute(creation_query)
             # table 2
-            cur.execute('CREATE TABLE "TEST".test_table1 AS TABLE "TEST".test_table')
+            cur.execute("SELECT * INTO \"Test\".kaka FROM \"Test\".test_table;")
+            cls.db_connection.commit()
 
         except psycopg2.ProgrammingError:
             #If it was still present in the database we better drop the schema and rebuild it
@@ -59,7 +62,7 @@ class TestTableViewer(unittest.TestCase):
                 cur.execute("INSERT INTO \"TEST\".test_table VALUES(%s, %s, %s)", v)
 
         for v in values2:
-            cur.execute("INSERT INTO \"TEST\".test_table1 VALUES(%s, %s, %s)", v)
+            cur.execute("INSERT INTO \"TEST\".kaka VALUES(%s, %s, %s)", v)
 
         
         cls.db_connection.commit()
@@ -161,8 +164,20 @@ class TestTableViewer(unittest.TestCase):
         self.assertEqual(max, "N/A")
 
     def test_get_min(self):
+        min = self.test_object.get_min("string")
+        self.assertEqual(min, "N/A")
+        min = self.test_object.get_min("number")
+        self.assertEqual(min, 1)
+        min = self.test_object.get_min("date")
+        self.assertEqual(min, "N/A")
 
     def test_get_avg(self):
+        avg = self.test_object.get_avg("string")
+        self.assertEqual(avg, "N/A")
+        avg = self.test_object.get_avg("number")
+        self.assertEqual(avg, 14/6)
+        avg = self.test_object.get_avg("date")
+        self.assertEqual(avg, "N/A")
         
 
 
