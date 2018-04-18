@@ -349,6 +349,7 @@ def transform_typeconversion(dataset_id, tablename):
     tt = dataset.getTableTransformer(tablename)
 
     form = DataTypeTransform(request.form)
+    print(form.new_datatype.data)
     form.fillForm(tv.get_attributes(), tt.get_conversion_options(tablename, form.select_attr.data), tt.get_datetime_formats(form.new_datatype.data))
 
 
