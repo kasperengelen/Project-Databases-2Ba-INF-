@@ -1,6 +1,8 @@
 import sys, os
-sys.path.append(os.path.join(sys.path[0],'..', 'Controller'))
-sys.path.append(os.path.join(sys.path[0],'..', 'Model'))
+sys.path.insert(0, "../Controller/")
+sys.path.insert(0, "../Model/")
+sys.path.insert(0, "../View")
+sys.path.insert(0, "..")
 import unittest
 from UserManager import UserManager
 from DatabaseConfiguration import DatabaseConfiguration
@@ -46,7 +48,7 @@ class TestUserManager(unittest.TestCase):
         db_conn.commit()
 
     def test_existID(self):
-        
+        pass
 
     def test_existsEmail(self):
         pass
