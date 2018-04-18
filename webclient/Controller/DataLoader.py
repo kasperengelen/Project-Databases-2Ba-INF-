@@ -40,8 +40,10 @@ class EODException(FileException):
 
 class DataLoader:
 
-    def __init__(self, setid, db_connection=get_db()):
+    def __init__(self, setid, db_connection=None):
         self.db_conn = db_connection
+        if db_connection is None:
+            self.db_conn = get_db()
         # self.db_conn = db_wrapper.DBWrapper()
 
         # first check if the setid is valid
