@@ -44,6 +44,7 @@
 				        	<div class="text-center" style="display: inline-block;" id="chart_freq"></div>
 				        	<div class="text-center" style="display: inline-block;" id="hist_num"></div>
 				        </div>
+
 				    </div>
 	        	</div>
 	      	</div>
@@ -313,6 +314,62 @@
 		</div>
 	</div>
 
+	<script>	
+		$('#view_attr').ready(function() {
+			var send = {
+				view_attr: $('#view_attr option:selected').text()
+			}
+			$.get("{{ url_for('dataset_pages._get_hist_num', dataset_id=dataset_info.setid, tablename=table_name, attr_name=send) }}", send, function(response) {
+					if(response != "N/A") {
+						$('#hist_num').append("<h5>Numerical Histogram</h5>");
+						$('#hist_num').append(response);
+					}
+				})
+			$.get("{{ url_for('dataset_pages._get_chart_freq', dataset_id=dataset_info.setid, tablename=table_name, attr_name=send) }}", send, function(response) {
+				if(response != "N/A") {
+					$('#chart_freq').append("<h5>Frequency Pie Chart</h5>");
+					$('#chart_freq').append(response);
+				}
+			})
+
+			$.get("{{ url_for('dataset_pages._get_colstats', dataset_id=dataset_info.setid, tablename=table_name, attr_name=send) }}", send, function(response) {
+				if(response != "") {	
+					$('#col_stats').append(response);
+				}
+			})
+		});
+
+		$('#view_attr').change(function() {
+			$('#hist_num').empty();
+			$('#chart_freq').empty();
+			$('#col_stats').empty();
+
+			var send = {
+				view_attr: $('#view_attr option:selected').text()
+			}
+			$.get("{{ url_for('dataset_pages._get_hist_num', dataset_id=dataset_info.setid, tablename=table_name, attr_name=send) }}", send, function(response) {
+				if(response != "N/A") {
+						$('#hist_num').append("<h5>Numerical Histogram</h5>");
+						$('#hist_num').append(response);
+				}
+			});
+			$.get("{{ url_for('dataset_pages._get_chart_freq', dataset_id=dataset_info.setid, tablename=table_name, attr_name=send) }}", send, function(response) {
+			if(response != "N/A") {
+					$('#chart_freq').append("<h5>Frequency Pie Chart</h5>");
+					$('#chart_freq').append(response);
+			}
+			});
+			$.get("{{ url_for('dataset_pages._get_colstats', dataset_id=dataset_info.setid, tablename=table_name, attr_name=send) }}", send, function(response) {
+				if(response != "") {	
+					$('#col_stats').append(response);
+				}
+			})
+		});
+
+		
+		
+	</script>
+
 	<div class="text-center">
 		<style>
 			table {
@@ -371,29 +428,27 @@
 
 	<script>	
 		$('#view_attr').ready(function() {
-			var send = {
+			var input = {
 				view_attr: $('#view_attr option:selected').text()
 			}
-			$.get("{{ url_for('dataset_pages._get_hist_num', dataset_id=dataset_info.setid, tablename=table_name, attr_name=send) }}", send, function(response) {
+			$.get("{{ url_for('dataset_pages._get_hist_num', dataset_id=dataset_info.setid, tablename=table_name, attr_name=input) }}", input, function(response) {
 					if(response != "N/A") {
 						$('#hist_num').append("<h5>Numerical Histogram</h5>");
 						$('#hist_num').append(response);
 					}
 				})
-			$.get("{{ url_for('dataset_pages._get_chart_freq', dataset_id=dataset_info.setid, tablename=table_name, attr_name=send) }}", send, function(response) {
+			$.get("{{ url_for('dataset_pages._get_chart_freq', dataset_id=dataset_info.setid, tablename=table_name, attr_name=input) }}", input, function(response) {
 				if(response != "N/A") {
 					$('#chart_freq').append("<h5>Frequency Pie Chart</h5>");
 					$('#chart_freq').append(response);
 				}
 			})
 
-			$.get("{{ url_for('dataset_pages._get_colstats', dataset_id=dataset_info.setid, tablename=table_name, attr_name=send) }}", send, function(response) {
+			$.get("{{ url_for('dataset_pages._get_colstats', dataset_id=dataset_info.setid, tablename=table_name, attr_name=input) }}", input, function(response) {
 				if(response != "") {	
 					$('#col_stats').append(response);
 				}
 			})
-
-			send.removeAttr();
 		});
 
 		$('#view_attr').change(function() {
@@ -401,35 +456,31 @@
 			$('#chart_freq').empty();
 			$('#col_stats').empty();
 
-			var send = {
+			var input = {
 				view_attr: $('#view_attr option:selected').text()
 			}
-			$.get("{{ url_for('dataset_pages._get_hist_num', dataset_id=dataset_info.setid, tablename=table_name, attr_name=send) }}", send, function(response) {
+			$.get("{{ url_for('dataset_pages._get_hist_num', dataset_id=dataset_info.setid, tablename=table_name, attr_name=input) }}", input, function(response) {
 				if(response != "N/A") {
 						$('#hist_num').append("<h5>Numerical Histogram</h5>");
 						$('#hist_num').append(response);
 				}
 			});
-			$.get("{{ url_for('dataset_pages._get_chart_freq', dataset_id=dataset_info.setid, tablename=table_name, attr_name=send) }}", send, function(response) {
+			$.get("{{ url_for('dataset_pages._get_chart_freq', dataset_id=dataset_info.setid, tablename=table_name, attr_name=input) }}", input, function(response) {
 			if(response != "N/A") {
 					$('#chart_freq').append("<h5>Frequency Pie Chart</h5>");
 					$('#chart_freq').append(response);
 			}
 			});
-			$.get("{{ url_for('dataset_pages._get_colstats', dataset_id=dataset_info.setid, tablename=table_name, attr_name=send) }}", send, function(response) {
+			$.get("{{ url_for('dataset_pages._get_colstats', dataset_id=dataset_info.setid, tablename=table_name, attr_name=input) }}", input, function(response) {
 				if(response != "") {	
 					$('#col_stats').append(response);
 				}
 			})
-
-			send.removeAttr();
 		});
-
-		
-		
 	</script>
+	
 
-	<script charset="utf-8" type="text/javascript">
+	<script>
 
 		$(function() {
 
@@ -467,7 +518,7 @@
 			});
 
 			$('#typeOptions').change(function() {
-				if($('#typeOptions option:selected').text() == "CHAR(X)" || $('#typeOptions option:selected').text() == "VARCHAR(X)"){
+				if($('#typeOptions option:selected').text() == "CHAR(n)" || $('#typeOptions option:selected').text() == "VARCHAR(n)"){
 					$('#char_div').show();
 				}
 				else {
