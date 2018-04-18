@@ -142,16 +142,44 @@ class TableTransformer:
     def get_conversion_options(self, tablename, attribute):
         """Returns a list of supported types that the given attribute can be converted to."""
         data_type = self.get_attribute_type(tablename, attribute)[0]
-        options = { 'character varying' : ['CHAR(255)', 'INTEGER', 'FLOAT', 'DATE', 'TIME', 'TIMESTAMP'],
-                    'character'         : ['VARCHAR(255)', 'INTEGER', 'FLOAT', 'DATE', 'TIME', 'TIMESTAMP'],
-                    'integer'           : ['CHAR(255)', 'VARCHAR(255)', 'FLOAT'],
-                    'double precision'  : ['CHAR(255)', 'VARCHAR(255)', 'INTEGER'] ,
-                    'date'              : ['CHAR(255)', 'VARCHAR(255)'],
-                    'time without time zone' : ['CHAR(255)', 'VARCHAR(255)'],
-                    'timestamp without time zone' : ['CHAR(255)', 'VARCHAR(255)']
+        options = { 'character varying' : ['INTEGER', 'FLOAT', 'DATE', 'TIME', 'TIMESTAMP',  'CHAR(n)'],
+                    'character'         : ['VARCHAR(255)', 'VARCHAR(n)', 'INTEGER', 'FLOAT', 'DATE', 'TIME', 'TIMESTAMP'],
+                    'integer'           : ['FLOAT', 'VARCHAR(255)', 'VARCHAR(n)','CHAR(n)'],
+                    'double precision'  : ['INTEGER', 'VARCHAR(255)','CHAR(n)'] ,
+                    'date'              : ['VARCHAR(255)', 'VARCHAR(n)', 'CHAR(n)'],
+                    'time without time zone' : ['VARCHAR(255)', 'VARCHAR(n)', 'CHAR(n)'],
+                    'timestamp without time zone' : ['VARCHAR(255)', 'VARCHAR(n)', 'CHAR(n)']
                     }
         #In case it's a data type unknown to this class, we can almost certainly convert to varchar(255)
         return options.setdefault(data_type, ['VARCHAR(255)'])
+
+    def get_datetime_formats(self, tablename, attribute):
+        """Returns a list of supported formats for the conversion of a character type to a date/time type."""
+        data_type = self.get_attribute_type(tablename, attribute)[0]
+        formats = { 'date'                        : ['DD/MM/YYYY', 'DD-MM-YYYY', 'MM/DD/YYYY', 'MM-DD-YYYY', 'YYYY/MM/DD', 'YYYY-MM-DD'],
+                    'time without time zone'      : ['HH24:MI:SS', 'HH12:MI:SS AM/PM', 'HH12:MI AM/PM', 'HH12 AM/PM'],
+                    'timestamp without time zone' : ['DD/MM/YYYY TIME', 'DD-MM-YYYY TIME', 'MM/DD/YYYY TIME', 'MM-DD-YYYY TIME', 'YYYY/MM/DD TIME', 'YYYY-MM-DD TIME']
+                    }
+
+        return options.setdefault(data_type, [])
+
+    def __readable_format_to_postgres(self, attr_type, readable_format):
+        """Modifies the readable formats we use for the front-end to correct postgres formats in the back-end."""
+        if attr_type == 'DATE':
+            return readable_format
+        
+        elif attr_type == 'TIME':
+            ps_format = readable_format.replace('/PM', '')
+            return ps_format
+
+        elif attr_type == 'TIMESTAMP':
+            ps_format = readable_format.replace('TIME', 'HH24:MI:SS')
+            return ps_format
+
+        error_msg = "This method should only be called when converting to date/time."
+        raise ValueError(error_msg)
+        
+        
 
     def get_attribute_type(self, tablename, attribute, detailed=False):
         """Return the postgres data type of an attribute.
@@ -174,8 +202,10 @@ class TableTransformer:
             return (row[0], row[1])
 
 
-    def __convert_numeric(self, internal_ref, attribute, to_type):
+    def __convert_numeric(self, internal_ref, attribute, to_type, length):
         """Conversion of "numeric" things (INTEGER and FLOAT, DATE, TIME, TIMESTAMP)"""
+        if to_type in ['VARCHAR(n)', 'CHAR(n)']:
+            to_type = to_type.replace('n', length)
         sql_query = "ALTER TABLE {}.{} ALTER COLUMN  {} TYPE %s" % to_type
         self.db_connection.cursor().execute(sql.SQL(sql_query).format(sql.Identifier(internal_ref[0]), sql.Identifier(internal_ref[1]),
                                                                                               sql.Identifier(attribute)), [to_type])
@@ -183,16 +213,17 @@ class TableTransformer:
         
 
     
-    def __convert_character(self, internal_ref, attribute, to_type, data_format):
+    def __convert_character(self, internal_ref, attribute, to_type, data_format, length):
         """Conversion of a character type (VARCHAR and CHAR)"""
         patterns = { 
                      'INTEGER'      : 'INTEGER USING {}::integer{}',
                      'FLOAT'        : 'FLOAT USING {}::float{}',
-                     'DATE'         : 'DATE USING to_date({} , {})',
-                     'TIME'         : 'TIME USING to_timestamp({}, {})::time',
-                     'TIMESTAMP'    : 'TIMESTAMP USING to_timestamp({}, {})',
-                     'CHAR(255)'    : 'CHAR',
-                     'VARCHAR(255)' : 'VARCHAR'
+                     'DATE'         : 'DATE USING to_date({} , \'{}\')',
+                     'TIME'         : 'TIME USING to_timestamp({}, \'{}\')::time',
+                     'TIMESTAMP'    : 'TIMESTAMP USING to_timestamp({}, \'{}\')',
+                     'VARCHAR(255)' : 'VARCHAR',
+                     'VARCHAR(n)'   : 'VARCHAR',
+                     'CHAR(n)'      : 'CHAR',
 
                      }
         temp = patterns.setdefault(to_type, '')
@@ -201,12 +232,15 @@ class TableTransformer:
             raise self.ValueError(error_msg)
         if to_type not in ['DATE', 'TIME', 'TIMESTAMP']: #Make sure no accidental data_format is provided
             data_format = ''
+
+        else:
+            data_format = self.__readable_format_to_postgres(to_type, data_format)
         #Maybe sanity check on these parameters? I'll look into it, note: 32
         ident_attr = '"{}"'.format(attribute)
         casting_var = temp.format(ident_attr, data_format)
 
         if temp in ['CHAR' , 'VARCHAR']: #Char and varchar don't need special parameters
-            casting_var = to_type
+            casting_var = to_type.replace('n', length)
             
         sql_query = "ALTER TABLE {}.{} ALTER COLUMN {} TYPE " + casting_var
         cur = self.db_connection.cursor()
@@ -216,12 +250,13 @@ class TableTransformer:
 
 
 
-    def change_attribute_type(self, tablename, attribute, to_type, data_format="", new_name=""):
+    def change_attribute_type(self, tablename, attribute, to_type, data_format="", length='1', new_name=""):
         """Change the type of a table attribute.
 
         Parameters:
             to_type: A string representing the PostreSQL type we want to convert to, like INTEGER or VARCHAR(255)
             data_format: Optional parameter for when the attribute has to follow a specific format, like a DATE with format 'DD/MM/YYYY'
+            length: This specifies the size of a char or varchar if it the user wants to place a specific limit.
             new_name: The name for the new table constructed from this operation if the TableTransformer is not set to overwrite
         """
         cur_type, internal_ref  = self.get_attribute_type(tablename, attribute)
@@ -229,10 +264,10 @@ class TableTransformer:
             internal_ref = self.copy_table(internal_ref, new_name)
         
         if (cur_type == 'character varying') or (cur_type == 'character'):
-            self.__convert_character(internal_ref, attribute, to_type, data_format)
+            self.__convert_character(internal_ref, attribute, to_type, data_format, length)
 
         else:
-            self.__convert_numeric(internal_ref, attribute, to_type)
+            self.__convert_numeric(internal_ref, attribute, to_type, length)
 
 
     def force_attribute_type(self, tablename, attribute, to_type, data_format="", new_name=""):
@@ -384,8 +419,7 @@ class TableTransformer:
                     sqla_type = sqlalchemy.types.TIME()
                     
             if sqla_type is None:
-                #error_msg = "Couldn't convert to a value! " + str(psql_type[0]) + " from " + elem +  " is unknown to the system."
-                error_msg = elem + " is the problem my dude, it's a " + temp
+                error_msg = "Couldn't convert to a value! " + str(psql_type[0]) + " from " + elem +  " is unknown to the system."
                 raise ValueError(error_msg)
             new_types[elem] = sqla_type
 
@@ -774,6 +808,8 @@ class TableTransformer:
 
         query += sql.SQL("t1.{} = t2.{})").format(sql.Identifier(table1_columns[-1]),
                                                   sql.Identifier(table2_columns[-1]))
+
+        print(query)
 
         self.db_connection.cursor().execute("SET search_path TO {};".format(self.setid))
         self.db_connection.cursor().execute(query)

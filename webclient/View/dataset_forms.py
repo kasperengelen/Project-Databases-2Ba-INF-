@@ -87,6 +87,15 @@ class TableJoinForm(FlaskForm):
     # ENDMETHOD
 # ENDCLASS
 
+class AttributeForm(FlaskForm):
+
+    view_attr = SelectField('Attribute', choices=[], id="view_attr")
+
+    def fillForm(self, attrs):
+        self.view_attr.choices = [(attr, attr) for attr in attrs]
+    # ENDMETHOD
+# ENDCLASS
+
 ################################################################# TRANSFORMATION FORMS #################################################################
 
 class FindReplaceForm(FlaskForm):

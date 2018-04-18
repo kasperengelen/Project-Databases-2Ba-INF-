@@ -197,15 +197,16 @@ class TableViewer:
 
     def get_numerical_histogram(self, columnname, bar_nr=10):
         # first check if the attribute type is numerical
-        tt = TableTransformer(self.setid, self.db_connection, DatabaseConfiguration().get_engine())
-        type = tt.get_attribute_type(self.tablename, columnname)[0]
-        if not (type == "bigint" or type == "double precision" or type == "integer"):
-            print(type)
+        self.db_connection.cursor().execute(sql.SQL("SELECT pg_typeof({}) FROM {}.{}").format(sql.Identifier(columnname),
+                                                                                                     sql.Identifier(str(self.setid)),
+                                                                                                     sql.Identifier(self.tablename)))
+        type = self.db_connection.cursor().fetchone()[0]
+        if not self.is_numerical(type):
             return "N/A"
 
         sql_query = "SELECT \"{}\" FROM \"{}\".\"{}\"".format(columnname, str(self.setid), self.tablename)
         df = pd.read_sql(sql_query, self.engine)
-        fig = plt.figure()
+        fig = plt.figure(figsize=(5.12, 3.84))
         plt.hist(df[columnname], bins=bar_nr, align='left', alpha=0.8, color='grey')
         html = mpld3.fig_to_html(fig)
 
@@ -260,10 +261,10 @@ class TableViewer:
             return my_autopct
 
         fig, ax = plt.subplots()
+        fig.set_size_inches(5.12, 3.84)
         ax.pie(sizes, labels=labels, autopct=make_autopct(sizes))
         ax.axis('equal')
         html = mpld3.fig_to_html(fig)
-
         # close the figure to free memory
         plt.close(fig)
 
@@ -301,14 +302,19 @@ class TableViewer:
         """Wrapper that returns result of aggregate function"""
         conn = self.db_connection
 
-        try:
-            conn.cursor().execute(sql.SQL("SELECT " + aggregate + "({}) FROM {}.{}").format(sql.Identifier(columnname),
+        # first check if the attribute type is numerical
+        conn.cursor().execute(
+            sql.SQL("SELECT pg_typeof({}) FROM {}.{}").format(sql.Identifier(columnname),
+                                                                     sql.Identifier(str(self.setid)),
+                                                                     sql.Identifier(self.tablename)))
+        type = conn.cursor().fetchone()[0]
+        print(type)
+        if not self.is_numerical(type):
+            return "N/A"
+
+        conn.cursor().execute(sql.SQL("SELECT " + aggregate + "({}) FROM {}.{}").format(sql.Identifier(columnname),
                                                                           sql.Identifier(str(self.setid)),
                                                                           sql.Identifier(self.tablename)))
-            # if the attribute type is not valid for aggregate functions
-        except psycopg2.ProgrammingError:
-            conn.rollback()
-            return "N/A"
 
         return conn.cursor().fetchone()[0]
 
