@@ -1,0 +1,7 @@
+flask
+wtforms
+flask_wtf
+psycopg2
+passlib
+sqlalchemy
+mpld3
