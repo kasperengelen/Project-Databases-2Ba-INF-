@@ -4,9 +4,9 @@ import shutil
 import psycopg2
 import re
 from psycopg2 import sql
-# import db_wrapper
 from utils import get_db
 from DatasetManager import DatasetManager
+from DatabaseConfiguration import DatabaseConfiguration
 
 
 class FileException(Exception):
@@ -40,8 +40,8 @@ class EODException(FileException):
 
 class DataLoader:
 
-    def __init__(self, setid):
-        self.db_conn = get_db()
+    def __init__(self, setid, db_connection=None):
+        self.db_conn = db_connection
         # self.db_conn = db_wrapper.DBWrapper()
 
         # first check if the setid is valid
