@@ -1,9 +1,7 @@
 from flask import Blueprint, render_template, request, url_for, redirect, session, flash, abort, send_from_directory, jsonify
 from flask import current_app as app
-from utils import require_admin
-from utils import require_login
-from utils import require_adminperm, require_writeperm, require_readperm
-from DatasetInfo import DatasetInfo
+from AccessController import require_login, require_admin
+from AccessController import require_adminperm, require_writeperm, require_readperm
 from DatasetManager import DatasetManager
 from UserManager import UserManager
 from dataset_forms import FindReplaceForm, DeleteAttrForm, DatasetForm, AddUserForm, RemoveUserForm, DatasetListEntryForm, TableUploadForm
@@ -711,7 +709,7 @@ def manage_dataset(dataset_id):
     dataset = DatasetManager.getDataset(dataset_id)
 
     if request.method == 'POST' and form.validate():
-        dataset.changeMetadata(form.name.data, form.description.data)
+        DatasetManager.changeMetadata(dataset_id, form.name.data, form.description.data)
         flash(message="Information updated.", category="success")
         return redirect(url_for('dataset_pages.view_dataset_home', dataset_id = dataset_id))
     else:

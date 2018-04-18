@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, redirect, url_for, request, flash
-from utils import require_admin
-from utils import require_login
+from AccessController import require_admin
+from AccessController import require_login
 from UserManager import UserManager
 from DatasetManager import DatasetManager
 from admin_forms import DeleteUserForm, DeleteDatasetForm, AdminUserEditForm, ActivateDecactivateUser
@@ -42,11 +42,11 @@ def manage_users():
 def edit_user(userid):
     """Returns a page that provides a way to for an admin edit user information."""
 
-    current_user = UserManager.getUserFromID(userid)
-
     # CHECK IF USER EXISTS
     if not UserManager.existsID(userid):
         abort(404)
+
+    current_user = UserManager.getUserFromID(userid)
 
     form = AdminUserEditForm(request.form)
 
@@ -62,7 +62,10 @@ def edit_user(userid):
         new_fname = form.firstname.data
         new_lname = form.lastname.data
 
-        current_user.editInfoNoPass(new_email, new_fname, new_lname)
+        #current_user.editInfoNoPass(new_email, new_fname, new_lname)
+
+        UserManager.editUserInfo(userid, new_fname, new_lname, new_email)
+
         flash(message="Information updated.", category="success")
     else:
         form.fillFields(current_user)

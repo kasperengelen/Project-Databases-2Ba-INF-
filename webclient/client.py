@@ -4,8 +4,7 @@ sys.path.append('./Model/')
 sys.path.append('./Controller/')
 
 from flask import Flask, render_template, g, session
-import utils
-from utils import LoginManager
+from LoginManager import LoginManager
 from UserManager import UserManager
 import user_pages
 import admin_pages
@@ -39,7 +38,7 @@ def before_request():
         if not UserManager.existsID(session['userdata']['userid']):
             LoginManager.setLoggedOut()
             return
-        utils.sync_user_info()
+        LoginManager.syncSession();
 
         if not session['userdata']['active']:
             LoginManager.setLoggedOut()

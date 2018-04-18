@@ -1,8 +1,3 @@
-import sys, os
-sys.path.insert(0, "../Controller/")
-sys.path.insert(0, "../Model/")
-sys.path.insert(0, "../View")
-sys.path.insert(0, "..")
 import unittest
 from UserManager import UserManager
 from DatabaseConfiguration import DatabaseConfiguration

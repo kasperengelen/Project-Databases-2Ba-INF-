@@ -109,7 +109,13 @@ class TableTransformer:
         self.db_connection.commit()
         return (internal_ref[0], new_name)
 
-        
+    def delete_rows_using_predicate_logic(self, arg_list):
+        """Method to delete rows by using provided predicates like "attribute > x AND attribute != y".
+
+        Parameters:
+            arg_list: A list of strings containing the strings representing the predicates (Identifiers, logical operators).
+        """
+        pass
     
     def delete_attribute(self, tablename, attribute, new_name=""):
         """Delete an attribute of a table"""
