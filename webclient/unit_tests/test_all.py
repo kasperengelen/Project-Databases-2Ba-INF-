@@ -1,3 +1,9 @@
+import sys
+sys.path.append('./View/')
+sys.path.append('./Model/')
+sys.path.append('./Controller/')
+
+
 import unittest
 import ProjectTester as pt
 import test_TableTransformer as t1

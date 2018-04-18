@@ -227,3 +227,32 @@ class FillNullsCustomValue(FlaskForm):
         self.select_attr.choices = [(attrname, attrname) for attrname in attrs]
     # ENDMETHOD
 # ENDCLASS
+
+class PredicateForm(FlaskForm):
+    """Form to handle predicates."""
+
+    # attributes
+    attr1 = SelectField('Attribute 1', choices = [])
+    attr2 = SelectField('Attribute 2', choices = [])
+    attr3 = SelectField('Attribute 3', choices = [])
+
+    # comparator operators
+    op1 = SelectField('Operator 1', choices = [('Equal', 'EQ'), ('Not Equal', 'NEQ'), ('Greater than', 'GT'), ('Less than', 'LT'), ('Contains', 'IN')])
+    op2 = SelectField('Operator 2', choices = [('Equal', 'EQ'), ('Not Equal', 'NEQ'), ('Greater than', 'GT'), ('Less than', 'LT'), ('Contains', 'IN')])
+    op3 = SelectField('Operator 3', choices = [('Equal', 'EQ'), ('Not Equal', 'NEQ'), ('Greater than', 'GT'), ('Less than', 'LT'), ('Contains', 'IN')])
+
+    # inputs
+    input1 = StringField('Input 1')
+    input2 = StringField('Input 2')
+    input3 = StringField('Input 3')
+
+    # logic operators
+    select1 = SelectField('Logic operator 1', choices = [('Finish', 'END'), ('And', 'AND'), ('Or', 'OR')])
+    select2 = SelectField('Logic operator 2', choices = [('Finish', 'END'), ('And', 'AND'), ('Or', 'OR')])
+
+    def fillForm(self, attrs1, attrs2, attrs3):
+        self.attr1.choices = [(attrname, attrname) for attrname in attrs1]
+        self.attr2.choices = [(attrname, attrname) for attrname in attrs2]
+        self.attr3.choices = [(attrname, attrname) for attrname in attrs3]
+    # ENDMETHOD
+# ENDCLASS
