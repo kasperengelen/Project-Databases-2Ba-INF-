@@ -185,5 +185,4 @@ class UserManager:
         db_conn.cursor().execute("UPDATE SYSTEM.user_accounts SET passwd = %s WHERE userid=%s;", [passwd_hash, int(userid)])
         db_conn.commit()
     # ENDMETHOD
-
 # ENDCLASS

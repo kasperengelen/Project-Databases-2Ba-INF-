@@ -40,7 +40,6 @@ class TestTableViewer(unittest.TestCase):
             cur.execute(creation_query)
             # table 2
             cur.execute(creation_query2)
-            cls.db_connection.commit()
 
         except psycopg2.ProgrammingError:
             #If it was still present in the database we better drop the schema and rebuild it
@@ -131,15 +130,15 @@ class TestTableViewer(unittest.TestCase):
 
     def test_is_numerical(self):
         is_numerical = self.test_object.is_numerical("double precision")
-        self.assertEqual(is_numerical, True)
+        self.assertTrue(is_numerical)
         is_numerical = self.test_object.is_numerical("bigserial")
-        self.assertEqual(is_numerical, True)
+        self.assertTrue(is_numerical)
         is_numerical = self.test_object.is_numerical("real")
-        self.assertEqual(is_numerical, True)
-        is_numerical = self.test_object.is_numerical("date_time")
-        self.assertEqual(is_numerical, False)
+        self.assertTrue(is_numerical)
+        is_numerical = self.test_object.is_numerical("character")
+        self.assertFalse(is_numerical)
         is_numerical = self.test_object.is_numerical("character varying")
-        self.assertEqual(is_numerical, False)
+        self.assertFalse(is_numerical)
 
     def test_get_most_frequent_value(self):
         most_frequent = self.test_object2.get_most_frequent_value("string")

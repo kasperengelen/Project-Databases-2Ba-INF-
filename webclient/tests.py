@@ -17,3 +17,5 @@ if __name__ == "__main__":
     tests = [TestUserManager]
     tester = ProjectTester(tests)
     tester.run()
+    #runner = unittest.TextTestRunner()
+    #runner.run(suite())

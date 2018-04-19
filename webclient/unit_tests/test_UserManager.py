@@ -121,4 +121,58 @@ class TestUserManager(unittest.TestCase):
         self.assertFalse((self.testuser1_id-1) in userids)
 
     def test_updateUserActivity(self):
-      pass
+        ## test if testuser1 is active
+        # --> true
+        self.db_conn.cursor().execute("SELECT active FROM SYSTEM.user_accounts WHERE userid = %s;", [self.testuser1_id])
+        result = self.db_conn.cursor().fetchone()[0]
+        self.assertTrue(result)
+
+        ## set testuser1 to inactive
+        UserManager.updateUserActivity(self.testuser1_id, False, db_conn = self.db_conn)
+
+        ## test if testuser1 is active
+        # --> false
+        self.db_conn.cursor().execute("SELECT active FROM SYSTEM.user_accounts WHERE userid = %s;", [self.testuser1_id])
+        result = self.db_conn.cursor().fetchone()[0]
+        self.assertFalse(result)
+
+        ## set testuser1 to active
+        UserManager.updateUserActivity(self.testuser1_id, True, db_conn = self.db_conn)
+
+        ## test if testuser1 is active
+        # --> true
+        self.db_conn.cursor().execute("SELECT active FROM SYSTEM.user_accounts WHERE userid = %s;", [self.testuser1_id])
+        result = self.db_conn.cursor().fetchone()[0]
+        self.assertTrue(result)
+
+    def test_editUserInfo(self):
+        ## edit info of testuser2
+
+        UserManager.editUserInfo(self.testuser2_id, "Luke", "Skywalker", "luke.skywalker@holo.net", db_conn = self.db_conn)
+
+        ## retrieve information
+        self.db_conn.cursor().execute("SELECT * FROM SYSTEM.user_accounts WHERE userid = %s;", [self.testuser2_id])
+        result = self.db_conn.cursor().fetchone()
+
+        # Format: (userid, fname, lname, email, passwd, registerdate, admin, active)
+
+        self.assertEqual(result[1], "Luke")
+        self.assertEqual(result[2], "Skywalker")
+        self.assertEqual(result[3], "luke.skywalker@holo.net")
+
+    def test_editUserPass(self):
+        ## set new password
+        new_pass = "123abcd456"
+
+        UserManager.editUserPass(self.testuser2_id, new_pass, db_conn = self.db_conn)
+
+        ## retrieve password
+        self.db_conn.cursor().execute("SELECT * FROM SYSTEM.user_accounts WHERE userid = %s;", [self.testuser2_id])
+        result = self.db_conn.cursor().fetchone()
+
+        ## check if the passwords match
+        retrieved_passwd_hash = result[4]
+
+        self.assertTrue(sha256_crypt.verify(new_pass, retrieved_passwd_hash))
+# ENDCLASS
+

@@ -23,9 +23,9 @@
 	      	</div>
 	      	<div id="view" class="panel-collapse collapse">
 	        	<div class="panel-body">
-	        		{% from "includes/_formhelpers.html" import render_field %}
 	        		<div>
 		        		<div>
+		        			{% from "includes/_formhelpers.html" import render_field %}
 		        			<form name="select_attr">
 		        				{{ attr_form.hidden_tag() }}
 				        		<div class="form-group" style="width: 20%;">
@@ -58,208 +58,9 @@
 		      	</div>
 		      	<div id="transform" class="panel-collapse collapse">
 		      		<div class="panel-body">
-		      			{% from "includes/_formhelpers.html" import render_field %}
-
-		      			<!-- Find & Replace -->
-		      			<div class="col-sm-12" style="border-bottom: 1px solid lightgrey; overflow-x: auto;">
-							<h5><u><strong>Find and Replace</strong></u></h5>
-							<form method="post" action="{{ url_for('dataset_pages.transform_findreplace', dataset_id=dataset_info.setid, tablename=table_name) }}">
-							{{ findrepl_form.csrf_token }}
-							<div class="form-group" style="width: 20%; display: inline-block;">
-								{{render_field(findrepl_form.select_attr, class_="form-control")}}
-							</div>
-							<div class="form-group" style="width: 30%; display: inline-block;">
-								{{render_field(findrepl_form.search, class_="form-control", placeholder="Searchterm")}}
-							</div>
-							<div class="form-group" style="width: 30%; display: inline-block;">
-								{{render_field(findrepl_form.replacement, class_="form-control", placeholder="Replacement")}}  
-							</div>
-							<p style="display: inline-block;"><input type="submit" id="findrepl" class="btn btn-primary" value="Find and Replace"></p>
-							<div class="form-group" style="width: 30%; display: inline-block;">
-								{{render_field(findrepl_form.exactmatch, class_="checkbox-inline", placeholder="True")}}
-							</div>
-							<div class="form-group" style="width: 30%; display: inline-block;">
-								{{render_field(findrepl_form.replace_full_match, class_="checkbox-inline", placeholder="True")}}
-							</div>
-							</form>
-						</div>
-						<!-- Find & Replace  -->
-
-						<!-- Regex Find & Replace -->
-		      			<div class="col-sm-12" style="border-bottom: 1px solid lightgrey; overflow-x: auto;">
-							<h5><u><strong>Find and Replace Using Regex</strong></u></h5>
-							<form method="post" action="{{ url_for('dataset_pages.transform_findreplaceregex', dataset_id=dataset_info.setid, tablename=table_name) }}">
-							{{ findrepl_form.csrf_token }}
-							<div class="form-group" style="width: 20%; display: inline-block;">
-								{{render_field(regexfindreplace_form.select_attr, class_="form-control")}}
-							</div>
-							<div class="form-group" style="width: 30%; display: inline-block;">
-								{{render_field(regexfindreplace_form.regex, class_="form-control", placeholder="Search Regex")}}
-							</div>
-							<div class="form-group" style="width: 30%; display: inline-block;">
-								{{render_field(regexfindreplace_form.replacement, class_="form-control", placeholder="Replacement")}}  
-							</div>
-							<p style="display: inline-block;"><input type="submit" id="findrepl" class="btn btn-primary" value="Find and Replace"></p>
-							<div class="form-group" style="width: 30%; display: inline-block;">
-								{{render_field(regexfindreplace_form.case_sens, class_="checkbox-inline", placeholder="True")}}
-							</div>
-							</form>
-						</div>
-						<!-- Regex Find & Replace  -->
-
-						<!-- Delete Outliers -->
-		      			<div class="col-sm-12" style="border-bottom: 1px solid lightgrey; overflow-x: auto;">
-		      				<h5><u><strong>Delete Outlier</strong></u></h5>
-							<form method="post" action="{{ url_for('dataset_pages.transform_deleteOutlier', dataset_id=dataset_info.setid,
-								tablename=table_name) }}">
-							{{ deleteoutlier_form.csrf_token }}
-							<div class="form-group" style="width: 30%; display: inline-block;">
-								{{render_field(deleteoutlier_form.select_attr, class_="form-control")}}
-							</div>
-							<div class="form-group" style="width: 20%; display: inline-block;">
-								{{render_field(deleteoutlier_form.select_comparison, class_="form-control")}}
-							</div>
-							<div class="form-group" style="width: 30%; display: inline-block;">
-								{{render_field(deleteoutlier_form.value, class_="form-control", placeholder="Value")}}
-							</div>
-							<p style="display: inline-block;"><input type="submit" id="delete" class="btn btn-primary" value="Delete Outlier"></p>
-							</form>
-						</div>
-						<!-- Delete Outliers -->
-
-						<!-- Type Conversion -->
-						<div class="col-sm-12" style="border-bottom: 1px solid lightgrey; overflow-x: auto;">
-							<h5><u><strong>Attribute Type Conversion</strong></u></h5>
-							<form method="post" action="{{ url_for('dataset_pages.transform_typeconversion', dataset_id=dataset_info.setid, tablename=table_name) }}">
-							{{ typeconversion_form.hidden_tag() }}
-							<div class="form-group" style="width: 20%; display: inline-block;">
-								{{render_field(typeconversion_form.select_attr, class_="form-control") }}
-							</div>
-							<div class="form-group" style="width: 20%; display: inline-block;">
-								{{render_field(typeconversion_form.new_datatype, class_="form-control") }}
-							</div>
-							<div class="form-group" style="width: 20%; display: inline-block;" id="char_div">
-								{{render_field(typeconversion_form.char_amount, class_="form-control", placeholder="Character Amount") }}
-							</div>
-							<div class="form-group" style="width: 20%; display: inline-block;" id="date_div">
-								{{render_field(typeconversion_form.date_type, class_="form-control") }}
-							</div>
-							<p style="display: inline-block;"><input type="submit" id="typeconversion" class="btn btn-primary" value="Convert Attribute Type"></p>
-							</form>
-						</div>
-						<!-- Type Conversion -->
-
-		      			<!-- Delete Attribute -->
-		      			<div class="col-sm-6" style="border-bottom: 1px solid lightgrey; overflow-x: auto;">
-		      				<h5><u><strong>Delete an Attribute</strong></u></h5>
-							<form method="post" action="{{ url_for('dataset_pages.transform_deleteattr', dataset_id=dataset_info.setid, tablename=table_name) }}">
-							{{ delete_form.csrf_token }}
-							<div class="form-group" style="width: 30%; display: inline-block;">
-								{{render_field(delete_form.select_attr, class_="form-control")}}
-							</div>
-							<p style="display: inline-block;"><input type="submit" id="delete" class="btn btn-primary" value="Delete Attribute"></p>
-							</form>
-						</div>
-						<!-- Delete Attribute -->
-
-			      		<!-- One Hot Encoding -->
-			      		<div class="col-sm-6" style="border-bottom: 1px solid lightgrey; overflow-x: auto;">
-			      			<h5><u><strong>One Hot Encoding</strong></u></h5>
-				        	<form method="post" action="{{ url_for('dataset_pages.transform_onehotencoding', dataset_id=dataset_info.setid,
-				        	tablename=table_name) }}">
-							{{ onehotencodingform.csrf_token }}
-							<div class="form-group" style="width: 30%; display: inline-block;">
-								{{render_field(onehotencodingform.select_attr, class_="form-control")}}
-							</div>
-							<p style="display: inline-block;"><input type="submit" id="OHE" class="btn btn-primary" value="One Hot Encode"></p>
-							</form>
-						</div>
-						<!-- One Hot Encoding -->
-
-						<!-- Normalize Using Z-Score -->
-						<div class="col-sm-6" style="border-bottom: 1px solid lightgrey; overflow-x: auto;">
-							<h5><u><strong>Normalize Using Z-Score</strong></u></h5>
-							<form method="post" action="{{ url_for('dataset_pages.transform_zscorenormalisation', dataset_id=dataset_info.setid,
-								tablename=table_name) }}">
-							{{ zscoreform.csrf_token }}
-							<div class="form-group" style="width: 30%; display: inline-block;">
-								{{render_field(zscoreform.select_attr, class_="form-control")}}
-							</div>
-							<p style="display: inline-block;"><input type="submit" id="NUZ" class="btn btn-primary" value="Normalize"></p>
-							</form>
-						</div>
-						<!-- Normalize Using Z-Score -->
-
-						<!-- Fill Nulls Mean -->
-		      			<div class="col-sm-6" style="border-bottom: 1px solid lightgrey; overflow-x: auto;">
-		      				<h5><u><strong>Fill Nulls - Mean</strong></u></h5>
-							<form method="post" action="{{ url_for('dataset_pages.transform_fillNullsMean', dataset_id=dataset_info.setid,
-								tablename=table_name) }}">
-							{{ fillnullmean_form.csrf_token }}
-							<div class="form-group" style="width: 30%; display: inline-block;">
-								{{render_field(fillnullmean_form.select_attr, class_="form-control")}}
-							</div>
-							<p style="display: inline-block;"><input type="submit" id="delete" class="btn btn-primary" value="Fill Nulls Mean"></p>
-							</form>
-						</div>
-						<!-- Fill Nulls Mean -->
-
-						<!-- Fill Nulls Median -->
-		      			<div class="col-sm-6" style="border-bottom: 1px solid lightgrey; overflow-x: auto;">
-		      				<h5><u><strong>Fill Nulls - Median</strong></u></h5>
-							<form method="post" action="{{ url_for('dataset_pages.transform_fillNullsMedian', dataset_id=dataset_info.setid,
-								tablename=table_name) }}">
-							{{ fillnullmedian_form.csrf_token }}
-							<div class="form-group" style="width: 30%; display: inline-block;">
-								{{render_field(fillnullmedian_form.select_attr, class_="form-control")}}
-							</div>
-							<p style="display: inline-block;"><input type="submit" id="delete" class="btn btn-primary" value="Fill Nulls Median"></p>
-							</form>
-						</div>
-						<!-- Fill Nulls Median -->
-
-						<!-- Fill Nulls Custom Value -->
-		      			<div class="col-sm-6" style="border-bottom: 1px solid lightgrey; overflow-x: auto;">
-		      				<h5><u><strong>Fill Nulls - Custom Value</strong></u></h5>
-							<form method="post" action="{{ url_for('dataset_pages.transform_fillNullsCustomValue', dataset_id=dataset_info.setid,
-								tablename=table_name) }}">
-							{{ fillnullcustom_form.csrf_token }}
-							<div class="form-group" style="width: 30%; display: inline-block;">
-								{{render_field(fillnullcustom_form.select_attr, class_="form-control")}}
-							</div>
-							<div class="form-group" style="width: 30%; display: inline-block;">
-								{{render_field(fillnullcustom_form.replacement, class_="form-control", placeholder="Replacement")}}
-							</div>
-							<p style="display: inline-block;"><input type="submit" id="delete" class="btn btn-primary" value="Fill Nulls Custom"></p>
-							</form>
-						</div>
-						<!-- Fill Nulls Median -->
-
-						<!-- Discretize Equal Width -->
-		      			<div class="col-sm-6" style="border-bottom: 1px solid lightgrey; overflow-x: auto;">
-		      				<h5><u><strong>Discretize with Equal Width</strong></u></h5>
-							<form method="post" action="{{ url_for('dataset_pages.transform_discretizeEqualWidth', dataset_id=dataset_info.setid, tablename=table_name) }}">
-							{{ discretizeWidth_form.csrf_token }}
-							<div class="form-group" style="width: 30%; display: inline-block;">
-								{{render_field(discretizeWidth_form.select_attr, class_="form-control")}}
-							</div>
-							<p style="display: inline-block;"><input type="submit" id="delete" class="btn btn-primary" value="Discretize Equal Width"></p>
-							</form>
-						</div>
-						<!-- Discretize Equal Width  -->
-
-						<!-- Discretize Equal Frequency -->
-		      			<div class="col-sm-6" style="overflow-x: auto;">
-		      				<h5><u><strong>Discretize with Equal Frequency</strong></u></h5>
-							<form method="post" action="{{ url_for('dataset_pages.transform_discretizeEqualFreq', dataset_id=dataset_info.setid, tablename=table_name) }}">
-							{{ discretizeFreq_form.csrf_token }}
-							<div class="form-group" style="width: 30%; display: inline-block;">
-								{{render_field(discretizeFreq_form.select_attr, class_="form-control")}}
-							</div>
-							<p style="display: inline-block;"><input type="submit" id="delete" class="btn btn-primary" value="Discretize Equal Frequency"></p>
-							</form>
-						</div>
-						<!-- Discretize Equal Frequency  -->		      			
+		      			<div class="panel-group" id="accordion2">
+					        {% include "includes/_transformations.html" %}
+						</div>    			
 			        </div>
 	     		</div>
 	    	</div>
@@ -435,6 +236,50 @@
 					$('#col_stats').append(response);
 				}
 			})
+		});
+	</script>
+
+	<script>
+		$(function() {
+			$('#pred_2_attr').hide()
+			$('#pred_2_op').hide()
+			$('#pred_2_input').hide()
+			$('#pred_2_select').hide()
+			$('#pred_3_attr').hide()
+			$('#pred_3_op').hide()
+			$('#pred_3_input').hide()
+
+			$('#select1').change(function() {
+				if($('#select1 option:selected').text() == "AND" || $('#select1 option:selected').text() == "OR"){
+					$('#pred_2_attr').show()
+					$('#pred_2_op').show()
+					$('#pred_2_input').show()
+					$('#pred_2_select').show()
+				}
+				else {
+					$('#pred_2_attr').hide()
+					$('#pred_2_op').hide()
+					$('#pred_2_input').hide()
+					$('#pred_2_select').hide()
+					$('#pred_3_attr').hide()
+					$('#pred_3_op').hide()
+					$('#pred_3_input').hide()
+					$('#select2').prop('selectedIndex', 0)
+				}
+			});
+
+			$('#select2').change(function() {
+				if($('#select2 option:selected').text() == "AND" || $('#select2 option:selected').text() == "OR"){
+					$('#pred_3_attr').show()
+					$('#pred_3_op').show()
+					$('#pred_3_input').show()
+				}
+				else {
+					$('#pred_3_attr').hide()
+					$('#pred_3_op').hide()
+					$('#pred_3_input').hide()
+				}
+			});
 		});
 	</script>
 	

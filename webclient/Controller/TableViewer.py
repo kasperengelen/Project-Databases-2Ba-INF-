@@ -1,7 +1,5 @@
 import pandas as pd
 import matplotlib.pyplot as plt
-from sqlalchemy import create_engine
-from Model.DatabaseConfiguration import DatabaseConfiguration
 import math
 import re
 import os
@@ -323,5 +321,3 @@ class TableViewer:
         """Return average value of the column"""
         return self.__aggregate_function(columnname, "AVG")
 
-if __name__ == '__main__':
-    pass
