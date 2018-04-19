@@ -81,7 +81,34 @@ class TestTableTransformer(unittest.TestCase):
         cls.db_connection.commit()
         #Close database connection
         cls.db_connection.close()
-        
+
+
+
+    def test_is_nullable(self):
+        """Test to see if the is_nullable method of TableTransformer works correctly."""
+        result = self.test_object.is_nullable('test_table', 'string')
+        self.assertFalse(result)
+        result = self.test_object.is_nullable('test_table', 'number')
+        self.assertFalse(result)
+        result = self.test_object.is_nullable('test_table', 'garbage')
+        self.assertTrue(result)
+        result = self.test_object.is_nullable('test_table', 'fpoint')
+        self.assertTrue(result)
+        result = self.test_object.is_nullable('test_table', 'date_string')
+        self.assertFalse(result)
+
+
+    def test_is_numerical(self):
+        is_numerical = self.test_object.is_numerical("double precision")
+        self.assertTrue(is_numerical)
+        is_numerical = self.test_object.is_numerical("bigserial")
+        self.assertTrue(is_numerical)
+        is_numerical = self.test_object.is_numerical("real")
+        self.assertTrue(is_numerical)
+        is_numerical = self.test_object.is_numerical("character")
+        self.assertFalse(is_numerical)
+        is_numerical = self.test_object.is_numerical("character varying")
+        self.assertFalse(is_numerical)
 
         
     def test_delete_attribute(self):
@@ -302,7 +329,7 @@ class TestTableTransformer(unittest.TestCase):
         
         for element in expected: #Test if expected elements are part of the table
             test_result = (element,) in all_columns
-            self.assertEqual(test_result, True)
+            self.assertTrue(test_result)
         #There should 22 columns, 6 previous one + 16 unique categories 
         self.assertEqual(len(all_columns), 22)
         self.db_connection.commit()
@@ -315,7 +342,7 @@ class TestTableTransformer(unittest.TestCase):
         del expected[1]
         for element in expected: #Test if expected elements are part of the table
             test_result = (element,) in all_columns
-            self.assertEqual(test_result, True)
+            self.assertTrue(test_result)
         #There should be 35 columns, the previous 22 - 1(date_string) + 14 (16 categeroies - 2 duplicates = 35
         self.assertEqual(len(all_columns), 35)
         self.db_connection.commit()
@@ -335,9 +362,9 @@ class TestTableTransformer(unittest.TestCase):
         smallest = min(all_values)
         unique_nr = len(set(all_values))
         test = largest <= 1.000
-        self.assertEqual(test, True)
+        self.assertTrue(test)
         test = smallest >= 0.000
-        self.assertEqual(test, True)
+        self.assertTrue(test)
         #There are 16 rows, two rows both contain 8 and should be mapped to the same value
         #And 2 extreme values should both be mapped to 1.0 so there should be 14 unqiue values.
         self.assertEqual(unique_nr, 14)
