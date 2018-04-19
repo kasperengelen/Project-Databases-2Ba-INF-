@@ -8,10 +8,14 @@ class TestDatasetInfo(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         """Set up the test environment."""
-        db_conn = DatabaseConfiguration.get_db()
-        engine = DatabaseConfiguration.get_engine()
+        db_conn = DatabaseConfiguration().get_db()
+        engine = DatabaseConfiguration().get_engine()
 
     @classmethod
     def tearDownClass(cls):
         """Clean up the test environment."""
         pass
+
+    def test_dummy(self):
+        self.assertEqual(1,1)
+

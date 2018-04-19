@@ -1,6 +1,4 @@
 import unittest
-import test_TableTransformer as t1
-import test_TableTransformerCopy as t2
 
 class ProjectTester:
     """Class that tests all the units of the project by executing the unit tests of the project that are
