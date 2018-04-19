@@ -60,7 +60,7 @@ class TableTransformer:
         self.db_connection.commit()
 
 
-    def is_nullable(self, tablename):
+    def is_nullable(self, tablename, attribute):
         """Extra option to check whether an attribute is nullable or not. If deleting something is impossible due to a not null
         constraint, the row will be deleted as a whole.
         """
@@ -108,12 +108,30 @@ class TableTransformer:
         self.db_connection.commit()
         return (internal_ref[0], new_name)
 
-    def delete_rows_using_predicate_logic(self, arg_list):
+    def delete_rows_using_predicate_logic(self, tablename, arg_list):
         """Method to delete rows by using provided predicates like "attribute > x AND attribute != y".
 
         Parameters:
             arg_list: A list of strings containing the strings representing the predicates (Identifiers, logical operators).
         """
+        #List of length 4 is of type ['ATTRIBUTE' '=' 'X' 'END]
+        list_size = len(arg_list)
+        if list_size  in [4, 8, 11]:
+            predicate = ''
+            if list_size >= 3:
+                predicate += '"{}"'.format(arg_list[0])
+                predicate += ' ' + arg_list[1]
+                predicate += ' ' + arg_list[2]
+                pass
+            
+            if list_size >= 7:
+                pass
+
+            if list_size >= 11:
+                pass
+
+        else:
+            raise self.ValueError('Can not delete rows because an invalid predicate has been provided.')
         pass
     
     def delete_attribute(self, tablename, attribute, new_name=""):
@@ -137,7 +155,7 @@ class TableTransformer:
     def is_numerical(self, attr_type):
         """Method that returns whether a postgres attribute type is a numerical type."""
         
-        numericals = ['integer', 'double precision', 'bigint', 'bigserial', 'real, smallint', 'smallserial', 'serial']
+        numericals = ['integer', 'double precision', 'bigint', 'bigserial', 'real', 'smallint', 'smallserial', 'serial']
         if attr_type in numericals:
             return True
         else:
@@ -818,5 +836,3 @@ class TableTransformer:
         self.db_connection.cursor().execute("SET search_path TO {};".format(self.setid))
         self.db_connection.cursor().execute(query)
         self.db_connection.commit()
-
-
