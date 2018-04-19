@@ -74,7 +74,7 @@ class TableTransformer:
             return True
         elif result == 'NO':
             return False
-        raise ValueError("Error: is_nullabe returned else than YES or NO.")
+        raise ValueError("Error: is_nullabe returned something else than YES or NO.")
 
 
     
@@ -102,6 +102,8 @@ class TableTransformer:
            internal_ref: A tuple containing information to identify the table in our system. This is returned by get_internal_reference().
            new_name: A string representing the name of the new table constructed after performing a transformation.
         """
+        if new_name == "":
+            raise self.ValueError('No name specified for new table resulting from the operation.')
         #Execute with the dynamic SQL module of psycopg2 to avoid SQL injecitons
         self.db_connection.cursor().execute(sql.SQL("CREATE TABLE {}.{} AS SELECT * FROM {}.{}").format(sql.Identifier(internal_ref[0]),sql.Identifier(new_name),
                                                                                           sql.Identifier(internal_ref[0]), sql.Identifier(internal_ref[1])))

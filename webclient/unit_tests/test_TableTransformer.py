@@ -114,7 +114,7 @@ class TestTableTransformer(unittest.TestCase):
     def test_delete_attribute(self):
         """Test to see if TableTransformer can correctly delete an attribute."""
         self.test_object.delete_attribute('test_table', 'garbage') #Delete attribute "garbage"
-        #Now the only attributes should be "string", "number", "date_time"
+        #Now the only attributes should be "string", "number", "date_time", ...
         cur = self.db_connection.cursor()
         cur.execute("""SELECT column_name FROM information_schema.columns WHERE table_schema = 'TEST'
                                               AND table_name   = 'test_table'""")

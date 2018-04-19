@@ -4,7 +4,6 @@ import shutil
 import psycopg2
 import re
 from psycopg2 import sql
-from utils import get_db
 from Controller.DatasetManager import DatasetManager
 from Model.DatabaseConfiguration import DatabaseConfiguration
 
@@ -42,8 +41,6 @@ class DataLoader:
 
     def __init__(self, setid, db_connection=None):
         self.db_conn = db_connection
-        if db_connection is None:
-            self.db_conn = get_db()
 
         # first check if the setid is valid
         if DatasetManager.existsID(setid):
