@@ -40,7 +40,6 @@ class TestTableViewer(unittest.TestCase):
             cur.execute(creation_query)
             # table 2
             cur.execute(creation_query2)
-            cls.db_connection.commit()
 
         except psycopg2.ProgrammingError:
             #If it was still present in the database we better drop the schema and rebuild it
