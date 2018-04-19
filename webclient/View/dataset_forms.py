@@ -137,6 +137,15 @@ class DeleteAttrForm(FlaskForm):
     # ENDMETHOD
 # ENDCLASS
 
+class DeleteAttrForm(FlaskForm):
+    """Form for the delete attribute/column transformation."""
+    select_attr = SelectField('Attribute', choices=[])
+
+    def fillForm(self, attrs):
+        self.select_attr.choices = [(attrname, attrname) for attrname in attrs]
+    # ENDMETHOD
+# ENDCLASS
+
 class DataTypeTransform(FlaskForm):
     """Form for datatype conversion transformation."""
     select_attr = SelectField('Attribute', choices=[], id='attribute')
