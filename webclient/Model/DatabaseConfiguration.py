@@ -1,7 +1,7 @@
 import configparser
 import io
 import os
-import Model.db_wrapper
+import Model.db_wrapper as db_wrapper
 from sqlalchemy import create_engine
 
 

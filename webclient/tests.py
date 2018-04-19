@@ -13,6 +13,6 @@ def suite():
     suite.addTest(TestUserManager('test_validateLogin'))
 
 if __name__ == "__main__":
-    #unittest.main()
-    runner = unittest.TextTestRunner()
-    runner.run(suite())
+    unittest.main()
+    #runner = unittest.TextTestRunner()
+    #runner.run(suite())
