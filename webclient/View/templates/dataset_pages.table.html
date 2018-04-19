@@ -56,7 +56,7 @@
 		         		<a data-toggle="collapse" data-parent="#accordion" href="#transform">Transform</a>
 		        	</h4>
 		      	</div>
-		      	<div id="transform" class="panel-collapse collapse">
+		      	<div id="transform" class="panel-collapse collapse in">
 		      		<div class="panel-body">
 		      			{% from "includes/_formhelpers.html" import render_field %}
 
@@ -148,6 +148,12 @@
 							</form>
 						</div>
 						<!-- Type Conversion -->
+
+						<!-- Predicates -->
+						<div class="col-sm-12" style="border-bottom: 1px solid lightgrey; overflow-x: auto;">
+							{% include "includes/_predicates.html" %}
+						</div>
+						<!-- Predicates -->						
 
 		      			<!-- Delete Attribute -->
 		      			<div class="col-sm-6" style="border-bottom: 1px solid lightgrey; overflow-x: auto;">
@@ -423,6 +429,50 @@
 					$('#col_stats').append(response);
 				}
 			})
+		});
+	</script>
+
+	<script>
+		$(function() {
+			$('#pred_2_attr').hide()
+			$('#pred_2_op').hide()
+			$('#pred_2_input').hide()
+			$('#pred_2_select').hide()
+			$('#pred_3_attr').hide()
+			$('#pred_3_op').hide()
+			$('#pred_3_input').hide()
+
+			$('#select1').change(function() {
+				if($('#select1 option:selected').text() == "AND" || $('#select1 option:selected').text() == "OR"){
+					$('#pred_2_attr').show()
+					$('#pred_2_op').show()
+					$('#pred_2_input').show()
+					$('#pred_2_select').show()
+				}
+				else {
+					$('#pred_2_attr').hide()
+					$('#pred_2_op').hide()
+					$('#pred_2_input').hide()
+					$('#pred_2_select').hide()
+					$('#pred_3_attr').hide()
+					$('#pred_3_op').hide()
+					$('#pred_3_input').hide()
+					$('#select2').prop('selectedIndex', 0)
+				}
+			});
+
+			$('#select2').change(function() {
+				if($('#select2 option:selected').text() == "AND" || $('#select2 option:selected').text() == "OR"){
+					$('#pred_3_attr').show()
+					$('#pred_3_op').show()
+					$('#pred_3_input').show()
+				}
+				else {
+					$('#pred_3_attr').hide()
+					$('#pred_3_op').hide()
+					$('#pred_3_input').hide()
+				}
+			});
 		});
 	</script>
 	

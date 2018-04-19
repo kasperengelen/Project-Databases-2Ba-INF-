@@ -4,7 +4,7 @@ from Controller.AccessController import require_login, require_admin
 from Controller.AccessController import require_adminperm, require_writeperm, require_readperm
 from Controller.DatasetManager import DatasetManager
 from Controller.UserManager import UserManager
-from View.dataset_forms import FindReplaceForm, DeleteAttrForm, DatasetForm, AddUserForm, RemoveUserForm, DatasetListEntryForm, TableUploadForm
+from View.dataset_forms import FindReplaceForm, DeleteAttrForm, DatasetForm, AddUserForm, RemoveUserForm, DatasetListEntryForm, TableUploadForm, PredicateForm
 from View.dataset_forms import DownloadForm, DataTypeTransform, NormalizeZScore, OneHotEncoding, TableJoinForm, RegexFindReplace, DiscretizeEqualWidth
 from View.dataset_forms import DiscretizeEqualFreq, DiscretizeCustomRange, DeleteOutlier, FillNullsMean, FillNullsMedian, FillNullsCustomValue, AttributeForm
 from Controller.TableViewer import TableViewer
@@ -64,6 +64,9 @@ def view_dataset_table(dataset_id, tablename, page_nr):
     # get tableviewer
     tv = dataset.getTableViewer(tablename)
 
+    # get tabletransformer
+    tt = dataset.getTableTransformer(tablename)
+
     # get info
     dataset_info = dataset.toDict()
 
@@ -90,11 +93,11 @@ def view_dataset_table(dataset_id, tablename, page_nr):
     fillnullmedian_form = FillNullsMedian()
     fillnullcustom_form = FillNullsCustomValue()
     attr_form = AttributeForm()
+    predicate_form = PredicateForm()
 
     # fill forms with data
     findrepl_form.fillForm(attrs)
     delete_form.fillForm(attrs)
-    typeconversion_form.fillForm(attrs, [], [])
     onehotencodingform.fillForm(attrs)
     zscoreform.fillForm(attrs)
     regexfindreplace_form.fillForm(attrs)
@@ -106,6 +109,8 @@ def view_dataset_table(dataset_id, tablename, page_nr):
     fillnullmedian_form.fillForm(attrs)
     fillnullcustom_form.fillForm(attrs)
     attr_form.fillForm(attrs)
+    typeconversion_form.fillForm(attrs, [], [])
+    predicate_form.fillForm(attrs)
 
 
     # render table
@@ -149,48 +154,9 @@ def view_dataset_table(dataset_id, tablename, page_nr):
                                                 current_page=page_nr,
                                                 colstats=colstats,
                                                 attributes=attributes,
-                                                attr_form=attr_form)
+                                                attr_form=attr_form,
+                                                predicate_form=predicate_form)
 # ENDFUNCTION
-
-@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/<string:attr_name>/')
-@require_login
-@require_readperm
-def view_popup(dataset_id, tablename, attr_name):
-    """Callback for graph popup"""
-
-    if not DatasetManager.getDataset(dataset_id):
-        abort(404)
-
-    dataset = DatasetManager.getDataset(dataset_id)
-
-    if tablename not in dataset.getTableNames():
-        abort(404)
-
-    # get tableviewer
-    tv = dataset.getTableViewer(tablename)
-
-    if not attr_name in tv.get_attributes():
-        abort(404)
-
-    # RETRIEVE COLUMN STATISTICS
-    colstats = []
-
-    colstats.append({
-        "attr_name": attr_name,
-        "nullfreq": tv.get_null_frequency(attr_name),
-        "mostfreq": tv.get_most_frequent_value(attr_name),
-        "max": tv.get_max(attr_name),
-        "min": tv.get_min(attr_name),
-        "avg": tv.get_avg(attr_name)
-    })
-
-    # ENDFOR
-
-    hist_num =  tv.get_numerical_histogram(attr_name)
-    chart_freq = tv.get_frequency_pie_chart(attr_name)
-
-    return render_template("dataset_pages.view_popup.html", hist_num=hist_num, chart_freq=chart_freq, attr_name=attr_name, colstats=colstats)
-    
 
 @dataset_pages.route('/dataset/<int:dataset_id>/jointables', methods=['POST'])
 @require_login
@@ -233,6 +199,52 @@ def transform_join_tables(dataset_id):
     except:
         flash(message="An error occurred", category="error")
     return redirect(url_for('dataset_pages.view_dataset_home', dataset_id=dataset_id))
+# ENDFUNCTION
+
+@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/transform/transform_predicate', methods=['POST'])
+@require_login
+@require_writeperm
+def transform_predicate(dataset_id, tablename):
+    """Callback for delete attribute transformation."""
+
+    if not DatasetManager.existsID(dataset_id):
+        abort(404)
+
+    dataset = DatasetManager.getDataset(dataset_id)
+
+    if tablename not in dataset.getTableNames():
+        abort(404)
+
+    tv = dataset.getTableViewer(tablename)
+
+    form = PredicateForm(request.form)
+    form.fillForm(tv.get_attributes())
+
+    if not form.validate():
+        flash(message="Invalid form.", category="error")
+        return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
+
+    tt = dataset.getTableTransformer(tablename)
+
+    predicate_list = [form.attr1.data, form.op1.data, form.input1.data]
+
+    if(form.select1.data != END):
+        predicate_list.append(form.select1.data)
+        predicate_list.append(form.attr2.data)
+        predicate_list.append(form.op2.data)
+        predicate_list.append(form.input2.data)
+
+    if(form.select2.data != END):
+        predicate_list.append(form.select2.data)
+        predicate_list.append(form.attr3.data)
+        predicate_list.append(form.op3.data)
+        predicate_list.append(form.input3.data)
+
+
+    tt.delete_rows_using_predicate_logic(tablename, predicate_list)
+    flash(message="Rows deleted according to predicate.", category="success")
+
+    return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 # ENDFUNCTION
 
 @dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/transform/deleteattr', methods=['POST'])
@@ -350,7 +362,22 @@ def transform_typeconversion(dataset_id, tablename):
 
     form = DataTypeTransform(request.form)
     print(form.new_datatype.data)
-    form.fillForm(tv.get_attributes(), tt.get_conversion_options(tablename, form.select_attr.data), tt.get_datetime_formats(form.new_datatype.data))
+
+    datetimetypes = []
+    datetimetypes.append("None")
+    for datetype in tt.get_datetime_formats("DATE"):
+        datetimetypes.append(datetype) 
+
+    for datetype in tt.get_datetime_formats("TIME"):
+        datetimetypes.append(datetype)
+
+    for datetype in tt.get_datetime_formats("TIMESTAMP"):
+        datetimetypes.append(datetype)   
+
+    print(type(form.date_type.data))
+    print(datetimetypes)
+
+    form.fillForm(tv.get_attributes(), tt.get_conversion_options(tablename, form.select_attr.data), datetimetypes)
 
 
     if not form.validate():
