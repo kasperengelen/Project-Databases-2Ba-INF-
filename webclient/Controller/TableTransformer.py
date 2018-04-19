@@ -820,9 +820,3 @@ class TableTransformer:
         self.db_connection.commit()
 
 
-if __name__ == '__main__':
-    connection_string = "dbname='{}' user='{}' host='{}' password='{}'".format(*(DatabaseConfiguration().get_packed_values()))
-    db_connection = psycopg2.connect(connection_string)
-    engine = DatabaseConfiguration().get_engine()
-    tt = TableTransformer(7, db_connection, engine)
-    tt.normalize_using_zscore('workingtable', 'age')
