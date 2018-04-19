@@ -74,7 +74,7 @@ class TableTransformer:
             return True
         elif result == 'NO':
             return False
-        raise ValueError("Error: is_nullabe returned something else than YES or NO.")
+        raise ValueError("Error: is_nullabe returned else than YES or NO.")
 
 
     
@@ -102,15 +102,13 @@ class TableTransformer:
            internal_ref: A tuple containing information to identify the table in our system. This is returned by get_internal_reference().
            new_name: A string representing the name of the new table constructed after performing a transformation.
         """
-        if new_name == "":
-            raise self.ValueError('No name specified for new table resulting from the operation.')
         #Execute with the dynamic SQL module of psycopg2 to avoid SQL injecitons
         self.db_connection.cursor().execute(sql.SQL("CREATE TABLE {}.{} AS SELECT * FROM {}.{}").format(sql.Identifier(internal_ref[0]),sql.Identifier(new_name),
                                                                                           sql.Identifier(internal_ref[0]), sql.Identifier(internal_ref[1])))
         self.db_connection.commit()
         return (internal_ref[0], new_name)
 
-    def delete_rows_using_predicate_logic(self, tablename, arg_list):
+    def delete_rows_using_predicate_logic(self, tablename, arg_list, new_name=""):
         """Method to delete rows by using provided predicates like "attribute > x AND attribute != y".
 
         Parameters:
@@ -186,6 +184,13 @@ class TableTransformer:
                     }
 
         return formats.setdefault(data_type, [])
+
+    def get_extraction_options(self, data_type):
+        """Returns a list of supported options for the date extraction method."""
+        if data_type in ['DATE', 'TIMESTAMP']:
+            return ['YEAR', 'MONTH + YEAR', 'MONTH', 'DAY OF THE WEEK']
+        else:
+            return []
 
     def __readable_format_to_postgres(self, attr_type, readable_format):
         """Modifies the readable formats we use for the front-end to correct postgres formats in the back-end."""
@@ -385,6 +390,8 @@ class TableTransformer:
             new_name: The name of the new table if the TableTransformer is not set to overwrite.
         """
         cur_type, internal_ref = self.get_attribute_type(tablename, attribute)
+        if self.replace is False:
+            internal_ref = self.copy_table(internal_ref, new_name)
 
         if cur_type not in ['character', 'character varying']:
             raise self.AttrTypeError("Find-and-replace using regular epxressions is only possible with character type attributes. "
@@ -797,11 +804,15 @@ class TableTransformer:
         # create history entry
         #self.__create_history(tablename, attribute, "fill_nulls_with_custom_value", value, new_name)
 
-
-    #INCOMPLETE    
-    def extract_part_of_datetime(self, tablename, attribute, new_name=""):
+    
+    def extract_part_of_date(self, tablename, attribute, extraction_arg, new_name=""):
         """Method that extracts part of a date, time, or datetime"""
-        pass
+        self.db_connection.cursor().execute(sql.SQL(
+                    "ALTER TABlE {}.{} ADD COLUMN  {} TO {}").format(sql.Identifier(str(self.setid)),
+                                                               sql.Identifier(tablename),
+                                                               sql.Identifier(old_name),
+                                                               sql.Identifier(new_name)))
+        
         
 
 
@@ -838,3 +849,11 @@ class TableTransformer:
         self.db_connection.cursor().execute("SET search_path TO {};".format(self.setid))
         self.db_connection.cursor().execute(query)
         self.db_connection.commit()
+
+
+if __name__ == '__main__':
+    connection_string = "dbname='{}' user='{}' host='{}' password='{}'".format(*(DatabaseConfiguration().get_packed_values()))
+    db_connection = psycopg2.connect(connection_string)
+    engine = DatabaseConfiguration().get_engine()
+    tt = TableTransformer(7, db_connection, engine)
+    tt.normalize_using_zscore('workingtable', 'age')

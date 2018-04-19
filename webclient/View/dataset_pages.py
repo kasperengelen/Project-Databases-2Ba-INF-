@@ -4,7 +4,7 @@ from Controller.AccessController import require_login, require_admin
 from Controller.AccessController import require_adminperm, require_writeperm, require_readperm
 from Controller.DatasetManager import DatasetManager
 from Controller.UserManager import UserManager
-from View.dataset_forms import FindReplaceForm, DeleteAttrForm, DatasetForm, AddUserForm, RemoveUserForm, DatasetListEntryForm, TableUploadForm, PredicateForm
+from View.dataset_forms import FindReplaceForm, DeleteAttrForm, DatasetForm, AddUserForm, RemoveUserForm, DatasetListEntryForm, TableUploadForm, PredicateForm, EntryCountForm
 from View.dataset_forms import DownloadForm, DataTypeTransform, NormalizeZScore, OneHotEncoding, TableJoinForm, RegexFindReplace, DiscretizeEqualWidth
 from View.dataset_forms import DiscretizeEqualFreq, DiscretizeCustomRange, DeleteOutlier, FillNullsMean, FillNullsMedian, FillNullsCustomValue, AttributeForm
 from Controller.TableViewer import TableViewer
@@ -13,6 +13,7 @@ import os
 from Controller.DataLoader import DataLoader, FileException as DLFileExcept
 import shutil
 import webbrowser
+from utils import get_db
 
 dataset_pages = Blueprint('dataset_pages', __name__)
 
@@ -51,7 +52,7 @@ def view_dataset_home(dataset_id):
 @require_readperm
 def view_dataset_table(dataset_id, tablename, page_nr):
 
-    ENTRIES_PER_PAGE = 10
+    row_count = session['rowcount']
 
     if not DatasetManager.existsID(dataset_id):
         abort(404)
@@ -71,9 +72,9 @@ def view_dataset_table(dataset_id, tablename, page_nr):
     dataset_info = dataset.toDict()
 
     # CHECK IN RANGE
-    if not tv.is_in_range(page_nr, ENTRIES_PER_PAGE):
+    if not tv.is_in_range(page_nr, row_count):
         flash(message="Page out of range.", category="error")
-        return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename = tablename, page_nr = 1))
+        return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename = tablename, page_nr = 1, row_count = 10))
 
     # RETRIEVE ATTRIBUTES
     attrs = tv.get_attributes()
@@ -95,6 +96,8 @@ def view_dataset_table(dataset_id, tablename, page_nr):
     attr_form = AttributeForm()
     predicate_form = PredicateForm()
 
+    entrycount_form = EntryCountForm(entry_count = session['rowcount'])
+
     # fill forms with data
     findrepl_form.fillForm(attrs)
     delete_form.fillForm(attrs)
@@ -109,15 +112,16 @@ def view_dataset_table(dataset_id, tablename, page_nr):
     fillnullmedian_form.fillForm(attrs)
     fillnullcustom_form.fillForm(attrs)
     attr_form.fillForm(attrs)
+    entrycount_form.fillForm(dataset_id, tablename)
     typeconversion_form.fillForm(attrs, [], [])
     predicate_form.fillForm(attrs)
 
 
     # render table
-    table_data = tv.render_table(page_nr, ENTRIES_PER_PAGE)
+    table_data = tv.render_table(page_nr, row_count)
 
     # get indices
-    page_indices = tv.get_page_indices(display_nr = ENTRIES_PER_PAGE, page_nr = page_nr)
+    page_indices = tv.get_page_indices(display_nr = row_count, page_nr = page_nr)
 
     # RETRIEVE USER PERMISSION
     perm_type = dataset.getPermForUserID(session['userdata']['userid'])
@@ -155,7 +159,34 @@ def view_dataset_table(dataset_id, tablename, page_nr):
                                                 colstats=colstats,
                                                 attributes=attributes,
                                                 attr_form=attr_form,
+                                                entrycount_form = entrycount_form,
                                                 predicate_form=predicate_form)
+# ENDFUNCTION
+
+@dataset_pages.route('/dataset/set_session_rowcount/', methods = ['POST'])
+@require_login
+def set_session_rowcount():
+    """Callback to set the session rowcount."""
+
+    form = EntryCountForm(request.form)
+
+    if not form.validate():
+        abort(404)
+
+    dataset_id = int(form.cur_dataset.data)
+    tablename = form.cur_table.data
+
+    if not DatasetManager.getDataset(dataset_id):
+        abort(404)
+
+    dataset = DatasetManager.getDataset(dataset_id)
+
+    if tablename not in dataset.getTableNames():
+        abort(404)
+
+    session['rowcount'] = int(form.entry_count.data)
+
+    return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 # ENDFUNCTION
 
 @dataset_pages.route('/dataset/<int:dataset_id>/jointables', methods=['POST'])
@@ -941,7 +972,7 @@ def upload(dataset_id):
             file.save(real_filename)
 
             # HANDLE FILE WITH DATALOADER
-            dl = DataLoader(dataset_id)
+            dl = DataLoader(dataset_id, get_db())
             
             try:
                 dl.read_file(real_filename, columnnames_included)

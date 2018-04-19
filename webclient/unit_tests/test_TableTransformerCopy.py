@@ -71,6 +71,7 @@ class TestTransformerCopy(unittest.TestCase):
         
 
     def test_delete_attribute(self):
+        """Test to see if TableTransformer can correctly delete an attribute resulting in a new table."""
         self.test_object.delete_attribute('test_table', 'garbage', 'new_table1') #Delete attribute "garbage"
         #Now the only attributes should be "string", "number", "date_time"
         cur = self.db_connection.cursor()
@@ -90,7 +91,101 @@ class TestTransformerCopy(unittest.TestCase):
         self.db_connection.commit()
 
 
+    def test_find_and_replace(self):
+        """A test for the find and replace method resulting in a new table."""
+        self.test_object.find_and_replace('test_table','string', 'C-Corp', 'Replacement', new_name='new_table2')
+        result = self.__test_table_exists('new_table2')
+        self.assertTrue(result)
+        cur = self.db_connection.cursor()
+        cur.execute("SELECT * FROM \"TEST\".new_table2 WHERE string = 'Replacement'")
+        result = cur.fetchone()
+        self.assertEqual(result[1], 1)
+        self.assertEqual(result[2], '08/08/1997')
+        self.db_connection.commit()
 
 
-if __name__ == '__main__':
-    unittest.main()
+    def test_find_and_replace_string(self):
+        """A test for find and replace method but for finding substrings resulting in a new table."""
+        #Find a word with substring Sam and replace the whole word with Foobar
+        self.test_object.find_and_replace('test_table', 'string', 'Sam', 'Foobar', False, True, 'new_table3')
+        result = self.__test_table_exists('new_table3')
+        self.assertTrue(result)
+        cur = self.db_connection.cursor()
+        cur.execute("SELECT * FROM \"TEST\".new_table3 WHERE string = 'Foobar'")
+        result = cur.fetchone()
+        self.assertEqual(result[1], 7)
+        self.assertEqual(result[2], '01/03/1938')
+
+        #Find a word with substring To and replace the substring only with Waka
+        self.test_object.find_and_replace('test_table', 'string', 'To', 'Waka', False, False, 'new_table4')
+        result = self.__test_table_exists('new_table1')
+        self.assertTrue(result)
+        cur = self.db_connection.cursor()
+        cur.execute("SELECT * FROM \"TEST\".new_table4 WHERE string = 'Wakashiba'")
+        result = cur.fetchone()
+        #We found Toshiba but replaced To with Waka to get Wakashiba
+        self.assertEqual(result[1], 8)
+        self.assertEqual(result[2], '01/07/1975')
+
+
+
+    def test_regex_find_and_replace(self):
+        """A test for the method of TableTransformer that uses regular expressions. This will result in a new table."""
+        #Use a regular expression to find Nintendo and replace it with SEGA
+        self.test_object.regex_find_and_replace('test_table', 'string', 'Nin.*', 'SEGA', False, 'new_table5')
+        result = self.__test_table_exists('new_table5')
+        self.assertTrue(result)
+        cur = self.db_connection.cursor()
+        cur.execute("SELECT * FROM \"TEST\".new_table5 WHERE string = 'SEGA'")
+        result = cur.fetchone()
+        self.assertEqual(result[1], 21)
+        self.assertEqual(result[2], '23/09/1989')
+
+        #Use the regex to find a word without case sensitivity
+        self.test_object.regex_find_and_replace('test_table', 'string', 'sega', 'SEGA', False, 'new_table6')
+        result = self.__test_table_exists('new_table6')
+        self.assertTrue(result)
+        cur = self.db_connection.cursor()
+        cur.execute("SELECT * FROM \"TEST\".new_table6 WHERE string = 'SEGA'")
+        result = cur.fetchone()
+        self.assertEqual(result[1], 21)
+        self.assertEqual(result[2], '23/09/1989')
+
+        #Use the regex to find a word with case sensitivity
+        self.test_object.regex_find_and_replace('test_table4', 'string', 'sega', 'Ethereal', True, 'new_table7')
+        result = self.__test_table_exists('new_table7')
+        self.assertTrue(result)
+        cur = self.db_connection.cursor()
+        cur.execute("SELECT * FROM \"TEST\".test_table7 WHERE string = 'Ethereal'")
+        result = cur.fetchone()
+        self.assertIsNone(result) #Shouldn't be able to find out due the difference in case
+
+
+    def test_numeric_conversion(self):
+        """Test the conversion of numeric types (INTEGER, FLOAT)."""
+        #From integer to float
+        self.test_object.change_attribute_type('test_table', 'number', 'FLOAT', new_name='new_table8')
+        result = self.__test_table_exists('new_table8')
+        self.assertTrue(result)
+        cur = self.db_connection.cursor()
+        cur.execute("SELECT pg_typeof(number) FROM \"TEST\".new_table8")
+        result = cur.fetchone()[0]
+        self.assertEqual(result, 'double precision')
+        #From float to integer
+        self.test_object.change_attribute_type('new_table8', 'number', 'INTEGER', new_name='new_table9')
+        result = self.__test_table_exists('new_table9')
+        self.assertTrue(result)
+        cur.execute("SELECT pg_typeof(number) FROM \"TEST\".new_table9")
+        result = cur.fetchone()[0]
+        self.assertEqual(result, 'integer')
+        #From integer to VARCHAR(255)
+        self.test_object.change_attribute_type('test_table', 'number', 'VARCHAR(255)', new_name='new_table10')
+        result = self.__test_table_exists('new_table10')
+        self.assertTrue(result)
+        cur.execute("SELECT pg_typeof(number) FROM \"TEST\".new_table10")
+        result = cur.fetchone()[0]
+        self.assertEqual(result, 'character varying')
+
+
+    
+    
