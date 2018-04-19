@@ -1,1 +1,1 @@
-python3 run_tests.py
+python3 tests.py

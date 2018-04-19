@@ -1,8 +1,6 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 from sqlalchemy import create_engine
-from Model.db_wrapper import DBWrapper
-from Controller.TableTransformer import TableTransformer
 from Model.DatabaseConfiguration import DatabaseConfiguration
 import math
 import re
@@ -326,6 +324,4 @@ class TableViewer:
         return self.__aggregate_function(columnname, "AVG")
 
 if __name__ == '__main__':
-    db_connection = DBWrapper("projectdb18", "dbadmin", "localhost", "AdminPass123")
-    engine = create_engine('postgresql://dbadmin:AdminPass123@localhost/projectdb18')
-    tv = TableViewer(1, "Sales(1)", engine, db_connection)
+    pass

@@ -44,7 +44,6 @@ class DataLoader:
         self.db_conn = db_connection
         if db_connection is None:
             self.db_conn = get_db()
-        # self.db_conn = db_wrapper.DBWrapper()
 
         # first check if the setid is valid
         if DatasetManager.existsID(setid):
