@@ -145,9 +145,11 @@ class DeleteAttrForm(FlaskForm):
     # ENDMETHOD
 # ENDCLASS
 
-class DeleteAttrForm(FlaskForm):
+class ExtractDateTimeForm(FlaskForm):
     """Form for the delete attribute/column transformation."""
     select_attr = SelectField('Attribute', choices=[])
+    select_extracttype = SelectField('Attribute', choices=[("YEAR", "YEAR"), ("MONTH + YEAR", "MONTH + YEAR"), 
+        ("MONTH", "MONTH"), ("DAY OF THE WEEK", "DAY OF THE WEEK")])
 
     def fillForm(self, attrs):
         self.select_attr.choices = [(attrname, attrname) for attrname in attrs]

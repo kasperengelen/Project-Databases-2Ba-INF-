@@ -5,7 +5,7 @@ from Controller.AccessController import require_adminperm, require_writeperm, re
 from Controller.DatasetManager import DatasetManager
 from Controller.UserManager import UserManager
 from View.dataset_forms import FindReplaceForm, DeleteAttrForm, DatasetForm, AddUserForm, RemoveUserForm, DatasetListEntryForm, TableUploadForm, PredicateForm, EntryCountForm
-from View.dataset_forms import DownloadForm, DataTypeTransform, NormalizeZScore, OneHotEncoding, TableJoinForm, RegexFindReplace, DiscretizeEqualWidth
+from View.dataset_forms import DownloadForm, DataTypeTransform, NormalizeZScore, OneHotEncoding, TableJoinForm, RegexFindReplace, DiscretizeEqualWidth, ExtractDateTimeForm
 from View.dataset_forms import DiscretizeEqualFreq, DiscretizeCustomRange, DeleteOutlier, FillNullsMean, FillNullsMedian, FillNullsCustomValue, AttributeForm
 from Controller.TableViewer import TableViewer
 from werkzeug.utils import secure_filename
@@ -95,6 +95,7 @@ def view_dataset_table(dataset_id, tablename, page_nr):
     fillnullcustom_form = FillNullsCustomValue()
     attr_form = AttributeForm()
     predicate_form = PredicateForm()
+    extract_form = ExtractDateTimeForm()
 
     entrycount_form = EntryCountForm(entry_count = session['rowcount'])
 
@@ -115,6 +116,7 @@ def view_dataset_table(dataset_id, tablename, page_nr):
     entrycount_form.fillForm(dataset_id, tablename)
     typeconversion_form.fillForm(attrs, [], [])
     predicate_form.fillForm(attrs)
+    extract_form.fillForm(attrs)
 
 
     # render table
@@ -160,7 +162,8 @@ def view_dataset_table(dataset_id, tablename, page_nr):
                                                 attributes=attributes,
                                                 attr_form=attr_form,
                                                 entrycount_form = entrycount_form,
-                                                predicate_form=predicate_form)
+                                                predicate_form=predicate_form,
+                                                extract_form=extract_form)
 # ENDFUNCTION
 
 @dataset_pages.route('/dataset/set_session_rowcount/', methods = ['POST'])
@@ -236,7 +239,7 @@ def transform_join_tables(dataset_id):
 @require_login
 @require_writeperm
 def transform_predicate(dataset_id, tablename):
-    """Callback for delete attribute transformation."""
+    """Callback for delete by predicate"""
 
     if not DatasetManager.existsID(dataset_id):
         abort(404)
@@ -277,6 +280,42 @@ def transform_predicate(dataset_id, tablename):
 
     return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 # ENDFUNCTION
+
+@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/transform/transform_extractdatetime', methods=['POST'])
+@require_login
+@require_writeperm
+def transform_extractdatetime(dataset_id, tablename):
+    """Callback for extracting date/time"""
+    if not DatasetManager.existsID(dataset_id):
+        abort(404)
+
+    dataset = DatasetManager.getDataset(dataset_id)
+
+    if tablename not in dataset.getTableNames():
+        abort(404)
+
+    tv = dataset.getTableViewer(tablename)
+    tt = dataset.getTableTransformer(tablename)
+
+    form = ExtractDateTimeForm(request.form)
+    form.fillForm(tv.get_attributes())
+
+    if not form.validate():
+        print(form.errors)
+        flash(message="Invalid form.", category="error")
+        return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
+
+    attr_type = tt.get_attribute_type(tablename, form.select_attr.data)
+
+    if tt.get_extraction_options(attr_type) == []:
+        flash(message="Selected Attribute not of type 'DATE' or 'TIMESTAMP'.", category="error")
+        return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
+
+    tt.extract_part_of_date(tablename, form.select_attr.data, form.select_extracttype.data)
+    flash(message="Part of date extracted.", category="success")
+
+    return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
+
 
 @dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/transform/deleteattr', methods=['POST'])
 @require_login
