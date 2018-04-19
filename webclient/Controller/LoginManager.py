@@ -1,5 +1,5 @@
 from flask import session
-from UserManager import UserManager
+from Controller.UserManager import UserManager
 
 class LoginManager:
     """Class that manages the session login-related variables."""

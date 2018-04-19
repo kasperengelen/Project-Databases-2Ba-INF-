@@ -1,8 +1,7 @@
 
 from utils import get_db
 from passlib.hash import sha256_crypt
-from UserInfo import UserInfo
-from utils import sql_time_to_dict
+from Controller.UserInfo import UserInfo
 
 class UserManager:
     """Class that provides facilities to manage the userbase."""

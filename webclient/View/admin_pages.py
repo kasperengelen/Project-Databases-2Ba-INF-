@@ -1,9 +1,9 @@
 from flask import Blueprint, render_template, redirect, url_for, request, flash
-from AccessController import require_admin
-from AccessController import require_login
-from UserManager import UserManager
-from DatasetManager import DatasetManager
-from admin_forms import DeleteUserForm, DeleteDatasetForm, AdminUserEditForm, ActivateDecactivateUser
+from Controller.AccessController import require_admin
+from Controller.AccessController import require_login
+from Controller.UserManager import UserManager
+from Controller.DatasetManager import DatasetManager
+from View.admin_forms import DeleteUserForm, DeleteDatasetForm, AdminUserEditForm, ActivateDecactivateUser
 
 admin_pages = Blueprint('admin_pages', __name__)
 

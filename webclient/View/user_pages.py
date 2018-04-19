@@ -1,10 +1,9 @@
 from flask import render_template, request, abort, Blueprint, flash, redirect, url_for, session
-from AccessController import require_login
-from LoginManager import LoginManager
-from user_forms import UserLoginForm, UserRegisterForm
+from Controller.AccessController import require_login
+from Controller.LoginManager import LoginManager
 from passlib.hash import sha256_crypt
-from UserManager import UserManager
-from user_forms import UserEditForm
+from Controller.UserManager import UserManager
+from View.user_forms import UserEditForm, UserLoginForm, UserRegisterForm
 
 user_pages = Blueprint('user_pages', __name__)
 

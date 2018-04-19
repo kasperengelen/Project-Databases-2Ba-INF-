@@ -1,16 +1,16 @@
 from flask import Blueprint, render_template, request, url_for, redirect, session, flash, abort, send_from_directory, jsonify
 from flask import current_app as app
-from AccessController import require_login, require_admin
-from AccessController import require_adminperm, require_writeperm, require_readperm
-from DatasetManager import DatasetManager
-from UserManager import UserManager
-from dataset_forms import FindReplaceForm, DeleteAttrForm, DatasetForm, AddUserForm, RemoveUserForm, DatasetListEntryForm, TableUploadForm
-from dataset_forms import DownloadForm, DataTypeTransform, NormalizeZScore, OneHotEncoding, TableJoinForm, RegexFindReplace, DiscretizeEqualWidth
-from dataset_forms import DiscretizeEqualFreq, DiscretizeCustomRange, DeleteOutlier, FillNullsMean, FillNullsMedian, FillNullsCustomValue, AttributeForm
-from TableViewer import TableViewer
+from Controller.AccessController import require_login, require_admin
+from Controller.AccessController import require_adminperm, require_writeperm, require_readperm
+from Controller.DatasetManager import DatasetManager
+from Controller.UserManager import UserManager
+from View.dataset_forms import FindReplaceForm, DeleteAttrForm, DatasetForm, AddUserForm, RemoveUserForm, DatasetListEntryForm, TableUploadForm
+from View.dataset_forms import DownloadForm, DataTypeTransform, NormalizeZScore, OneHotEncoding, TableJoinForm, RegexFindReplace, DiscretizeEqualWidth
+from View.dataset_forms import DiscretizeEqualFreq, DiscretizeCustomRange, DeleteOutlier, FillNullsMean, FillNullsMedian, FillNullsCustomValue, AttributeForm
+from Controller.TableViewer import TableViewer
 from werkzeug.utils import secure_filename
 import os
-from DataLoader import DataLoader, FileException as DLFileExcept
+from Controller.DataLoader import DataLoader, FileException as DLFileExcept
 import shutil
 import webbrowser
 

@@ -5,8 +5,8 @@ import psycopg2
 import re
 from psycopg2 import sql
 from utils import get_db
-from DatasetManager import DatasetManager
-from DatabaseConfiguration import DatabaseConfiguration
+from Controller.DatasetManager import DatasetManager
+from Model.DatabaseConfiguration import DatabaseConfiguration
 
 
 class FileException(Exception):

@@ -1,5 +1,5 @@
 from flask import session, abort
-from DatasetManager import DatasetManager
+from Controller.DatasetManager import DatasetManager
 from functools import wraps
 
 # SOURCE: https://docs.python.org/2/library/functools.html

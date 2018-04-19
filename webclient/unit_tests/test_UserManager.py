@@ -1,6 +1,6 @@
 import unittest
-from UserManager import UserManager
-from DatabaseConfiguration import DatabaseConfiguration
+from Controller.UserManager import UserManager
+from Model.DatabaseConfiguration import DatabaseConfiguration
 
 from passlib.hash import sha256_crypt
 

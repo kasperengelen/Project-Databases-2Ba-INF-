@@ -2,9 +2,9 @@ from psycopg2 import sql
 from psycopg2 import extensions
 from utils import get_db
 from utils import get_sqla_eng
-from UserManager import UserManager
-from TableViewer import TableViewer
-from TableTransformer import TableTransformer
+from Controller.UserManager import UserManager
+from Controller.TableViewer import TableViewer
+from Controller.TableTransformer import TableTransformer
 
 class DatasetInfo:
     """Class that represents a dataset."""

@@ -1,6 +1,6 @@
 from utils import get_db
-from DatasetInfo import DatasetInfo
-from UserManager import UserManager
+from Controller.DatasetInfo import DatasetInfo
+from Controller.UserManager import UserManager
 
 class DatasetManager:
     """Class that provides facilities for managing datasets."""

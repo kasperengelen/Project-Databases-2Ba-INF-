@@ -4,8 +4,7 @@ import psycopg2
 from psycopg2 import sql
 import sqlalchemy
 import sys, os
-sys.path.append(os.path.join(sys.path[0],'..', 'Model'))
-from DatabaseConfiguration import DatabaseConfiguration
+from Model.DatabaseConfiguration import DatabaseConfiguration
 
 class TableTransformer:
     """Class that performs transformations and various actions on SQL tables to support the data cleaning process.

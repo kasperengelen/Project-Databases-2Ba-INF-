@@ -1,9 +1,9 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 from sqlalchemy import create_engine
-from db_wrapper import DBWrapper
-from TableTransformer import TableTransformer
-from DatabaseConfiguration import DatabaseConfiguration
+from Model.db_wrapper import DBWrapper
+from Controller.TableTransformer import TableTransformer
+from Model.DatabaseConfiguration import DatabaseConfiguration
 import math
 import re
 import os
