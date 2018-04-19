@@ -1,9 +1,10 @@
-from unit_tests import test_TableTransformer
-from unit_tests import test_TableTransformerCopy
-from unit_tests import test_TableViewer
-from unit_tests import test_UserManager
-from unit_tests import test_DatasetManager
-from unit_tests import test_DatasetInfo
+from unit_tests.test_TableTransformer import TestTableTransformer
+from unit_tests.test_TableTransformerCopy import TestTransformerCopy
+from unit_tests.test_TableViewer import TestTableViewer
+from unit_tests.test_UserManager import TestUserManager
+from unit_tests.test_DatasetManager import TestDatasetManager
+from unit_tests.test_DatasetInfo import TestDatasetInfo
+from unit_tests.ProjectTester import ProjectTester
 
 import unittest
 
@@ -13,6 +14,8 @@ def suite():
     suite.addTest(TestUserManager('test_validateLogin'))
 
 if __name__ == "__main__":
-    unittest.main()
+    tests = [TestDatasetInfo]
+    tester = ProjectTester(tests)
+    tester.run()
     #runner = unittest.TextTestRunner()
     #runner.run(suite())
