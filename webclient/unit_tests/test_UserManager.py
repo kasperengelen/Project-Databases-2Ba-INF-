@@ -29,8 +29,6 @@ class TestUserManager(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         """Clean up the test environment."""
-        cls.db_conn.cursor().execute("DELETE FROM SYSTEM.user_accounts WHERE email='peter.selie@abc.com';")
-        cls.db_conn.commit()
         cls.db_conn.cursor().execute("DELETE FROM SYSTEM.user_accounts WHERE TRUE;");
         cls.db_conn.commit()
 
