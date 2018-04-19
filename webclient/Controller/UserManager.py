@@ -1,8 +1,7 @@
 
 from utils import get_db
 from passlib.hash import sha256_crypt
-from UserInfo import UserInfo
-from utils import sql_time_to_dict
+from Controller.UserInfo import UserInfo
 
 class UserManager:
     """Class that provides facilities to manage the userbase."""
@@ -124,6 +123,30 @@ class UserManager:
             raise RuntimeError("User with specified userid does not exists.")
 
         get_db().cursor().execute("UPDATE SYSTEM.user_accounts SET active=%s WHERE userid=%s", [bool(active), int(userid)])
+        get_db().commit()
+    # ENDMETHOD
+
+    @staticmethod
+    def editUserInfo(userid, new_fname, new_lname, new_email):
+        """Set the information about the specified user to the new
+        specified values."""
+
+        if not UserManager.existsID(userid):
+            raise RuntimeError("User with specified userid does not exists.")
+        
+        get_db().cursor().execute("UPDATE SYSTEM.user_accounts SET fname = %s, lname = %s, email=%s WHERE userid=%s;", 
+                                                                                                [new_fname, new_lname, new_email, int(userid)])
+        get_db().commit()
+    # ENDMETHOD
+
+    @staticmethod
+    def editUserPass(userid, new_pass):
+        """Given the user-inputted password (not yet hashed!), this will update the user's
+        password to the specified password."""
+
+        passwd_hash = sha256_crypt.hash(new_pass)
+
+        get_db().cursor().execute("UPDATE SYSTEM.user_accounts SET passwd = %s WHERE userid=%s;", [passwd_hash, int(userid)])
         get_db().commit()
     # ENDMETHOD
 

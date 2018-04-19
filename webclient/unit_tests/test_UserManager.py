@@ -1,6 +1,6 @@
 import unittest
-from UserManager import UserManager
-from DatabaseConfiguration import DatabaseConfiguration
+from Controller.UserManager import UserManager
+from Model.DatabaseConfiguration import DatabaseConfiguration
 
 from passlib.hash import sha256_crypt
 
@@ -42,26 +42,26 @@ class TestUserManager(unittest.TestCase):
         db_conn.cursor().execute("DELETE FROM SYSTEM.user_accounts WHERE email='peter.selie@abc.com';")
         db_conn.commit()
 
-    def test_existID(self):
-        pass
+    # def test_existID(self):
+    #     pass
 
-    def test_existsEmail(self):
-        pass
+    # def test_existsEmail(self):
+    #     pass
 
-    def test_getUserFromID(self):
-        pass
+    # def test_getUserFromID(self):
+    #     pass
 
-    def test_getUserFromEmail(self):
-        pass
+    # def test_getUserFromEmail(self):
+    #     pass
 
-    def test_createUser(self):
-        pass
+    # def test_createUser(self):
+    #     pass
 
-    def test_destroyUser(self):
-        pass
+    # def test_destroyUser(self):
+    #     pass
 
-    def test_getAllUsers(self):
-        pass
+    # def test_getAllUsers(self):
+    #     pass
 
-    def test_updateUserActivity(self):
-        pass
+    # def test_updateUserActivity(self):
+    #     pass

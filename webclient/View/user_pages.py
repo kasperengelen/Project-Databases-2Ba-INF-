@@ -1,10 +1,9 @@
 from flask import render_template, request, abort, Blueprint, flash, redirect, url_for, session
-from utils import require_login
-from utils import LoginManager
-from user_forms import UserLoginForm, UserRegisterForm
+from Controller.AccessController import require_login
+from Controller.LoginManager import LoginManager
 from passlib.hash import sha256_crypt
-from UserManager import UserManager
-from user_forms import UserEditForm
+from Controller.UserManager import UserManager
+from View.user_forms import UserEditForm, UserLoginForm, UserRegisterForm
 
 user_pages = Blueprint('user_pages', __name__)
 
@@ -111,8 +110,13 @@ def edit():
         new_lname = form.lastname.data
         new_pass = form.password.data
 
-        current_user.editInfo(new_email, new_fname, new_lname, new_pass)
-        session['userdata'] = current_user.toDict()
+        #current_user.editInfo(new_email, new_fname, new_lname, new_pass)
+
+        UserManager.editUserInfo(userid, new_fname, new_lname, new_email)
+        UserManager.editUserPass(userid, new_pass)
+
+        #session['userdata'] = current_user.toDict()
+        session['userdata'] = UserManager.getUserFromID(userid).toDict()
         flash(message="Information updated.", category="success")
     else:
         form.fillFields(session['userdata'])

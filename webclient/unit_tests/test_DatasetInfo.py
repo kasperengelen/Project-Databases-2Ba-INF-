@@ -1,11 +1,6 @@
-sys.path.append(os.path.join(sys.path[0],'..', 'Controller'))
-sys.path.append(os.path.join(sys.path[0],'..', 'Model'))
 import unittest
-from DatasetInfo import DatasetInfo
-from UserInfo import UserInfo
-from DatasetManager import DatasetManager
-from UserManager import UserManager
-from DatabaseConfiguration import DatabaseConfiguration
+from Controller.DatasetInfo import DatasetInfo
+from Model.DatabaseConfiguration import DatabaseConfiguration
 
 class TestDatasetInfo(unittest.TestCase):
     """Tests for the DatasetInfo class."""
@@ -13,10 +8,14 @@ class TestDatasetInfo(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         """Set up the test environment."""
-        db_conn = DatabaseConfiguration.get_db()
-        engine = DatabaseConfiguration.get_engine()
+        db_conn = DatabaseConfiguration().get_db()
+        engine = DatabaseConfiguration().get_engine()
 
     @classmethod
     def tearDownClass(cls):
         """Clean up the test environment."""
         pass
+
+    def test_dummy(self):
+        self.assertEqual(1,1)
+

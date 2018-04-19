@@ -1,10 +1,7 @@
 import unittest
-import sys, os
-sys.path.append(os.path.join(sys.path[0],'..', 'Controller'))
-sys.path.append(os.path.join(sys.path[0],'..', 'Model'))
-from DatabaseConfiguration import DatabaseConfiguration
+from Model.DatabaseConfiguration import DatabaseConfiguration
 import psycopg2
-import TableTransformer as transformer
+import Controller.TableTransformer as transformer
 
 #This file contains tests for TableTransformer that specificaly overwrite tables. This tests data manipulation methods of TableTransformer
 #For the tests on data manipulation methods of TableTransformer that create new tables instead overwriting refer to "test_TableTransformerCopy.py"

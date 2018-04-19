@@ -4,8 +4,7 @@ import psycopg2
 from psycopg2 import sql
 import sqlalchemy
 import sys, os
-sys.path.append(os.path.join(sys.path[0],'..', 'Model'))
-from DatabaseConfiguration import DatabaseConfiguration
+from Model.DatabaseConfiguration import DatabaseConfiguration
 
 class TableTransformer:
     """Class that performs transformations and various actions on SQL tables to support the data cleaning process.
@@ -109,7 +108,13 @@ class TableTransformer:
         self.db_connection.commit()
         return (internal_ref[0], new_name)
 
-        
+    def delete_rows_using_predicate_logic(self, arg_list):
+        """Method to delete rows by using provided predicates like "attribute > x AND attribute != y".
+
+        Parameters:
+            arg_list: A list of strings containing the strings representing the predicates (Identifiers, logical operators).
+        """
+        pass
     
     def delete_attribute(self, tablename, attribute, new_name=""):
         """Delete an attribute of a table"""
@@ -815,9 +820,3 @@ class TableTransformer:
         self.db_connection.commit()
 
 
-if __name__ == '__main__':
-    connection_string = "dbname='{}' user='{}' host='{}' password='{}'".format(*(DatabaseConfiguration().get_packed_values()))
-    db_connection = psycopg2.connect(connection_string)
-    engine = DatabaseConfiguration().get_engine()
-    tt = TableTransformer(7, db_connection, engine)
-    tt.normalize_using_zscore('workingtable', 'age')

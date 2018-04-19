@@ -5,8 +5,8 @@ import psycopg2
 import re
 from psycopg2 import sql
 from utils import get_db
-from DatasetManager import DatasetManager
-from DatabaseConfiguration import DatabaseConfiguration
+from Controller.DatasetManager import DatasetManager
+from Model.DatabaseConfiguration import DatabaseConfiguration
 
 
 class FileException(Exception):
@@ -44,7 +44,6 @@ class DataLoader:
         self.db_conn = db_connection
         if db_connection is None:
             self.db_conn = get_db()
-        # self.db_conn = db_wrapper.DBWrapper()
 
         # first check if the setid is valid
         if DatasetManager.existsID(setid):

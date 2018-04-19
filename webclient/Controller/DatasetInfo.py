@@ -2,9 +2,9 @@ from psycopg2 import sql
 from psycopg2 import extensions
 from utils import get_db
 from utils import get_sqla_eng
-from UserManager import UserManager
-from TableViewer import TableViewer
-from TableTransformer import TableTransformer
+from Controller.UserManager import UserManager
+from Controller.TableViewer import TableViewer
+from Controller.TableTransformer import TableTransformer
 
 class DatasetInfo:
     """Class that represents a dataset."""
@@ -71,20 +71,6 @@ class DatasetInfo:
         get_db().cursor().execute("DROP TABLE \"{}\".{};".format(int(self.setid), extensions.quote_ident(tablename, get_db().cursor())))
         get_db().cursor().execute("DROP TABLE \"original_{}\".{};".format(int(self.setid), extensions.quote_ident(tablename, get_db().cursor())))
         get_db().commit()
-    # ENDMETHOD
-
-    def changeMetadata(self, new_name, new_desc):
-        """Changes the name and description of the dataset to the 
-        specified values."""
-        
-        # UPDATE INFO IN DB
-        get_db().cursor().execute("UPDATE SYSTEM.datasets SET setname = %s, description = %s WHERE setid = %s;", [new_name, new_desc, self.setid])
-        get_db().commit()
-
-        # UPDATE INFO IN CLASS
-        new  = DatasetManager.DatasetManager.getDataset(self.setid)
-        self.name = new.name
-        self.desc = new.desc
     # ENDMETHOD
 
     def getAdminPerms(self):
@@ -194,5 +180,3 @@ class DatasetInfo:
 
         return retval
     # ENDMETHOD
-
-import DatasetManager

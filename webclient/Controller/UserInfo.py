@@ -1,4 +1,3 @@
-from utils import sql_time_to_dict
 from utils import get_db
 from passlib.hash import sha256_crypt
 
@@ -44,38 +43,6 @@ class UserInfo:
         self.active = active
     # ENDMETHOD
 
-    def editInfo(self, new_email, new_fname, new_lname, new_pass):
-        """Edit the user information. The information will also be updated in the database."""
-
-        passwd_hash = sha256_crypt.hash(new_pass)
-
-        # update DB
-        get_db().cursor().execute("UPDATE SYSTEM.user_accounts SET fname=%s, lname=%s, email=%s, passwd=%s WHERE userid=%s", 
-                                                                        [new_fname, new_lname, new_email, passwd_hash, self.userid])
-        get_db().commit()
-
-         # update values
-        new = UserManager.UserManager.getUserFromID(self.userid)
-        self.fname = new.fname
-        self.lname = new.lname
-        self.email = new.email
-    # ENDMETHOD
-
-    def editInfoNoPass(self, new_email, new_fname, new_lname):
-        """Edit the user information except the password."""
-
-        get_db().cursor().execute("UPDATE SYSTEM.user_accounts SET fname=%s, lname=%s, email=%s WHERE userid=%s", 
-                                                                        [new_fname, new_lname, new_email, self.userid])
-        get_db().commit()
-
-        # update values
-        new = UserManager.UserManager.getUserFromID(self.userid)
-        self.fname = new.fname
-        self.lname = new.lname
-        self.email = new.email
-
-    # ENDMETHOD
-
     def toDict(self):
         """Retrieve a JSON-compatible dict
         that contains information about the user."""
@@ -91,4 +58,33 @@ class UserInfo:
         }
     # ENDMETHOD
 
-import UserManager
+def sql_time_to_dict(sql_date_string):
+    """Given a string of the format "YYYY:MM:DD HH:MM:SS.SSSSSS" this
+    returns a dict containing the same data under the keys 'Y', 'M', 'D', 'hr', 'min', 'sec', 'sec_full'.
+    With 'sec' containing the seconds rounded to an integer, and 'sec_full' containing the full original value."""
+
+    sql_date_string = str(sql_date_string)
+
+    date = sql_date_string.split(' ')[0] # split on space between date and time
+    time = sql_date_string.split(' ')[1]
+
+    year = int(date.split('-')[0])
+    month = int(date.split('-')[1])
+    day = int(date.split('-')[2])
+
+    hour = int(time.split(':')[0])
+    minute = int(time.split(':')[1])
+    sec_full = float(time.split(':')[2])
+    sec = int(sec_full)
+
+    return {
+        "Y": year,
+        "M": month,
+        "D": day,
+
+        "hr": hour,
+        "min": minute,
+        "sec": sec,
+        "sec_full": sec_full
+    }
+# ENDFUNCTION

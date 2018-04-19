@@ -1,11 +1,8 @@
 import unittest
-import sys, os
-sys.path.append(os.path.join(sys.path[0],'..', 'Controller'))
-sys.path.append(os.path.join(sys.path[0],'..', 'Model'))
 import psycopg2
 from sqlalchemy import create_engine
-import TableViewer as tv
-from DatabaseConfiguration import DatabaseConfiguration
+import Controller.TableViewer as tv
+from Model.DatabaseConfiguration import DatabaseConfiguration
 import math
 
 

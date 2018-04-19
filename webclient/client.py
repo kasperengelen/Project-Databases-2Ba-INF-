@@ -1,16 +1,10 @@
-import sys
-sys.path.append('./View/')
-sys.path.append('./Model/')
-sys.path.append('./Controller/')
-
 from flask import Flask, render_template, g, session
-import utils
-from utils import LoginManager
-from UserManager import UserManager
-import user_pages
-import admin_pages
-import dataset_pages
-from DatabaseConfiguration import DatabaseConfiguration
+from Controller.LoginManager import LoginManager
+from Controller.UserManager import UserManager
+from View.user_pages import user_pages
+from View.admin_pages import admin_pages
+from View.dataset_pages import dataset_pages
+from Model.DatabaseConfiguration import DatabaseConfiguration
 
 app = Flask(__name__, template_folder="./View/templates/")
 app.config.update(dict(
@@ -20,9 +14,9 @@ app.config.update(dict(
     DOWNLOAD_FOLDER = "./download"
 ))
 
-app.register_blueprint(user_pages.user_pages)
-app.register_blueprint(admin_pages.admin_pages)
-app.register_blueprint(dataset_pages.dataset_pages)
+app.register_blueprint(user_pages)
+app.register_blueprint(admin_pages)
+app.register_blueprint(dataset_pages)
 @app.before_request
 def before_request():
     """Prepare request."""
@@ -39,7 +33,7 @@ def before_request():
         if not UserManager.existsID(session['userdata']['userid']):
             LoginManager.setLoggedOut()
             return
-        utils.sync_user_info()
+        LoginManager.syncSession();
 
         if not session['userdata']['active']:
             LoginManager.setLoggedOut()

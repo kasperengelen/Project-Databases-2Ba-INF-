@@ -1,6 +1,6 @@
 from utils import get_db
-from DatasetInfo import DatasetInfo
-from UserManager import UserManager
+from Controller.DatasetInfo import DatasetInfo
+from Controller.UserManager import UserManager
 
 class DatasetManager:
     """Class that provides facilities for managing datasets."""
@@ -107,6 +107,10 @@ class DatasetManager:
         """Determine if the specfied user has at least
         the specified permissions for the specified set."""
 
+        # CHECK
+        if not DatasetManager.existsID(setid):
+            raise RuntimeError("There exists no dataset with the specified set id.")
+
         # list of permission types that are equivalent or higher
         higher_perm_list = []
 
@@ -129,5 +133,17 @@ class DatasetManager:
             return False
 
         return result[0] in higher_perm_list
-    # ENDFUNCTION
+    # ENDMETHOD
+
+    @staticmethod
+    def changeMetadata(setid, new_name, new_desc):
+        """Change the metadata of the specified dataset."""
+
+        # CHECK
+        if not DatasetManager.existsID(setid):
+            raise RuntimeError("There exists no dataset with the specified set id.")
+
+        get_db().cursor().execute("UPDATE SYSTEM.datasets SET setname = %s, description = %s WHERE setid = %s;", [new_name, new_desc, int(setid)])
+        get_db().commit()
+    # ENDMETHOD
 # ENDCLASS

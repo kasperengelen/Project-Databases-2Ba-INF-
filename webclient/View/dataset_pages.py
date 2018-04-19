@@ -1,18 +1,16 @@
 from flask import Blueprint, render_template, request, url_for, redirect, session, flash, abort, send_from_directory, jsonify
 from flask import current_app as app
-from utils import require_admin
-from utils import require_login
-from utils import require_adminperm, require_writeperm, require_readperm
-from DatasetInfo import DatasetInfo
-from DatasetManager import DatasetManager
-from UserManager import UserManager
-from dataset_forms import FindReplaceForm, DeleteAttrForm, DatasetForm, AddUserForm, RemoveUserForm, DatasetListEntryForm, TableUploadForm
-from dataset_forms import DownloadForm, DataTypeTransform, NormalizeZScore, OneHotEncoding, TableJoinForm, RegexFindReplace, DiscretizeEqualWidth
-from dataset_forms import DiscretizeEqualFreq, DiscretizeCustomRange, DeleteOutlier, FillNullsMean, FillNullsMedian, FillNullsCustomValue, AttributeForm
-from TableViewer import TableViewer
+from Controller.AccessController import require_login, require_admin
+from Controller.AccessController import require_adminperm, require_writeperm, require_readperm
+from Controller.DatasetManager import DatasetManager
+from Controller.UserManager import UserManager
+from View.dataset_forms import FindReplaceForm, DeleteAttrForm, DatasetForm, AddUserForm, RemoveUserForm, DatasetListEntryForm, TableUploadForm
+from View.dataset_forms import DownloadForm, DataTypeTransform, NormalizeZScore, OneHotEncoding, TableJoinForm, RegexFindReplace, DiscretizeEqualWidth
+from View.dataset_forms import DiscretizeEqualFreq, DiscretizeCustomRange, DeleteOutlier, FillNullsMean, FillNullsMedian, FillNullsCustomValue, AttributeForm
+from Controller.TableViewer import TableViewer
 from werkzeug.utils import secure_filename
 import os
-from DataLoader import DataLoader, FileException as DLFileExcept
+from Controller.DataLoader import DataLoader, FileException as DLFileExcept
 import shutil
 import webbrowser
 
@@ -351,11 +349,13 @@ def transform_typeconversion(dataset_id, tablename):
     tt = dataset.getTableTransformer(tablename)
 
     form = DataTypeTransform(request.form)
-    form.fillForm(tv.get_attributes(), tt.get_conversion_options(tablename, form.select_attr.data), tt.get_datetime_formats(form.date_type.data))
+    print(form.new_datatype.data)
+    form.fillForm(tv.get_attributes(), tt.get_conversion_options(tablename, form.select_attr.data), tt.get_datetime_formats(form.new_datatype.data))
 
 
     if not form.validate():
         flash(message="Invalid form.", category="error")
+        print(form.errors)
         return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 
     if not form.new_datatype.data in tt.get_conversion_options(tablename, form.select_attr.data):
@@ -710,7 +710,7 @@ def manage_dataset(dataset_id):
     dataset = DatasetManager.getDataset(dataset_id)
 
     if request.method == 'POST' and form.validate():
-        dataset.changeMetadata(form.name.data, form.description.data)
+        DatasetManager.changeMetadata(dataset_id, form.name.data, form.description.data)
         flash(message="Information updated.", category="success")
         return redirect(url_for('dataset_pages.view_dataset_home', dataset_id = dataset_id))
     else:
