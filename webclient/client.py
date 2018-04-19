@@ -28,6 +28,13 @@ def before_request():
         session['loggedin'] = False
         session['userdata'] = None
 
+    # make sure that the default row count is set
+    if not 'rowcount' in session:
+        session['rowcount'] = 10
+
+    if not session['rowcount'] in [10,20,50,100,500]:
+        session['rowcount'] = 10
+
     # make sure that user information is up to date
     if 'loggedin' in session and session['loggedin']:
         if not UserManager.existsID(session['userdata']['userid']):

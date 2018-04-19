@@ -266,6 +266,18 @@
 	    {% endif %}
   	</div>	
 
+	<!--ENTRYCOUNT-->
+	<div class="col-sm-3 text-left">
+		{% from "includes/_formhelpers.html" import render_field %}
+		<form name="entrycount_form">
+			{{ entrycount_form.hidden_tag() }}
+			<div class="form-group" style="width: 20%;">
+				{{render_field(entrycount_form.entry_count, class_="form-control")}}
+		    </div>
+		</form>
+	</div>
+	<!--ENTRYCOUNT-->
+
   	<div class="xs-center">
     	<div class="row">
 	    	<div class="col-sm-3 text-left">
