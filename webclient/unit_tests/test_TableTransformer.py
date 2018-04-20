@@ -456,7 +456,8 @@ class TestTableTransformer(unittest.TestCase):
         self.db_connection.commit()
 
         #Let's simulate equifrequent discretization with our custom bins.
-        self.test_object.discretize_using_equal_frequency('test_table4', 'number')
+        ranges = [-17, 4, 9, 15, 42]
+        self.test_object.discretize_using_custom_ranges('test_table4', 'number', ranges)
         cur.execute('SELECT DISTINCT number_categorical_1 FROM "TEST".test_table4')
         self.db_connection.commit()
         all_values = cur.fetchall()

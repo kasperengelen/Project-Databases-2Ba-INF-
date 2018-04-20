@@ -15,7 +15,8 @@ class TestTransformerCopy(unittest.TestCase):
     def setUpClass(cls):
         connection_string = "dbname='{}' user='{}' host='{}' password='{}'".format(*(DatabaseConfiguration().get_packed_values()))
         cls.db_connection = psycopg2.connect(connection_string)
-        cls.test_object = transformer.TableTransformer('TEST', cls.db_connection, None, False)
+        cls.engine = DatabaseConfiguration().get_engine()
+        cls.test_object = transformer.TableTransformer('TEST', cls.db_connection, cls.engine, False)
         cur = cls.db_connection.cursor()
         cur.execute("CREATE SCHEMA IF NOT EXISTS \"TEST\"")
         cls.db_connection.commit()
@@ -142,7 +143,7 @@ class TestTransformerCopy(unittest.TestCase):
         self.assertEqual(result[2], '23/09/1989')
 
         #Use the regex to find a word without case sensitivity
-        self.test_object.regex_find_and_replace('test_table', 'string', 'sega', 'SEGA', False, 'new_table6')
+        self.test_object.regex_find_and_replace('new_table5', 'string', 'sega', 'SEGA', False, 'new_table6')
         result = self.__test_table_exists('new_table6')
         self.assertTrue(result)
         cur = self.db_connection.cursor()
@@ -152,13 +153,13 @@ class TestTransformerCopy(unittest.TestCase):
         self.assertEqual(result[2], '23/09/1989')
 
         #Use the regex to find a word with case sensitivity
-        self.test_object.regex_find_and_replace('test_table4', 'string', 'sega', 'Ethereal', True, 'new_table7')
+        self.test_object.regex_find_and_replace('new_table6', 'string', 'sega', 'Ethereal', True, 'new_table7')
         result = self.__test_table_exists('new_table7')
         self.assertTrue(result)
         cur = self.db_connection.cursor()
-        cur.execute("SELECT * FROM \"TEST\".test_table7 WHERE string = 'Ethereal'")
+        cur.execute("SELECT * FROM \"TEST\".new_table7 WHERE string = 'Ethereal'")
         result = cur.fetchone()
-        self.assertIsNone(result) #Shouldn't be able to find out due the difference in case
+        self.assertIsNone(result) #Shouldn't be able to find out due the difference in case"""
 
 
     def test_numeric_conversion(self):
@@ -185,6 +186,204 @@ class TestTransformerCopy(unittest.TestCase):
         cur.execute("SELECT pg_typeof(number) FROM \"TEST\".new_table10")
         result = cur.fetchone()[0]
         self.assertEqual(result, 'character varying')
+
+
+    def test_character_conversion(self):
+        """Test the conversion of character types."""
+        cur = self.db_connection.cursor()
+        #Make it into a varchar for testing purposes
+        self.test_object.change_attribute_type('test_table', 'number', 'VARCHAR(255)', new_name='new_table11')
+        result = self.__test_table_exists('new_table11')
+        self.assertTrue(result)
+        cur.execute("SELECT pg_typeof(number) FROM \"TEST\".new_table11")
+        result = cur.fetchone()[0]
+        self.assertEqual(result,'character varying')
+
+        self.test_object.change_attribute_type('new_table11', 'number', 'FLOAT', new_name='new_table12')
+        result = self.__test_table_exists('new_table12')
+        self.assertTrue(result)
+        cur.execute("SELECT pg_typeof(number) FROM \"TEST\".new_table12")
+        result = cur.fetchone()[0]
+        self.assertEqual(result, 'double precision')
+        
+        #Change to varchar(30)
+        self.test_object.change_attribute_type('new_table12', 'number', 'VARCHAR(n)', "", '30', new_name='new_table13')
+        result = self.__test_table_exists('new_table13')
+        self.assertTrue(result)
+        cur.execute("SELECT pg_typeof(number) FROM \"TEST\".new_table13")
+        result = cur.fetchone()[0]
+        self.assertEqual(result, 'character varying')
+
+
+    def test_datetime_conversion(self):
+        """Test the conversion of an attribute to  a date/time type."""
+        cur = self.db_connection.cursor()
+        #Convert date_string column to actual DATE type
+        self.test_object.change_attribute_type('test_table', 'date_time', 'DATE', 'DD/MM/YYYY', new_name='new_table14')
+        result = self.__test_table_exists('new_table14')
+        self.assertTrue(result)
+        cur.execute('SELECT pg_typeof(date_time) FROM "TEST".new_table14')
+        result = cur.fetchone()[0]
+        self.assertEqual(result, 'date')
+        self.db_connection.commit()
+        #Convert the same column to a timestamp
+        self.test_object.change_attribute_type('test_table', 'date_time', 'TIMESTAMP', 'DD/MM/YYYY TIME', new_name='new_table15')
+        result = self.__test_table_exists('new_table15')
+        self.assertTrue(result)
+        cur.execute('SELECT pg_typeof(date_time) FROM "TEST".new_table15')
+        result = cur.fetchone()[0]
+        self.assertEqual(result, 'timestamp without time zone')
+        self.db_connection.commit()
+        #Set date_string of another to a time string and try to convert it
+        query_1 = 'UPDATE "TEST".test_table SET garbage = \'08:42 PM\' WHERE garbage is NULL'
+        cur.execute(query_1)
+        self.test_object.change_attribute_type('test_table', 'garbage', 'TIME', 'HH12:MI AM/PM', new_name='new_table16')
+        result = self.__test_table_exists('new_table16')
+        self.assertTrue(result)
+        cur.execute('SELECT pg_typeof(garbage) FROM "TEST".new_table16')
+        result = cur.fetchone()[0]
+        self.assertEqual(result, 'time without time zone')
+        self.db_connection.commit()
+
+
+    def test_one_hot_encode(self):
+        """Test the one-hot-encoding method for a column with unique and duplicate values."""
+        cur = self.db_connection.cursor()
+        self.test_object.one_hot_encode('test_table', 'string', 'new_table17')
+        result = self.__test_table_exists('new_table17')
+        self.assertTrue(result)
+        #Query to get all columns from the encoded table
+        query = ("SELECT column_name FROM information_schema.columns "
+               "WHERE table_schema = 'TEST' AND table_name =  'new_table17'")
+        cur.execute(query)
+        all_columns  = cur.fetchall()
+        #This should be all the columns
+        expected = ['number', 'date_time', 'garbage', 'Apple', 'Asus', 'Dummy', 'Elevate ltd',
+                   'Hewlett-Packard', 'Huawei', 'Imagine Breakers', 'LG Electronics', 'Microsoft', 'Nintendo', 'Nokia', 'Razer',
+                   'C-Corp', 'Samsung', 'Sony', 'Toshiba']
+        
+        for element in expected: #Test if expected elements are part of the table
+            test_result = (element,) in all_columns
+            self.assertTrue(test_result)
+        #There should 22 columns, 3 previous one + 16 unique categories 
+        self.assertEqual(len(all_columns), 19)
+        self.db_connection.commit()
+
+
+    def test_equidistant_discretization(self):
+        """Test the equidistant discretization method."""
+        cur = self.db_connection.cursor()
+        self.test_object.discretize_using_equal_width('test_table', 'number', 'new_table18')
+        result = self.__test_table_exists('new_table18')
+        self.assertTrue(result)
+        cur.execute('SELECT DISTINCT number_categorical FROM "TEST".new_table18')
+        self.db_connection.commit()
+        all_values = cur.fetchall()
+        all_values = [x[0] for x in all_values]
+        #There should be 3 buckets.
+        self.assertEqual(len(all_values), 4)
+        all_values = sorted(all_values)
+        expected_values = ['[-17 , -2[', '[-2 , 13[', '[13 , 28[', '[28 , 43[']
+        self.assertEqual(all_values, expected_values)
+        #Let's check if the values are actually being put in the correct buckets
+        cur.execute('SELECT * FROM "TEST".new_table18 WHERE number < -2 AND number > -17 '
+                    'AND number_categorical <> \'[-17 , -2[\'')
+        result = cur.fetchone()
+        self.assertIsNone(result)
+        cur.execute('SELECT * FROM "TEST".new_table18 WHERE number < 13 AND number > -2 '
+                    'AND number_categorical <> \'[-2 , 13[\'')
+        result = cur.fetchone()
+        self.assertIsNone(result)
+        cur.execute('SELECT * FROM "TEST".new_table18 WHERE number < 43 AND number > 28 '
+                    'AND number_categorical <> \'[28 , 43[\'')
+        result = cur.fetchone()
+        self.assertIsNone(result)
+        self.db_connection.commit()
+
+
+    def test_equifrequent_discretization(self):
+        """Test the equifrequent discretization method."""
+        cur = self.db_connection.cursor()
+        self.test_object.discretize_using_equal_frequency('test_table', 'number', 'new_table19')
+        result = self.__test_table_exists('new_table19')
+        self.assertTrue(result)
+        cur.execute('SELECT DISTINCT number_categorical FROM "TEST".new_table19')
+        self.db_connection.commit()
+        all_values = cur.fetchall()
+        all_values = [x[0] for x in all_values]
+        all_values = sorted(all_values)
+        expected_values = ['[-17 , 4[', '[15 , 42[', '[4 , 9[', '[9 , 15[']
+        #There should be 4 buckets
+        self.assertEqual(len(all_values), 4)
+        self.assertEqual(all_values, expected_values)
+        #Let's check if the values are actually being put in the correct buckets
+        cur.execute('SELECT * FROM "TEST".new_table19 WHERE number < -4 AND number > -17 '
+                    'AND number_categorical <> \'[-17 , -4[\'')
+        result = cur.fetchone()
+        self.assertIsNone(result)
+        cur.execute('SELECT * FROM "TEST".new_table19 WHERE number < 9 AND number > 4 '
+                    'AND number_categorical <> \'[4 , 9[\'')
+        result = cur.fetchone()
+        self.assertIsNone(result)
+        cur.execute('SELECT * FROM "TEST".new_table19 WHERE number < 42 AND number > 15 '
+                    'AND number_categorical <> \'[15 , 42[\'')
+        result = cur.fetchone()
+        self.assertIsNone(result)
+        self.db_connection.commit()
+
+
+    def __est_discretization_with_custom_ranges(self):
+        """Test the discretization with custom ranges method."""
+        #Let's simulate equidistant discretization with our custom bins.
+        cur = self.db_connection.cursor()
+        ranges = [-17, -2, 13, 28, 43]
+        #self.test_object.set_to_overwrite()
+        self.test_object.discretize_using_custom_ranges('test_table', 'number', ranges, 'new_table200')
+        result = self.__test_table_exists('new_table20')
+        self.assertTrue(result)
+        cur.execute('SELECT DISTINCT number_categorical FROM "TEST".new_table20')
+        self.db_connection.commit()
+        all_values = cur.fetchall()
+        all_values = [x[0] for x in all_values]
+        all_values = sorted(all_values)
+        expected_values = ['[-17 , -2[', '[-2 , 13[', '[13 , 28[', '[28 , 43[']
+        #There should be 4 buckets
+        self.assertEqual(len(all_values), 4)
+        self.assertEqual(all_values, expected_values)
+        #Let's check if the values are actually being put in the correct buckets
+        cur.execute('SELECT * FROM "TEST".new_table20 WHERE number < -2 AND number > -17 '
+                    'AND number_categorical <> \'[-17 , -2[\'')
+        result = cur.fetchone()
+        self.assertIsNone(result)
+        cur.execute('SELECT * FROM "TEST".new_table20 WHERE number < 43 AND number > 28 '
+                    'AND number_categorical <> \'[28 , 43[\'')
+        result = cur.fetchone()
+        self.assertIsNone(result)
+        self.db_connection.commit()
+
+        #Let's simulate equifrequent discretization with our custom bins.
+        ranges = [-17, 4, 9, 15, 42]
+        self.test_object.discretize_using_custom_ranges('test_table', 'number', ranges, 'new_table21')
+        cur.execute('SELECT DISTINCT number_categorical_1 FROM "TEST".new_table21')
+        self.db_connection.commit()
+        all_values = cur.fetchall()
+        all_values = [x[0] for x in all_values]
+        all_values = sorted(all_values)
+        expected_values = ['[-17 , 4[', '[15 , 42[', '[4 , 9[', '[9 , 15[']
+        #There should be 4 buckets
+        self.assertEqual(len(all_values), 4)
+        self.assertEqual(all_values, expected_values)
+        cur.execute('SELECT * FROM "TEST".new_table21 WHERE number < -4 AND number > -17 '
+                    'AND number_categorical_1 <> \'[-17 , -4[\'')
+        result = cur.fetchone()
+        self.assertIsNone(result)
+        cur.execute('SELECT * FROM "TEST".new_table21 WHERE number < 42 AND number > 15 '
+                    'AND number_categorical_1 <> \'[15 , 42[\'')
+        result = cur.fetchone()
+        self.assertIsNone(result)
+        self.db_connection.commit()
+
+
 
 
     
