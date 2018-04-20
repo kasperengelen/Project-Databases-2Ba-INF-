@@ -171,20 +171,27 @@ def view_dataset_table(dataset_id, tablename, page_nr):
 def set_session_rowcount():
     """Callback to set the session rowcount."""
 
+    print('test')
+
     form = EntryCountForm(request.form)
 
-    if not form.validate():
-        abort(404)
-
     dataset_id = int(form.cur_dataset.data)
-    tablename = form.cur_table.data
+    tablename = form.cur_tablename.data
 
     if not DatasetManager.getDataset(dataset_id):
+        print('did')
         abort(404)
 
     dataset = DatasetManager.getDataset(dataset_id)
 
     if tablename not in dataset.getTableNames():
+        print('table')
+        abort(404)
+
+    form.fillForm(tablename, dataset_id)
+
+    if not form.validate():
+        print(form.entry_count.data)
         abort(404)
 
     session['rowcount'] = int(form.entry_count.data)

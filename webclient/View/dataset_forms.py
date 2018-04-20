@@ -98,7 +98,7 @@ class AttributeForm(FlaskForm):
 class EntryCountForm(FlaskForm):
     """Form to select how many entries need to be displayed."""
 
-    entry_count = SelectField('Entries', choices = [(10, '10'), (20, '20'), (50, '50'), (100, '100'), (500, '500')])
+    entry_count = SelectField("   ", choices = [('10', '10'), ('20', '20'), ('50', '50'), ('100', '100'), ('500', '500')], id="entry_count")
     cur_dataset = HiddenField('cur_dataset')
     cur_tablename = HiddenField('cur_tablename')
 
