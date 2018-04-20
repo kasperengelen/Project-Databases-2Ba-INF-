@@ -558,20 +558,5 @@ class TestTableTransformer(unittest.TestCase):
 
 
     def test_delete_rows_using_conditions(self):
+        """Test the method of TableTransformer that deletes rows by using provided predicates."""
         self.assertEqual(1, 1)
-        
-        
-        
-        
-        
-        
-
-        
-        
-
-        
-
-
-
-if __name__ == '__main__':
-    unittest.main()

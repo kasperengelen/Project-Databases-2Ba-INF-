@@ -104,6 +104,8 @@ class TableTransformer:
         """
         if new_name == "":
             raise self.ValueError('No tablename given to the new table resulting from this operation. Please assign a valid tablename.')
+
+        new_name = self.__get_unique_name(new_name, new_name, False)
         #Execute with the dynamic SQL module of psycopg2 to avoid SQL injecitons
         self.db_connection.cursor().execute(sql.SQL("CREATE TABLE {}.{} AS SELECT * FROM {}.{}").format(sql.Identifier(internal_ref[0]),sql.Identifier(new_name),
                                                                                           sql.Identifier(internal_ref[0]), sql.Identifier(internal_ref[1])))
@@ -535,32 +537,40 @@ class TableTransformer:
 
 
 
-    def __get_categorical_name(self, tablename, categorical_name):
-        """Method that makes sure an attribute name given to a categorical variable attribute
+    def __get_unique_name(self, tablename, name, is_attribute=True):
+        """Method that makes sure an attribute name or table name given the name
         is unique or else make an unique variation of it by appending a number.
         """
         cur = self.db_connection.cursor()
-        cur.execute(sql.SQL("SELECT column_name FROM information_schema.columns WHERE table_schema = %s "
-                            "AND table_name   = %s"), (str(self.setid), tablename))
+        if is_attribute is True:
+            query = ("SELECT column_name FROM information_schema.columns WHERE table_schema = %s "
+                     "AND table_name   = '{}'").format(tablename)
+        elif is_attribute is False:
+            query = "SELECT table_name FROM information_schema.columns WHERE table_schema = %s{}".format("")
+        
+            
+        cur.execute(sql.SQL(query), [str(self.setid)])
         query_result = cur.fetchall()
-        name_list = [x[0] for x in query_result] #List of all the column names in the table.
-        name_size = len(categorical_name)
+        name_list = [x[0] for x in query_result] #List of all the attribute/table names in the table.
+        name_size = len(name)
         count = 0
 
         for elem in name_list:
-            if categorical_name in elem:
+            if name in elem:
                 if len(elem) == name_size: #If it's the same size, it's the string itself
                     count += 1
                     continue #Looking for the next characters is pointless. So continue
-                if (elem[name_size] == '_') and (str.isdigit(elem[name_size:])):
+                if (elem[name_size] == '_') and (str.isdigit(elem[name_size+1:])):
                     count += 1
 
         if count == 0:
-            return categorical_name
+            return name
 
         else:
-            new_name = categorical_name + "_" + str(count)
+            new_name = name + "_" + str(count)
             return new_name
+
+                
         
 
 
@@ -606,7 +616,7 @@ class TableTransformer:
         binlabels = self.__make_binlabels(bins)
 
         column_name = attribute + "_categorical"
-        category = self.__get_categorical_name(tablename, column_name)
+        category = self.__get_unique_name(tablename, column_name)
         df[category] = pd.cut(df[attribute], bins, right=False, labels = binlabels, include_lowest=True)
         new_dtypes = self.__get_simplified_types(tablename, df)
 
@@ -663,7 +673,7 @@ class TableTransformer:
         binlabels = self.__make_binlabels(bins)
 
         column_name = attribute + "_categorical"
-        category = self.__get_categorical_name(tablename, column_name)
+        category = self.__get_unique_name(tablename, column_name)
         df[category] = pd.cut(df[attribute], bins, right=False, labels = binlabels, include_lowest=True)
         new_dtypes = self.__get_simplified_types(tablename, df)
 
@@ -714,7 +724,7 @@ class TableTransformer:
             param_b = False
 
         column_name = attribute + "_categorical"
-        category = self.__get_categorical_name(tablename, column_name)
+        category = self.__get_unique_name(tablename, column_name)
         df[category] = pd.cut(df[attribute], ranges, right=param_a, labels = binlabels, include_lowest=param_b)
         new_dtypes = self.__get_simplified_types(tablename, df)
 
@@ -781,7 +791,7 @@ class TableTransformer:
         """Method that fills null values of an attribute with the median."""
         internal_ref = self.get_internal_reference(tablename)
         if self.replace is False:
-            internal_ref = self.copy_table(attribute, internal_ref, new_name)
+            internal_ref = self.copy_table(internal_ref, new_name)
 
         sql_query = "SELECT * FROM \"{}\".\"{}\"".format(*internal_ref)
         df = pd.read_sql(sql_query, self.engine)
