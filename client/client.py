@@ -73,7 +73,7 @@ def handle_404(e):
 
 @app.errorhandler(500)
 def handle_500(e):
-    return render_template('error.html', message="500, internal error."), 500
+    return render_template('error.html', message="500, internal error.", error=str(e)), 500
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", debug=True)
