@@ -98,7 +98,7 @@ class AttributeForm(FlaskForm):
 class EntryCountForm(FlaskForm):
     """Form to select how many entries need to be displayed."""
 
-    entry_count = SelectField('Entries', choices = [(10, '10'), (20, '20'), (50, '50'), (100, '100'), (500, '500')])
+    entry_count = SelectField("   ", choices = [('10', '10'), ('20', '20'), ('50', '50'), ('100', '100'), ('500', '500')], id="entry_count")
     cur_dataset = HiddenField('cur_dataset')
     cur_tablename = HiddenField('cur_tablename')
 
@@ -139,6 +139,17 @@ class RegexFindReplace(FlaskForm):
 class DeleteAttrForm(FlaskForm):
     """Form for the delete attribute/column transformation."""
     select_attr = SelectField('Attribute', choices=[])
+
+    def fillForm(self, attrs):
+        self.select_attr.choices = [(attrname, attrname) for attrname in attrs]
+    # ENDMETHOD
+# ENDCLASS
+
+class ExtractDateTimeForm(FlaskForm):
+    """Form for the delete attribute/column transformation."""
+    select_attr = SelectField('Attribute', choices=[])
+    select_extracttype = SelectField('Attribute', choices=[("YEAR", "YEAR"), ("MONTH + YEAR", "MONTH + YEAR"), 
+        ("MONTH", "MONTH"), ("DAY OF THE WEEK", "DAY OF THE WEEK")])
 
     def fillForm(self, attrs):
         self.select_attr.choices = [(attrname, attrname) for attrname in attrs]

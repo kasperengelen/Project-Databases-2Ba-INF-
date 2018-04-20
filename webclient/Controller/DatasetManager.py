@@ -5,33 +5,43 @@ from Controller.UserManager import UserManager
 class DatasetManager:
     """Class that provides facilities for managing datasets."""
     @staticmethod
-    def existsID(setid):
+    def existsID(setid, db_conn = None):
         """Determine if there exists a dataset with the specified set id."""
-        get_db().cursor().execute("SELECT * FROM SYSTEM.datasets WHERE setid=%s;", [setid])
-        result = get_db().cursor().fetchone()
+
+        if db_conn is None:
+            db_conn = get_db()
+
+        db_conn.cursor().execute("SELECT * FROM SYSTEM.datasets WHERE setid=%s;", [setid])
+        result = db_conn.cursor().fetchone()
 
         return result is not None
     # ENDMETHOD
 
     @staticmethod
-    def getDataset(setid):
+    def getDataset(setid, db_conn = None):
         """Retrieve the dataset with the specified setid."""
+
+        if db_conn is None:
+            db_conn = get_db()
 
         if not DatasetManager.existsID(setid):
             raise RuntimeError("There exists no dataset with the specified set id.")
 
-        get_db().cursor().execute("SELECT * FROM SYSTEM.datasets WHERE setid=%s;", [setid])
-        result = get_db().cursor().fetchone()
+        db_conn.cursor().execute("SELECT * FROM SYSTEM.datasets WHERE setid=%s;", [setid])
+        result = db_conn.cursor().fetchone()
 
         return DatasetInfo.fromSqlTuple(result)
     # ENDMETHOD
 
     @staticmethod
-    def getDatasetsForUser(userid):
+    def getDatasetsForUser(userid, db_conn = None):
         """Retrieve all datasets that the user with the specified userid has access to."""
 
-        get_db().cursor().execute("SELECT * FROM SYSTEM.datasets WHERE setid IN (SELECT setid FROM SYSTEM.set_permissions WHERE userid = %s);", [userid])
-        results = get_db().cursor().fetchall()
+        if db_conn is None:
+            db_conn = get_db()
+
+        db_conn.cursor().execute("SELECT * FROM SYSTEM.datasets WHERE setid IN (SELECT setid FROM SYSTEM.set_permissions WHERE userid = %s);", [userid])
+        results = db_conn.cursor().fetchall()
 
         retval = []
 
@@ -42,57 +52,65 @@ class DatasetManager:
     # ENDMETHOD
 
     @staticmethod
-    def createDataset(name, desc):
+    def createDataset(name, desc, db_conn = None):
         """Create a new dataset with the specified name and description.
         Returns the set id of the newly created dataset."""
-        
-        get_db().cursor().execute("INSERT INTO SYSTEM.datasets(setname, description) VALUES (%s, %s) RETURNING setid;", [name, desc])
-        setid = int(get_db().cursor().fetchall()[0][0])
+
+        if db_conn is None:
+            db_conn = get_db()
+
+        db_conn.cursor().execute("INSERT INTO SYSTEM.datasets(setname, description) VALUES (%s, %s) RETURNING setid;", [name, desc])
+        setid = int(db_conn.cursor().fetchall()[0][0])
 
         # CREATE SCHEMA
-        get_db().cursor().execute("CREATE SCHEMA \"{}\";".format(int(setid)))
-        get_db().commit()
+        db_conn.cursor().execute("CREATE SCHEMA \"{}\";".format(int(setid)))
+        db_conn.commit()
 
         # CREATE BACKUP SCHEMA
-        get_db().cursor().execute("CREATE SCHEMA \"original_{}\";".format(int(setid)))
-        get_db().commit()
+        db_conn.cursor().execute("CREATE SCHEMA \"original_{}\";".format(int(setid)))
+        db_conn.commit()
 
         # create the history table
-        get_db().cursor().execute(open("Controller/dataset_history.sql", 'r').read())
-        get_db().cursor().execute("ALTER TABLE DATASET_HISTORY.temp RENAME TO \"{}\"".format(str(setid)))
-        get_db().commit()
+        db_conn.cursor().execute(open("Controller/dataset_history.sql", 'r').read())
+        db_conn.cursor().execute("ALTER TABLE DATASET_HISTORY.temp RENAME TO \"{}\"".format(str(setid)))
+        db_conn.commit()
 
         return setid
     # ENDMETHOD
 
     @staticmethod
-    def destroyDataset(setid):
+    def destroyDataset(setid, db_conn = None):
         """Destroy the dataset with the specified set id."""
+
+        if db_conn is None:
+            db_conn = get_db()
 
         # CHECK
         if not DatasetManager.existsID(setid):
             raise RuntimeError("There exists no dataset with the specified set id.")
 
         # DROP SCHEMA
-        get_db().cursor().execute("DROP SCHEMA \"{}\" CASCADE;".format(int(setid)))
-        get_db().commit()
+        db_conn.cursor().execute("DROP SCHEMA \"{}\" CASCADE;".format(int(setid)))
+        db_conn.commit()
 
         # DROP BACKUP SCHEMA
-        get_db().cursor().execute("DROP SCHEMA \"original_{}\" CASCADE;".format(int(setid)))
-        get_db().commit()
-
+        db_conn.cursor().execute("DROP SCHEMA \"original_{}\" CASCADE;".format(int(setid)))
+        db_conn.commit()
 
         # DELETE DATASET
-        get_db().cursor().execute("DELETE FROM SYSTEM.datasets WHERE setid=%s;", [setid])
-        get_db().commit()
+        db_conn.cursor().execute("DELETE FROM SYSTEM.datasets WHERE setid=%s;", [setid])
+        db_conn.commit()
     # ENDMETHOD
 
     @staticmethod
-    def getAllDatasets():
+    def getAllDatasets(db_conn = None):
         """Retrieve a list of DatasetInfo objects that represent all datasets."""
-        
-        get_db().cursor().execute("SELECT * FROM SYSTEM.datasets;")
-        results = get_db().cursor().fetchall()
+
+        if db_conn is None:
+            db_conn = get_db()
+
+        db_conn.cursor().execute("SELECT * FROM SYSTEM.datasets;")
+        results = db_conn.cursor().fetchall()
 
         retval = []
 
@@ -103,9 +121,12 @@ class DatasetManager:
     # ENDMETHOD
 
     @staticmethod
-    def userHasAccessTo(setid, userid, minimum_perm_type):
+    def userHasAccessTo(setid, userid, minimum_perm_type, db_conn = None):
         """Determine if the specfied user has at least
         the specified permissions for the specified set."""
+
+        if db_conn is None:
+            db_conn = get_db()
 
         # CHECK
         if not DatasetManager.existsID(setid):
@@ -126,8 +147,8 @@ class DatasetManager:
         if not UserManager.existsID(int(userid)):
             raise RuntimeError("Specified user does not exist.")
 
-        get_db().cursor().execute("SELECT permission_type FROM SYSTEM.set_permissions WHERE setid=%s AND userid = %s;", [int(setid), int(userid)])
-        result = get_db().cursor().fetchone()
+        db_conn.cursor().execute("SELECT permission_type FROM SYSTEM.set_permissions WHERE setid=%s AND userid = %s;", [int(setid), int(userid)])
+        result = db_conn.cursor().fetchone()
 
         if result is None:
             return False
@@ -136,14 +157,17 @@ class DatasetManager:
     # ENDMETHOD
 
     @staticmethod
-    def changeMetadata(setid, new_name, new_desc):
+    def changeMetadata(setid, new_name, new_desc, db_conn = None):
         """Change the metadata of the specified dataset."""
+
+        if db_conn is None:
+            db_conn = get_db()
 
         # CHECK
         if not DatasetManager.existsID(setid):
             raise RuntimeError("There exists no dataset with the specified set id.")
 
-        get_db().cursor().execute("UPDATE SYSTEM.datasets SET setname = %s, description = %s WHERE setid = %s;", [new_name, new_desc, int(setid)])
-        get_db().commit()
+        db_conn.cursor().execute("UPDATE SYSTEM.datasets SET setname = %s, description = %s WHERE setid = %s;", [new_name, new_desc, int(setid)])
+        db_conn.commit()
     # ENDMETHOD
 # ENDCLASS
