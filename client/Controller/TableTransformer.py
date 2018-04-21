@@ -626,7 +626,7 @@ class TableTransformer:
         value_range = rightmost_edge - leftmost_edge
         nr_values = df[attribute].size
         #A good rule of thumb for the amount of bins is the square root of the amount of elements
-        nr_bins = math.ceil(math.sqrt(nr_values))
+        nr_bins = 10 #math.ceil(math.sqrt(nr_values))
         #Generally speaking we want to keep the amount of bins between 2 and 20 for readibility
         if nr_bins < 2:
             nr_bins = 2

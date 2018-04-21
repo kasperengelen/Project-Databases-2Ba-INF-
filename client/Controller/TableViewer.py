@@ -34,7 +34,6 @@ class TableViewer:
         return data_frame.columns.values.tolist()
         
     
-    #Given a a number of rows to display this functions returns a list of possible page indices.
     def get_page_indices(self, display_nr, page_nr=1):
         """Method that returns the relevant indices for a table that's being viewed.
 

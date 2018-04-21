@@ -565,10 +565,10 @@ def transform_discretizeEqualWidth(dataset_id, tablename):
         flash(message="Invalid form.", category="error")
         return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 
-    try:
-        tt.discretize_using_equal_width(tablename, form.select_attr.data)
-    except:
-        flash(message="An error occurred.", category="error")
+    #try:
+    tt.discretize_using_equal_width(tablename, form.select_attr.data)
+    """except:
+        flash(message="An error occurred.", category="error")"""
 
     return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 # ENDFUNCTION
