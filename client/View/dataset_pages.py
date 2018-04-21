@@ -466,7 +466,7 @@ def transform_typeconversion(dataset_id, tablename):
         flash(message="Selected datatype not compatible with the selected attribute.", category="error")
     else:
         #try:
-        tt.change_attribute_type(tablename, form.select_attr.data, form.new_datatype.data)
+        tt.change_attribute_type(tablename, form.select_attr.data, form.new_datatype.data, form.date_type.data, form.char_amount.data)
         flash(message="Attribute type changed.", category="success")
         #except Exception:
         #    flash(message="An error occurred.", category="error")
