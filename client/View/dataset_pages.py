@@ -220,7 +220,8 @@ def transform_join_tables(dataset_id):
 
     # check if tables exist.
     if not (table1_name in dataset.getTableNames() and table2_name in dataset.getTableNames()):
-        abort(404)
+        flash("Invalid table names.")
+        return redirect(url_for('dataset_pages.view_dataset_home', dataset_id=dataset_id))
 
     table1_info = dataset.getTableViewer(table1_name)
     table2_info = dataset.getTableViewer(table2_name)
@@ -238,7 +239,7 @@ def transform_join_tables(dataset_id):
         tt.join_tables(form.tablename1.data, form.tablename2.data, [form.attribute1.data], [form.attribute2.data], form.newname.data)
         flash(message="Tables joined", category="success")
     except:
-        flash(message="An error occurred", category="error")
+        flash(message="An error occurred.", category="error")
     return redirect(url_for('dataset_pages.view_dataset_home', dataset_id=dataset_id))
 # ENDFUNCTION
 
@@ -282,7 +283,6 @@ def transform_predicate(dataset_id, tablename):
         predicate_list.append(form.op3.data)
         predicate_list.append(form.input3.data)
 
-
     tt.delete_rows_using_predicate_logic(tablename, predicate_list)
     flash(message="Rows deleted according to predicate.", category="success")
 
@@ -309,7 +309,6 @@ def transform_extractdatetime(dataset_id, tablename):
     form.fillForm(tv.get_attributes())
 
     if not form.validate():
-        print(form.errors)
         flash(message="Invalid form.", category="error")
         return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 
@@ -323,7 +322,7 @@ def transform_extractdatetime(dataset_id, tablename):
     flash(message="Part of date extracted.", category="success")
 
     return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
-
+# ENDFUNCTION
 
 @dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/transform/deleteattr', methods=['POST'])
 @require_login
@@ -383,6 +382,7 @@ def transform_findreplace(dataset_id, tablename):
 
     try:
         tt.find_and_replace(tablename, form.select_attr.data, form.search.data, form.replacement.data, form.exactmatch.data, form.replace_full_match.data)
+        flash(message="Find and replace completed.", category="success")
     except:
         flash(message="No matches found.", category="error")
 
@@ -415,6 +415,7 @@ def transform_findreplaceregex(dataset_id, tablename):
 
     try:
         tt.regex_find_and_replace(tablename, form.select_attr.data, form.regex.data, form.replacement.data, form.case_sens.data)
+        flash(message="Find and replace complete.", category="success")
     except:
         flash(message="An error occurred.", category="error")
 
@@ -534,7 +535,7 @@ def transform_zscorenormalisation(dataset_id, tablename):
 
     try:
         tt.normalize_using_zscore(tablename, form.select_attr.data)
-        flash(message="normalisation complete.", category="success")
+        flash(message="Normalization complete.", category="success")
     except:
         flash(message="An error occurred.", category="error")
 
@@ -565,10 +566,11 @@ def transform_discretizeEqualWidth(dataset_id, tablename):
         flash(message="Invalid form.", category="error")
         return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 
-    #try:
-    tt.discretize_using_equal_width(tablename, form.select_attr.data)
-    """except:
-        flash(message="An error occurred.", category="error")"""
+    try:
+        tt.discretize_using_equal_width(tablename, form.select_attr.data)
+        flash(message="Discretization complete.", category="success")
+    except:
+        flash(message="An error occurred.", category="error")
 
     return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 # ENDFUNCTION
@@ -599,6 +601,7 @@ def transform_discretizeEqualFreq(dataset_id, tablename):
 
     try:
         tt.discretize_using_equal_frequency(tablename, form.select_attr.data)
+        flash(message="Discretization complete.", category="success")
     except:
         flash(message="An error occurred.", category="error")
 
@@ -648,6 +651,10 @@ def transform_discretizeCustomRange(dataset_id, tablename):
         flash(message="Range specifiers not in correct order or empty range detected.", category="error")
         return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 
+    if len(int_ranges) < 2:
+        flash(message="At least two range specifiers needed.", category="error")
+        return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
+
     try:
         tt.discretize_using_custom_ranges(tablename, form.select_attr.data, int_ranges, form.interval_spec.data)
         flash(message="Discretization complete.")
@@ -683,6 +690,7 @@ def transform_deleteOutlier(dataset_id, tablename):
 
     try:
         tt.delete_outlier(tablename, form.select_attr.data, form.select_comparison.data, form.value.data)
+        flash(message="Outliers deleted.", category="success")
     except:
         flash(message="An error occurred.", category="error")
 
@@ -715,6 +723,7 @@ def transform_fillNullsMean(dataset_id, tablename):
 
     try:
         tt.fill_nulls_with_mean(tablename, form.select_attr.data)
+        flash(message="NULL values replaced with mean.", category="success")
     except:
         flash(message="An error occurred.", category="error")
 
@@ -747,6 +756,7 @@ def transform_fillNullsMedian(dataset_id, tablename):
 
     try:
         tt.fill_nulls_with_median(tablename, form.select_attr.data)
+        flash(message="NULL values replaced with median.", category="success")
     except:
         flash(message="An error occurred.", category="error")
 
@@ -779,6 +789,7 @@ def transform_fillNullsCustomValue(dataset_id, tablename):
 
     try:
         tt.fill_nulls_with_custom_value(tablename, form.select_attr.data, form.replacement.data)
+        flash(message="NULL values filled with custom value.", category="success")
     except:
         flash(message="An error occurred.", category="error")
 
