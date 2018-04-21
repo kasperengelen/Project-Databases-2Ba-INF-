@@ -207,7 +207,13 @@ class DiscretizeEqualFreq(FlaskForm):
 # ENDCLASS
 
 class DiscretizeCustomRange(FlaskForm):
-    pass
+    select_attr = SelectField('Attribute', choices=[])
+    ranges = StringField('Ranges (comma separated values)', [InputRequired("Input is required.")])
+    interval_spec = SelectField('Left/Right open', choices = [(True, '[a, b['), (False, ']a, b]')])
+
+    def fillForm(self, attrs):
+        self.select_attr.choices = [(attrname, attrname) for attrname in attrs]
+    # ENDMETHOD
 # ENDCLASS
 
 class DeleteOutlier(FlaskForm):
@@ -264,8 +270,8 @@ class PredicateForm(FlaskForm):
 
     # inputs
     input1 = StringField('Input', [InputRequired(message="Input is required.")], id="input1")
-    input2 = StringField('Input', [InputRequired(message="Input is required.")], id="input2")
-    input3 = StringField('Input', [InputRequired(message="Input is required.")], id="input3")
+    input2 = StringField('Input', [InputRequired(message="Input is required.")], id="input2", default=" ")
+    input3 = StringField('Input', [InputRequired(message="Input is required.")], id="input3", default=" ")
 
     # logic operators
     select1 = SelectField('Logic operator', choices = [('Finish', 'END'), ('And', 'AND'), ('Or', 'OR')], id="select1")

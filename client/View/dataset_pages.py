@@ -107,7 +107,7 @@ def view_dataset_table(dataset_id, tablename, page_nr):
     regexfindreplace_form.fillForm(attrs)
     discretizeWidth_form.fillForm(attrs)
     discretizeFreq_form.fillForm(attrs)
-    # discretizeCustom_form
+    discretizeCustom_form.fillForm(attrs)
     deleteoutlier_form.fillForm(attrs)
     fillnullmean_form.fillForm(attrs)
     fillnullmedian_form.fillForm(attrs)
@@ -262,6 +262,7 @@ def transform_predicate(dataset_id, tablename):
     form.fillForm(tv.get_attributes())
 
     if not form.validate():
+        print(form.errors)
         flash(message="Invalid form.", category="error")
         return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 
@@ -269,13 +270,13 @@ def transform_predicate(dataset_id, tablename):
 
     predicate_list = [form.attr1.data, form.op1.data, form.input1.data]
 
-    if(form.select1.data != END):
+    if(form.select1.data != "END"):
         predicate_list.append(form.select1.data)
         predicate_list.append(form.attr2.data)
         predicate_list.append(form.op2.data)
         predicate_list.append(form.input2.data)
 
-    if(form.select2.data != END):
+    if(form.select2.data != "END"):
         predicate_list.append(form.select2.data)
         predicate_list.append(form.attr3.data)
         predicate_list.append(form.op3.data)
@@ -607,8 +608,53 @@ def transform_discretizeEqualFreq(dataset_id, tablename):
 @dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/transform/discretize/customrange', methods = ['POST'])
 @require_login
 @require_writeperm
-def transform_discretizeCustomRange():
-    assert(False)
+def transform_discretizeCustomRange(dataset_id, tablename):
+    """Callback to discretize the data into custom intervals."""
+
+    if not DatasetManager.existsID(dataset_id):
+        abort(404)
+
+    dataset = DatasetManager.getDataset(dataset_id)
+
+    if tablename not in dataset.getTableNames():
+        abort(404)
+
+    tv = dataset.getTableViewer(tablename)
+    tt = dataset.getTableTransformer(tablename)
+
+    form = DiscretizeCustomRange(request.form)
+    form.fillForm(tv.get_attributes())
+
+    if not form.validate():
+        flash(message="Invalid form.", category="error")
+        return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
+
+    # determine intervals
+    split = form.ranges.data.split(',')
+
+    int_ranges = []
+
+    # convert to integer list
+    for i in split:
+        try:
+            int_ranges.append(int(i))
+        except:
+            flash(message="Invalid range specifier: " + str(i), category="error")
+            return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
+    # ENDFOR
+
+    # check if interval is in correct order and no empty bins
+    if not all(int_ranges[i] < int_ranges[i+1] for i in range(0, len(int_ranges)-1)):
+        flash(message="Range specifiers not in correct order or empty range detected.", category="error")
+        return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
+
+    try:
+        tt.discretize_using_custom_ranges(tablename, form.select_attr.data, int_ranges, form.interval_spec.data)
+        flash(message="Discretization complete.")
+    except:
+        flash(message="An error occurred.", category="error")
+
+    return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 # ENDFUNCTION
 
 @dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/transform/delete_outlier', methods = ['POST'])
