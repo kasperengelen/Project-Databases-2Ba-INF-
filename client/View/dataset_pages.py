@@ -282,7 +282,6 @@ def transform_predicate(dataset_id, tablename):
         predicate_list.append(form.op3.data)
         predicate_list.append(form.input3.data)
 
-
     tt.delete_rows_using_predicate_logic(tablename, predicate_list)
     flash(message="Rows deleted according to predicate.", category="success")
 

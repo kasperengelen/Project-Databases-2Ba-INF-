@@ -274,8 +274,8 @@ class PredicateForm(FlaskForm):
     input3 = StringField('Input', [InputRequired(message="Input is required.")], id="input3", default=" ")
 
     # logic operators
-    select1 = SelectField('Logic operator', choices = [('Finish', 'END'), ('And', 'AND'), ('Or', 'OR')], id="select1")
-    select2 = SelectField('Logic operator', choices = [('Finish', 'END'), ('And', 'AND'), ('Or', 'OR')], id="select2")
+    select1 = SelectField('Logic operator', choices = [('END', 'END'), ('And', 'AND'), ('Or', 'OR')], id="select1")
+    select2 = SelectField('Logic operator', choices = [('END', 'END'), ('And', 'AND'), ('Or', 'OR')], id="select2")
 
     def fillForm(self, attrs):
         self.attr1.choices = [(attrname, attrname) for attrname in attrs]
