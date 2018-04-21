@@ -219,7 +219,7 @@ class TableTransformer:
 
     def get_extraction_options(self, data_type):
         """Returns a list of supported options for the date extraction method."""
-        if data_type in ['DATE', 'TIMESTAMP']:
+        if data_type in ['date', 'timestamp without time zone']:
             return ['YEAR', 'MONTH + YEAR', 'MONTH', 'DAY OF THE WEEK']
         else:
             return []
