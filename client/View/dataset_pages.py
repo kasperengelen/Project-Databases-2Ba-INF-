@@ -262,6 +262,7 @@ def transform_predicate(dataset_id, tablename):
     form.fillForm(tv.get_attributes())
 
     if not form.validate():
+        print(form.errors)
         flash(message="Invalid form.", category="error")
         return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 
@@ -269,13 +270,13 @@ def transform_predicate(dataset_id, tablename):
 
     predicate_list = [form.attr1.data, form.op1.data, form.input1.data]
 
-    if(form.select1.data != END):
+    if(form.select1.data != "END"):
         predicate_list.append(form.select1.data)
         predicate_list.append(form.attr2.data)
         predicate_list.append(form.op2.data)
         predicate_list.append(form.input2.data)
 
-    if(form.select2.data != END):
+    if(form.select2.data != "END"):
         predicate_list.append(form.select2.data)
         predicate_list.append(form.attr3.data)
         predicate_list.append(form.op3.data)

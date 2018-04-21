@@ -264,8 +264,8 @@ class PredicateForm(FlaskForm):
 
     # inputs
     input1 = StringField('Input', [InputRequired(message="Input is required.")], id="input1")
-    input2 = StringField('Input', [InputRequired(message="Input is required.")], id="input2")
-    input3 = StringField('Input', [InputRequired(message="Input is required.")], id="input3")
+    input2 = StringField('Input', [InputRequired(message="Input is required.")], id="input2", default=" ")
+    input3 = StringField('Input', [InputRequired(message="Input is required.")], id="input3", default=" ")
 
     # logic operators
     select1 = SelectField('Logic operator', choices = [('Finish', 'END'), ('And', 'AND'), ('Or', 'OR')], id="select1")
