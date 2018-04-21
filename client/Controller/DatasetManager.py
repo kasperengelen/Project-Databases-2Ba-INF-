@@ -24,7 +24,7 @@ class DatasetManager:
         if db_conn is None:
             db_conn = get_db()
 
-        if not DatasetManager.existsID(setid):
+        if not DatasetManager.existsID(setid, db_conn = db_conn):
             raise RuntimeError("There exists no dataset with the specified set id.")
 
         db_conn.cursor().execute("SELECT * FROM SYSTEM.datasets WHERE setid=%s;", [setid])
@@ -86,7 +86,7 @@ class DatasetManager:
             db_conn = get_db()
 
         # CHECK
-        if not DatasetManager.existsID(setid):
+        if not DatasetManager.existsID(setid, db_conn = db_conn):
             raise RuntimeError("There exists no dataset with the specified set id.")
 
         # DROP SCHEMA
@@ -129,7 +129,7 @@ class DatasetManager:
             db_conn = get_db()
 
         # CHECK
-        if not DatasetManager.existsID(setid):
+        if not DatasetManager.existsID(setid, db_conn = db_conn):
             raise RuntimeError("There exists no dataset with the specified set id.")
 
         # list of permission types that are equivalent or higher
@@ -144,7 +144,7 @@ class DatasetManager:
                 break;
         # ENDFOR
 
-        if not UserManager.existsID(int(userid)):
+        if not UserManager.existsID(int(userid), db_conn = db_conn):
             raise RuntimeError("Specified user does not exist.")
 
         db_conn.cursor().execute("SELECT permission_type FROM SYSTEM.set_permissions WHERE setid=%s AND userid = %s;", [int(setid), int(userid)])
@@ -164,7 +164,7 @@ class DatasetManager:
             db_conn = get_db()
 
         # CHECK
-        if not DatasetManager.existsID(setid):
+        if not DatasetManager.existsID(setid, db_conn = db_conn):
             raise RuntimeError("There exists no dataset with the specified set id.")
 
         db_conn.cursor().execute("UPDATE SYSTEM.datasets SET setname = %s, description = %s WHERE setid = %s;", [new_name, new_desc, int(setid)])
