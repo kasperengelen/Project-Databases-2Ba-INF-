@@ -483,13 +483,52 @@ class TestTransformerCopy(unittest.TestCase):
 
     def test_delete_rows_using_conditions(self):
         """Test method of TableTransformer deletes rows by using provided predicates. This will result in a new table."""
-        self.assertEqual(1, 1)
+        cur = self.db_connection.cursor()
+        predicate1 = ['string', '=', 'C-Corp']
+        self.test_object.delete_rows_using_predicate_logic('test_table', predicate1, 'new_table29')
+        result = self.__test_table_exists('new_table29')
+        self.assertTrue(result)
+        query = "SELECT * FROM \"TEST\".new_table29 WHERE string = 'C-Corp'"
+        cur.execute(query)
+        result = cur.fetchone()
+        self.assertIsNone(result)
+
+        predicate2 = ['string', '=', 'Nokia', 'AND', 'number', '=', '18', 'AND', 'date_time', '!=', '01/01/2001']
+        self.test_object.delete_rows_using_predicate_logic('test_table', predicate2, 'new_table30')
+        result = self.__test_table_exists('new_table30')
+        self.assertTrue(result)
+        query = "SELECT * FROM \"TEST\".new_table30 WHERE string = 'Nokia' AND number = 18"
+        cur.execute(query)
+        result = cur.fetchone()
+        self.assertIsNone(result)
 
 
 
     def test_datetime_extraction(self):
         """This one is for testing the extraction of parts of the date/time done by TableTransformer. This will result in a new table."""
-        self.assertEqual(1, 1)
+        cur = self.db_connection.cursor()
+        cur.execute('ALTER TABLE "TEST".test_table2 ALTER COLUMN date_time TYPE DATE USING to_date(date_time , \'DD/MM/YYYY\')')
+        self.test_object.extract_part_of_date('test_table2', 'date_time', 'MONTH', 'new_table31')
+        result = self.__test_table_exists('new_table31')
+        self.assertTrue(result)
+        #Get all the column names for the table
+        query = ("SELECT column_name FROM information_schema.columns "
+               "WHERE table_schema = 'TEST' AND table_name =  'new_table31'")
+        cur.execute(query)
+        all_columns = cur.fetchall()
+        result = False
+        
+        for elem in all_columns:
+            if elem[0] == 'date_time_part':
+                result = True
+
+        self.assertTrue(result)
+
+        query = "SELECT * FROM \"TEST\".new_table31 WHERE number = 21 AND date_time_part = 'September'"
+        cur.execute(query)
+        result = cur.fetchone()
+        self.assertIsNotNone(result)
+        self.assertEqual(result[0], 'Nintendo')
 
 
 

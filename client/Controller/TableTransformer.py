@@ -118,24 +118,52 @@ class TableTransformer:
         Parameters:
             arg_list: A list of strings containing the strings representing the predicates (Identifiers, logical operators).
         """
+        internal_ref = self.get_internal_reference(tablename)
+        if self.replace is False:
+            internal_ref = self.copy_table(internal_ref, new_name)
         #List of length 4 is of type ['ATTRIBUTE' '=' 'X' 'END]
         list_size = len(arg_list)
-        if list_size  in [4, 8, 11]:
+        if list_size  in [3, 8, 11]:
             predicate = ''
             if list_size >= 3:
                 predicate += '"{}"'.format(arg_list[0])
                 predicate += ' ' + arg_list[1]
-                predicate += ' ' + arg_list[2]
+                attr_type = self.get_attribute_type(tablename, arg_list[0])
+                if not self.is_numerical(attr_type):
+                    predicate += ' ' + "'{}'".format(arg_list[2])                   
+                else:
+                    predicate += ' ' + arg_list[2]
                 pass
             
             if list_size >= 7:
-                pass
+                
+                predicate += ' ' + arg_list[3]
+                predicate += ' ' +'"{}"'.format(arg_list[4])
+                predicate += ' ' + arg_list[5]
+                attr_type = self.get_attribute_type(tablename, arg_list[4])
+                if not self.is_numerical(attr_type):
+                    predicate += ' ' + "'{}'".format(arg_list[6])                   
+                else:
+                    predicate += ' ' + arg_list[6]
 
-            if list_size >= 11:
-                pass
+            if list_size == 11:
+                predicate += ' ' + arg_list[7]
+                predicate += ' ' + '"{}"'.format(arg_list[8])
+                predicate += ' ' + arg_list[9]
+                attr_type = self.get_attribute_type(tablename, arg_list[7])
+                if not self.is_numerical(attr_type):
+                    predicate += ' ' + "'{}'".format(arg_list[10])                   
+                else:
+                    predicate += ' ' + arg_list[10]
 
         else:
             raise self.ValueError('Can not delete rows because an invalid predicate has been provided.')
+
+        query = "DELETE FROM {}.{} WHERE %s" % predicate
+        self.db_connection.cursor().execute(sql.SQL(query).format(sql.Identifier(internal_ref[0]), sql.Identifier(internal_ref[1])))
+        self.db_connection.commit()
+
+
         pass
     
     def delete_attribute(self, tablename, attribute, new_name=""):
@@ -819,11 +847,86 @@ class TableTransformer:
     
     def extract_part_of_date(self, tablename, attribute, extraction_arg, new_name=""):
         """Method that extracts part of a date, time, or datetime"""
+        internal_ref = self.get_internal_reference(tablename)
+        if self.replace is False:
+            internal_ref = self.copy_table(internal_ref, new_name)
+
+        attr_type = self.get_attribute_type(tablename, attribute)
+        if attr_type[0] not in ['date', 'timestamp without time zone']:
+            raise self.AttrTypeError("Extraction of date part failed due attribute not being a date type (neither DATE or TIMESTAMP).")
+
+        if extraction_arg not in ['YEAR', 'MONTH + YEAR', 'MONTH', 'DAY OF THE WEEK']:
+            raise self.ValueError('Extraction argument is not supported by TableTransformer')
+
+        attr_name = attribute + '_part'
+        attr_name = self.__get_unique_name(tablename, attr_name, True)
+        #Let's first create this new column that will contain the extracted part of the date
         self.db_connection.cursor().execute(sql.SQL(
-                    "ALTER TABlE {}.{} ADD COLUMN  {} TO {}").format(sql.Identifier(str(self.setid)),
-                                                               sql.Identifier(tablename),
-                                                               sql.Identifier(old_name),
-                                                               sql.Identifier(new_name)))
+                    "ALTER TABlE {}.{} ADD COLUMN  {} VARCHAR(255)").format(sql.Identifier(internal_ref[0]),
+                                                               sql.Identifier(internal_ref[1]),
+                                                               sql.Identifier(attr_name)))
+
+
+
+        cur = self.db_connection.cursor()
+        if extraction_arg == 'YEAR':
+            query = "UPDATE {}.{} SET {} = EXTRACT(YEAR from {})::VARCHAR(255)"
+
+
+        elif extraction_arg == 'MONTH + YEAR':
+            query = (
+                """UPDATE {0}.{1} SET {2} = concat_ws( ' ', CASE (EXTRACT(MONTH from {3}))
+                WHEN 1 THEN 'January'
+                WHEN 2 THEN 'February'
+                WHEN 3 THEN 'March'
+                WHEN 4 THEN 'April'
+                WHEN 5 THEN 'May'
+                WHEN 6 THEN 'June'
+                WHEN 7 THEN 'July'
+                WHEN 8 THEN 'August'
+                WHEN 9 THEN 'September'
+                WHEN 10 THEN 'October'
+                WHEN 11 THEN 'November'
+                WHEN 12 THEN 'December'
+                END, EXTRACT(YEAR from {3})::VARCHAR(255))""")
+
+
+        elif extraction_arg == 'MONTH':
+            query = (
+                """UPDATE {}.{} SET {} =  CASE (EXTRACT(MONTH from {}))
+                WHEN 1 THEN 'January'
+                WHEN 2 THEN 'February'
+                WHEN 3 THEN 'March'
+                WHEN 4 THEN 'April'
+                WHEN 5 THEN 'May'
+                WHEN 6 THEN 'June'
+                WHEN 7 THEN 'July'
+                WHEN 8 THEN 'August'
+                WHEN 9 THEN 'September'
+                WHEN 10 THEN 'October'
+                WHEN 11 THEN 'November'
+                WHEN 12 THEN 'December'
+                END""")
+
+
+        elif extraction_arg == 'DAY OF THE WEEK':
+            query = (
+                """UPDATE pom SET temp =  CASE (EXTRACT(DOW from datell))
+                WHEN 0 THEN 'Sunday'
+                WHEN 1 THEN 'Monday'
+                WHEN 2 THEN 'Tuesday'
+                WHEN 3 THEN 'Wednesday'
+                WHEN 4 THEN 'Thursday'
+                WHEN 5 THEN 'Friday'
+                WHEN 6 THEN 'Saturday'
+                END""")
+
+
+        cur.execute(sql.SQL(query).format(sql.Identifier(internal_ref[0]), sql.Identifier(internal_ref[1]),
+                                          sql.Identifier(attr_name), sql.Identifier(attribute)))
+        self.db_connection.commit()
+                
+         
         
         
 

@@ -37,6 +37,8 @@ class TestTableTransformer(unittest.TestCase):
         creation_query5 = 'CREATE TABLE "TEST".test_table5 AS TABLE "TEST".test_table'
         creation_query6 = 'CREATE TABLE "TEST".test_table6 AS TABLE "TEST".test_table'
         creation_query7 = 'CREATE TABLE "TEST".test_table7 AS TABLE "TEST".test_table'
+        creation_query8 = 'CREATE TABLE "TEST".test_table8 AS TABLE "TEST".test_table'
+        creation_query9 = 'CREATE TABLE "TEST".test_table9 AS TABLE "TEST".test_table'
         #In some cases the test fails in a way that tearDownClass is not called and the table still exists
         #Sadly we can't confirm if the table is still correct, because of transformations performed on it
         try:
@@ -71,6 +73,8 @@ class TestTableTransformer(unittest.TestCase):
         cur.execute(creation_query5)
         cur.execute(creation_query6)
         cur.execute(creation_query7)
+        cur.execute(creation_query8)
+        cur.execute(creation_query9)
 
 
         cls.db_connection.commit()
@@ -308,7 +312,27 @@ class TestTableTransformer(unittest.TestCase):
 
     def test_datetime_extraction(self):
         """This one is for testing the extraction of parts of the date/time done by TableTransformer"""
-        self.assertEqual(1, 1)
+        cur = self.db_connection.cursor()
+        cur.execute('ALTER TABLE "TEST".test_table8 ALTER COLUMN date_string TYPE DATE USING to_date(date_string , \'DD/MM/YYYY\')')
+        self.test_object.extract_part_of_date('test_table8', 'date_string', 'MONTH')
+        #Get all the column names for the table
+        query = ("SELECT column_name FROM information_schema.columns "
+               "WHERE table_schema = 'TEST' AND table_name =  'test_table8'")
+        cur.execute(query)
+        all_columns = cur.fetchall()
+        result = False
+        
+        for elem in all_columns:
+            if elem[0] == 'date_string_part':
+                result = True
+
+        self.assertTrue(result)
+
+        query = "SELECT * FROM \"TEST\".test_table8 WHERE number = 21 AND date_string_part = 'September'"
+        cur.execute(query)
+        result = cur.fetchone()
+        self.assertIsNotNone(result)
+        self.assertEqual(result[0], 'Nintendo')
         
 
 
@@ -559,4 +583,17 @@ class TestTableTransformer(unittest.TestCase):
 
     def test_delete_rows_using_conditions(self):
         """Test the method of TableTransformer that deletes rows by using provided predicates."""
-        self.assertEqual(1, 1)
+        cur = self.db_connection.cursor()
+        predicate1 = ['string', '=', 'C-Corp']
+        self.test_object.delete_rows_using_predicate_logic('test_table9', predicate1)
+        query = "SELECT * FROM \"TEST\".test_table9 WHERE string = 'C-Corp'"
+        cur.execute(query)
+        result = cur.fetchone()
+        self.assertIsNone(result)
+
+        predicate2 = ['string', '=', 'Nokia', 'AND', 'number', '=', '18', 'AND', 'date_string', '!=', '01/01/2001']
+        self.test_object.delete_rows_using_predicate_logic('test_table9', predicate2)
+        query = "SELECT * FROM \"TEST\".test_table9 WHERE string = 'Nokia' AND number = 18"
+        cur.execute(query)
+        result = cur.fetchone()
+        self.assertIsNone(result)
