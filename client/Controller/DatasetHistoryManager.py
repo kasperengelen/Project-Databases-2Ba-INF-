@@ -22,9 +22,43 @@ class DatasetHistoryManager:
         self.entry_count = None
 
 
-    def write_to_history(table_name, origin_table, attribute, parameters, transformation_type):
-        """Method thar writes an entry to the history table for a performed transformation."""
-        pass
+    def __python_list_to_postgres_array(self, py_list):
+        """Method that represents a python list as a postgres array for inserting into a PostreSQL database."""
+        param_array = "{"
+        nr_elements = len(py_list)
+        
+        if nr_elements == 0: #Return an empty postgres array string
+            return "{}"
+        
+        for i in range(nr_elements-1):
+            param_array += "'%s', "
+        if nr_elements > 1:
+            param_array += "'%s'"
+
+        param_array += "}"
+        param_array % parameters
+        return param_array
+        
+
+
+    def write_to_history(self, table_name, origin_table, attribute, parameters, transformation_type):
+        """Method thar writes an entry to the dataset history table for a performed transformation.
+
+        Parameters:
+            table_name: Name of the table containing the results of the transformation.
+            origin_table: Name of the table that was used for the transformation.
+            attribute: Name of attribute that was use for the transformation.
+            parameters: List of parameters used with the transformation
+            transformation_type: Integer representing the transformation used.
+        """
+        param_array = self.__python_list_to_postgres_array(parameters)
+        cur = self.db_connection.cursor()
+        query = 'INSERT INTO SYSTEM.DATASET_HISTORY VALUES (%s, %s, %s, %s, %s, %s)'
+        cur.execute(sql.SQL(query), [self.setid, table_name, attribute, transformation_type, param_array, origin_table])
+        self.db_connection.commit()
+        
+        
+        
 
 
     def get_page_indices(self, display_nr, page_nr=1):
@@ -139,8 +173,8 @@ class DatasetHistoryManager:
 
         all_rows = cur.fetchall()
         html_table = '<table border = "1">\n'
-        html_table += '<thead> + \n + <tr style="text-align: right;">
-        html_table += '<th>Transformation info</th>\n<th>Date</th>\n</tr>\n</thead>\n
+        html_table += '<thead> + \n + <tr style="text-align: right;">'
+        html_table += '<th>Transformation info</th>\n<th>Date</th>\n</tr>\n</thead>\n'
         html_table += '<tbody>\n'
         
         

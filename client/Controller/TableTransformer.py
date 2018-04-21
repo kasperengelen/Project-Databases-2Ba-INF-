@@ -4,7 +4,7 @@ import psycopg2
 from psycopg2 import sql
 import sqlalchemy
 import sys, os
-from Model.DatabaseConfiguration import DatabaseConfiguration
+from Controller.DatasetHistoryManager import DatasetHistoryManager
 
 class TableTransformer:
     """Class that performs transformations and various actions on SQL tables to support the data cleaning process.
@@ -23,6 +23,7 @@ class TableTransformer:
         self.replace = replace
         self.db_connection = db_conn
         self.engine = engine
+        self.history_manager = DatasetHistoryManager(setid, db_conn, engine)
 
 
     
@@ -44,20 +45,6 @@ class TableTransformer:
         the operation to fail.
         """
 
-
-    def __create_history(self, tablename, attribute, trans_type, parameter, origin=""):
-        """Create a DatasetHistory entry with the given parameters, this function gets called
-        every time a transformation is completed"""
-
-        origin_table = ""
-        if self.replace:
-            origin_table = tablename
-        else:
-            origin_table = origin
-
-        self.db_connection.cursor().execute(sql.SQL("INSERT INTO DATASET_HISTORY.{} VALUES (%s, %s, %s, %s, %s, %s)").format(sql.Identifier(str(self.setid))),
-                                                    [self.setid, tablename, attribute, trans_type, str(parameter), origin_table])
-        self.db_connection.commit()
 
 
     def is_nullable(self, tablename, attribute):
@@ -118,6 +105,7 @@ class TableTransformer:
         Parameters:
             arg_list: A list of strings containing the strings representing the predicates (Identifiers, logical operators).
         """
+        print(arg_list)
         internal_ref = self.get_internal_reference(tablename)
         if self.replace is False:
             internal_ref = self.copy_table(internal_ref, new_name)
@@ -133,7 +121,6 @@ class TableTransformer:
                     predicate += ' ' + "'{}'".format(arg_list[2])                   
                 else:
                     predicate += ' ' + arg_list[2]
-                pass
             
             if list_size >= 7:
                 
@@ -162,6 +149,7 @@ class TableTransformer:
         query = "DELETE FROM {}.{} WHERE %s" % predicate
         self.db_connection.cursor().execute(sql.SQL(query).format(sql.Identifier(internal_ref[0]), sql.Identifier(internal_ref[1])))
         self.db_connection.commit()
+        self.history_manager.write_to_history(internal_ref[1], tablename, attribute, [predicate], 15)
 
 
         pass
@@ -174,6 +162,8 @@ class TableTransformer:
         self.db_connection.cursor().execute(sql.SQL("ALTER TABLE {}.{} DROP COLUMN {}").format(sql.Identifier(internal_ref[0]), sql.Identifier(internal_ref[1]),
                                                                                     sql.Identifier(attribute)))
         self.db_connection.commit()
+
+        self.history_manager.write_to_history(internal_ref[1], tablename, attribute, [], 2)
 
         # create history entry
         #self.__create_history(tablename, attribute, "delete_attribute", None, new_name)
@@ -330,6 +320,9 @@ class TableTransformer:
         else:
             self.__convert_numeric(internal_ref, attribute, to_type, length)
 
+        #Write this transformation to the dataset history.
+        self.history_manager.write_to_history(internal_ref[1], tablename, attribute, [to_type, data_format, length], 1)
+
 
     def force_attribute_type(self, tablename, attribute, to_type, data_format="", new_name=""):
         """In case that change_attribute_type fails due to elements that can't be converted
@@ -409,6 +402,7 @@ class TableTransformer:
         self.db_connection.cursor().execute(sql.SQL(sql_query).format(sql.Identifier(internal_ref[0]), sql.Identifier(internal_ref[1]),
                                                                       sql.Identifier(attribute)), (replacement, value))
         self.db_connection.commit()
+        self.history_manager.write_to_history(internal_ref[1], tablename, attribute, [value, replacement, exact, replace_all], 8)
 
 
     #INCOMPLETE
@@ -442,6 +436,7 @@ class TableTransformer:
             raise self.ValueError(error_msg)
 
         self.db_connection.commit()
+        self.history_manager.write_to_history(internal_ref[1], tablename, attribute, [regex, replacement, case_sens], 9)
 
 
     def __get_simplified_types(self, tablename, data_frame):
@@ -499,15 +494,19 @@ class TableTransformer:
         df = df.drop(attribute, axis=1) #Drop the attribute used for encoding
         df = df.join(encoded) #Join the original attributes with the encoded table
         new_dtypes = self.__get_simplified_types(tablename, df)
+        eventual_table = "" #This will be the name of table containing the changes.
         if self.replace is True:
             #If the table should be replaced, drop it and recreate it.
             df.to_sql(tablename, self.engine, None, internal_ref[0], 'replace', index = False, dtype = new_dtypes)
+            eventual_table = tablename
         elif self.replace is False:
             #We need to create a new table and leave the original untouched
+            new_name = self.__get_unique_name(new_name)
             df.to_sql(new_name, self.engine, None, internal_ref[0], 'fail', index = False, dtype = new_dtypes)
+            eventual_table = new_name
+            
 
-        # create history entry
-        #self.__create_history(tablename, attribute, "one_hot_encode", None, new_name)
+        self.history_manager.write_to_history(eventual_table, tablename, attribute, [], 14)
         
 
         
@@ -552,16 +551,19 @@ class TableTransformer:
         new_dtypes = self.__get_simplified_types(tablename, df)
         #Casting the attribute back to int would be problematic so make sure it's float
         new_dtypes[attribute] = sqlalchemy.types.Float(precision=25, asdecimal=True)
+        eventual_table = ""
 
         if self.replace is True:
             #If the table should be replaced, drop it and recreate it.
             df.to_sql(tablename, self.engine, None, internal_ref[0], 'replace', index = False, dtype = new_dtypes)
+            eventual_table = tablename
         elif self.replace is False:
             #We need to create a new table and leave the original untouched
+            new_name = self.__get_unique_name("", new_name, False)
             df.to_sql(new_name, self.engine, None, internal_ref[0], 'fail', index = False, dtype = new_dtypes)
+            eventual_table = new_name
 
-        # create history entry
-        #self.__create_history(tablename, attribute, "normalize_using_zscore", None, new_name)
+        self.history_manager.write_to_history(internal_ref[1], tablename, attribute, [mean], 10)
 
 
 
@@ -647,16 +649,20 @@ class TableTransformer:
         category = self.__get_unique_name(tablename, column_name)
         df[category] = pd.cut(df[attribute], bins, right=False, labels = binlabels, include_lowest=True)
         new_dtypes = self.__get_simplified_types(tablename, df)
+        eventual_table = "" #This the table that eventually becomes the table with the resulting changes
 
         if self.replace is True:
             #If the table should be replaced, drop it and recreate it.
             df.to_sql(tablename, self.engine, None, internal_ref[0], 'replace', index = False, dtype = new_dtypes)
+            eventual_table = tablename
         elif self.replace is False:
             #We need to create a new table and leave the original untouched
+            new_name = self.__get_unique_name("", new_name, False)
             df.to_sql(new_name, self.engine, None, internal_ref[0], 'fail', index = False, dtype = new_dtypes)
+            eventual_table = new_name
 
-        # create history entry
-        #self.__create_history(tablename, attribute, "discretize_using_equal_width", None, new_name)
+
+        self.history_manager.write_to_history(eventual_table, tablename, attribute, [], 6)
 
 
     def discretize_using_equal_frequency(self, tablename, attribute, new_name=""):
@@ -704,16 +710,23 @@ class TableTransformer:
         category = self.__get_unique_name(tablename, column_name)
         df[category] = pd.cut(df[attribute], bins, right=False, labels = binlabels, include_lowest=True)
         new_dtypes = self.__get_simplified_types(tablename, df)
+        eventual_table = "" #This the table that eventually becomes the table with the resulting changes
 
         if self.replace is True:
             #If the table should be replaced, drop it and recreate it.
             df.to_sql(tablename, self.engine, None, internal_ref[0], 'replace', index = False, dtype = new_dtypes)
+            eventual_table = tablename
         elif self.replace is False:
             #We need to create a new table and leave the original untouched
+            new_name = self.__get_unique_name("", new_name, False)
             df.to_sql(new_name, self.engine, None, internal_ref[0], 'fail', index = False, dtype = new_dtypes)
+            eventual_table = new_name
 
-        # create history entry
-        #self.__create_history(tablename, attribute, "discretize_using_equal_frequency", None, new_name)
+
+        self.history_manager.write_to_history(eventual_table, tablename, attribute, [], 5)
+            
+
+
 
 
     def discretize_using_custom_ranges(self, tablename, attribute, ranges, exclude_right=True, new_name=""):
@@ -755,13 +768,19 @@ class TableTransformer:
         category = self.__get_unique_name(tablename, column_name)
         df[category] = pd.cut(df[attribute], ranges, right=param_a, labels = binlabels, include_lowest=param_b)
         new_dtypes = self.__get_simplified_types(tablename, df)
+        eventual_table = "" #This the table that eventually becomes the table with the resulting changes
 
         if self.replace is True:
             #If the table should be replaced, drop it and recreate it.
             df.to_sql(tablename, self.engine, None, internal_ref[0], 'replace', index = False, dtype = new_dtypes)
+            eventual_table = tablename
         elif self.replace is False:
             #We need to create a new table and leave the original untouched
+            new_name = self.__get_unique_name("", new_name, False)
             df.to_sql(new_name, self.engine, None, internal_ref[0], 'fail', index = False, dtype = new_dtypes)
+            eventual_table = new_name
+
+        self.history_manager.write_to_history(eventual_table, tablename, attribute, [ranges, exclude_right], 4)
 
 
             
@@ -787,6 +806,8 @@ class TableTransformer:
                                                                                     sql.Identifier(attribute)), (value,))
         self.db_connection.commit()
         
+        self.history_manager.write_to_history(internal_ref[1], tablename, attribute, [larger, value], 3)
+        
 
     def __fill_nulls_with_x(self, attribute, internal_ref,  x):
         """Method that fills null values of an attribute with a provided value.
@@ -810,9 +831,7 @@ class TableTransformer:
         mean = df[attribute].mean()
 
         self.__fill_nulls_with_x(attribute, internal_ref, mean)
-
-        # create history entry
-        #self.__create_history(tablename, attribute, "fill_nulls_with_mean", None, new_name)
+        self.history_manager.write_to_history(internal_ref[1], tablename, attribute, [mean], 10)
 
 
     def fill_nulls_with_median(self, tablename, attribute, new_name=""):
@@ -826,9 +845,7 @@ class TableTransformer:
         median = df[attribute].median()
 
         self.__fill_nulls_with_x(attribute, internal_ref, median)
-
-        # create history entry
-        #self.__create_history(tablename, attribute, "fill_nulls_with_median", None, new_name)
+        self.history_manager.write_to_history(internal_ref[1], tablename, attribute, [median], 11)
 
 
     def fill_nulls_with_custom_value(self, tablename, attribute, value, new_name=""):
@@ -840,9 +857,7 @@ class TableTransformer:
         #Perhaps do a sanity check here? I'll see later on.
 
         self.__fill_nulls_with_x(attribute, internal_ref, value)
-
-        # create history entry
-        #self.__create_history(tablename, attribute, "fill_nulls_with_custom_value", value, new_name)
+        self.history_manager.write_to_history(internal_ref[1], tablename, attribute, [value], 12)
 
     
     def extract_part_of_date(self, tablename, attribute, extraction_arg, new_name=""):
@@ -925,6 +940,7 @@ class TableTransformer:
         cur.execute(sql.SQL(query).format(sql.Identifier(internal_ref[0]), sql.Identifier(internal_ref[1]),
                                           sql.Identifier(attr_name), sql.Identifier(attribute)))
         self.db_connection.commit()
+        self.history_manager.write_to_history(internal_ref[1], tablename, attribute, [extraction_arg], 7)
                 
          
         

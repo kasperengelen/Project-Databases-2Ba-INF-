@@ -37,6 +37,19 @@ CREATE TABLE SYSTEM.set_permissions (
     FOREIGN KEY(setid) REFERENCES SYSTEM.datasets(setid) ON DELETE CASCADE
 );
 
+CREATE TABLE SYSTEM.DATASET_HISTORY(
+	setid INTEGER,
+	table_name VARCHAR(255) NOT NULL,
+	attribute VARCHAR(255) NOT NULL,
+	transformation_type INTEGER NOT NULL,
+	parameters VARCHAR(255) ARRAY NOT NULL,
+	origin_table VARCHAR(255) NOT NULL,
+	transformation_id SERIAL UNIQUE,
+	transformation_date TIMESTAMP DEFAULT NOW(),
+
+	FOREIGN KEY(setid) REFERENCES SYSTEM.datasets(setid) ON DELETE CASCADE
+);
+
 --TRIGGER to delete all the data if the admin is deleted (needs to be modified for more than 1 admin)
 /*CREATE FUNCTION delete_clean() RETURNS TRIGGER AS $BODY$
 BEGIN
