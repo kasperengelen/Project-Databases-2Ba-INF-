@@ -1,6 +1,7 @@
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField as FWFileField, FileRequired as FWFileRequired
-from wtforms import StringField, PasswordField, TextAreaField, SelectField, HiddenField, FileField, BooleanField
+from wtforms import StringField, PasswordField, TextAreaField, SelectField, HiddenField, FileField, BooleanField, IntegerField
+from wtforms.widgets import HiddenInput
 from wtforms.validators import Length, InputRequired, Email, EqualTo, Regexp
 from utils import EnumCheck, FilenameCheck
 
@@ -27,7 +28,7 @@ class AddUserForm(FlaskForm):
 
 class RemoveUserForm(FlaskForm):
     """Form to revoke a user's permission to alter the dataset."""
-    userid = HiddenField('UserID')
+    userid = IntegerField('UserID', widget = HiddenInput())
     email = HiddenField('Email', [Email()])
     permission_type = HiddenField('Permission Type', [EnumCheck(message="Invalid permission type.", choises=['read', 'write', 'admin'])])
 # ENDCLASS
@@ -36,7 +37,7 @@ class DatasetListEntryForm(FlaskForm):
     """Form that contains data about a dataset
     that the user is part of."""
 
-    setid = HiddenField('Set id')
+    setid = IntegerField('Set id', widget = HiddenInput())
     name = HiddenField('Set Name')
     desc = HiddenField('Description')
 
@@ -98,7 +99,7 @@ class AttributeForm(FlaskForm):
 class EntryCountForm(FlaskForm):
     """Form to select how many entries need to be displayed."""
 
-    entry_count = SelectField("   ", choices = [('10', '10'), ('20', '20'), ('50', '50'), ('100', '100'), ('500', '500')], id="entry_count")
+    entry_count = SelectField("   ", choices = [(10, '10'), (20, '20'), (50, '50'), (100, '100'), (500, '500')], id="entry_count", coerce = lambda x : int(x))
     cur_dataset = HiddenField('cur_dataset')
     cur_tablename = HiddenField('cur_tablename')
 
@@ -160,7 +161,7 @@ class DataTypeTransform(FlaskForm):
     """Form for datatype conversion transformation."""
     select_attr = SelectField('Attribute', choices=[], id='attribute')
     new_datatype = SelectField('New Datatype', choices=[], id='typeOptions')
-    char_amount = StringField('Character Amount', [InputRequired(message="input is required.")], default=1)
+    char_amount = IntegerField('Character Amount', [InputRequired(message="input is required.")], default=1)
     date_type = SelectField('Date/Time Format', choices=[], id="date_type")
 
     def fillForm(self, attrs, datatypes, datetimetypes):
@@ -209,7 +210,7 @@ class DiscretizeEqualFreq(FlaskForm):
 class DiscretizeCustomRange(FlaskForm):
     select_attr = SelectField('Attribute', choices=[])
     ranges = StringField('Ranges (comma separated values)', [InputRequired("Input is required.")])
-    interval_spec = SelectField('Left/Right open', choices = [(True, '[a, b['), (False, ']a, b]')])
+    interval_spec = SelectField('Right/Left open', choices = [(True, '[a, b['), (False, ']a, b]')], coerce = lambda x : x == 'True')
 
     def fillForm(self, attrs):
         self.select_attr.choices = [(attrname, attrname) for attrname in attrs]
@@ -219,7 +220,7 @@ class DiscretizeCustomRange(FlaskForm):
 class DeleteOutlier(FlaskForm):
     """Form to replace outlier values with NULL."""
     select_attr = SelectField('Attribute', choices=[])
-    select_comparison = SelectField('Larger/Smaller', choices=[(True, 'Larger'), (False, 'Smaller')])
+    select_comparison = SelectField('Larger/Smaller', choices=[(True, 'Larger'), (False, 'Smaller')], coerce = lambda x : x == 'True')
     value = StringField('Value', [InputRequired(message="Input is required.")])
     
     def fillForm(self, attrs):

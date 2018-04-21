@@ -647,6 +647,10 @@ def transform_discretizeCustomRange(dataset_id, tablename):
         flash(message="Range specifiers not in correct order or empty range detected.", category="error")
         return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 
+    if len(int_ranges) < 2:
+        flash(message="At least two range specifiers needed.", category="error")
+        return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
+
     try:
         tt.discretize_using_custom_ranges(tablename, form.select_attr.data, int_ranges, form.interval_spec.data)
         flash(message="Discretization complete.")

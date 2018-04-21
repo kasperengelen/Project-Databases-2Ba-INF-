@@ -1,5 +1,6 @@
 from flask_wtf import FlaskForm
-from wtforms import HiddenField, StringField
+from wtforms import HiddenField, StringField, IntegerField
+from wtforms.widgets import HiddenInput
 from wtforms.validators import Email, InputRequired, Length
 
 class DeleteUserForm(FlaskForm):
@@ -19,7 +20,7 @@ class DeleteDatasetForm(FlaskForm):
     """Class that represents a form that allows an admin to delete
     a dataset."""
     
-    setid = HiddenField('Set id')
+    setid = IntegerField('Set id', widget = HiddenInput())
     setname = HiddenField('Set name')
 
     def fillForm(self, dataset):
@@ -45,7 +46,7 @@ class AdminUserEditForm(FlaskForm):
 # ENDCLASS
 
 class ActivateDecactivateUser(FlaskForm):
-    userid = HiddenField('User id')
+    userid = IntegerField('User id', widget = HiddenInput())
     new_activation_status = HiddenField('New activation status')
 
     def fillForm(self, user_data):
