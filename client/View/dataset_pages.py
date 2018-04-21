@@ -632,10 +632,29 @@ def transform_discretizeCustomRange(dataset_id, tablename):
     # determine intervals
     split = form.ranges.data.split(',')
 
-    #range_values = [int(i) for i in split]
+    int_ranges = []
 
+    # convert to integer list
+    for i in split:
+        try:
+            int_ranges.append(int(i))
+        except:
+            flash(message="Invalid range specifier: " + str(i), category="error")
+            return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
+    # ENDFOR
 
+    # check if interval is in correct order and no empty bins
+    if not all(int_ranges[i] < int_ranges[i+1] for i in range(0, len(int_ranges)-1)):
+        flash(message="Range specifiers not in correct order or empty range detected.", category="error")
+        return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 
+    try:
+        tt.discretize_using_custom_ranges(tablename, form.select_attr.data, int_ranges, form.interval_spec.data)
+        flash(message="Discretization complete.")
+    except:
+        flash(message="An error occurred.", category="error")
+
+    return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 # ENDFUNCTION
 
 @dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/transform/delete_outlier', methods = ['POST'])
