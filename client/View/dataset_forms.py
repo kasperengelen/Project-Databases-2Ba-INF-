@@ -207,7 +207,13 @@ class DiscretizeEqualFreq(FlaskForm):
 # ENDCLASS
 
 class DiscretizeCustomRange(FlaskForm):
-    pass
+    select_attr = SelectField('Attribute', choices=[])
+    ranges = StringField('Ranges (comma separated values)', [InputRequired("Input is required.")])
+    interval_spec = SelectField('Left/Right open', choices = [(True, '[a, b['), (False, ']a, b]')])
+
+    def fillForm(self, attrs):
+        self.select_attr.choices = [(attrname, attrname) for attrname in attrs]
+    # ENDMETHOD
 # ENDCLASS
 
 class DeleteOutlier(FlaskForm):

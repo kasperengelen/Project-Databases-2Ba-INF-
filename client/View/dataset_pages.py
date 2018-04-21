@@ -107,7 +107,7 @@ def view_dataset_table(dataset_id, tablename, page_nr):
     regexfindreplace_form.fillForm(attrs)
     discretizeWidth_form.fillForm(attrs)
     discretizeFreq_form.fillForm(attrs)
-    # discretizeCustom_form
+    discretizeCustom_form.fillForm(attrs)
     deleteoutlier_form.fillForm(attrs)
     fillnullmean_form.fillForm(attrs)
     fillnullmedian_form.fillForm(attrs)
@@ -607,8 +607,34 @@ def transform_discretizeEqualFreq(dataset_id, tablename):
 @dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/transform/discretize/customrange', methods = ['POST'])
 @require_login
 @require_writeperm
-def transform_discretizeCustomRange():
-    assert(False)
+def transform_discretizeCustomRange(dataset_id, tablename):
+    """Callback to discretize the data into custom intervals."""
+
+    if not DatasetManager.existsID(dataset_id):
+        abort(404)
+
+    dataset = DatasetManager.getDataset(dataset_id)
+
+    if tablename not in dataset.getTableNames():
+        abort(404)
+
+    tv = dataset.getTableViewer(tablename)
+    tt = dataset.getTableTransformer(tablename)
+
+    form = DiscretizeCustomRange(request.form)
+    form.fillForm(tv.get_attributes())
+
+    if not form.validate():
+        flash(message="Invalid form.", category="error")
+        return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
+
+    # determine intervals
+    split = form.ranges.data.split(',')
+
+    #range_values = [int(i) for i in split]
+
+
+
 # ENDFUNCTION
 
 @dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/transform/delete_outlier', methods = ['POST'])
