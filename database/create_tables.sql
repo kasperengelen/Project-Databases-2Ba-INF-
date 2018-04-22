@@ -1,7 +1,6 @@
-CREATE SCHEMA DATASET_HISTORY;
 CREATE SCHEMA SYSTEM;
 
--- Table for keeping track of users
+-- Table for keeping track of users.
 CREATE TABLE SYSTEM.user_accounts (
     userid        SERIAL,
     fname         VARCHAR(255) NOT NULL,
@@ -15,7 +14,7 @@ CREATE TABLE SYSTEM.user_accounts (
     PRIMARY KEY(userid)
 );
 
--- table that keeps track of datasets
+-- Table that keeps track of datasets.
 CREATE TABLE SYSTEM.datasets (
     setid         	SERIAL,
     setname       	VARCHAR(255) NOT NULL,
@@ -25,7 +24,7 @@ CREATE TABLE SYSTEM.datasets (
     PRIMARY KEY(setid)
 );
 
--- table that links users to datasets
+-- Table that links users to datasets with the correct permissions.
 CREATE TABLE SYSTEM.set_permissions (
     userid            INTEGER,
     setid             INTEGER,
@@ -37,6 +36,7 @@ CREATE TABLE SYSTEM.set_permissions (
     FOREIGN KEY(setid) REFERENCES SYSTEM.datasets(setid) ON DELETE CASCADE
 );
 
+-- Table containing history of the transformations perfomed in the system.
 CREATE TABLE SYSTEM.DATASET_HISTORY(
 	setid INTEGER,
 	table_name VARCHAR(255) NOT NULL,
@@ -50,15 +50,24 @@ CREATE TABLE SYSTEM.DATASET_HISTORY(
 	FOREIGN KEY(setid) REFERENCES SYSTEM.datasets(setid) ON DELETE CASCADE
 );
 
---TRIGGER to delete all the data if the admin is deleted (needs to be modified for more than 1 admin)
-/*CREATE FUNCTION delete_clean() RETURNS TRIGGER AS $BODY$
+-- Trigger to delete all the corresponding data if the last admin of the data is deleted.
+CREATE FUNCTION delete_clean() RETURNS TRIGGER AS $BODY$
+DECLARE
+	deadset RECORD;
 BEGIN
-    DELETE FROM datasets WHERE datasets.setid IN
-    (SELECT set_permissions.setid FROM set_permissions WHERE
-    set_permissions.userid = OLD.userid AND set_permissions.permission_type = 'admin');
+	FOR deadset IN 
+		DELETE FROM system.datasets WHERE system.datasets.setid IN
+		(SELECT setid FROM system.set_permissions GROUP BY setid, 
+		permission_type HAVING count(*) = 1) AND system.datasets.setid 
+		IN (SELECT setid FROM system.set_permissions WHERE 
+		system.set_permissions.userid = OLD.userid AND system.set_permissions.permission_type = 'admin')
+		RETURNING * LOOP
+		
+		EXECUTE 'DROP SCHEMA IF EXISTS ' || quote_ident(deadset.setid::varchar) || ' CASCADE';
+	END LOOP;
     RETURN OLD;
 END;
 $BODY$ LANGUAGE PLPGSQL;
  
-CREATE TRIGGER deleted_user BEFORE DELETE ON user_accounts
-FOR EACH ROW EXECUTE PROCEDURE delete_clean();*/
+CREATE TRIGGER deleted_user BEFORE DELETE ON SYSTEM.user_accounts
+FOR EACH ROW EXECUTE PROCEDURE delete_clean();-
