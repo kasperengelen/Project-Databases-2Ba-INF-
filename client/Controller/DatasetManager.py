@@ -30,7 +30,7 @@ class DatasetManager:
         db_conn.cursor().execute("SELECT * FROM SYSTEM.datasets WHERE setid=%s;", [setid])
         result = db_conn.cursor().fetchone()
 
-        return DatasetInfo.fromSqlTuple(result)
+        return DatasetInfo.fromSqlTuple(result, db_conn = db_conn)
     # ENDMETHOD
 
     @staticmethod
@@ -46,7 +46,7 @@ class DatasetManager:
         retval = []
 
         for result in results:
-            retval.append(DatasetInfo.fromSqlTuple(result))
+            retval.append(DatasetInfo.fromSqlTuple(result, db_conn = db_conn))
 
         return retval
     # ENDMETHOD
@@ -68,11 +68,6 @@ class DatasetManager:
 
         # CREATE BACKUP SCHEMA
         db_conn.cursor().execute("CREATE SCHEMA \"original_{}\";".format(int(setid)))
-        db_conn.commit()
-
-        # create the history table
-        db_conn.cursor().execute(open("Controller/dataset_history.sql", 'r').read())
-        db_conn.cursor().execute("ALTER TABLE DATASET_HISTORY.temp RENAME TO \"{}\"".format(str(setid)))
         db_conn.commit()
 
         return setid
@@ -115,7 +110,7 @@ class DatasetManager:
         retval = []
 
         for result in results:
-            retval.append(DatasetInfo.fromSqlTuple(result))
+            retval.append(DatasetInfo.fromSqlTuple(result, db_conn = db_conn))
 
         return retval
     # ENDMETHOD

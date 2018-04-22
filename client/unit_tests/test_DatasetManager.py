@@ -20,11 +20,6 @@ class TestDatasetManager(unittest.TestCase):
         self.db_conn.cursor().execute("CREATE SCHEMA \"original_{}\";".format(int(setid)))
         self.db_conn.commit()
 
-        # create the history table
-        self.db_conn.cursor().execute(open("Controller/dataset_history.sql", 'r').read())
-        self.db_conn.cursor().execute("ALTER TABLE DATASET_HISTORY.temp RENAME TO \"{}\"".format(str(setid)))
-        self.db_conn.commit()
-
         return setid
 
     def __delete_dataset_manually(self, setid):
@@ -35,9 +30,6 @@ class TestDatasetManager(unittest.TestCase):
         self.db_conn.commit()
 
         self.db_conn.cursor().execute("DROP SCHEMA IF EXISTS \"original_{}\";".format(int(setid)))
-        self.db_conn.commit()
-
-        self.db_conn.cursor().execute("DROP TABLE IF EXISTS DATASET_HISTORY.\"{}\";".format(int(setid)))
         self.db_conn.commit()
 
     def __dataset_exists(self, setid):
