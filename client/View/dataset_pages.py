@@ -4,9 +4,10 @@ from Controller.AccessController import require_login, require_admin
 from Controller.AccessController import require_adminperm, require_writeperm, require_readperm
 from Controller.DatasetManager import DatasetManager
 from Controller.UserManager import UserManager
-from View.dataset_forms import FindReplaceForm, DeleteAttrForm, DatasetForm, AddUserForm, RemoveUserForm, DatasetListEntryForm, TableUploadForm, PredicateForm, EntryCountForm
+from View.dataset_forms import FindReplaceForm, DeleteAttrForm, DatasetForm, AddUserForm, RemoveUserForm, DatasetListEntryForm, TableUploadForm, EntryCountForm
 from View.dataset_forms import DownloadForm, DataTypeTransform, NormalizeZScore, OneHotEncoding, TableJoinForm, RegexFindReplace, DiscretizeEqualWidth, ExtractDateTimeForm
 from View.dataset_forms import DiscretizeEqualFreq, DiscretizeCustomRange, DeleteOutlier, FillNullsMean, FillNullsMedian, FillNullsCustomValue, AttributeForm
+from View.dataset_forms import PredicateFormOne, PredicateFormTwo, PredicateFormThree
 from Controller.TableViewer import TableViewer
 from werkzeug.utils import secure_filename
 import os
@@ -94,7 +95,9 @@ def view_dataset_table(dataset_id, tablename, page_nr):
     fillnullmedian_form = FillNullsMedian()
     fillnullcustom_form = FillNullsCustomValue()
     attr_form = AttributeForm()
-    predicate_form = PredicateForm()
+    predicateone_form = PredicateFormOne()
+    predicatetwo_form = PredicateFormTwo()
+    predicatethree_form = PredicateFormThree()
     extract_form = ExtractDateTimeForm()
 
     entrycount_form = EntryCountForm(entry_count = session['rowcount'])
@@ -115,8 +118,10 @@ def view_dataset_table(dataset_id, tablename, page_nr):
     attr_form.fillForm(attrs)
     entrycount_form.fillForm(dataset_id, tablename)
     typeconversion_form.fillForm(attrs, [], [])
-    predicate_form.fillForm(attrs)
     extract_form.fillForm(attrs)
+    predicateone_form.fillForm(attrs)
+    predicatetwo_form.fillForm(attrs)
+    predicatethree_form.fillForm(attrs)
 
 
     # render table
@@ -162,8 +167,10 @@ def view_dataset_table(dataset_id, tablename, page_nr):
                                                 attributes=attributes,
                                                 attr_form=attr_form,
                                                 entrycount_form = entrycount_form,
-                                                predicate_form=predicate_form,
-                                                extract_form=extract_form)
+                                                extract_form=extract_form,
+                                                predicateone_form=predicateone_form,
+                                                predicatetwo_form=predicatetwo_form,
+                                                predicatethree_form=predicatethree_form)
 # ENDFUNCTION
 
 @dataset_pages.route('/dataset/set_session_rowcount/', methods = ['POST'])
@@ -249,6 +256,8 @@ def transform_join_tables(dataset_id):
 def transform_predicate(dataset_id, tablename):
     """Callback for delete by predicate"""
 
+    print('TEST')
+
     if not DatasetManager.existsID(dataset_id):
         abort(404)
 
@@ -259,30 +268,43 @@ def transform_predicate(dataset_id, tablename):
 
     tv = dataset.getTableViewer(tablename)
 
-    form = PredicateForm(request.form)
-    form.fillForm(tv.get_attributes())
+    predicateone = PredicateFormOne(request.form)
+    predicateone.fillForm(tv.get_attributes())
+    predicatetwo = PredicateFormTwo(request.form)
+    predicatetwo.fillForm(tv.get_attributes())
+    predicatethree = PredicateFormThree(request.form)
+    predicatethree.fillForm(tv.get_attributes())
 
-    if not form.validate():
-        print(form.errors)
+    if not predicateone.validate():
+        print(predicateone.errors)
         flash(message="Invalid form.", category="error")
         return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 
+    predicate_list = [predicateone.attr1.data, predicateone.op1.data, predicateone.input1.data]
+
+    if(predicateone.select1.data != "END"):
+        if not predicatetwo.validate():
+            print(predicatetwo.errors)
+            flash(message="Invalid form.", category="error")
+            return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))    
+
+        predicate_list.append(predicateone.select1.data)
+        predicate_list.append(predicatetwo.attr2.data)
+        predicate_list.append(predicatetwo.op2.data)
+        predicate_list.append(predicatetwo.input2.data)
+
+    if(predicatetwo.select2.data != "END"):
+        if not predicatethree.validate():
+            print(predicatethree.errors)
+            flash(message="Invalid form.", category="error")
+            return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
+
+        predicate_list.append(predicatetwo.select2.data)
+        predicate_list.append(predicatethree.attr3.data)
+        predicate_list.append(predicatethree.op3.data)
+        predicate_list.append(predicatethree.input3.data)
+
     tt = dataset.getTableTransformer(tablename)
-
-    predicate_list = [form.attr1.data, form.op1.data, form.input1.data]
-
-    if(form.select1.data != "END"):
-        predicate_list.append(form.select1.data)
-        predicate_list.append(form.attr2.data)
-        predicate_list.append(form.op2.data)
-        predicate_list.append(form.input2.data)
-
-    if(form.select2.data != "END"):
-        predicate_list.append(form.select2.data)
-        predicate_list.append(form.attr3.data)
-        predicate_list.append(form.op3.data)
-        predicate_list.append(form.input3.data)
-
     tt.delete_rows_using_predicate_logic(tablename, predicate_list)
     flash(message="Rows deleted according to predicate.", category="success")
 

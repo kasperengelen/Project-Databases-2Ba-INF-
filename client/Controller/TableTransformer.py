@@ -111,7 +111,7 @@ class TableTransformer:
             internal_ref = self.copy_table(internal_ref, new_name)
         #List of length 4 is of type ['ATTRIBUTE' '=' 'X' 'END]
         list_size = len(arg_list)
-        if list_size  in [3, 8, 11]:
+        if list_size  in [3, 7, 11]:
             predicate = ''
             if list_size >= 3:
                 predicate += '"{}"'.format(arg_list[0])
@@ -149,7 +149,7 @@ class TableTransformer:
         query = "DELETE FROM {}.{} WHERE %s" % predicate
         self.db_connection.cursor().execute(sql.SQL(query).format(sql.Identifier(internal_ref[0]), sql.Identifier(internal_ref[1])))
         self.db_connection.commit()
-        self.history_manager.write_to_history(internal_ref[1], tablename, attribute, [predicate], 15)
+        self.history_manager.write_to_history(internal_ref[1], tablename, 'None', [predicate], 15)
 
 
         pass

@@ -1,38 +1,42 @@
 <h5><u><strong>Predicates</strong></u></h5>
-<form method="post" action="{{ url_for('dataset_pages.transform_predicate', dataset_id=dataset_info.setid, tablename=table_name) }}">
-{{ predicate_form.hidden_tag() }}
-<div class="form-group" style="width: 20%; display: inline-block;">
-	{{render_field(predicate_form.attr1, class_="form-control") }}
-</div>
-<div class="form-group" style="width: 20%; display: inline-block;">
-	{{render_field(predicate_form.op1, class_="form-control") }}
-</div>
-<div class="form-group" style="width: 20%; display: inline-block;">
-	{{render_field(predicate_form.input1, class_="form-control") }}
-</div>
-<div class="form-group" style="width: 20%; display: inline-block;">
-	{{render_field(predicate_form.select1, class_="form-control") }}
-</div>
-<div class="form-group" style="width: 20%; display: inline-block;" id="pred_2_attr">
-	{{render_field(predicate_form.attr2, class_="form-control") }}
-</div>
-<div class="form-group" style="width: 20%; display: inline-block;" id="pred_2_op">
-	{{render_field(predicate_form.op2, class_="form-control") }}
-</div>
-<div class="form-group" style="width: 20%; display: inline-block;" id="pred_2_input">
-	{{render_field(predicate_form.input2, class_="form-control") }}
-</div>
-<div class="form-group" style="width: 20%; display: inline-block;" id="pred_2_select">
-	{{render_field(predicate_form.select2, class_="form-control") }}
-</div>
-<div class="form-group" style="width: 20%; display: inline-block;" id="pred_3_attr">
-	{{render_field(predicate_form.attr3, class_="form-control") }}
-</div>
-<div class="form-group" style="width: 20%; display: inline-block;" id="pred_3_op">
-	{{render_field(predicate_form.op3, class_="form-control") }}
-</div>
-<div class="form-group" style="width: 20%; display: inline-block;" id="pred_3_input">
-	{{render_field(predicate_form.input3, class_="form-control") }}
-</div>
-<p style="display: inline-block;"><input type="submit" id="predicates" class="btn btn-primary" value="Delete Using Predicate"></p>
+<form id="pred" method="post" action="{{ url_for('dataset_pages.transform_predicate', dataset_id=dataset_info.setid, tablename=table_name) }}">
+	{{ predicateone_form.hidden_tag() }}
+	<div class="form-group" style="width: 20%; display: inline-block;">
+		{{render_field(predicateone_form.attr1, class_="form-control") }}
+	</div>
+	<div class="form-group" style="width: 20%; display: inline-block;">
+		{{render_field(predicateone_form.op1, class_="form-control") }}
+	</div>
+	<div class="form-group" style="width: 20%; display: inline-block;">
+		{{render_field(predicateone_form.input1, class_="form-control", placeholder="Input") }}
+	</div>
+	<div class="form-group" style="width: 20%; display: inline-block;">
+		{{render_field(predicateone_form.select1, class_="form-control") }}
+	</div>
+
+	{{ predicatetwo_form.hidden_tag() }}
+	<div class="form-group" style="width: 20%; display: inline-block;" id="pred_2_attr">
+		{{render_field(predicatetwo_form.attr2, class_="form-control") }}
+	</div>
+	<div class="form-group" style="width: 20%; display: inline-block;" id="pred_2_op">
+		{{render_field(predicatetwo_form.op2, class_="form-control") }}
+	</div>
+	<div class="form-group" style="width: 20%; display: inline-block;" id="pred_2_input">
+		{{render_field(predicatetwo_form.input2, class_="form-control", placeholder="Input") }}
+	</div>
+	<div class="form-group" style="width: 20%; display: inline-block;" id="pred_2_select">
+		{{render_field(predicatetwo_form.select2, class_="form-control") }}
+	</div>
+
+	{{ predicatethree_form.hidden_tag() }}
+	<div class="form-group" style="width: 20%; display: inline-block;" id="pred_3_attr">
+		{{render_field(predicatethree_form.attr3, class_="form-control") }}
+	</div>
+	<div class="form-group" style="width: 20%; display: inline-block;" id="pred_3_op">
+		{{render_field(predicatethree_form.op3, class_="form-control") }}
+	</div>
+	<div class="form-group" style="width: 20%; display: inline-block;" id="pred_3_input">
+		{{render_field(predicatethree_form.input3, class_="form-control", placeholder="Input") }}
+	</div>
+	<p style="display: inline-block;" ><input type="submit" class="btn btn-primary" Value="Delete By Predicate"></p>
 </form>
