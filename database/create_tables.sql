@@ -52,11 +52,19 @@ CREATE TABLE SYSTEM.DATASET_HISTORY(
 
 -- Trigger to delete all the corresponding data if the last admin of the data is deleted.
 CREATE FUNCTION delete_clean() RETURNS TRIGGER AS $BODY$
+DECLARE
+	deadset RECORD;
 BEGIN
-    DELETE FROM system.datasets WHERE system.datasets.setid IN (SELECT setid FROM system.set_permissions 
-	WHERE system.set_permissions.userid != OLD.userid AND system.set_permissions.permission_type = 'admin');
-	/*AND system.datasets.setid NOT IN (SELECT count(*), setid, set_permissions FROM system.set_permissions GROUP BY setid, 
-	set_permissions HAVING count(*) > 1);*/
+	FOR deadset IN 
+		DELETE FROM system.datasets WHERE system.datasets.setid IN
+		(SELECT setid FROM system.set_permissions GROUP BY setid, 
+		permission_type HAVING count(*) = 1) AND system.datasets.setid 
+		IN (SELECT setid FROM system.set_permissions WHERE 
+		system.set_permissions.userid = OLD.userid AND system.set_permissions.permission_type = 'admin')
+		RETURNING * LOOP
+		
+		EXECUTE 'DROP SCHEMA IF EXISTS ' || quote_ident(deadset.setid::varchar) || ' CASCADE';
+	END LOOP;
     RETURN OLD;
 END;
 $BODY$ LANGUAGE PLPGSQL;
