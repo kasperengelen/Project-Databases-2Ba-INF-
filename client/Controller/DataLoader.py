@@ -1,6 +1,5 @@
 import zipfile
 import os
-import codecs
 import shutil
 import psycopg2
 import re
@@ -8,6 +7,8 @@ from psycopg2 import sql
 from Controller.DatasetManager import DatasetManager
 from Model.DatabaseConfiguration import DatabaseConfiguration
 
+
+# -*- coding: ascii -*-
 
 class FileException(Exception):
     def __init__(self, message):
@@ -95,9 +96,6 @@ class DataLoader:
         # list of sql.Identifiers for the column names
         column_names = []
 
-        # convert to ascii because the server requires files to be ascii-encoded
-        self.__convert_to_ascii(filename)
-
         # read first line for table info
         with open(filename) as csv:
             header = csv.readline()
@@ -150,9 +148,6 @@ class DataLoader:
     def __dump(self, filename):
         # keep track of tables created for backups
         table_names = []
-
-        # convert to ascii because the server requires files to be ascii-encoded
-        self.__convert_to_ascii(filename)
 
         with open(filename, 'r') as dump:
             for command in dump.read().strip().split(';'):
@@ -251,14 +246,6 @@ class DataLoader:
                     new_name = tablename + '_' + str(name_count)
 
         return new_name
-
-    def __convert_to_ascii(self, filename):
-        asciidata = ""
-        with open(filename, 'r') as file:
-            asciidata = file.read().encode("utf-8", "ignore")
-
-        with open(filename, 'w') as file:
-            file.write(asciidata.decode("ascii", "ignore"))
 
 
 if __name__ == "__main__":
