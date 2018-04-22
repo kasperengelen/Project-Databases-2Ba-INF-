@@ -1,5 +1,6 @@
 import zipfile
 import os
+import codecs
 import shutil
 import psycopg2
 import re
@@ -12,6 +13,11 @@ class FileException(Exception):
     def __init__(self, message):
         super().__init__(message)
 
+
+class InvalidFileExtention(FileException):
+    # exception thrown if the file is of an unsupported type
+    def __init__(self):
+        super().__init__("File type is unsupported")
 
 class EmptyFileException(FileException):
     # exception thrown if file is empty
@@ -80,7 +86,7 @@ class DataLoader:
             self.__dump(filename)
 
         else:
-            raise ValueError("file type not supported")
+            raise InvalidFileExtention
 
         # only commit when no errors occurred
         self.db_conn.commit()
@@ -88,6 +94,9 @@ class DataLoader:
     def __csv(self, filename):
         # list of sql.Identifiers for the column names
         column_names = []
+
+        # convert to ascii because the server requires files to be ascii-encoded
+        self.__convert_to_ascii(filename)
 
         # read first line for table info
         with open(filename) as csv:
@@ -141,6 +150,9 @@ class DataLoader:
     def __dump(self, filename):
         # keep track of tables created for backups
         table_names = []
+
+        # convert to ascii because the server requires files to be ascii-encoded
+        self.__convert_to_ascii(filename)
 
         with open(filename, 'r') as dump:
             for command in dump.read().strip().split(';'):
@@ -238,6 +250,14 @@ class DataLoader:
                     new_name = tablename + '_' + str(name_count)
 
         return new_name
+
+    def __convert_to_ascii(self, filename):
+        asciidata = ""
+        with open(filename, 'r') as file:
+            asciidata = file.read().encode("utf-8", "ignore")
+
+        with open(filename, 'w') as file:
+            file.write(asciidata.decode("ascii", "ignore"))
 
 
 if __name__ == "__main__":
