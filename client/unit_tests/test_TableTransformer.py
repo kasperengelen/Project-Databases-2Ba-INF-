@@ -16,7 +16,7 @@ class TestTableTransformer(unittest.TestCase):
     def setUpClass(cls):
         cls.db_connection = DatabaseConfiguration().get_db()
         cls.engine = DatabaseConfiguration().get_engine()
-        cls.test_object = transformer.TableTransformer('TEST', cls.db_connection, cls.engine, True)
+        cls.test_object = transformer.TableTransformer('TEST', cls.db_connection, cls.engine, True, False)
         cur = cls.db_connection.cursor()
         cur.execute("CREATE SCHEMA IF NOT EXISTS \"TEST\"")
         cls.db_connection.commit()

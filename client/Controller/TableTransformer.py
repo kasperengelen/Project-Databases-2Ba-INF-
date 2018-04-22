@@ -15,15 +15,16 @@ class TableTransformer:
                  True overwrites data, False creates a new table (every transformation method has a new_name parameter that is the name of the new table)
         db_connection: psycopg2 database connection to execute SQL queries
         engine: SQLalchemy engine to use pandas functionality
+        track_history: A boolean indicating whether the transformations performed should be tracked in the history table.
     """
 
-    def __init__(self, setid, db_conn, engine, replace=True):
+    def __init__(self, setid, db_conn, engine, replace=True, track_history=True):
         """Inits the TableTransformer with provided values"""
         self.setid = setid
         self.replace = replace
         self.db_connection = db_conn
         self.engine = engine
-        self.history_manager = DatasetHistoryManager(setid, db_conn, engine)
+        self.history_manager = DatasetHistoryManager(setid, db_conn, engine, track_history)
 
 
     
@@ -105,7 +106,6 @@ class TableTransformer:
         Parameters:
             arg_list: A list of strings containing the strings representing the predicates (Identifiers, logical operators).
         """
-        print(arg_list)
         internal_ref = self.get_internal_reference(tablename)
         if self.replace is False:
             internal_ref = self.copy_table(internal_ref, new_name)
@@ -321,7 +321,6 @@ class TableTransformer:
             self.__convert_numeric(internal_ref, attribute, to_type, length)
 
         #Write this transformation to the dataset history.
-        print("########################################################################")
         self.history_manager.write_to_history(internal_ref[1], tablename, attribute, [to_type, data_format, length], 1)
 
 
@@ -629,7 +628,7 @@ class TableTransformer:
         value_range = rightmost_edge - leftmost_edge
         nr_values = df[attribute].size
         #A good rule of thumb for the amount of bins is the square root of the amount of elements
-        nr_bins = 10 #math.ceil(math.sqrt(nr_values))
+        nr_bins = math.ceil(math.sqrt(nr_values))
         #Generally speaking we want to keep the amount of bins between 2 and 20 for readibility
         if nr_bins < 2:
             nr_bins = 2
@@ -975,8 +974,6 @@ class TableTransformer:
 
         query += sql.SQL("t1.{} = t2.{})").format(sql.Identifier(table1_columns[-1]),
                                                   sql.Identifier(table2_columns[-1]))
-
-        print(query)
 
         self.db_connection.cursor().execute("SET search_path TO {};".format(self.setid))
         self.db_connection.cursor().execute(query)

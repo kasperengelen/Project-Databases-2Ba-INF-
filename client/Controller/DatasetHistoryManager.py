@@ -11,14 +11,16 @@ class DatasetHistoryManager:
 
     Attributes:
         setid: The id of the dataset that the manager has to access.
-        db_connection: psycopg2 database connection to execute SQL queries
-        engine: SQLalchemy engine to use pandas functionality
+        db_connection: psycopg2 database connection to execute SQL queries.
+        engine: SQLalchemy engine to use pandas functionality.
+        track: Boolean indicating if the history has to be tracked and written to the history table.
     """
 
-    def __init__(self, setid, db_connection, engine):
+    def __init__(self, setid, db_connection, engine, track=True):
         self.setid = setid
         self.db_connection = db_connection
         self.engine = engine
+        self.track = track
         self.entry_count = None
         
 
@@ -33,6 +35,10 @@ class DatasetHistoryManager:
             parameters: List of parameters used with the transformation
             transformation_type: Integer representing the transformation used.
         """
+
+        if self.track is False:
+            return None
+        
         param_array = self.__python_list_to_postgres_array(parameters)
         cur = self.db_connection.cursor()
         query = 'INSERT INTO SYSTEM.DATASET_HISTORY VALUES (%s, %s, %s, %s, %s, %s)'
@@ -53,13 +59,9 @@ class DatasetHistoryManager:
         if nr_elements > 1:
             param_array += "'{}'"
 
-        print(param_array)
-        print(py_list)
 
         param_array = param_array.format(*py_list)
         param_array = "{" + param_array + "}"
-        print(param_array)
-        print("###########################################################")
         return param_array
         
         
