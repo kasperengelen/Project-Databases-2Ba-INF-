@@ -158,7 +158,11 @@ class DataLoader:
             for command in dump.read().strip().split(';'):
 
                 if re.search("CREATE TABLE.*\(.*\)", command, re.DOTALL | re.IGNORECASE):
+                    # extract tablename
                     tablename = command.split()[2]
+                    # remove bracket in tablename if there is no whitespace in between
+                    tablename = tablename.split("(", 1)[0]
+
                     # raise error if the table name is not alphanumeric, this is to not cause problems with url's
                     if not self.__check_alnum(tablename):
                         raise ValueError("Table names should be alphanumeric")
@@ -173,9 +177,6 @@ class DataLoader:
 
                 elif re.search("INSERT INTO.*", command, re.DOTALL | re.IGNORECASE):
                     tablename = command.split()[2]
-                    # raise error if the table name is not alphanumeric, this is to not cause problems with url's
-                    if not self.__check_alnum(tablename):
-                        raise ValueError("Table names should be alphanumeric")
 
                     self.db_conn.cursor().execute("SET search_path TO {};".format(self.setid))
                     try:
