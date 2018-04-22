@@ -30,7 +30,7 @@ class DatasetManager:
         db_conn.cursor().execute("SELECT * FROM SYSTEM.datasets WHERE setid=%s;", [setid])
         result = db_conn.cursor().fetchone()
 
-        return DatasetInfo.fromSqlTuple(result)
+        return DatasetInfo.fromSqlTuple(result, db_conn = db_conn)
     # ENDMETHOD
 
     @staticmethod
@@ -46,7 +46,7 @@ class DatasetManager:
         retval = []
 
         for result in results:
-            retval.append(DatasetInfo.fromSqlTuple(result))
+            retval.append(DatasetInfo.fromSqlTuple(result, db_conn = db_conn))
 
         return retval
     # ENDMETHOD
@@ -110,7 +110,7 @@ class DatasetManager:
         retval = []
 
         for result in results:
-            retval.append(DatasetInfo.fromSqlTuple(result))
+            retval.append(DatasetInfo.fromSqlTuple(result, db_conn = db_conn))
 
         return retval
     # ENDMETHOD

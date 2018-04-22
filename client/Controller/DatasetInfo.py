@@ -10,7 +10,7 @@ class DatasetInfo:
     """Class that represents a dataset."""
 
     @staticmethod
-    def fromSqlTuple(tupl):
+    def fromSqlTuple(tupl, db_conn = None):
         """Convert a SQL-tuple containing information about a user
         to a DatasetInfo object."""
 
@@ -18,13 +18,18 @@ class DatasetInfo:
         setname = str(tupl[1])
         description = str(tupl[2])
 
-        return DatasetInfo(setid, setname, description)
+        return DatasetInfo(setid, setname, description, db_conn = db_conn)
     # ENDMETHOD
 
-    def __init__(self, setid, name, description):
+    def __init__(self, setid, name, description, db_conn = None):
         self.setid = setid
         self.name = name
         self.desc = description
+
+        if db_conn is None:
+            self.db_conn = get_db()
+        else:
+            self.db_conn = db_conn
     # ENDMETHOD
 
     def toDict(self):
@@ -39,28 +44,35 @@ class DatasetInfo:
 
     def getTableNames(self):
         """Retrieve the names of the tables that are part of the dataset."""
-        get_db().cursor().execute("SELECT table_name FROM information_schema.tables WHERE table_schema = %s;", [str(self.setid)])
-        result = get_db().cursor().fetchall()
+        self.db_conn.cursor().execute("SELECT table_name FROM information_schema.tables WHERE table_schema = %s;", [str(self.setid)])
+        result = self.db_conn.cursor().fetchall()
 
         tablenames = [t[0] for t in result]
 
         return tablenames
     # ENDMETHOD
 
-    def getTableViewer(self, tablename):
+    def getTableViewer(self, tablename, engine = None):
         """Retrieves a TableViewer object associated with the specified set and table."""
         
+        if engine is None:
+            engine = get_sqla_eng()
+
         if not tablename in self.getTableNames():
             raise RuntimeError("Invalid tablename.")
-        return TableViewer(self.setid, tablename, get_sqla_eng(), get_db())
+        return TableViewer(self.setid, tablename, engine, self.db_conn)
     # ENDMETHOD
 
-    def getTableTransformer(self, tablename):
+    def getTableTransformer(self, tablename, engine = None):
         """Retrieves a TableTransformer object associated with the specified set and table."""
+
+        if engine is None:
+            engine = get_sqla_eng()
+
         if not tablename in self.getTableNames():
             raise RuntimeError("Invalid tablename.")
 
-        return TableTransformer(self.setid, get_db(), get_sqla_eng())
+        return TableTransformer(self.setid, self.db_conn, engine)
     # ENDMETHOD
 
     def deleteTable(self, tablename):
@@ -68,51 +80,30 @@ class DatasetInfo:
         if not tablename in self.getTableNames():
             raise RuntimeError("Invalid tablename.")
 
-        get_db().cursor().execute("DROP TABLE \"{}\".{};".format(int(self.setid), extensions.quote_ident(tablename, get_db().cursor())))
-        get_db().cursor().execute("DROP TABLE \"original_{}\".{};".format(int(self.setid), extensions.quote_ident(tablename, get_db().cursor())))
-        get_db().commit()
+        self.db_conn.cursor().execute("DROP TABLE \"{}\".{};".format(int(self.setid), extensions.quote_ident(tablename, get_db().cursor())))
+        self.db_conn.cursor().execute("DROP TABLE \"original_{}\".{};".format(int(self.setid), extensions.quote_ident(tablename, get_db().cursor())))
+        self.db_conn.commit()
     # ENDMETHOD
 
     def getAdminPerms(self):
-        """Retrieve a list of UserInfo objects that represent
+        """Retrieve a list of userid's that represent
         the users that have admin access to the dataset."""
         
         return self.__getPermIDs('admin')
     # ENDMETHOD
 
     def getWritePerms(self):
-        """Retrieve a list of UserInfo objects that represent
+        """Retrieve a list of userid's objects that represent
         the users that have write access to the dataset."""
         
         return self.__getPermIDs('write')
     # ENDMETHOD
 
     def getReadPerms(self):
-        """Retrieve a list of UserInfo objects that represent
+        """Retrieve a list of userid's objects that represent
         the users that have read access to the dataset."""
         
         return self.__getPermIDs('read')
-    # ENDMETHOD
-
-    def hasAdminPerms(self, userid):
-        """Determine whether the user with the specified userid has
-        admin access to the dataset."""
-
-        return userid in self.getAdminPerms()
-    # ENDMETHOD
-
-    def hasWritePerms(self, userid):
-        """Determine whether the user with the specified userid has
-        write access to the dataset."""
-
-        return userid in self.getWritePerms()
-    # ENDMETHOD
-
-    def hasReadPerms(self, userid):
-        """Determine whether the user with the specified userid has
-        read access to the dataset."""
-
-        return userid in self.getReadPerms()
     # ENDMETHOD
 
     def addPerm(self, email, perm_type):
@@ -124,41 +115,41 @@ class DatasetInfo:
             raise RuntimeError("The specified permission type is not valid.")
 
         # DETERMINE IF THE USER EXISTS
-        if not UserManager.existsEmail(email):
+        if not UserManager.existsEmail(email, self.db_conn):
             raise RuntimeError("The specified e-mail does not belong to an existing user.")
 
-        user = UserManager.getUserFromEmail(email)
+        user = UserManager.getUserFromEmail(email, self.db_conn)
 
         # DETERMINE IF USER ALREADY HAS PERMISSION
-        if self.hasAdminPerms(user.userid) or self.hasWritePerms(user.userid) or self.hasReadPerms(user.userid):
+        if (user.userid in self.getAdminPerms()) or (user.userid in self.getWritePerms()) or (user.userid in self.getReadPerms()):
             raise RuntimeError("The specified user already has access to the dataset.")
 
         # ADD PERMISSION
-        get_db().cursor().execute("INSERT INTO SYSTEM.set_permissions(userid, setid, permission_type) VALUES (%s, %s, %s);", 
+        self.db_conn.cursor().execute("INSERT INTO SYSTEM.set_permissions(userid, setid, permission_type) VALUES (%s, %s, %s);", 
                                                                                         [int(user.userid), int(self.setid), str(perm_type)])
-        get_db().commit()
+        self.db_conn.commit()
     # ENDMETHOD
 
     def removePerm(self, userid):
         """Revoke the specified user's access to the dataset."""
 
         # DETERMINE IF THE USER HAS PERMISSION
-        if not (self.hasAdminPerms(userid) or self.hasWritePerms(userid) or self.hasReadPerms(userid)):
+        if not ((userid in self.getAdminPerms()) or (userid in self.getWritePerms()) or (userid in self.getReadPerms())):
             raise RuntimeError("Specified user does not have permissions for the dataset.")
 
         # REMOVE PERMISSION
-        get_db().cursor().execute("DELETE FROM SYSTEM.set_permissions WHERE setid=%s AND userid=%s;", [int(self.setid), int(userid)])
-        get_db().commit()
+        self.db_conn.cursor().execute("DELETE FROM SYSTEM.set_permissions WHERE setid=%s AND userid=%s;", [int(self.setid), int(userid)])
+        self.db_conn.commit()
     # ENDMETHOD
 
     def getPermForUserID(self, userid):
         """Returns the permission that the specified user has."""
 
-        if not UserManager.existsID(int(userid)):
+        if not UserManager.existsID(int(userid), self.db_conn):
             raise RuntimeError("Specified user does not exist.")
 
-        get_db().cursor().execute("SELECT permission_type FROM SYSTEM.set_permissions WHERE setid=%s AND userid = %s;", [int(self.setid), int(userid)])
-        result = get_db().cursor().fetchone()
+        self.db_conn.cursor().execute("SELECT permission_type FROM SYSTEM.set_permissions WHERE setid=%s AND userid = %s;", [int(self.setid), int(userid)])
+        result = self.db_conn.cursor().fetchone()
 
         return result[0]
 
@@ -173,8 +164,8 @@ class DatasetInfo:
             raise RuntimeError("The specified permission type is not valid.")
 
         # RETRIEVE userid's
-        get_db().cursor().execute("SELECT userid FROM SYSTEM.set_permissions WHERE setid = %s AND permission_type = %s;", [int(self.setid), perm_type])
-        results = get_db().cursor().fetchall()
+        self.db_conn.cursor().execute("SELECT userid FROM SYSTEM.set_permissions WHERE setid = %s AND permission_type = %s;", [int(self.setid), perm_type])
+        results = self.db_conn.cursor().fetchall()
 
         retval = [t[0] for t in results]
 
