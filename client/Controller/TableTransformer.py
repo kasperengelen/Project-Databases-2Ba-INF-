@@ -321,6 +321,7 @@ class TableTransformer:
             self.__convert_numeric(internal_ref, attribute, to_type, length)
 
         #Write this transformation to the dataset history.
+        print("########################################################################")
         self.history_manager.write_to_history(internal_ref[1], tablename, attribute, [to_type, data_format, length], 1)
 
 
@@ -501,7 +502,7 @@ class TableTransformer:
             eventual_table = tablename
         elif self.replace is False:
             #We need to create a new table and leave the original untouched
-            new_name = self.__get_unique_name(new_name)
+            new_name = self.__get_unique_name("", new_name, False)
             df.to_sql(new_name, self.engine, None, internal_ref[0], 'fail', index = False, dtype = new_dtypes)
             eventual_table = new_name
             

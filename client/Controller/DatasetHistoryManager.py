@@ -20,24 +20,6 @@ class DatasetHistoryManager:
         self.db_connection = db_connection
         self.engine = engine
         self.entry_count = None
-
-
-    def __python_list_to_postgres_array(self, py_list):
-        """Method that represents a python list as a postgres array for inserting into a PostreSQL database."""
-        param_array = "{"
-        nr_elements = len(py_list)
-        
-        if nr_elements == 0: #Return an empty postgres array string
-            return "{}"
-        
-        for i in range(nr_elements-1):
-            param_array += "'%s', "
-        if nr_elements > 1:
-            param_array += "'%s'"
-
-        param_array += "}"
-        param_array % parameters
-        return param_array
         
 
 
@@ -56,6 +38,29 @@ class DatasetHistoryManager:
         query = 'INSERT INTO SYSTEM.DATASET_HISTORY VALUES (%s, %s, %s, %s, %s, %s)'
         cur.execute(sql.SQL(query), [self.setid, table_name, attribute, transformation_type, param_array, origin_table])
         self.db_connection.commit()
+
+
+    def __python_list_to_postgres_array(self, py_list):
+        """Method that represents a python list as a postgres array for inserting into a PostreSQL database."""
+        param_array = ""
+        nr_elements = len(py_list)
+        
+        if nr_elements == 0: #Return an empty postgres array string
+            return "{}"
+        
+        for i in range(nr_elements-1):
+            param_array += "'{}', "
+        if nr_elements > 1:
+            param_array += "'{}'"
+
+        print(param_array)
+        print(py_list)
+
+        param_array = param_array.format(*py_list)
+        param_array = "{" + param_array + "}"
+        print(param_array)
+        print("###########################################################")
+        return param_array
         
         
         
