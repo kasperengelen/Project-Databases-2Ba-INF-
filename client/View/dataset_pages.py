@@ -15,7 +15,6 @@ import os
 from Controller.DataLoader import DataLoader, FileException as DLFileExcept
 import shutil
 import webbrowser
-from utils import get_db
 
 dataset_pages = Blueprint('dataset_pages', __name__)
 
@@ -1183,7 +1182,7 @@ def upload(dataset_id):
             file.save(real_filename)
 
             # HANDLE FILE WITH DATALOADER
-            dl = DataLoader(dataset_id, get_db())
+            dl = DatasetManager.getDataset(dataset_id).getDataLoader()
             
             try:
                 dl.read_file(real_filename, columnnames_included)

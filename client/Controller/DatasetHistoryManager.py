@@ -1,10 +1,7 @@
 import psycopg2
 import psycopg2.extras
+import pandas as pd
 from psycopg2 import sql
-
-
-
-
 
 
 class DatasetHistoryManager:
@@ -17,7 +14,7 @@ class DatasetHistoryManager:
         track: Boolean indicating if the history has to be tracked and written to the history table.
     """
 
-    def __init__(self, setid, db_connection, engine, track=True):
+    def __init__(self, setid, db_connection, track=True):
         self.setid = setid
         self.db_connection = db_connection
         self.engine = engine
@@ -47,8 +44,6 @@ class DatasetHistoryManager:
         cur.execute(sql.SQL(query), [self.setid, table_name, attribute, transformation_type, param_array, origin_table])
         self.db_connection.commit()
 
-        #self.render_history_table(1, 100)
-        {'', '', }
 
 
     def __python_list_to_postgres_array(self, py_list, transformation_type):
@@ -68,14 +63,8 @@ class DatasetHistoryManager:
             for i in range(nr_elements-1):
                 param_array += ", '{}'"
 
-        print('########################################################################')
-        print(py_list)
-        print(param_array)
         param_array = param_array.format(*py_list)
-        print(param_array)
         param_array = "{" + param_array  + "}"
-        print(param_array)
-        print('########################################################################')
 
         return param_array
 
@@ -189,10 +178,30 @@ class DatasetHistoryManager:
         
         self.choice_dict =  choice_dict
 
-    def __entry_to_table_row(self, dict_row):
-        """Method that translates a row result of a query to an tr element of the html table."""
-        
+    def __rows_to_dataframe(self, row_list):
+        """Method that translates row results of a query to a pandas dataframe."""
+        list_a = []
+        list_b = []
+        self.__generate_choice_dict()
 
+        for elem in row_list:
+            tr_type = int(elem['transformation_type'])
+            field1 = self.choice_dict[a](elem)
+            field2 = elem['transformation_date']
+            list_a.append(field1)
+            list_b.append(field2)
+
+        val_dict = { 'Tranfsormation description' : list_a,
+                     'Operation date'             : list_b}
+        
+        pd.set_option('display.max_colwidth', -1)
+        df = pd.DataFrame(data=val_dict)
+        return df
+
+    def __unquote_string(self, string):
+        """Assuming a string is quoted, this method will return the same string without the quotes"""
+        return string[1:-1]
+        
 
     def render_history_table(self, page_nr, nr_rows, show_all=True, table_name=""):
         """This method returns a html table representing the page of the history table.
@@ -218,30 +227,18 @@ class DatasetHistoryManager:
 
 
         all_rows = dict_cur.fetchall()
-        self.__generate_choice_dict()
-        print("#######################################################################")
-        print(all_rows)
-        for elem in all_rows:
-            a = int(elem['transformation_type'])
-            print(self.choice_dict[a](elem))
-        print("#######################################################################")
-
-        all_rows = dict_cur.fetchall()
-        html_table = '<table id="mytable" border = "1">\n'
-        html_table += '<thead> + \n + <tr style="text-align: right;">'
-        html_table += '<th>Transformation info</th>\n<th>Date</th>\n</tr>\n</thead>\n'
-        html_table += '<tbody>\n'
-
+        df = self.__rows_to_dataframe(all_rows)
+        html_string = df.to_html(None, None, None, True, False)
 
 
     def __rowstring_generator1(self, dict_obj):
         param = dict_obj['parameters']
-        rowstring = 'Converted attribute "{}" of table {} to type {}.'
-        rowstring = rowstring.format(dict_obj['attribute'], dict_object['origin_table'], param[0])
+        rowstring = 'Converted attribute "{}" of table "{}" to type {}.'
+        rowstring = rowstring.format(dict_obj['attribute'], dict_obj['origin_table'], param[0])
         return rowstring
 
     def __rowstring_generator2(self, dict_obj):
-        rowstring = 'Deleted attribute "{}" of table {}'.format(dict_obj['attribute'], dict_obj['origin_table'])
+        rowstring = 'Deleted attribute "{}" of table "{}"'.format(dict_obj['attribute'], dict_obj['origin_table'])
 
     def __rowstring_generator3(self, dict_obj):
         param = dict_obj['parameters']
@@ -251,13 +248,13 @@ class DatasetHistoryManager:
             operand = 'smaller'
 
         rowstring = 'Deleted outliers {} than {} from attribute "{}" of table "{}".'
-        rowstring = rowstring.format(operand, param[1], dict_obj['attribute'], ['origin_table'])
+        rowstring = rowstring.format(operand, self.__unquote_string(param[1]), dict_obj['attribute'], dict_obj['origin_table'])
         return rowstring
 
     def __rowstring_generator4(self, dict_obj):
         param = dict_obj['parameters']
         rowstring = 'Discretized attribute "{}" of table "{}" using custom ranges ( {} ).'
-        rowstring = rowstring.format(dict_obj['attribute'], dict_obj['attribute'], param[0])
+        rowstring = rowstring.format(dict_obj['attribute'], dict_obj['attribute'], self.__unquote_string(param[0]))
         return rowstring
 
     def __rowstring_generator5(self, dict_obj):
@@ -277,7 +274,7 @@ class DatasetHistoryManager:
         return rowstring   
 
     def __rowstring_generator8(self, dict_obj):
-        rowstring = 'Performed find-and-replace on attribute "{}" of table "{}" looking for "{}", {} substring matches and replacing the {} with "{}".'
+        rowstring = 'Performed find-and-replace on attribute "{}" of table "{}" looking for {}, {} substring matches and replacing the {} with {}.'
         param = dict_obj['parameters']
         replacement_style = 'whole string'
         if param[2] == 'True':
@@ -296,26 +293,26 @@ class DatasetHistoryManager:
             sens_option = 'case sensitive'
         else:
             sens_option = 'case insensitive'
-        rowstring = 'Performed find-and-replace on attribute "{}" of table "{}" with the regular expression "{}" ({}) replacing the matches with "{}".'
+        rowstring = 'Performed find-and-replace on attribute "{}" of table "{}" with the regular expression {} ({}) replacing the matches with {}.'
         rowstring = rowstring.format(dict_obj['attribute'], dict_obj['origin_table'], param[0], sens_option, param[1])
         return rowstring
 
     def __rowstring_generator10(self, dict_obj):
         param = dict_obj['parameters']
-        rowstring = 'Filled null values with provide value {} in attribute "{}" of table "{}".'
-        rowstring = rowstring.format(param[0], dict_obj['attribute'], dict_obj['origin_table'])
+        rowstring = 'Filled null values with provided value {} in attribute "{}" of table "{}".'
+        rowstring = rowstring.format(self.__unquote_string(param[0]), dict_obj['attribute'], dict_obj['origin_table'])
         return rowstring
 
     def __rowstring_generator11(self, dict_obj):
         param = dict_obj['parameters']
         rowstring = 'Filled null values with the mean ({}) in attribute "{}" of table "{}".'
-        rowstring = rowstring.format(param[0], dict_obj['attribute'], dict_obj['origin_table'])
+        rowstring = rowstring.format(self.__unquote_string(param[0]), dict_obj['attribute'], dict_obj['origin_table'])
         return rowstring
 
     def __rowstring_generator12(self, dict_obj):
         param = dict_obj['parameters']
-        rowstring = 'Filled null values with the mean ({}) in attribute "{}" of table "{}".'
-        rowstring = rowstring.format(param[0], dict_obj['attribute'], dict_obj['origin_table'])
+        rowstring = 'Filled null values with a custom value ({}) in attribute "{}" of table "{}".'
+        rowstring = rowstring.format(self.__unquote_string(param[0]), dict_obj['attribute'], dict_obj['origin_table'])
         return rowstring
 
     def __rowstring_generator13(self, dict_obj):
@@ -337,7 +334,7 @@ class DatasetHistoryManager:
 
 if __name__ == '__main__':
     connection = psycopg2.connect("dbname='projectdb18' user='postgres' host='localhost' password='Sch00l2k17'")
-    obj = DatasetHistoryManager(3, connection, None, True)
+    obj = DatasetHistoryManager(2, connection, None, True)
     obj.render_history_table(1, 100, True)
 
 

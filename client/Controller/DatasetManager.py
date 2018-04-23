@@ -1,6 +1,5 @@
 from utils import get_db
 from Controller.DatasetInfo import DatasetInfo
-from Controller.UserManager import UserManager
 
 class DatasetManager:
     """Class that provides facilities for managing datasets."""
@@ -138,9 +137,6 @@ class DatasetManager:
             if ptype == minimum_perm_type:
                 break;
         # ENDFOR
-
-        if not UserManager.existsID(int(userid), db_conn = db_conn):
-            raise RuntimeError("Specified user does not exist.")
 
         db_conn.cursor().execute("SELECT permission_type FROM SYSTEM.set_permissions WHERE setid=%s AND userid = %s;", [int(setid), int(userid)])
         result = db_conn.cursor().fetchone()

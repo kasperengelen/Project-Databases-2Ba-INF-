@@ -3,7 +3,7 @@ import sys, os
 sys.path.append(os.path.join(sys.path[0],'..', 'Controller'))
 sys.path.append(os.path.join(sys.path[0],'..', 'Model'))
 import psycopg2
-import DataLoader as dl
+import Controller.DataLoader as dl
 from Model.DatabaseConfiguration import DatabaseConfiguration
 
 
