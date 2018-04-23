@@ -5,6 +5,7 @@ from utils import get_sqla_eng
 from Controller.UserManager import UserManager
 from Controller.TableViewer import TableViewer
 from Controller.TableTransformer import TableTransformer
+from Controller.DataLoader import DataLoader
 
 class DatasetInfo:
     """Class that represents a dataset."""
@@ -78,6 +79,10 @@ class DatasetInfo:
 
         return TableTransformer(self.setid, self.db_conn, engine)
     # ENDMETHOD
+
+    def getDataLoader(self):
+        """Retrieve the dataloader for this dataset."""
+        return DataLoader(self.setid, self.db_conn)
 
     def deleteTable(self, tablename):
         """Deletes the specified table from the dataset."""

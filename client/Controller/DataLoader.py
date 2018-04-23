@@ -185,9 +185,9 @@ class DataLoader:
         zip.close()
 
         # load all files that were extracted
-        directory = os.fsencode(unzip_folder)
+        directory = os.fsencode(unzip_folder_complete)
         for sub_file in os.listdir(directory):
-            sub_filename = unzip_folder + "/" + os.fsdecode(sub_file)
+            sub_filename = unzip_folder_complete + "/" + os.fsdecode(sub_file)
             # files other than csv's are ignored
             if sub_filename.endswith(".csv"):
                 try:
