@@ -1197,7 +1197,7 @@ def download(dataset_id, tablename):
     filename = tablename + ".csv"
 
     # SEND TO USER
-    send_file = send_from_directory(real_download_dir, filename, mimetype="text/csv", attachment_filename=filename)
+    send_file = send_from_directory(real_download_dir, filename, mimetype="text/csv", as_attachment=True, attachment_filename=filename)
 
     # DELETE FILE
     shutil.rmtree(real_download_dir, ignore_errors=True)
