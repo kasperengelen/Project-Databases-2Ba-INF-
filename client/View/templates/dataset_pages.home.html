@@ -97,6 +97,8 @@
 					<tr>
 						<th>Tables</th>
 						<th></th>
+						<th></th>
+						<th></th>
 					</tr>
 
 					{% for table in table_list %}
@@ -141,6 +143,9 @@
 					        </div>
 						</div>
 						<!-- Download dialog. -->
+						<td><a href="{{ url_for('dataset_pages.view_dataset_table_original', dataset_id=dataset_info.setid, tablename=table) }}">
+							View Raw</a></td>
+
 						<td><input type="hidden" id="input" value="delete this table?">
 							<form method="post" action="{{ url_for('dataset_pages.delete_table', dataset_id=dataset_info.setid, tablename=table) }}"
 										name="delete{{ table }}" onsubmit="return check()">
