@@ -149,7 +149,8 @@ class TableTransformer:
         query = "DELETE FROM {}.{} WHERE %s" % predicate
         self.db_connection.cursor().execute(sql.SQL(query).format(sql.Identifier(internal_ref[0]), sql.Identifier(internal_ref[1])))
         self.db_connection.commit()
-        self.history_manager.write_to_history(internal_ref[1], tablename, 'None', [predicate], 15)
+        clean_predicate = predicate.replace('"', '\\"') #Escape double quotes to pass it in postgres array
+        self.history_manager.write_to_history(internal_ref[1], tablename, 'None', [clean_predicate], 15)
 
 
         pass
@@ -261,7 +262,7 @@ class TableTransformer:
         self.db_connection.cursor().execute(sql.SQL(sql_query).format(sql.Identifier(internal_ref[0]), sql.Identifier(internal_ref[1]),
                                                                                               sql.Identifier(attribute)), [to_type])
         self.db_connection.commit()
-        
+        return to_type
 
     
     def __convert_character(self, internal_ref, attribute, to_type, data_format, length):
@@ -291,13 +292,15 @@ class TableTransformer:
         casting_var = temp.format(ident_attr, data_format)
 
         if temp in ['CHAR' , 'VARCHAR']: #Char and varchar don't need special parameters
-            casting_var = to_type.replace('n', length)
+            to_type = to_type.replace('n', length)
+            casting_var = to_type
             
         sql_query = "ALTER TABLE {}.{} ALTER COLUMN {} TYPE " + casting_var
         cur = self.db_connection.cursor()
         cur.execute(sql.SQL(sql_query).format(sql.Identifier(internal_ref[0]), sql.Identifier(internal_ref[1]),
                                               sql.Identifier(attribute)))
         self.db_connection.commit()
+        return to_type
 
 
 
@@ -315,10 +318,10 @@ class TableTransformer:
             internal_ref = self.copy_table(internal_ref, new_name)
         
         if (cur_type == 'character varying') or (cur_type == 'character'):
-            self.__convert_character(internal_ref, attribute, to_type, data_format, length)
+            to_type = self.__convert_character(internal_ref, attribute, to_type, data_format, length)
 
         else:
-            self.__convert_numeric(internal_ref, attribute, to_type, length)
+            to_type = self.__convert_numeric(internal_ref, attribute, to_type, length)
 
         #Write this transformation to the dataset history.
         self.history_manager.write_to_history(internal_ref[1], tablename, attribute, [to_type, data_format, length], 1)
@@ -402,7 +405,7 @@ class TableTransformer:
         self.db_connection.cursor().execute(sql.SQL(sql_query).format(sql.Identifier(internal_ref[0]), sql.Identifier(internal_ref[1]),
                                                                       sql.Identifier(attribute)), (replacement, value))
         self.db_connection.commit()
-        self.history_manager.write_to_history(internal_ref[1], tablename, attribute, [value, replacement, exact, replace_all], 8)
+        self.history_manager.write_to_history(internal_ref[1], tablename, attribute, [original_value, replacement, exact, replace_all], 8)
 
 
     #INCOMPLETE
