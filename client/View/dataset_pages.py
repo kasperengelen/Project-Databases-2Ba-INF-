@@ -14,7 +14,6 @@ import os
 from Controller.DataLoader import DataLoader, FileException as DLFileExcept
 import shutil
 import webbrowser
-from utils import get_db
 
 dataset_pages = Blueprint('dataset_pages', __name__)
 
@@ -496,6 +495,7 @@ def transform_findreplaceregex(dataset_id, tablename):
     form.fillForm(tv.get_attributes())
 
     if not form.validate():
+        print(form.errors)
         flash(message="Invalid form.", category="error")
         return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 
@@ -1161,7 +1161,7 @@ def upload(dataset_id):
             file.save(real_filename)
 
             # HANDLE FILE WITH DATALOADER
-            dl = DataLoader(dataset_id, get_db())
+            dl = DatasetManager.getDataset(dataset_id).getDataLoader()
             
             try:
                 dl.read_file(real_filename, columnnames_included)
