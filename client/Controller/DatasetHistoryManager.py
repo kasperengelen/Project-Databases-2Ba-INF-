@@ -221,7 +221,7 @@ class DatasetHistoryManager:
         print("#######################################################################")
 
         all_rows = dict_cur.fetchall()
-        html_table = '<table border = "1">\n'
+        html_table = '<table id="mytable" border = "1">\n'
         html_table += '<thead> + \n + <tr style="text-align: right;">'
         html_table += '<th>Transformation info</th>\n<th>Date</th>\n</tr>\n</thead>\n'
         html_table += '<tbody>\n'

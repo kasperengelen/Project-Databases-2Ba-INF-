@@ -64,7 +64,7 @@ class DatasetInfo:
                             tablename = tablename, 
                             engine = engine, 
                             db_connection = self.db_conn, 
-                            original = original)
+                            is_original = original)
     # ENDMETHOD
 
     def getTableTransformer(self, tablename, engine = None):
