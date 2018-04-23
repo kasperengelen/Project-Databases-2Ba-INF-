@@ -4,10 +4,6 @@ import pandas as pd
 from psycopg2 import sql
 
 
-
-
-
-
 class DatasetHistoryManager:
     """Class that manages the transformation history of a dataset.
 
@@ -18,7 +14,7 @@ class DatasetHistoryManager:
         track: Boolean indicating if the history has to be tracked and written to the history table.
     """
 
-    def __init__(self, setid, db_connection, engine, track=True):
+    def __init__(self, setid, db_connection, track=True):
         self.setid = setid
         self.db_connection = db_connection
         self.engine = engine
@@ -337,7 +333,7 @@ class DatasetHistoryManager:
 
 
 if __name__ == '__main__':
-    connection = psycopg2.connect("dbname='tregqgay' user='tregqgay' host='packy.db.elephantsql.com' password='y3HJ2Gw4WHtC8s-iN-dVqbRtE1_i7k2N'")
+    connection = psycopg2.connect("dbname='projectdb18' user='postgres' host='localhost' password='Sch00l2k17'")
     obj = DatasetHistoryManager(2, connection, None, True)
     obj.render_history_table(1, 100, True)
 
