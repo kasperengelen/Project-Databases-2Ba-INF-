@@ -378,6 +378,7 @@ class TableTransformer:
         if self.replace is False:
             internal_ref = self.copy_table(internal_ref, new_name)
 
+        original_value = value            
         if exact is True:
             sql_query = "UPDATE {0}.{1} SET {2} = %s WHERE {2} = %s"
         elif exact is False:
@@ -390,7 +391,7 @@ class TableTransformer:
                                          "Please convert the attribute to a character string type.")
                 
             sql_query = "UPDATE {0}.{1} SET {2} = %s WHERE {2} LIKE %s"
-            original_value = value
+
             value = '%{}%'.format(value)
 
             if replace_all is False: #We have to replace the substring and this is done with a different query.
