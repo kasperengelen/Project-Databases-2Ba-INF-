@@ -79,8 +79,7 @@ class DatasetHistoryManager:
             #This method will set the maxrows
             raise RuntimeError("Method is_in_range() was not called prior to get_page_indices, causing this failed operation.")
     
-        table_size = self.maxrows
-        self.maxrows = table_size
+        table_size = self.entry_count
         max_index = math.ceil(table_size / display_nr)
         #At this point the table is too large to just show all the indices, we have to minimize clutter
         if(max_index > 5):
