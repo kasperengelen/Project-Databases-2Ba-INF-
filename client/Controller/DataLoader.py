@@ -3,8 +3,6 @@ import os
 import shutil
 import psycopg2
 import re
-import
-from io import StringIO
 from psycopg2 import sql
 from Controller.DatasetManager import DatasetManager
 from Model.DatabaseConfiguration import DatabaseConfiguration
@@ -247,14 +245,6 @@ class DataLoader:
                     new_name = tablename + '_' + str(name_count)
 
         return new_name
-
-    def __convert_to_ascii(self, filename):
-        data = ""
-        with open(filename, 'r') as file:
-            data = file.read()
-
-        encoded_data = data.encode("utf-8", "ignore")
-        return StringIO(encoded_data)
 
 
 if __name__ == "__main__":
