@@ -1,5 +1,4 @@
 from utils import get_db
-from passlib.hash import sha256_crypt
 
 class UserInfo:
     """Class that represents a user."""

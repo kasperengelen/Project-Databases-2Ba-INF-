@@ -1,7 +1,6 @@
 from flask import render_template, request, abort, Blueprint, flash, redirect, url_for, session
 from Controller.AccessController import require_login
 from Controller.LoginManager import LoginManager
-from passlib.hash import sha256_crypt
 from Controller.UserManager import UserManager
 from View.user_forms import UserEditForm, UserLoginForm, UserRegisterForm
 
