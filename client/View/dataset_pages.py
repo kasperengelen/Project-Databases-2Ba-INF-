@@ -75,7 +75,7 @@ def view_dataset_table(dataset_id, tablename, page_nr):
     # CHECK IN RANGE
     if not tv.is_in_range(page_nr, row_count):
         flash(message="Page out of range.", category="error")
-        return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename = tablename, page_nr = 1, row_count = 10))
+        return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename = tablename, page_nr = 1))
 
     # RETRIEVE ATTRIBUTES
     attrs = tv.get_attributes()
@@ -186,6 +186,7 @@ def view_dataset_table_original(dataset_id, tablename, page_nr):
         abort(404)
 
     dataset = DatasetManager.getDataset(dataset_id)
+    dataset_info = dataset.toDict()
 
     if tablename not in dataset.getTableNames():
         abort(404)
@@ -193,13 +194,40 @@ def view_dataset_table_original(dataset_id, tablename, page_nr):
     # get tableviewer
     tv = dataset.getTableViewer(tablename, original = True)
 
+    # CHECK IN RANGE
+    if not tv.is_in_range(page_nr, row_count):
+        flash(message="Page out of range.", category="error")
+        return redirect(url_for('dataset_pages.view_dataset_table_original', dataset_id=dataset_id, tablename = tablename, page_nr = 1))
 
+    # render table
+    table_data = tv.render_table(page_nr, row_count)
 
 
     return render_template('dataset_pages.table.html',
                                                 table_name = tablename,
+                                                dataset_info = dataset_info,
                                                 table_data = "",
                                                 original = True)
+# ENDFUNCTION
+
+@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/history')
+@require_login
+@require_readperm
+def view_dataset_table_history(dataset_id, tablename):
+    
+    if not DatasetManager.existsID(dataset_id):
+        abort(404)
+
+    dataset = DatasetManager.getDataset(dataset_id)
+
+    if tablename not in dataset.getTableNames():
+        abort(404)
+
+    # retrieve history manager
+
+    # retrieve history data
+
+    return render_template('dataset_pages.table_history.html')
 # ENDFUNCTION
 
 @dataset_pages.route('/dataset/set_session_rowcount/', methods = ['POST'])
