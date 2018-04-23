@@ -496,6 +496,7 @@ def transform_findreplaceregex(dataset_id, tablename):
     form.fillForm(tv.get_attributes())
 
     if not form.validate():
+        print(form.errors)
         flash(message="Invalid form.", category="error")
         return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 
@@ -1235,7 +1236,7 @@ def download(dataset_id, tablename, original):
     filename = tablename + ".csv"
 
     # SEND TO USER
-    send_file = send_from_directory(real_download_dir, filename, mimetype="text/csv", as_attachment=True, attachment_filename=filename)
+    send_file = send_from_directory(real_download_dir, filename, mimetype="text/csv", attachment_filename=filename, as_attachment = True)
 
     # DELETE FILE
     shutil.rmtree(real_download_dir, ignore_errors=True)
