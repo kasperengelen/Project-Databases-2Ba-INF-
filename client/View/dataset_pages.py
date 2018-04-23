@@ -202,11 +202,18 @@ def view_dataset_table_original(dataset_id, tablename, page_nr):
     # render table
     table_data = tv.render_table(page_nr, row_count)
 
+    entrycount_form = EntryCountForm(entry_count = session['rowcount'])
+
+    # get indices
+    page_indices = tv.get_page_indices(display_nr = row_count, page_nr = page_nr)
+
 
     return render_template('dataset_pages.table.html',
                                                 table_name = tablename,
                                                 dataset_info = dataset_info,
-                                                table_data = "",
+                                                table_data = table_data,
+                                                entrycount_form = entrycount_form,
+                                                page_indices = page_indices,
                                                 original = True)
 # ENDFUNCTION
 
