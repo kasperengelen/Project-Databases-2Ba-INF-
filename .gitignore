@@ -6,6 +6,7 @@ client/test_csv.zip
 client/load_departments.dump
 client/config.ini
 client/upload/*
+client/download/*
 
 # Created by https://www.gitignore.io/api/python,sublimetext
 
