@@ -256,8 +256,6 @@ def transform_join_tables(dataset_id):
 def transform_predicate(dataset_id, tablename):
     """Callback for delete by predicate"""
 
-    print('TEST')
-
     if not DatasetManager.existsID(dataset_id):
         abort(404)
 

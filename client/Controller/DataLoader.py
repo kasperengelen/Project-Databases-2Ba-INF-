@@ -6,6 +6,7 @@ import re
 from psycopg2 import sql
 from Controller.DatasetManager import DatasetManager
 from Model.DatabaseConfiguration import DatabaseConfiguration
+from flask import abort
 
 
 # -*- coding: ascii -*-
@@ -111,6 +112,7 @@ class DataLoader:
             for i in range(header.count(',') + 1):
                 column_names.append(sql.Identifier("column_" + str(i)))
 
+        abort(404)
 
         # extract table name
         tablename = os.path.basename(filename.replace(".csv", ""))
