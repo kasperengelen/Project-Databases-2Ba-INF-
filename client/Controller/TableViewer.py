@@ -171,7 +171,7 @@ class TableViewer:
 
         filename = os.path.join(foldername, self.tablename + ".csv")
 
-        with open(filename, 'w') as outfile:
+        with open(filename, 'w', encoding="utf-8") as outfile:
             outcsv = csv.writer(outfile, delimiter=delimiter, quotechar=quotechar)
             conn = self.db_connection
 
