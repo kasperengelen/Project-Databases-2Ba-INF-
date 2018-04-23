@@ -43,8 +43,7 @@ def view_dataset_home(dataset_id):
                                                       table_list = table_list,
                                                       uploadform = upload_form,
                                                       join_form = join_form,
-                                                      perm_type=perm_type, 
-                                                      downloadform = DownloadForm())
+                                                      perm_type=perm_type)
 # ENDFUNCTION
 
 @dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>', defaults = {'page_nr': 1})
@@ -75,7 +74,7 @@ def view_dataset_table(dataset_id, tablename, page_nr):
     # CHECK IN RANGE
     if not tv.is_in_range(page_nr, row_count):
         flash(message="Page out of range.", category="error")
-        return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename = tablename, page_nr = 1, row_count = 10))
+        return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename = tablename, page_nr = 1))
 
     # RETRIEVE ATTRIBUTES
     attrs = tv.get_attributes()
@@ -170,7 +169,74 @@ def view_dataset_table(dataset_id, tablename, page_nr):
                                                 extract_form=extract_form,
                                                 predicateone_form=predicateone_form,
                                                 predicatetwo_form=predicatetwo_form,
-                                                predicatethree_form=predicatethree_form)
+                                                predicatethree_form=predicatethree_form,
+                                                downloadform = DownloadForm(),
+                                                original = False)
+# ENDFUNCTION
+
+@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/original', defaults = {'page_nr': 1})
+@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/original/<int:page_nr>')
+@require_login
+@require_readperm
+def view_dataset_table_original(dataset_id, tablename, page_nr):
+
+    row_count = session['rowcount']
+
+    if not DatasetManager.existsID(dataset_id):
+        abort(404)
+
+    dataset = DatasetManager.getDataset(dataset_id)
+    dataset_info = dataset.toDict()
+
+    if tablename not in dataset.getTableNames():
+        abort(404)
+
+    # get tableviewer
+    tv = dataset.getTableViewer(tablename, original = True)
+
+    # CHECK IN RANGE
+    if not tv.is_in_range(page_nr, row_count):
+        flash(message="Page out of range.", category="error")
+        return redirect(url_for('dataset_pages.view_dataset_table_original', dataset_id=dataset_id, tablename = tablename, page_nr = 1))
+
+    # render table
+    table_data = tv.render_table(page_nr, row_count)
+
+    entrycount_form = EntryCountForm(entry_count = session['rowcount'])
+
+    # get indices
+    page_indices = tv.get_page_indices(display_nr = row_count, page_nr = page_nr)
+
+
+    return render_template('dataset_pages.table.html',
+                                                table_name = tablename,
+                                                dataset_info = dataset_info,
+                                                table_data = table_data,
+                                                entrycount_form = entrycount_form,
+                                                page_indices = page_indices,
+                                                current_page=page_nr,
+                                                original = True,
+                                                downloadform = DownloadForm())
+# ENDFUNCTION
+
+@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/history')
+@require_login
+@require_readperm
+def view_dataset_table_history(dataset_id, tablename):
+    
+    if not DatasetManager.existsID(dataset_id):
+        abort(404)
+
+    dataset = DatasetManager.getDataset(dataset_id)
+
+    if tablename not in dataset.getTableNames():
+        abort(404)
+
+    # retrieve history manager
+
+    # retrieve history data
+
+    return render_template('dataset_pages.table_history.html')
 # ENDFUNCTION
 
 @dataset_pages.route('/dataset/set_session_rowcount/', methods = ['POST'])
@@ -1119,10 +1185,11 @@ def upload(dataset_id):
     return redirect(url_for('dataset_pages.view_dataset_home', dataset_id=dataset_id))
 # ENDFUNCTION
 
-@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/download/')
+@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/download/', defaults = {'original': False})
+@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/original/download', defaults = {'original': True})
 @require_login
 @require_readperm
-def download(dataset_id, tablename):
+def download(dataset_id, tablename, original):
     """Callback to download the specified table from the specified dataset."""
 
     if not DatasetManager.existsID(dataset_id):
@@ -1140,7 +1207,7 @@ def download(dataset_id, tablename):
         flash(message="Invalid parameters.", category="error")
         return redirect(url_for('dataset_pages.view_dataset_home', dataset_id=dataset_id))
 
-    tv = dataset.getTableViewer(tablename)
+    tv = dataset.getTableViewer(tablename, original = original)
 
     real_download_dir = None
 
@@ -1168,7 +1235,7 @@ def download(dataset_id, tablename):
     filename = tablename + ".csv"
 
     # SEND TO USER
-    send_file = send_from_directory(real_download_dir, filename, mimetype="text/csv", attachment_filename=filename)
+    send_file = send_from_directory(real_download_dir, filename, mimetype="text/csv", attachment_filename=filename, as_attachment = True)
 
     # DELETE FILE
     shutil.rmtree(real_download_dir, ignore_errors=True)

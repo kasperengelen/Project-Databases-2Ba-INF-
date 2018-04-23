@@ -42,13 +42,13 @@ class DatasetHistoryManager:
             return None
         
         param_array = self.__python_list_to_postgres_array(parameters, transformation_type)
-        print(param_array)
         cur = self.db_connection.cursor()
         query = 'INSERT INTO SYSTEM.DATASET_HISTORY VALUES (%s, %s, %s, %s, %s, %s)'
         cur.execute(sql.SQL(query), [self.setid, table_name, attribute, transformation_type, param_array, origin_table])
         self.db_connection.commit()
 
         #self.render_history_table(1, 100)
+        {'', '', }
 
 
     def __python_list_to_postgres_array(self, py_list, transformation_type):
@@ -64,13 +64,20 @@ class DatasetHistoryManager:
             return param_array
             
         
-        for i in range(nr_elements-1):
+        for i in range(nr_elements):
             param_array += "'{}'"
         if nr_elements > 1:
             param_array += ", '{}'"
 
-        param_array = param_array.format(py_list[0])
+        print('########################################################################')
+        print(py_list)
+        print(param_array)
+        param_array = param_array.format(*py_list)
+        print(param_array)
         param_array = "{" + param_array  + "}"
+        print(param_array)
+        print('########################################################################')
+
         return param_array
 
     def get_page_indices(self, display_nr, page_nr=1):
@@ -221,7 +228,7 @@ class DatasetHistoryManager:
         print("#######################################################################")
 
         all_rows = dict_cur.fetchall()
-        html_table = '<table border = "1">\n'
+        html_table = '<table id="mytable" border = "1">\n'
         html_table += '<thead> + \n + <tr style="text-align: right;">'
         html_table += '<th>Transformation info</th>\n<th>Date</th>\n</tr>\n</thead>\n'
         html_table += '<tbody>\n'
