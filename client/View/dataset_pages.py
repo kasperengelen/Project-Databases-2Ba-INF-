@@ -1184,10 +1184,11 @@ def upload(dataset_id):
     return redirect(url_for('dataset_pages.view_dataset_home', dataset_id=dataset_id))
 # ENDFUNCTION
 
-@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/download/')
+@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/download/', defaults = {'original': False})
+@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/original/download', defaults = {'original': True})
 @require_login
 @require_readperm
-def download(dataset_id, tablename):
+def download(dataset_id, tablename, original):
     """Callback to download the specified table from the specified dataset."""
 
     if not DatasetManager.existsID(dataset_id):
