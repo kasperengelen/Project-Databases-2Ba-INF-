@@ -43,8 +43,7 @@ def view_dataset_home(dataset_id):
                                                       table_list = table_list,
                                                       uploadform = upload_form,
                                                       join_form = join_form,
-                                                      perm_type=perm_type, 
-                                                      downloadform = DownloadForm())
+                                                      perm_type=perm_type)
 # ENDFUNCTION
 
 @dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>', defaults = {'page_nr': 1})
@@ -171,6 +170,7 @@ def view_dataset_table(dataset_id, tablename, page_nr):
                                                 predicateone_form=predicateone_form,
                                                 predicatetwo_form=predicatetwo_form,
                                                 predicatethree_form=predicatethree_form,
+                                                downloadform = DownloadForm(),
                                                 original = False)
 # ENDFUNCTION
 
@@ -215,7 +215,8 @@ def view_dataset_table_original(dataset_id, tablename, page_nr):
                                                 entrycount_form = entrycount_form,
                                                 page_indices = page_indices,
                                                 current_page=page_nr,
-                                                original = True)
+                                                original = True,
+                                                downloadform = DownloadForm())
 # ENDFUNCTION
 
 @dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/history')
@@ -1184,10 +1185,11 @@ def upload(dataset_id):
     return redirect(url_for('dataset_pages.view_dataset_home', dataset_id=dataset_id))
 # ENDFUNCTION
 
-@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/download/')
+@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/download/', defaults = {'original': False})
+@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/original/download', defaults = {'original': True})
 @require_login
 @require_readperm
-def download(dataset_id, tablename):
+def download(dataset_id, tablename, original):
     """Callback to download the specified table from the specified dataset."""
 
     if not DatasetManager.existsID(dataset_id):
@@ -1205,7 +1207,7 @@ def download(dataset_id, tablename):
         flash(message="Invalid parameters.", category="error")
         return redirect(url_for('dataset_pages.view_dataset_home', dataset_id=dataset_id))
 
-    tv = dataset.getTableViewer(tablename)
+    tv = dataset.getTableViewer(tablename, original = original)
 
     real_download_dir = None
 
