@@ -212,19 +212,19 @@ class DatasetHistoryManager:
 
 
         all_rows = dict_cur.fetchall()
-        self.__generate_choice_dict()"""
+        self.__generate_choice_dict()
         print("#######################################################################")
         print(all_rows)
         for elem in all_rows:
             a = int(elem['transformation_type'])
             print(self.choice_dict[a](elem))
-        print("#######################################################################")"""
+        print("#######################################################################")
 
-        """all_rows = dict_cur.fetchall()
+        all_rows = dict_cur.fetchall()
         html_table = '<table border = "1">\n'
         html_table += '<thead> + \n + <tr style="text-align: right;">'
         html_table += '<th>Transformation info</th>\n<th>Date</th>\n</tr>\n</thead>\n'
-        html_table += '<tbody>\n'"""
+        html_table += '<tbody>\n'
 
 
 
