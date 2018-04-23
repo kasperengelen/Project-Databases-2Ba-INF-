@@ -197,6 +197,8 @@ def view_dataset_table_original(dataset_id, tablename, page_nr):
 
 
     return render_template('dataset_pages.table.html',
+                                                table_name = tablename,
+                                                table_data = "",
                                                 original = True)
 # ENDFUNCTION
 
