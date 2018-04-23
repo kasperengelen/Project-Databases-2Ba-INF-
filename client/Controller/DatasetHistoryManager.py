@@ -48,7 +48,7 @@ class DatasetHistoryManager:
         cur.execute(sql.SQL(query), [self.setid, table_name, attribute, transformation_type, param_array, origin_table])
         self.db_connection.commit()
 
-        self.render_history_table(1, 100)
+        #self.render_history_table(1, 100)
 
 
     def __python_list_to_postgres_array(self, py_list, transformation_type):
@@ -212,13 +212,13 @@ class DatasetHistoryManager:
 
 
         all_rows = dict_cur.fetchall()
-        self.__generate_choice_dict()
+        self.__generate_choice_dict()"""
         print("#######################################################################")
         print(all_rows)
         for elem in all_rows:
             a = int(elem['transformation_type'])
             print(self.choice_dict[a](elem))
-        print("#######################################################################")
+        print("#######################################################################")"""
 
         """all_rows = dict_cur.fetchall()
         html_table = '<table border = "1">\n'
