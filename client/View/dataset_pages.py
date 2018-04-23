@@ -214,6 +214,7 @@ def view_dataset_table_original(dataset_id, tablename, page_nr):
                                                 table_data = table_data,
                                                 entrycount_form = entrycount_form,
                                                 page_indices = page_indices,
+                                                current_page=page_nr,
                                                 original = True)
 # ENDFUNCTION
 
