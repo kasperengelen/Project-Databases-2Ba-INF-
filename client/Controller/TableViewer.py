@@ -102,7 +102,6 @@ class TableViewer:
         """
         count_query  = "SELECT COUNT(*) FROM \"%s\".\"%s\"" % (self.schema, self.tablename)
         query_result = pd.read_sql(count_query, self.engine)
-        print(query_result)
         table_size = query_result.iat[0, 0]
         self.maxrows = table_size
             
@@ -156,6 +155,8 @@ class TableViewer:
         data_frame = pd.read_sql(SQL_query, self.engine)
         html_table = re.sub(' mytable', '" id="mytable', data_frame.to_html(None, None, None, True, False, classes='mytable'))
         if show_types is False:
+            print("Penis")
+            print(html_table)
             return html_table
         attributes = self.get_attributes()
         for string in attributes: #Let's add the types to the tablenames
@@ -165,6 +166,7 @@ class TableViewer:
             sqltype = self.__translate_system_type(cur.fetchone()[0])
             new_string = string + "<br>(" + sqltype + ")"
             html_table = html_table.replace(string, new_string, 1)
+            
         return html_table
 
 
