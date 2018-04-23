@@ -189,7 +189,7 @@ class DatasetHistoryManager:
 
         for elem in row_list:
             tr_type = int(elem['transformation_type'])
-            field1 = self.choice_dict[a](elem)
+            field1 = self.choice_dict[tr_type](elem)
             field2 = elem['transformation_date']
             list_a.append(field1)
             list_b.append(field2)
@@ -331,16 +331,16 @@ class DatasetHistoryManager:
 
     def __rowstring_generator15(self, dict_obj):
         param = dict_obj['parameters']
-        rowstring = 'Delete rows from table "{}" using the following predicate: {}.'
+        rowstring = 'Deleted rows from table "{}" using the following predicate: {}.'
         rowstring = rowstring.format(dict_obj['origin_table'], param[0])
         return rowstring
 
 
 if __name__ == '__main__':
     connection = psycopg2.connect("dbname='projectdb18' user='postgres' host='localhost' password='Sch00l2k17'")
-    obj = DatasetHistoryManager(2, connection, True)
-    obj.is_in_range(1, 10)
-    print(obj.get_page_indices(20, 1))
+    obj = DatasetHistoryManager(5, connection, True)
+    obj.is_in_range(1, 50)
+    print(obj.render_history_table(1, 50))
 
 
 
