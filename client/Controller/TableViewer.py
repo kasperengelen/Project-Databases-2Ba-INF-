@@ -155,7 +155,6 @@ class TableViewer:
         data_frame = pd.read_sql(SQL_query, self.engine)
         html_table = re.sub(' mytable', '" id="mytable', data_frame.to_html(None, None, None, True, False, classes='mytable'))
         if show_types is False:
-            print("Penis")
             print(html_table)
             return html_table
         attributes = self.get_attributes()

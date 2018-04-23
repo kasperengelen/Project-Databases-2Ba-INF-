@@ -48,8 +48,6 @@ class DatasetHistoryManager:
         cur.execute(sql.SQL(query), [self.setid, table_name, attribute, transformation_type, param_array, origin_table])
         self.db_connection.commit()
 
-        #self.render_history_table(1, 100)
-        {'', '', }
 
 
     def __python_list_to_postgres_array(self, py_list, transformation_type):
@@ -69,14 +67,8 @@ class DatasetHistoryManager:
             for i in range(nr_elements-1):
                 param_array += ", '{}'"
 
-        print('########################################################################')
-        print(py_list)
-        print(param_array)
         param_array = param_array.format(*py_list)
-        print(param_array)
         param_array = "{" + param_array  + "}"
-        print(param_array)
-        print('########################################################################')
 
         return param_array
 
@@ -197,7 +189,7 @@ class DatasetHistoryManager:
         self.__generate_choice_dict()
 
         for elem in row_list:
-            tr_type = a = int(elem['transformation_type'])
+            tr_type = int(elem['transformation_type'])
             field1 = self.choice_dict[a](elem)
             field2 = elem['transformation_date']
             list_a.append(field1)
@@ -239,16 +231,8 @@ class DatasetHistoryManager:
 
 
         all_rows = dict_cur.fetchall()
-        appa = self.__rows_to_dataframe(all_rows)
-        html_string = appa.to_html(None, None, None, True, False)
-        print(html_string)
-
-        """all_rows = dict_cur.fetchall()
-        html_table = '<table id="mytable" border = "1">\n'
-        html_table += '<thead>\n<tr style="text-align: right;">\n'
-        html_table += '<th>Transformation description</th>\n<th>Operation date</th>\n</tr>\n</thead>\n'
-        html_table += '<tbody>\n'"""
-
+        df = self.__rows_to_dataframe(all_rows)
+        html_string = df.to_html(None, None, None, True, False)
 
 
     def __rowstring_generator1(self, dict_obj):
