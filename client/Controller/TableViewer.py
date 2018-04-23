@@ -18,18 +18,22 @@ class TableViewer:
         tablename: The name of the table we're extracting information from.
         engine: SQLalchemy engine to use pandas functionality
         db_connection: psycopg2 database connection to execute SQL queries
+        is_original: Boolean indicating whether we're viewing the original data uploaded by the users.
     """
 
-    def __init__(self, setid, tablename, engine, db_connection=None):
+    def __init__(self, setid, tablename, engine, db_connection=None, is_original=False):
         self.engine = engine
-        self.setid = setid
         self.tablename = tablename
         self.db_connection = db_connection
+        if is_original is True:
+            self.schema = 'original_' + str(setid)
+        else:
+            self.schema = str(id)
         self.maxrows = None
 
     def get_attributes(self):
         """Method that returns a list of all attributes of the table."""
-        SQL_query = "SELECT * FROM \"%s\".\"%s\" LIMIT 1" % (str(self.setid), self.tablename)
+        SQL_query = "SELECT * FROM \"%s\".\"%s\" LIMIT 1" % (self.schema, self.tablename)
         data_frame = pd.read_sql(SQL_query, self.engine)
         return data_frame.columns.values.tolist()
         
@@ -96,7 +100,7 @@ class TableViewer:
             page_nr: Integer indicating which page we're trying to view
             nr_rows: The number of rows that are being showed per page. 
         """
-        count_query  = "SELECT COUNT(*) FROM \"%s\".\"%s\"" % (self.setid, self.tablename)
+        count_query  = "SELECT COUNT(*) FROM \"%s\".\"%s\"" % (self.schema, self.tablename)
         query_result = pd.read_sql(count_query, self.engine)
         table_size = query_result.iat[0, 0]
         self.maxrows = table_size
@@ -147,7 +151,7 @@ class TableViewer:
         """
         offset = 0
         offset = (page_nr - 1) * nr_rows
-        SQL_query = "SELECT * FROM \"%s\".\"%s\" LIMIT %s OFFSET %s" % (str(self.setid), self.tablename, nr_rows, offset)
+        SQL_query = "SELECT * FROM \"%s\".\"%s\" LIMIT %s OFFSET %s" % (self.schema, self.tablename, nr_rows, offset)
         data_frame = pd.read_sql(SQL_query, self.engine)
         html_table = re.sub(' mytable', '" id="mytable', data_frame.to_html(None, None, None, True, False, classes='mytable'))
         if show_types is False:
@@ -155,7 +159,7 @@ class TableViewer:
         attributes = self.get_attributes()
         for string in attributes: #Let's add the types to the tablenames
             cur = self.db_connection.cursor()
-            cur.execute(sql.SQL("SELECT pg_typeof({}) FROM {}.{} LIMIT 1").format(sql.Identifier(string), sql.Identifier(str(self.setid)),
+            cur.execute(sql.SQL("SELECT pg_typeof({}) FROM {}.{} LIMIT 1").format(sql.Identifier(string), sql.Identifier(self.schema),
                                                                                   sql.Identifier(self.tablename)))
             sqltype = self.__translate_system_type(cur.fetchone()[0])
             new_string = string + "<br>(" + sqltype + ")"
@@ -175,12 +179,12 @@ class TableViewer:
             outcsv = csv.writer(outfile, delimiter=delimiter, quotechar=quotechar)
             conn = self.db_connection
 
-            conn.cursor().execute("SELECT column_name FROM information_schema.columns WHERE table_schema = '{}' AND table_name = '{}'".format(self.setid, self.tablename))
+            conn.cursor().execute("SELECT column_name FROM information_schema.columns WHERE table_schema = '{}' AND table_name = '{}'".format(self.schema, self.tablename))
 
             # write header
             outcsv.writerow([x[0] for x in conn.cursor().fetchall()])
 
-            conn.cursor().execute(sql.SQL("SELECT * FROM {}.{}").format(sql.Identifier(str(self.setid)), sql.Identifier(self.tablename)))
+            conn.cursor().execute(sql.SQL("SELECT * FROM {}.{}").format(sql.Identifier(self.schema)), sql.Identifier(self.tablename)))
             rows = conn.cursor().fetchall()
 
             # replace NULL values with parameter 'null'
@@ -195,13 +199,13 @@ class TableViewer:
     def get_numerical_histogram(self, columnname, bar_nr=10):
         # first check if the attribute type is numerical
         self.db_connection.cursor().execute(sql.SQL("SELECT pg_typeof({}) FROM {}.{}").format(sql.Identifier(columnname),
-                                                                                                     sql.Identifier(str(self.setid)),
+                                                                                                     sql.Identifier(self.schema),
                                                                                                      sql.Identifier(self.tablename)))
         type = self.db_connection.cursor().fetchone()[0]
         if not self.is_numerical(type):
             return "N/A"
 
-        sql_query = "SELECT \"{}\" FROM \"{}\".\"{}\"".format(columnname, str(self.setid), self.tablename)
+        sql_query = "SELECT \"{}\" FROM \"{}\".\"{}\"".format(columnname, self.schema, self.tablename)
         df = pd.read_sql(sql_query, self.engine)
         fig = plt.figure(figsize=(5.12, 3.84))
         plt.hist(df[columnname], bins=bar_nr, align='left', alpha=0.8, color='grey')
@@ -217,7 +221,7 @@ class TableViewer:
 
         # get the frequency of every value
         conn.cursor().execute(sql.SQL("SELECT {}, COUNT(*) FROM {}.{} GROUP BY {} ORDER BY COUNT(*) DESC,"
-                                      " {}").format(sql.Identifier(columnname), sql.Identifier(str(self.setid)),
+                                      " {}").format(sql.Identifier(columnname), sql.Identifier(self.schema),
                                                             sql.Identifier(self.tablename),
                                                             sql.Identifier(columnname),
                                                             sql.Identifier(columnname)))
@@ -269,7 +273,7 @@ class TableViewer:
 
         # get the frequency of every value and select the one that has the highest one
         conn.cursor().execute(sql.SQL("SELECT {}, COUNT(*) FROM {}.{} GROUP BY {} ORDER BY COUNT(*) DESC,"
-                                      " {} LIMIT 1").format(sql.Identifier(columnname), sql.Identifier(str(self.setid)),
+                                      " {} LIMIT 1").format(sql.Identifier(columnname), sql.Identifier(self.schema),
                                                             sql.Identifier(self.tablename),
                                                             sql.Identifier(columnname),
                                                             sql.Identifier(columnname)))
@@ -281,7 +285,7 @@ class TableViewer:
         conn = self.db_connection
 
         conn.cursor().execute(sql.SQL("SELECT {}, COUNT(*) FROM {}.{} WHERE {} IS NULL GROUP BY {}"
-                                      "").format(sql.Identifier(columnname), sql.Identifier(str(self.setid)),
+                                      "").format(sql.Identifier(columnname), sql.Identifier(self.schema),
                                                             sql.Identifier(self.tablename),
                                                             sql.Identifier(columnname),
                                                             sql.Identifier(columnname)))
@@ -298,14 +302,14 @@ class TableViewer:
         # first check if the attribute type is numerical
         conn.cursor().execute(
             sql.SQL("SELECT pg_typeof({}) FROM {}.{}").format(sql.Identifier(columnname),
-                                                                     sql.Identifier(str(self.setid)),
+                                                                     sql.Identifier(self.schema),
                                                                      sql.Identifier(self.tablename)))
         type = conn.cursor().fetchone()[0]
         if not self.is_numerical(type):
             return "N/A"
 
         conn.cursor().execute(sql.SQL("SELECT " + aggregate + "({}) FROM {}.{}").format(sql.Identifier(columnname),
-                                                                          sql.Identifier(str(self.setid)),
+                                                                          sql.Identifier(self.schema),
                                                                           sql.Identifier(self.tablename)))
 
         return conn.cursor().fetchone()[0]
