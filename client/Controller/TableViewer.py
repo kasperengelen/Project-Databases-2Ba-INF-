@@ -102,7 +102,6 @@ class TableViewer:
         """
         count_query  = "SELECT COUNT(*) FROM \"%s\".\"%s\"" % (self.schema, self.tablename)
         query_result = pd.read_sql(count_query, self.engine)
-        print(query_result)
         table_size = query_result.iat[0, 0]
         self.maxrows = table_size
             
