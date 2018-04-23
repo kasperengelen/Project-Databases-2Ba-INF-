@@ -1207,7 +1207,7 @@ def download(dataset_id, tablename, original):
         flash(message="Invalid parameters.", category="error")
         return redirect(url_for('dataset_pages.view_dataset_home', dataset_id=dataset_id))
 
-    tv = dataset.getTableViewer(tablename, is_original = original)
+    tv = dataset.getTableViewer(tablename, original = original)
 
     real_download_dir = None
 
