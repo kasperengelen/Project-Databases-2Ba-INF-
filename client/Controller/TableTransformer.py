@@ -24,7 +24,7 @@ class TableTransformer:
         self.replace = replace
         self.db_connection = db_conn
         self.engine = engine
-        self.history_manager = DatasetHistoryManager(setid, db_conn, engine, track_history)
+        self.history_manager = DatasetHistoryManager(setid, db_conn, track_history)
 
 
     
