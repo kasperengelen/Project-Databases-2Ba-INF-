@@ -6,6 +6,7 @@ import re
 from psycopg2 import sql
 from Controller.DatasetManager import DatasetManager
 from Model.DatabaseConfiguration import DatabaseConfiguration
+from flask import abort
 
 class FileException(Exception):
     def __init__(self, message):
@@ -94,7 +95,7 @@ class DataLoader:
         column_names = []
 
         # read first line for table info
-        with open(filename) as csv:
+        with open(filename, encoding="utf-8") as csv:
             header = csv.readline()
 
         # if the first line in the file contains the column names
@@ -107,7 +108,6 @@ class DataLoader:
         else:
             for i in range(header.count(',') + 1):
                 column_names.append(sql.Identifier("column_" + str(i)))
-
 
         # extract table name
         tablename = os.path.basename(filename.replace(".csv", ""))
@@ -127,7 +127,7 @@ class DataLoader:
         # insert everything into the database
         self.db_conn.cursor().execute("SET search_path TO {};".format(self.setid))
         self.db_conn.cursor().execute(query)
-        csv = open(filename, 'r')
+        csv = open(filename, 'r', encoding="utf-8")
         try:
             # tablename has to be wrapped in quotes for this function to work
             self.db_conn.cursor().copy_from(csv, "\"" + tablename + "\"", sep=',')
@@ -146,37 +146,34 @@ class DataLoader:
         # keep track of tables created for backups
         table_names = []
 
-        # with open(filename, 'r') as dump:
-        dump = self.__convert_to_ascii(filename)
+        with open(filename, 'r', encoding="utf-8") as dump:
+            for command in dump.read().strip().split(';'):
+                if re.search("CREATE TABLE.*\(.*\)", command, re.DOTALL | re.IGNORECASE):
+                    # extract tablename
+                    tablename = command.split()[2]
+                    # remove bracket in tablename if there is no whitespace in between
+                    tablename = tablename.split("(", 1)[0]
 
-        for command in dump.read().strip().split(';'):
+                    # raise error if the table name is not alphanumeric, this is to not cause problems with url's
+                    if not self.__check_alnum(tablename):
+                        raise ValueError("Table names should be alphanumeric")
 
-            if re.search("CREATE TABLE.*\(.*\)", command, re.DOTALL | re.IGNORECASE):
-                # extract tablename
-                tablename = command.split()[2]
-                # remove bracket in tablename if there is no whitespace in between
-                tablename = tablename.split("(", 1)[0]
+                    self.db_conn.cursor().execute("SET search_path TO {};".format(self.setid))
+                    try:
+                        self.db_conn.cursor().execute(command.replace("\n", ""))
+                    except psycopg2.ProgrammingError:
+                        raise DumpInconsistencyException
 
-                # raise error if the table name is not alphanumeric, this is to not cause problems with url's
-                if not self.__check_alnum(tablename):
-                    raise ValueError("Table names should be alphanumeric")
+                    table_names.append(tablename)
 
-                self.db_conn.cursor().execute("SET search_path TO {};".format(self.setid))
-                try:
-                    self.db_conn.cursor().execute(command.replace("\n", ""))
-                except psycopg2.ProgrammingError:
-                    raise DumpInconsistencyException
+                elif re.search("INSERT INTO.*", command, re.DOTALL | re.IGNORECASE):
+                    tablename = command.split()[2]
 
-                table_names.append(tablename)
-
-            elif re.search("INSERT INTO.*", command, re.DOTALL | re.IGNORECASE):
-                tablename = command.split()[2]
-
-                self.db_conn.cursor().execute("SET search_path TO {};".format(self.setid))
-                try:
-                    self.db_conn.cursor().execute(command.replace("\n", ""))
-                except psycopg2.ProgrammingError:
-                    raise DumpInconsistencyException
+                    self.db_conn.cursor().execute("SET search_path TO {};".format(self.setid))
+                    try:
+                        self.db_conn.cursor().execute(command.replace("\n", ""))
+                    except psycopg2.ProgrammingError:
+                        raise DumpInconsistencyException
 
         # if no tables were created, raise error
         if len(table_names) == 0:
