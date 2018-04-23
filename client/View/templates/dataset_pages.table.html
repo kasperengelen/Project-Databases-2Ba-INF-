@@ -9,7 +9,53 @@
 			</div>
 			<div class="col-sm-6 text-center">
 				<h2>{{ dataset_info.name }}</h2>
-				<p>{{ dataset_info.desc }}</p>
+				{% if original != True %}
+					<p>{{ dataset_info.desc }}</p>
+				{% else %}
+					<p>Original Table</p>
+				{% endif %}
+			</div>
+			<div class="col-sm-3 text-right">
+				<div>
+					<a id="file" href="#" class="btn btn-primary" data-toggle="modal" data-target="#downloadFormModal_{{ table }}">Download</a>
+					<!-- Download dialog. -->
+					<div id="downloadFormModal_{{ table }}" class="modal fade text-left" role="dialog">
+				        <div class="modal-dialog">
+				        
+				            <!-- Modal content-->
+				            <div class="modal-content">
+				                <div class="modal-header">
+				                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+				                    <h4 class="modal-title">Download table.</h4>
+				                </div>
+				                <div class="modal-body">
+				                	<!-- Download form -->
+				                	{% from "includes/_formhelpers.html" import render_field %}
+				                    <form action="{{ url_for('dataset_pages.download', dataset_id=dataset_info.setid, tablename=table_name, original=original)}}"
+				                    method="get" id="downloadForm_{{ table }}">
+                                        {{ downloadform.hidden_tag() }}
+				                    	<div class="form-group">
+				                    		{{ render_field(downloadform.delimiter, class_="form-control") }}
+				                    	</div>
+				                    	<div class="form-group">
+				                    		{{ render_field(downloadform.quotechar, class_="form-control") }}
+				                    	</div>
+				                    	<div class="form-group">
+				                    		{{ render_field(downloadform.nullrep, class_="form-control") }}
+				                    	</div>
+                                		<input id="downloadForm_{{ table }}" class="btn btn-primary" type="submit" value="Download">
+				                    </form>
+				                    <!-- Download form -->
+				                </div>
+				                <div class="modal-footer">
+				                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+				                </div>
+				            </div>
+				            <!-- Modal content -->
+				        </div>
+					</div>
+					<!-- Download dialog. -->
+				</div>
 			</div>
 		</div>
 	</div>    		
@@ -57,7 +103,7 @@
 			         		<a data-toggle="collapse" data-parent="#accordion" href="#transform">Transform</a>
 			        	</h4>
 			      	</div>
-			      	<div id="transform" class="panel-collapse collapse in">
+			      	<div id="transform" class="panel-collapse collapse">
 			      		<div class="panel-body">
 			      			<div class="panel-group" id="accordion2">
 						        {% include "includes/_transformations.html" %}
@@ -73,7 +119,11 @@
     	<div class="row">
 	    	<div class="col-sm-3 text-left">
 	    		<input type="text" id="input" placeholder="Search Page No" style="border-style: solid; border-width: 1px; border-radius: 3px;"/>
-				<button onclick="page_search()"><i class="glyphicon glyphicon-arrow-right"></i></button>
+	    		{% if original != True %}
+					<button onclick="page_search()"><i class="glyphicon glyphicon-arrow-right"></i></button>
+	    		{% else %}
+	    			<button onclick="page_search_original()"><i class="glyphicon glyphicon-arrow-right"></i></button>
+	    		{% endif %}
 
 				<script type="text/javascript">
 				function page_search(){
@@ -82,6 +132,13 @@
 				    		window.location.href = '/dataset/{{ dataset_info.setid }}/{{ table_name }}/' + document.getElementById('input').value;
 					}
 				 }
+				function page_search_original(){
+					if(document.getElementById('input').value != "") {
+				    	if(!isNaN(document.getElementById('input').value))
+				    		window.location.href = '/dataset/{{ dataset_info.setid }}/{{ table_name }}/original/' + document.getElementById('input').value;
+					}
+				 }
+
 				</script>
 			</div>
 
@@ -106,34 +163,65 @@
 			</form>
 		</div>
 		<!--ENTRYCOUNT-->
-		<div class="col-sm-6 text-center" style="overflow-x: auto;">
-	   		<ul class="pagination">
-	   			{% if page_indices|length > 1 %}
-	    			{% for index in page_indices %}
-	    				{% if index == "..." %}
-	    					<li class="page-item hidden-xs"><a class="page-link" style="color: black;">...</a></li>
-	    				{% else %}
-	    					{% if index|int == current_page %}
-	    						<style>
-	    							.active {
-	    								color: red !important;
-	    							}
-	    						</style>
-		    					<li class="page-item active"><a class="page-link" href="{{ url_for('dataset_pages.view_dataset_table', dataset_id=dataset_info.setid, tablename=table_name, page_nr=index) }}" style="color: black;"">
-		    						{{ index }}</a></li>
+		{% if original != True %}
+			<div class="col-sm-6 text-center" style="overflow-x: auto;">
+		   		<ul class="pagination">
+		   			{% if page_indices|length > 1 %}
+		    			{% for index in page_indices %}
+		    				{% if index == "..." %}
+		    					<li class="page-item hidden-xs"><a class="page-link" style="color: black;">...</a></li>
 		    				{% else %}
-		    					<li class="page-item"><a class="page-link" href="{{ url_for('dataset_pages.view_dataset_table', dataset_id=dataset_info.setid, tablename=table_name, page_nr=index) }}" style="color: black;"">
-		    						{{ index }}</a></li>
-	    					{% endif %}
-	    				{% endif %}
-	    			{% endfor %}
-	    		{% else %}
-		    			<li class="page-item active"><a class="page-link" style="color: black;"">
-			    						{{ page_indices[0] }}</a></li>
-		    	{% endif %}
+		    					{% if index|int == current_page %}
+		    						<style>
+		    							.active {
+		    								color: red !important;
+		    							}
+		    						</style>
+			    					<li class="page-item active"><a class="page-link" href="{{ url_for('dataset_pages.view_dataset_table', dataset_id=dataset_info.setid, tablename=table_name, page_nr=index) }}" style="color: black;"">
+			    						{{ index }}</a></li>
+			    				{% else %}
+			    					<li class="page-item"><a class="page-link" href="{{ url_for('dataset_pages.view_dataset_table', dataset_id=dataset_info.setid, tablename=table_name, page_nr=index) }}" style="color: black;"">
+			    						{{ index }}</a></li>
+		    					{% endif %}
+		    				{% endif %}
+		    			{% endfor %}
+		    		{% else %}
+			    			<li class="page-item active"><a class="page-link" style="color: black;"">
+				    						{{ page_indices[0] }}</a></li>
+			    	{% endif %}
 
-    		</ul>	
-    	</div>
+	    		</ul>	
+	    	</div>
+	    {% else %}
+	    	<div class="col-sm-6 text-center" style="overflow-x: auto;">
+		   		<ul class="pagination">
+		   			{% if page_indices|length > 1 %}
+		    			{% for index in page_indices %}
+		    				{% if index == "..." %}
+		    					<li class="page-item hidden-xs"><a class="page-link" style="color: black;">...</a></li>
+		    				{% else %}
+		    					{% if index|int == current_page %}
+		    						<style>
+		    							.active {
+		    								color: red !important;
+		    							}
+		    						</style>
+			    					<li class="page-item active"><a class="page-link" href="{{ url_for('dataset_pages.view_dataset_table_original', dataset_id=dataset_info.setid, tablename=table_name, page_nr=index) }}" style="color: black;"">
+			    						{{ index }}</a></li>
+			    				{% else %}
+			    					<li class="page-item"><a class="page-link" href="{{ url_for('dataset_pages.view_dataset_table_original', dataset_id=dataset_info.setid, tablename=table_name, page_nr=index) }}" style="color: black;"">
+			    						{{ index }}</a></li>
+		    					{% endif %}
+		    				{% endif %}
+		    			{% endfor %}
+		    		{% else %}
+			    			<li class="page-item active"><a class="page-link" style="color: black;"">
+				    						{{ page_indices[0] }}</a></li>
+			    	{% endif %}
+
+	    		</ul>	
+	    	</div>
+	    {% endif %}
 	</div>
 
 	<div class="text-center">
