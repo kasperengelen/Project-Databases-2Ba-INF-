@@ -43,8 +43,7 @@ def view_dataset_home(dataset_id):
                                                       table_list = table_list,
                                                       uploadform = upload_form,
                                                       join_form = join_form,
-                                                      perm_type=perm_type, 
-                                                      downloadform = DownloadForm())
+                                                      perm_type=perm_type)
 # ENDFUNCTION
 
 @dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>', defaults = {'page_nr': 1})
@@ -171,6 +170,7 @@ def view_dataset_table(dataset_id, tablename, page_nr):
                                                 predicateone_form=predicateone_form,
                                                 predicatetwo_form=predicatetwo_form,
                                                 predicatethree_form=predicatethree_form,
+                                                downloadform = DownloadForm(),
                                                 original = False)
 # ENDFUNCTION
 
@@ -215,7 +215,8 @@ def view_dataset_table_original(dataset_id, tablename, page_nr):
                                                 entrycount_form = entrycount_form,
                                                 page_indices = page_indices,
                                                 current_page=page_nr,
-                                                original = True)
+                                                original = True,
+                                                downloadform = DownloadForm())
 # ENDFUNCTION
 
 @dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/history')
