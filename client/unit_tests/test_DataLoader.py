@@ -19,7 +19,7 @@ class TestDataLoader(unittest.TestCase):
 
         cur = self.db_connection.cursor()
         cur.execute("CREATE SCHEMA IF NOT EXISTS \"0\"")
-        self.db_connection.commit
+        self.db_connection.commit()
 
 
     def tearDown(self):
@@ -92,4 +92,5 @@ class TestDataLoader(unittest.TestCase):
         self.assertEqual(self.db_connection.cursor().fetchone(), (1, "test", "01/01/2018"))
 
 if __name__ == '__main__':
+
     unittest.main()

@@ -3,12 +3,11 @@ import os
 import shutil
 import psycopg2
 import re
+import
+from io import StringIO
 from psycopg2 import sql
 from Controller.DatasetManager import DatasetManager
 from Model.DatabaseConfiguration import DatabaseConfiguration
-
-
-# -*- coding: ascii -*-
 
 class FileException(Exception):
     def __init__(self, message):
@@ -149,35 +148,37 @@ class DataLoader:
         # keep track of tables created for backups
         table_names = []
 
-        with open(filename, 'r') as dump:
-            for command in dump.read().strip().split(';'):
+        # with open(filename, 'r') as dump:
+        dump = self.__convert_to_ascii(filename)
 
-                if re.search("CREATE TABLE.*\(.*\)", command, re.DOTALL | re.IGNORECASE):
-                    # extract tablename
-                    tablename = command.split()[2]
-                    # remove bracket in tablename if there is no whitespace in between
-                    tablename = tablename.split("(", 1)[0]
+        for command in dump.read().strip().split(';'):
 
-                    # raise error if the table name is not alphanumeric, this is to not cause problems with url's
-                    if not self.__check_alnum(tablename):
-                        raise ValueError("Table names should be alphanumeric")
+            if re.search("CREATE TABLE.*\(.*\)", command, re.DOTALL | re.IGNORECASE):
+                # extract tablename
+                tablename = command.split()[2]
+                # remove bracket in tablename if there is no whitespace in between
+                tablename = tablename.split("(", 1)[0]
 
-                    self.db_conn.cursor().execute("SET search_path TO {};".format(self.setid))
-                    try:
-                        self.db_conn.cursor().execute(command.replace("\n", ""))
-                    except psycopg2.ProgrammingError:
-                        raise DumpInconsistencyException
+                # raise error if the table name is not alphanumeric, this is to not cause problems with url's
+                if not self.__check_alnum(tablename):
+                    raise ValueError("Table names should be alphanumeric")
 
-                    table_names.append(tablename)
+                self.db_conn.cursor().execute("SET search_path TO {};".format(self.setid))
+                try:
+                    self.db_conn.cursor().execute(command.replace("\n", ""))
+                except psycopg2.ProgrammingError:
+                    raise DumpInconsistencyException
 
-                elif re.search("INSERT INTO.*", command, re.DOTALL | re.IGNORECASE):
-                    tablename = command.split()[2]
+                table_names.append(tablename)
 
-                    self.db_conn.cursor().execute("SET search_path TO {};".format(self.setid))
-                    try:
-                        self.db_conn.cursor().execute(command.replace("\n", ""))
-                    except psycopg2.ProgrammingError:
-                        raise DumpInconsistencyException
+            elif re.search("INSERT INTO.*", command, re.DOTALL | re.IGNORECASE):
+                tablename = command.split()[2]
+
+                self.db_conn.cursor().execute("SET search_path TO {};".format(self.setid))
+                try:
+                    self.db_conn.cursor().execute(command.replace("\n", ""))
+                except psycopg2.ProgrammingError:
+                    raise DumpInconsistencyException
 
         # if no tables were created, raise error
         if len(table_names) == 0:
@@ -246,6 +247,14 @@ class DataLoader:
                     new_name = tablename + '_' + str(name_count)
 
         return new_name
+
+    def __convert_to_ascii(self, filename):
+        data = ""
+        with open(filename, 'r') as file:
+            data = file.read()
+
+        encoded_data = data.encode("utf-8", "ignore")
+        return StringIO(encoded_data)
 
 
 if __name__ == "__main__":
