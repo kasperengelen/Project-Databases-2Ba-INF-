@@ -184,7 +184,7 @@ class TableViewer:
             # write header
             outcsv.writerow([x[0] for x in conn.cursor().fetchall()])
 
-            conn.cursor().execute(sql.SQL("SELECT * FROM {}.{}").format(sql.Identifier(self.schema)), sql.Identifier(self.tablename)))
+            conn.cursor().execute(sql.SQL("SELECT * FROM {}.{}").format(sql.Identifier(self.schema), sql.Identifier(self.tablename)))
             rows = conn.cursor().fetchall()
 
             # replace NULL values with parameter 'null'
