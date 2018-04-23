@@ -4,7 +4,6 @@ import shutil
 import psycopg2
 import re
 from psycopg2 import sql
-from Controller.DatasetManager import DatasetManager
 from Model.DatabaseConfiguration import DatabaseConfiguration
 from flask import abort
 
@@ -214,8 +213,11 @@ class DataLoader:
 
     def __get_valid_name(self, tablename):
         # create a new tablename if the current one is already in use
-        Dm = DatasetManager.getDataset(self.setid, db_conn = self.db_conn)
-        table_names = Dm.getTableNames()
+
+        self.db_conn.cursor().execute("SELECT table_name FROM information_schema.tables WHERE table_schema = %s;",
+                                      [str(self.setid)])
+        result = self.db_conn.cursor().fetchall()
+        table_names = [t[0] for t in result]
         new_name = tablename
 
         # if there is at least one table in the dataset
