@@ -1,7 +1,10 @@
+import math
 import psycopg2
 import psycopg2.extras
-import pandas as pd
 from psycopg2 import sql
+import pandas as pd
+
+
 
 
 class DatasetHistoryManager:
@@ -17,7 +20,6 @@ class DatasetHistoryManager:
     def __init__(self, setid, db_connection, track=True):
         self.setid = setid
         self.db_connection = db_connection
-        self.engine = engine
         self.track = track
         self.entry_count = None
         self.choice_dict = None
@@ -81,6 +83,8 @@ class DatasetHistoryManager:
     
         table_size = self.entry_count
         max_index = math.ceil(table_size / display_nr)
+        if max_index == 0:
+            return [1]
         #At this point the table is too large to just show all the indices, we have to minimize clutter
         if(max_index > 5):
             if page_nr > 4:
@@ -228,6 +232,7 @@ class DatasetHistoryManager:
         all_rows = dict_cur.fetchall()
         df = self.__rows_to_dataframe(all_rows)
         html_string = df.to_html(None, None, None, True, False)
+        return html_string
 
 
     def __rowstring_generator1(self, dict_obj):
@@ -333,8 +338,9 @@ class DatasetHistoryManager:
 
 if __name__ == '__main__':
     connection = psycopg2.connect("dbname='projectdb18' user='postgres' host='localhost' password='Sch00l2k17'")
-    obj = DatasetHistoryManager(2, connection, None, True)
-    obj.render_history_table(1, 100, True)
+    obj = DatasetHistoryManager(2, connection, True)
+    obj.is_in_range(1, 10)
+    print(obj.get_page_indices(20, 1))
 
 
 
