@@ -1,6 +1,39 @@
 <div class="panel panel-default">
   	<div class="panel-heading">
     	<h4 class="panel-title">
+     		<a data-toggle="collapse" data-parent="#accordion2" href="#tc">Attribute Type Conversion</a>
+    	</h4>
+  	</div>
+  	<div id="tc" class="panel-collapse collapse">
+  		<div class="panel-body">
+  			{% from "includes/_formhelpers.html" import render_field %}
+  			<!-- Type Conversion -->
+			<div class="col-sm-12" style="overflow-x: auto;">
+				<form method="post" action="{{ url_for('dataset_pages.transform_typeconversion', dataset_id=dataset_info.setid, tablename=table_name) }}">
+				{{ typeconversion_form.hidden_tag() }}
+				<div class="form-group" style="width: 20%; display: inline-block;">
+					{{render_field(typeconversion_form.select_attr, class_="form-control") }}
+				</div>
+				<div class="form-group" style="width: 20%; display: inline-block;">
+					{{render_field(typeconversion_form.new_datatype, class_="form-control") }}
+				</div>
+				<div class="form-group" style="width: 20%; display: inline-block;" id="char_div">
+					{{render_field(typeconversion_form.char_amount, class_="form-control", placeholder="Character Amount") }}
+				</div>
+				<div class="form-group" style="width: 20%; display: inline-block;" id="date_div">
+					{{render_field(typeconversion_form.date_type, class_="form-control") }}
+				</div>
+				<p style="display: inline-block;"><input type="submit" id="typeconversion" class="btn btn-primary" value="Convert Attribute Type"></p>
+				</form>
+			</div>
+			<!-- Type Conversion -->
+        </div>
+	</div>
+</div>
+
+<div class="panel panel-default">
+  	<div class="panel-heading">
+    	<h4 class="panel-title">
      		<a data-toggle="collapse" data-parent="#accordion2" href="#fr">Find and Replace</a>
     	</h4>
   	</div>
@@ -70,98 +103,6 @@
 <div class="panel panel-default">
   	<div class="panel-heading">
     	<h4 class="panel-title">
-     		<a data-toggle="collapse" data-parent="#accordion2" href="#do">Delete Outliers</a>
-    	</h4>
-  	</div>
-  	<div id="do" class="panel-collapse collapse">
-  		<div class="panel-body">
-  			{% from "includes/_formhelpers.html" import render_field %}
-  			<!-- Delete Outliers -->
-  			<div class="col-sm-12" style="overflow-x: auto;">
-				<form method="post" action="{{ url_for('dataset_pages.transform_deleteOutlier', dataset_id=dataset_info.setid,
-					tablename=table_name) }}">
-				{{ deleteoutlier_form.csrf_token }}
-				<div class="form-group" style="width: 30%; display: inline-block;">
-					{{render_field(deleteoutlier_form.select_attr, class_="form-control")}}
-				</div>
-				<div class="form-group" style="width: 20%; display: inline-block;">
-					{{render_field(deleteoutlier_form.select_comparison, class_="form-control")}}
-				</div>
-				<div class="form-group" style="width: 30%; display: inline-block;">
-					{{render_field(deleteoutlier_form.value, class_="form-control", placeholder="Value")}}
-				</div>
-				<p style="display: inline-block;"><input type="submit" id="delete" class="btn btn-primary" value="Delete Outlier"></p>
-				</form>
-			</div>
-			<!-- Delete Outliers -->
-        </div>
-	</div>
-</div>
-
-<div class="panel panel-default">
-  	<div class="panel-heading">
-    	<h4 class="panel-title">
-     		<a data-toggle="collapse" data-parent="#accordion2" href="#tc">Attribute Type Conversion</a>
-    	</h4>
-  	</div>
-  	<div id="tc" class="panel-collapse collapse">
-  		<div class="panel-body">
-  			{% from "includes/_formhelpers.html" import render_field %}
-  			<!-- Type Conversion -->
-			<div class="col-sm-12" style="overflow-x: auto;">
-				<form method="post" action="{{ url_for('dataset_pages.transform_typeconversion', dataset_id=dataset_info.setid, tablename=table_name) }}">
-				{{ typeconversion_form.hidden_tag() }}
-				<div class="form-group" style="width: 20%; display: inline-block;">
-					{{render_field(typeconversion_form.select_attr, class_="form-control") }}
-				</div>
-				<div class="form-group" style="width: 20%; display: inline-block;">
-					{{render_field(typeconversion_form.new_datatype, class_="form-control") }}
-				</div>
-				<div class="form-group" style="width: 20%; display: inline-block;" id="char_div">
-					{{render_field(typeconversion_form.char_amount, class_="form-control", placeholder="Character Amount") }}
-				</div>
-				<div class="form-group" style="width: 20%; display: inline-block;" id="date_div">
-					{{render_field(typeconversion_form.date_type, class_="form-control") }}
-				</div>
-				<p style="display: inline-block;"><input type="submit" id="typeconversion" class="btn btn-primary" value="Convert Attribute Type"></p>
-				</form>
-			</div>
-			<!-- Type Conversion -->
-        </div>
-	</div>
-</div>
-
-<div class="panel panel-default">
-  	<div class="panel-heading">
-    	<h4 class="panel-title">
-     		<a data-toggle="collapse" data-parent="#accordion2" href="#edt">Extract Part of Date</a>
-    	</h4>
-  	</div>
-  	<div id="edt" class="panel-collapse collapse">
-  		<div class="panel-body">
-  			{% from "includes/_formhelpers.html" import render_field %}
-  			<!-- Extract Date/Time -->
-  			<div class="col-sm-12" style="overflow-x: auto;">
-				<form method="post" action="{{ url_for('dataset_pages.transform_extractdatetime', dataset_id=dataset_info.setid,
-					tablename=table_name) }}">
-				{{ extract_form.csrf_token }}
-				<div class="form-group" style="width: 30%; display: inline-block;">
-					{{render_field(extract_form.select_attr, class_="form-control")}}
-				</div>
-				<div class="form-group" style="width: 20%; display: inline-block;">
-					{{render_field(extract_form.select_extracttype, class_="form-control")}}
-				</div>
-				<p style="display: inline-block;"><input type="submit" id="delete" class="btn btn-primary" value="Extract"></p>
-				</form>
-			</div>
-			<!-- Extract Date/Time -->
-        </div>
-	</div>
-</div>
-
-<div class="panel panel-default">
-  	<div class="panel-heading">
-    	<h4 class="panel-title">
      		<a data-toggle="collapse" data-parent="#accordion2" href="#pr">Delete Rows Using Predicate</a>
     	</h4>
   	</div>
@@ -205,24 +146,30 @@
 <div class="panel panel-default">
   	<div class="panel-heading">
     	<h4 class="panel-title">
-     		<a data-toggle="collapse" data-parent="#accordion2" href="#ohe">One Hot Encoding</a>
+     		<a data-toggle="collapse" data-parent="#accordion2" href="#do">Delete Outliers</a>
     	</h4>
   	</div>
-  	<div id="ohe" class="panel-collapse collapse">
+  	<div id="do" class="panel-collapse collapse">
   		<div class="panel-body">
   			{% from "includes/_formhelpers.html" import render_field %}
-  			<!-- One Hot Encoding -->
-      		<div class="col-sm-6" style="border-bottom: 1px solid lightgrey; overflow-x: auto;">
-	        	<form method="post" action="{{ url_for('dataset_pages.transform_onehotencoding', dataset_id=dataset_info.setid,
-	        	tablename=table_name) }}">
-				{{ onehotencodingform.csrf_token }}
+  			<!-- Delete Outliers -->
+  			<div class="col-sm-12" style="overflow-x: auto;">
+				<form method="post" action="{{ url_for('dataset_pages.transform_deleteOutlier', dataset_id=dataset_info.setid,
+					tablename=table_name) }}">
+				{{ deleteoutlier_form.csrf_token }}
 				<div class="form-group" style="width: 30%; display: inline-block;">
-					{{render_field(onehotencodingform.select_attr, class_="form-control")}}
+					{{render_field(deleteoutlier_form.select_attr, class_="form-control")}}
 				</div>
-				<p style="display: inline-block;"><input type="submit" id="OHE" class="btn btn-primary" value="One Hot Encode"></p>
+				<div class="form-group" style="width: 20%; display: inline-block;">
+					{{render_field(deleteoutlier_form.select_comparison, class_="form-control")}}
+				</div>
+				<div class="form-group" style="width: 30%; display: inline-block;">
+					{{render_field(deleteoutlier_form.value, class_="form-control", placeholder="Value")}}
+				</div>
+				<p style="display: inline-block;"><input type="submit" id="delete" class="btn btn-primary" value="Delete Outlier"></p>
 				</form>
 			</div>
-			<!-- One Hot Encoding -->
+			<!-- Delete Outliers -->
         </div>
 	</div>
 </div>
@@ -248,81 +195,6 @@
 			</div>
 			<!-- Normalize Using Z-Score -->
         </div>
-	</div>
-</div>
-
-<div class="panel panel-default">
-  	<div class="panel-heading">
-    	<h4 class="panel-title">
-     		<a data-toggle="collapse" data-parent="#accordion2" href="#fnmean">Fill Nulls - Mean</a>
-    	</h4>
-  	</div>
-  	<div id="fnmean" class="panel-collapse collapse">
-  		<div class="panel-body">
-			<!-- Fill Nulls Mean -->
-			<div class="col-sm-6" style="border-bottom: 1px solid lightgrey; overflow-x: auto;">
-				<form method="post" action="{{ url_for('dataset_pages.transform_fillNullsMean', dataset_id=dataset_info.setid,
-					tablename=table_name) }}">
-				{{ fillnullmean_form.csrf_token }}
-				<div class="form-group" style="width: 30%; display: inline-block;">
-					{{render_field(fillnullmean_form.select_attr, class_="form-control")}}
-				</div>
-				<p style="display: inline-block;"><input type="submit" id="delete" class="btn btn-primary" value="Fill Nulls Mean"></p>
-				</form>
-			</div>
-		<!-- Fill Nulls Mean -->
-		</div>
-	</div>
-</div>
-
-<div class="panel panel-default">
-  	<div class="panel-heading">
-    	<h4 class="panel-title">
-     		<a data-toggle="collapse" data-parent="#accordion2" href="#fnmedian">Fill Nulls - Median</a>
-    	</h4>
-  	</div>
-  	<div id="fnmedian" class="panel-collapse collapse">
-  		<div class="panel-body">
-			<!-- Fill Nulls Median -->
-  			<div class="col-sm-6" style="border-bottom: 1px solid lightgrey; overflow-x: auto;">
-				<form method="post" action="{{ url_for('dataset_pages.transform_fillNullsMedian', dataset_id=dataset_info.setid,
-					tablename=table_name) }}">
-				{{ fillnullmedian_form.csrf_token }}
-				<div class="form-group" style="width: 30%; display: inline-block;">
-					{{render_field(fillnullmedian_form.select_attr, class_="form-control")}}
-				</div>
-				<p style="display: inline-block;"><input type="submit" id="delete" class="btn btn-primary" value="Fill Nulls Median"></p>
-				</form>
-			</div>
-			<!-- Fill Nulls Median -->
-		</div>
-	</div>
-</div>
-
-<div class="panel panel-default">
-  	<div class="panel-heading">
-    	<h4 class="panel-title">
-     		<a data-toggle="collapse" data-parent="#accordion2" href="#fnc">Fill Nulls - Custom Value</a>
-    	</h4>
-  	</div>
-  	<div id="fnc" class="panel-collapse collapse">
-  		<div class="panel-body">
-			<!-- Fill Nulls Custom Value -->
-  			<div class="col-sm-6" style="border-bottom: 1px solid lightgrey; overflow-x: auto;">
-				<form method="post" action="{{ url_for('dataset_pages.transform_fillNullsCustomValue', dataset_id=dataset_info.setid,
-					tablename=table_name) }}">
-				{{ fillnullcustom_form.csrf_token }}
-				<div class="form-group" style="width: 30%; display: inline-block;">
-					{{render_field(fillnullcustom_form.select_attr, class_="form-control")}}
-				</div>
-				<div class="form-group" style="width: 30%; display: inline-block;">
-					{{render_field(fillnullcustom_form.replacement, class_="form-control", placeholder="Replacement")}}
-				</div>
-				<p style="display: inline-block;"><input type="submit" id="delete" class="btn btn-primary" value="Fill Nulls Custom"></p>
-				</form>
-			</div>
-			<!-- Fill Nulls Median -->
-		</div>
 	</div>
 </div>
 
@@ -398,6 +270,134 @@
 				</form>
 			</div>
 			<!-- Discretize Equal Width  -->
+		</div>
+	</div>
+</div>
+
+<div class="panel panel-default">
+  	<div class="panel-heading">
+    	<h4 class="panel-title">
+     		<a data-toggle="collapse" data-parent="#accordion2" href="#edt">Extract Part of Date</a>
+    	</h4>
+  	</div>
+  	<div id="edt" class="panel-collapse collapse">
+  		<div class="panel-body">
+  			{% from "includes/_formhelpers.html" import render_field %}
+  			<!-- Extract Date/Time -->
+  			<div class="col-sm-12" style="overflow-x: auto;">
+				<form method="post" action="{{ url_for('dataset_pages.transform_extractdatetime', dataset_id=dataset_info.setid,
+					tablename=table_name) }}">
+				{{ extract_form.csrf_token }}
+				<div class="form-group" style="width: 30%; display: inline-block;">
+					{{render_field(extract_form.select_attr, class_="form-control")}}
+				</div>
+				<div class="form-group" style="width: 20%; display: inline-block;">
+					{{render_field(extract_form.select_extracttype, class_="form-control")}}
+				</div>
+				<p style="display: inline-block;"><input type="submit" id="delete" class="btn btn-primary" value="Extract"></p>
+				</form>
+			</div>
+			<!-- Extract Date/Time -->
+        </div>
+	</div>
+</div>
+
+<div class="panel panel-default">
+  	<div class="panel-heading">
+    	<h4 class="panel-title">
+     		<a data-toggle="collapse" data-parent="#accordion2" href="#ohe">One Hot Encoding</a>
+    	</h4>
+  	</div>
+  	<div id="ohe" class="panel-collapse collapse">
+  		<div class="panel-body">
+  			{% from "includes/_formhelpers.html" import render_field %}
+  			<!-- One Hot Encoding -->
+      		<div class="col-sm-6" style="border-bottom: 1px solid lightgrey; overflow-x: auto;">
+	        	<form method="post" action="{{ url_for('dataset_pages.transform_onehotencoding', dataset_id=dataset_info.setid,
+	        	tablename=table_name) }}">
+				{{ onehotencodingform.csrf_token }}
+				<div class="form-group" style="width: 30%; display: inline-block;">
+					{{render_field(onehotencodingform.select_attr, class_="form-control")}}
+				</div>
+				<p style="display: inline-block;"><input type="submit" id="OHE" class="btn btn-primary" value="One Hot Encode"></p>
+				</form>
+			</div>
+			<!-- One Hot Encoding -->
+        </div>
+	</div>
+</div>
+
+<div class="panel panel-default">
+  	<div class="panel-heading">
+    	<h4 class="panel-title">
+     		<a data-toggle="collapse" data-parent="#accordion2" href="#fnmean">Fill Nulls - Mean</a>
+    	</h4>
+  	</div>
+  	<div id="fnmean" class="panel-collapse collapse">
+  		<div class="panel-body">
+			<!-- Fill Nulls Mean -->
+			<div class="col-sm-6" style="border-bottom: 1px solid lightgrey; overflow-x: auto;">
+				<form method="post" action="{{ url_for('dataset_pages.transform_fillNullsMean', dataset_id=dataset_info.setid,
+					tablename=table_name) }}">
+				{{ fillnullmean_form.csrf_token }}
+				<div class="form-group" style="width: 30%; display: inline-block;">
+					{{render_field(fillnullmean_form.select_attr, class_="form-control")}}
+				</div>
+				<p style="display: inline-block;"><input type="submit" id="delete" class="btn btn-primary" value="Fill Nulls Mean"></p>
+				</form>
+			</div>
+		<!-- Fill Nulls Mean -->
+		</div>
+	</div>
+</div>
+
+<div class="panel panel-default">
+  	<div class="panel-heading">
+    	<h4 class="panel-title">
+     		<a data-toggle="collapse" data-parent="#accordion2" href="#fnmedian">Fill Nulls - Median</a>
+    	</h4>
+  	</div>
+  	<div id="fnmedian" class="panel-collapse collapse">
+  		<div class="panel-body">
+			<!-- Fill Nulls Median -->
+  			<div class="col-sm-6" style="border-bottom: 1px solid lightgrey; overflow-x: auto;">
+				<form method="post" action="{{ url_for('dataset_pages.transform_fillNullsMedian', dataset_id=dataset_info.setid,
+					tablename=table_name) }}">
+				{{ fillnullmedian_form.csrf_token }}
+				<div class="form-group" style="width: 30%; display: inline-block;">
+					{{render_field(fillnullmedian_form.select_attr, class_="form-control")}}
+				</div>
+				<p style="display: inline-block;"><input type="submit" id="delete" class="btn btn-primary" value="Fill Nulls Median"></p>
+				</form>
+			</div>
+			<!-- Fill Nulls Median -->
+		</div>
+	</div>
+</div>
+
+<div class="panel panel-default">
+  	<div class="panel-heading">
+    	<h4 class="panel-title">
+     		<a data-toggle="collapse" data-parent="#accordion2" href="#fnc">Fill Nulls - Custom Value</a>
+    	</h4>
+  	</div>
+  	<div id="fnc" class="panel-collapse collapse">
+  		<div class="panel-body">
+			<!-- Fill Nulls Custom Value -->
+  			<div class="col-sm-6" style="border-bottom: 1px solid lightgrey; overflow-x: auto;">
+				<form method="post" action="{{ url_for('dataset_pages.transform_fillNullsCustomValue', dataset_id=dataset_info.setid,
+					tablename=table_name) }}">
+				{{ fillnullcustom_form.csrf_token }}
+				<div class="form-group" style="width: 30%; display: inline-block;">
+					{{render_field(fillnullcustom_form.select_attr, class_="form-control")}}
+				</div>
+				<div class="form-group" style="width: 30%; display: inline-block;">
+					{{render_field(fillnullcustom_form.replacement, class_="form-control", placeholder="Replacement")}}
+				</div>
+				<p style="display: inline-block;"><input type="submit" id="delete" class="btn btn-primary" value="Fill Nulls Custom"></p>
+				</form>
+			</div>
+			<!-- Fill Nulls Median -->
 		</div>
 	</div>
 </div>

@@ -63,11 +63,10 @@ class DatasetHistoryManager:
             param_array = "{" + py_list[0] + "}"
             return param_array
             
-        
-        for i in range(nr_elements):
-            param_array += "'{}'"
+        param_array = "'{}'"
         if nr_elements > 1:
-            param_array += ", '{}'"
+            for i in range(nr_elements-1):
+                param_array += ", '{}'"
 
         print('########################################################################')
         print(py_list)
@@ -331,7 +330,7 @@ class DatasetHistoryManager:
 
     def __rowstring_generator15(self, dict_obj):
         param = dict_obj['parameters']
-        rowstring = 'Delete rows from table "{}" using the following predicate: "{}".'
+        rowstring = 'Delete rows from table "{}" using the following predicate: {}.'
         rowstring = rowstring.format(dict_obj['origin_table'], param[0])
         return rowstring
 
