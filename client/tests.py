@@ -5,6 +5,7 @@ from unit_tests.test_UserManager import TestUserManager
 from unit_tests.test_DatasetManager import TestDatasetManager
 from unit_tests.test_DatasetInfo import TestDatasetInfo
 from unit_tests.ProjectTester import ProjectTester
+from unit_tests.test_DataLoader import TestDataLoader
 
 import unittest
 
@@ -14,7 +15,7 @@ def suite():
     suite.addTest(TestUserManager('test_validateLogin'))
 
 if __name__ == "__main__":
-    tests = [TestDatasetInfo]
-    #tests = [TestTableTransformer, TestTransformerCopy, TestTableViewer]
+    # tests = [TestDatasetInfo]
+    tests = [TestDatasetInfo, TestDataLoader, TestTableTransformer, TestTransformerCopy, TestTableViewer]
     tester = ProjectTester(tests)
     tester.run()

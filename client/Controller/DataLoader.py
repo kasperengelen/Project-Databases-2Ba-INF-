@@ -46,14 +46,7 @@ class DataLoader:
 
     def __init__(self, setid, db_connection=None):
         self.db_conn = db_connection
-
-        # first check if the setid is valid
-        if DatasetManager.existsID(setid):
-            self.setid = setid
-        else:
-            raise ValueError("setid is not valid")
-
-        # self.setid = setid
+        self.setid = setid
 
         # predefine attribute
         self.header = None
@@ -127,12 +120,12 @@ class DataLoader:
         # insert everything into the database
         self.db_conn.cursor().execute("SET search_path TO {};".format(self.setid))
         self.db_conn.cursor().execute(query)
-        csv = open(filename, 'r', encoding="utf-8")
-        try:
-            # tablename has to be wrapped in quotes for this function to work
-            self.db_conn.cursor().copy_from(csv, "\"" + tablename + "\"", sep=',')
-        except psycopg2.DataError:
-            raise ColumnInconsistencyException
+        with open(filename, 'r', encoding="utf-8") as csv:
+            try:
+                # tablename has to be wrapped in quotes for this function to work
+                self.db_conn.cursor().copy_from(csv, "\"" + tablename + "\"", sep=',')
+            except psycopg2.DataError:
+                raise ColumnInconsistencyException
 
         # if the first line in the csv contained the names of the columns, that row has to be deleted from the table
         if self.header:
@@ -187,13 +180,14 @@ class DataLoader:
         zip = zipfile.ZipFile(filename, 'r')
         # each dataset gets an unzip folder, so that no data can overlap
         unzip_folder = ".unzip_temp_" + str(self.setid)
-        zip.extractall(unzip_folder)
+        unzip_folder_complete = os.path.dirname(os.path.abspath(__file__)) + "/" + unzip_folder
+        zip.extractall(unzip_folder_complete)
         zip.close()
 
         # load all files that were extracted
         directory = os.fsencode(unzip_folder)
         for sub_file in os.listdir(directory):
-            sub_filename = os.fsdecode(sub_file)
+            sub_filename = unzip_folder + "/" + os.fsdecode(sub_file)
             # files other than csv's are ignored
             if sub_filename.endswith(".csv"):
                 try:
@@ -202,9 +196,10 @@ class DataLoader:
                     print("Didn't read file " + sub_filename)
 
         # delete the temporary folder
-        shutil.rmtree(unzip_folder)
+        shutil.rmtree(unzip_folder_complete)
 
     def __make_backup(self, tablename):
+        self.db_conn.cursor().execute("CREATE SCHEMA IF NOT EXISTS original_{}".format(self.setid))
         self.db_conn.cursor().execute("SET search_path TO original_{};".format(self.setid))
 
         # copy table into the backup schema
@@ -219,7 +214,7 @@ class DataLoader:
 
     def __get_valid_name(self, tablename):
         # create a new tablename if the current one is already in use
-        Dm = DatasetManager.getDataset(self.setid)
+        Dm = DatasetManager.getDataset(self.setid, db_conn = self.db_conn)
         table_names = Dm.getTableNames()
         new_name = tablename
 
