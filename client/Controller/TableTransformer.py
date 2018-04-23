@@ -292,7 +292,7 @@ class TableTransformer:
         casting_var = temp.format(ident_attr, data_format)
 
         if temp in ['CHAR' , 'VARCHAR']: #Char and varchar don't need special parameters
-            to_type = to_type.replace('n', length)
+            to_type = to_type.replace('n', str(length))
             casting_var = to_type
             
         sql_query = "ALTER TABLE {}.{} ALTER COLUMN {} TYPE " + casting_var

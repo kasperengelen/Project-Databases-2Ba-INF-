@@ -57,9 +57,9 @@ class TableUploadForm(FlaskForm):
 class DownloadForm(FlaskForm):
     """Form to specify CSV properties for download."""
 
-    delimiter = StringField('Delimiter', [InputRequired('Input is required.'), Length(min=1, max=1)])
-    quotechar = StringField('Qoute character', [InputRequired('Input is required.'), Length(min=1, max=1)])
-    nullrep = StringField('NULL representation', [InputRequired('Input is required.'), Length(min=1, max=10)])
+    delimiter = StringField('Delimiter', [InputRequired('Input is required.'), Length(min=1, max=1)], default=",")
+    quotechar = StringField('Qoute character', [InputRequired('Input is required.'), Length(min=1, max=1)], default='"')
+    nullrep = StringField('NULL representation', [InputRequired('Input is required.'), Length(min=1, max=10)], default="NULL")
 
 # ENDCLASS
 
@@ -130,7 +130,7 @@ class RegexFindReplace(FlaskForm):
     select_attr = SelectField('Attribute', choices=[])
     regex = StringField('Search regex', [InputRequired(message="Input is required.")])
     replacement = StringField('Replacement', [InputRequired(message="Input is required.")])
-    case_sens = BooleanField('Case sensitive', [InputRequired(message="Input is required.")], default=False)
+    case_sens = BooleanField('Case sensitive', default=False)
 
     def fillForm(self, attrs):
         self.select_attr.choices = [(attrname, attrname) for attrname in attrs]
