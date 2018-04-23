@@ -6,9 +6,7 @@ import re
 from psycopg2 import sql
 from Controller.DatasetManager import DatasetManager
 from Model.DatabaseConfiguration import DatabaseConfiguration
-
-
-# -*- coding: ascii -*-
+from flask import abort
 
 class FileException(Exception):
     def __init__(self, message):
@@ -97,7 +95,7 @@ class DataLoader:
         column_names = []
 
         # read first line for table info
-        with open(filename) as csv:
+        with open(filename, encoding="utf-8") as csv:
             header = csv.readline()
 
         # if the first line in the file contains the column names
@@ -110,7 +108,6 @@ class DataLoader:
         else:
             for i in range(header.count(',') + 1):
                 column_names.append(sql.Identifier("column_" + str(i)))
-
 
         # extract table name
         tablename = os.path.basename(filename.replace(".csv", ""))
@@ -130,7 +127,7 @@ class DataLoader:
         # insert everything into the database
         self.db_conn.cursor().execute("SET search_path TO {};".format(self.setid))
         self.db_conn.cursor().execute(query)
-        csv = open(filename, 'r')
+        csv = open(filename, 'r', encoding="utf-8")
         try:
             # tablename has to be wrapped in quotes for this function to work
             self.db_conn.cursor().copy_from(csv, "\"" + tablename + "\"", sep=',')
@@ -149,9 +146,8 @@ class DataLoader:
         # keep track of tables created for backups
         table_names = []
 
-        with open(filename, 'r') as dump:
+        with open(filename, 'r', encoding="utf-8") as dump:
             for command in dump.read().strip().split(';'):
-
                 if re.search("CREATE TABLE.*\(.*\)", command, re.DOTALL | re.IGNORECASE):
                     # extract tablename
                     tablename = command.split()[2]
