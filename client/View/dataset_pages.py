@@ -170,7 +170,34 @@ def view_dataset_table(dataset_id, tablename, page_nr):
                                                 extract_form=extract_form,
                                                 predicateone_form=predicateone_form,
                                                 predicatetwo_form=predicatetwo_form,
-                                                predicatethree_form=predicatethree_form)
+                                                predicatethree_form=predicatethree_form,
+                                                original = False)
+# ENDFUNCTION
+
+@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/original', defaults = {'page_nr': 1})
+@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/original/<int:page_nr>')
+@require_login
+@require_readperm
+def view_dataset_table_original(dataset_id, tablename, page_nr):
+
+    row_count = session['rowcount']
+
+    if not DatasetManager.existsID(dataset_id):
+        abort(404)
+
+    dataset = DatasetManager.getDataset(dataset_id)
+
+    if tablename not in dataset.getTableNames():
+        abort(404)
+
+    # get tableviewer
+    tv = dataset.getTableViewer(tablename, original = True)
+
+
+
+
+    return render_template('dataset_pages.table.html',
+                                                original = True)
 # ENDFUNCTION
 
 @dataset_pages.route('/dataset/set_session_rowcount/', methods = ['POST'])

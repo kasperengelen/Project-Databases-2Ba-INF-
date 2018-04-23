@@ -52,7 +52,7 @@ class DatasetInfo:
         return tablenames
     # ENDMETHOD
 
-    def getTableViewer(self, tablename, engine = None):
+    def getTableViewer(self, tablename, engine = None, original = False):
         """Retrieves a TableViewer object associated with the specified set and table."""
         
         if engine is None:
@@ -60,7 +60,11 @@ class DatasetInfo:
 
         if not tablename in self.getTableNames():
             raise RuntimeError("Invalid tablename.")
-        return TableViewer(self.setid, tablename, engine, self.db_conn)
+        return TableViewer(setid = self.setid, 
+                            tablename = tablename, 
+                            engine = engine, 
+                            db_connection = self.db_conn, 
+                            original = original)
     # ENDMETHOD
 
     def getTableTransformer(self, tablename, engine = None):
