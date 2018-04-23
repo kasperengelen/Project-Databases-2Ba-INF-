@@ -96,6 +96,15 @@ class AttributeForm(FlaskForm):
     # ENDMETHOD
 # ENDCLASS
 
+class HistoryForm(FlaskForm):
+    options = SelectField('Attribute', choices=[], id="history_options")
+
+    def fillForm(self, tables):
+        self.options.choices = [(table, table) for table in tables]
+        self.options.choices.insert(0, ("dataset", "Entire Dataset"))
+    # ENDMETHOD
+# ENDCLASS
+
 class EntryCountForm(FlaskForm):
     """Form to select how many entries need to be displayed."""
 

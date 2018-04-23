@@ -4,10 +4,11 @@ from Controller.AccessController import require_login, require_admin
 from Controller.AccessController import require_adminperm, require_writeperm, require_readperm
 from Controller.DatasetManager import DatasetManager
 from Controller.UserManager import UserManager
+from Controller.DatasetHistoryManager import DatasetHistoryManager
 from View.dataset_forms import FindReplaceForm, DeleteAttrForm, DatasetForm, AddUserForm, RemoveUserForm, DatasetListEntryForm, TableUploadForm, EntryCountForm
 from View.dataset_forms import DownloadForm, DataTypeTransform, NormalizeZScore, OneHotEncoding, TableJoinForm, RegexFindReplace, DiscretizeEqualWidth, ExtractDateTimeForm
 from View.dataset_forms import DiscretizeEqualFreq, DiscretizeCustomRange, DeleteOutlier, FillNullsMean, FillNullsMedian, FillNullsCustomValue, AttributeForm
-from View.dataset_forms import PredicateFormOne, PredicateFormTwo, PredicateFormThree
+from View.dataset_forms import PredicateFormOne, PredicateFormTwo, PredicateFormThree, HistoryForm
 from Controller.TableViewer import TableViewer
 from werkzeug.utils import secure_filename
 import os
@@ -218,46 +219,65 @@ def view_dataset_table_original(dataset_id, tablename, page_nr):
                                                 downloadform = DownloadForm())
 # ENDFUNCTION
 
-@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/history')
+@dataset_pages.route('/dataset/<int:dataset_id>/history', defaults = {'page_nr': 1})
+@dataset_pages.route('/dataset/<int:dataset_id>/history/<int:page_nr>')
 @require_login
 @require_readperm
-def view_dataset_table_history(dataset_id, tablename):
+def view_dataset_table_history(dataset_id, page_nr):
     
     if not DatasetManager.existsID(dataset_id):
         abort(404)
 
     dataset = DatasetManager.getDataset(dataset_id)
+    dataset_info = dataset.toDict()
 
-    if tablename not in dataset.getTableNames():
-        abort(404)
+    form = HistoryForm(request.form)
+    form.fillForm(dataset.getTableNames())
 
     # retrieve history manager
+    dhm = DatasetHistoryManager(dataset_id, get_db())
 
     # retrieve history data
+    row_count = session['rowcount']
+    table_data = dhm.render_history_table(page_nr, row_count)
 
-    return render_template('dataset_pages.table_history.html')
+    print(form.options.data)
+
+    if not dhm.is_in_range(page_nr, row_count):
+        flash(message="Page out of range.", category="error")
+        return redirect(url_for('dataset_pages.view_dataset_table_history', dataset_id=dataset_id, tablename = tablename, page_nr = 1))
+
+    page_indices = dhm.get_page_indices(row_count, page_nr)
+    entrycount_form = EntryCountForm(entry_count = session['rowcount'])
+    history_form = HistoryForm()
+    history_form.fillForm(dataset.getTableNames())
+
+
+    return render_template('dataset_pages.table_history.html',
+                                                dataset_info = dataset_info,
+                                                table_data = table_data,
+                                                entrycount_form = entrycount_form,
+                                                page_indices = page_indices,
+                                                current_page=page_nr,
+                                                original = False,
+                                                history_form = history_form )
 # ENDFUNCTION
 
 @dataset_pages.route('/dataset/set_session_rowcount/', methods = ['POST'])
 @require_login
 def set_session_rowcount():
     """Callback to set the session rowcount."""
-
-    print('test')
-
     form = EntryCountForm(request.form)
 
     dataset_id = int(form.cur_dataset.data)
     tablename = form.cur_tablename.data
 
     if not DatasetManager.getDataset(dataset_id):
-        print('did')
         abort(404)
 
     dataset = DatasetManager.getDataset(dataset_id)
 
     if tablename not in dataset.getTableNames():
-        print('table')
         abort(404)
 
     form.fillForm(tablename, dataset_id)
@@ -466,7 +486,8 @@ def transform_findreplace(dataset_id, tablename):
     tt = dataset.getTableTransformer(tablename)
 
     try:
-        tt.find_and_replace(tablename, form.select_attr.data, form.search.data, form.replacement.data, form.exactmatch.data, form.replace_full_match.data)
+        tt.find_and_replace(tablename, form.select_attr.data, form.search.data, form.replacement.data, form.exactmatch.data,
+                            form.replace_full_match.data)
         flash(message="Find and replace completed.", category="success")
     except:
         flash(message="No matches found.", category="error")
