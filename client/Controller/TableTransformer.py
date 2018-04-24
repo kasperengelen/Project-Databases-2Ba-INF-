@@ -297,8 +297,17 @@ class TableTransformer:
             
         sql_query = "ALTER TABLE {}.{} ALTER COLUMN {} TYPE " + casting_var
         cur = self.db_connection.cursor()
-        cur.execute(sql.SQL(sql_query).format(sql.Identifier(internal_ref[0]), sql.Identifier(internal_ref[1]),
-                                              sql.Identifier(attribute)))
+        try:
+            cur.execute(sql.SQL(sql_query).format(sql.Identifier(internal_ref[0]), sql.Identifier(internal_ref[1]),
+                                                  sql.Identifier(attribute)))
+        except psycopg2.DataError as e:
+            if 'value too long' in str(e):
+                error_msg = "Conversion failed due to  character values longer than {} in the attribute.".format(length)
+                raise self.ValueError(error_msg)
+
+            else:
+                error_msg = "Conversion failed due to values in attribute that can't correctly be converted to {}.".format(to_type)
+                raise self.ValueError(error_msg)
         self.db_connection.commit()
         return to_type
 
