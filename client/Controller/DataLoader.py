@@ -192,7 +192,7 @@ class DataLoader:
                 try:
                     self.__csv(sub_filename)
                 except psycopg2.ProgrammingError:
-                    print("Didn't read file " + sub_filename)
+                    self.db_conn.rollback()
 
         # delete the temporary folder
         shutil.rmtree(unzip_folder_complete)

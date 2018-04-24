@@ -46,7 +46,7 @@ class DatasetInfo:
 
     def getTableNames(self):
         """Retrieve the names of the tables that are part of the dataset."""
-        self.db_conn.cursor().execute("SELECT table_name FROM information_schema.tables WHERE table_schema = %s;", [str(self.setid)])
+            self.db_conn.cursor().execute("SELECT table_name FROM information_schema.tables WHERE table_schema = %s;", [str(self.setid)])
         result = self.db_conn.cursor().fetchall()
 
         tablenames = [t[0] for t in result]
