@@ -243,6 +243,7 @@ class DatasetHistoryManager:
 
     def __rowstring_generator2(self, dict_obj):
         rowstring = 'Deleted attribute "{}" of table "{}"'.format(dict_obj['attribute'], dict_obj['origin_table'])
+        return rowstring
 
     def __rowstring_generator3(self, dict_obj):
         param = dict_obj['parameters']
