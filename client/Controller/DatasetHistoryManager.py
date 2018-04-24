@@ -9,7 +9,7 @@ import re
 
 
 class DatasetHistoryManager:
-    """Class that manages the transformation history of a dataset.
+    """Class that manages the transformation history ofimport reimport re a dataset.
 
     Attributes:
         setid: The id of the dataset that the manager has to access.
@@ -195,7 +195,7 @@ class DatasetHistoryManager:
             list_a.append(field1)
             list_b.append(field2)
 
-        val_dict = { 'Tranfsormation description' : list_a,
+        val_dict = { 'Transformation description' : list_a,
                      'Operation date'             : list_b}
         
         pd.set_option('display.max_colwidth', -1)
