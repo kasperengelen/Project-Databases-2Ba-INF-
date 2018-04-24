@@ -64,7 +64,7 @@ BEGIN
 		RETURNING * LOOP
 		
 		EXECUTE 'DROP SCHEMA IF EXISTS ' || quote_ident(deadset.setid::varchar) || ' CASCADE';
-		EXECUTE 'DROP SCHEMA IF EXISTS original_' || quote_ident(deadset.setid::varchar) || ' CASCADE';
+		EXECUTE 'DROP SCHEMA IF EXISTS ' || quote_ident('original_' || deadset.setid::varchar) || ' CASCADE';
 	END LOOP;
     RETURN OLD;
 END;
