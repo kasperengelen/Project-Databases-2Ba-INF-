@@ -445,7 +445,7 @@ class TableTransformer:
             self.db_connection.cursor().execute(sql.SQL(sql_query).format(sql.Identifier(internal_ref[0]), sql.Identifier(internal_ref[1]),
                                                                       sql.Identifier(attribute)), (replacement, regex))
         except psycopg2.DataError as e:
-            error_msg = str(e)  + "Please refer to the PostgreSQL documentation on regular expressions for more information."
+            error_msg = str(e)  + ". Please refer to the PostgreSQL documentation on regular expressions for more information."
             raise self.ValueError(error_msg)
 
         self.db_connection.commit()
@@ -677,6 +677,32 @@ class TableTransformer:
 
         self.history_manager.write_to_history(eventual_table, tablename, attribute, [], 6)
 
+    def __calculate_equifrequent_indices(self, width, remainder, nr_bins):
+        """Calculates the indices of the list that represent bin edges for discretize_using_equal_frequency."""
+        index_bins = [-1] #Offset all the indices because Nth element is at index N-1
+        for i in range(nr_bins):
+            index_value = index_bins[i] + width
+            if remainder > 0:
+                index_value += 1
+                remainder -= 1
+            index_bins.append(index_value)# minus because Nth element is at index N-1
+
+        index_bins[0] = 0 #The first index is always zero.
+        return index_bins
+
+    def __bin_fits(self, elements, indices_list):
+        """Check whether elements will fit properly in bins."""
+        for i in range(1, len(indices_list)):
+            a = indices_list[i-1]
+            b = indices_list[i]
+            #If the element after a supposed bin is still in range in the bin before...
+            if math.ceil(elements[a]) == math.ceil(elements [b]):
+                return False
+            
+        return True
+            
+            
+
 
     def discretize_using_equal_frequency(self, tablename, attribute, new_name=""):
         """Method that calulates the bins for an equi-frequent discretization and performs it"""
@@ -697,24 +723,27 @@ class TableTransformer:
         
         elements = df[attribute].tolist() #Load all the elements in a python list
         elements.sort()
-        index_bins = [0]
-        temp_width = math.floor(len(elements) / nr_bins) #Rough estimate of the indices
-        remainder = len(elements) % nr_bins
-        for i in range(nr_bins):
-            index_value = index_bins[i-1] + temp_width
-            if remainder > 0:
-                index_value += 1
-                remainder -= 1
-            index_bins[i] = index_value
-            index_bins.append(0) #Add dummy element that will be modified in the next loop
+        list_size = len(elements)
 
-        
-        del index_bins[-1] #Delete last dummy element
+        indices = []
+    
+        while(True):
+            if nr_bins < 2: #We need atleast 2 bins, any less is impossible
+                break
+            bin_width = math.floor(list_size / nr_bins)
+            remainder = list_size % nr_bins
+            indices   = self.__calculate_equifrequent_indices(bin_width, remainder, nr_bins)
+            if self.__bin_fits(elements, indices): #If the data fits in the bins, it's good
+                break
+            else: #If data doesn't fit in the bins, use less bins and thus larger bins.
+                nr_bins -= 1
 
         #Calculate actual values for the bins
         bins = [elements[0]]
-        for i in index_bins:
-            bins.append((elements[i-1] + 1)) #The elements need to be included too so we add 1 to compensate
+        for i in range(1, len(indices)):
+            index = indices[i]
+            value = math.ceil(elements[index] + 0.0001)
+            bins.append(value)
 
         #Make binlabels to represent the bins.
         binlabels = self.__make_binlabels(bins)

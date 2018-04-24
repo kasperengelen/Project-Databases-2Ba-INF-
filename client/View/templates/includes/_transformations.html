@@ -110,7 +110,7 @@
   		<div class="panel-body">
   			{% from "includes/_formhelpers.html" import render_field %}
   			<!-- Predicates -->
-			<div class="col-sm-12" style="border-bottom: 1px solid lightgrey; overflow-x: auto;">
+			<div class="col-sm-12" style="overflow-x: auto;">
 				{% include "includes/_predicates.html" %}
 			</div>
 			<!-- Predicates -->	
@@ -183,7 +183,7 @@
   	<div id="nuz" class="panel-collapse collapse">
   		<div class="panel-body">
   			<!-- Normalize Using Z-Score -->
-			<div class="col-sm-6" style="border-bottom: 1px solid lightgrey; overflow-x: auto;">
+			<div class="col-sm-6" style="overflow-x: auto;">
 				<form method="post" action="{{ url_for('dataset_pages.transform_zscorenormalisation', dataset_id=dataset_info.setid,
 					tablename=table_name) }}">
 				{{ zscoreform.csrf_token }}
@@ -207,7 +207,7 @@
   	<div id="dew" class="panel-collapse collapse">
   		<div class="panel-body">
 			<!-- Discretize Equal Width -->
-  			<div class="col-sm-6" style="border-bottom: 1px solid lightgrey; overflow-x: auto;">
+  			<div class="col-sm-6" style="overflow-x: auto;">
 				<form method="post" action="{{ url_for('dataset_pages.transform_discretizeEqualWidth', dataset_id=dataset_info.setid, tablename=table_name) }}">
 				{{ discretizeWidth_form.csrf_token }}
 				<div class="form-group" style="width: 30%; display: inline-block;">
@@ -312,7 +312,7 @@
   		<div class="panel-body">
   			{% from "includes/_formhelpers.html" import render_field %}
   			<!-- One Hot Encoding -->
-      		<div class="col-sm-6" style="border-bottom: 1px solid lightgrey; overflow-x: auto;">
+      		<div class="col-sm-6" style="overflow-x: auto;">
 	        	<form method="post" action="{{ url_for('dataset_pages.transform_onehotencoding', dataset_id=dataset_info.setid,
 	        	tablename=table_name) }}">
 				{{ onehotencodingform.csrf_token }}
@@ -336,7 +336,7 @@
   	<div id="fnmean" class="panel-collapse collapse">
   		<div class="panel-body">
 			<!-- Fill Nulls Mean -->
-			<div class="col-sm-6" style="border-bottom: 1px solid lightgrey; overflow-x: auto;">
+			<div class="col-sm-6" style="overflow-x: auto;">
 				<form method="post" action="{{ url_for('dataset_pages.transform_fillNullsMean', dataset_id=dataset_info.setid,
 					tablename=table_name) }}">
 				{{ fillnullmean_form.csrf_token }}
@@ -360,7 +360,7 @@
   	<div id="fnmedian" class="panel-collapse collapse">
   		<div class="panel-body">
 			<!-- Fill Nulls Median -->
-  			<div class="col-sm-6" style="border-bottom: 1px solid lightgrey; overflow-x: auto;">
+  			<div class="col-sm-6" style="overflow-x: auto;">
 				<form method="post" action="{{ url_for('dataset_pages.transform_fillNullsMedian', dataset_id=dataset_info.setid,
 					tablename=table_name) }}">
 				{{ fillnullmedian_form.csrf_token }}
@@ -384,7 +384,7 @@
   	<div id="fnc" class="panel-collapse collapse">
   		<div class="panel-body">
 			<!-- Fill Nulls Custom Value -->
-  			<div class="col-sm-6" style="border-bottom: 1px solid lightgrey; overflow-x: auto;">
+  			<div class="col-sm-6" style="overflow-x: auto;">
 				<form method="post" action="{{ url_for('dataset_pages.transform_fillNullsCustomValue', dataset_id=dataset_info.setid,
 					tablename=table_name) }}">
 				{{ fillnullcustom_form.csrf_token }}
