@@ -50,8 +50,9 @@ class TableViewer:
             self.is_in_range(1, 1)
     
         table_size = self.maxrows
-        self.maxrows = table_size
         max_index = math.ceil(table_size / display_nr)
+        if max_index == 0:
+            return [1]
         #At this point the table is too large to just show all the indices, we have to minimize clutter
         if(max_index > 5):
             if page_nr > 4:
@@ -155,7 +156,6 @@ class TableViewer:
         data_frame = pd.read_sql(SQL_query, self.engine)
         html_table = re.sub(' mytable', '" id="mytable', data_frame.to_html(None, None, None, True, False, classes='mytable'))
         if show_types is False:
-            print(html_table)
             return html_table
         attributes = self.get_attributes()
         for string in attributes: #Let's add the types to the tablenames

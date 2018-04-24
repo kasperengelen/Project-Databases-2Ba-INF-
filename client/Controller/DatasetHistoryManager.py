@@ -1,7 +1,10 @@
+import math
 import psycopg2
 import psycopg2.extras
-import pandas as pd
 from psycopg2 import sql
+import pandas as pd
+
+
 
 
 class DatasetHistoryManager:
@@ -78,9 +81,10 @@ class DatasetHistoryManager:
             #This method will set the maxrows
             raise RuntimeError("Method is_in_range() was not called prior to get_page_indices, causing this failed operation.")
     
-        table_size = self.maxrows
-        self.maxrows = table_size
+        table_size = self.entry_count
         max_index = math.ceil(table_size / display_nr)
+        if max_index == 0:
+            return [1]
         #At this point the table is too large to just show all the indices, we have to minimize clutter
         if(max_index > 5):
             if page_nr > 4:
@@ -185,7 +189,7 @@ class DatasetHistoryManager:
 
         for elem in row_list:
             tr_type = int(elem['transformation_type'])
-            field1 = self.choice_dict[a](elem)
+            field1 = self.choice_dict[tr_type](elem)
             field2 = elem['transformation_date']
             list_a.append(field1)
             list_b.append(field2)
@@ -228,6 +232,7 @@ class DatasetHistoryManager:
         all_rows = dict_cur.fetchall()
         df = self.__rows_to_dataframe(all_rows)
         html_string = df.to_html(None, None, None, True, False)
+        return html_string
 
 
     def __rowstring_generator1(self, dict_obj):
@@ -326,15 +331,16 @@ class DatasetHistoryManager:
 
     def __rowstring_generator15(self, dict_obj):
         param = dict_obj['parameters']
-        rowstring = 'Delete rows from table "{}" using the following predicate: {}.'
+        rowstring = 'Deleted rows from table "{}" using the following predicate: {}.'
         rowstring = rowstring.format(dict_obj['origin_table'], param[0])
         return rowstring
 
 
 if __name__ == '__main__':
     connection = psycopg2.connect("dbname='projectdb18' user='postgres' host='localhost' password='Sch00l2k17'")
-    obj = DatasetHistoryManager(2, connection, None, True)
-    obj.render_history_table(1, 100, True)
+    obj = DatasetHistoryManager(5, connection, True)
+    obj.is_in_range(1, 50)
+    print(obj.render_history_table(1, 50))
 
 
 
