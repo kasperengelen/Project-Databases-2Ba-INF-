@@ -25,48 +25,50 @@
 		</div>
 	</div>
 
-	<div class="xs-center">
-		<!--ENTRYCOUNT-->
-		<div class="col-sm-3 text-left">
-		</br>
-			{% from "includes/_formhelpers.html" import render_field %}
-			<form id="entrycount_form" method="post" action="{{ url_for('dataset_pages.set_session_rowcount') }}">
-				{{ entrycount_form.hidden_tag() }}
-				<div class="form-group" style="width: 30%;">
-					{{render_field(entrycount_form.entry_count, class_="form-control")}}
-			    </div>
-			</form>
-		</div>
-		<!--ENTRYCOUNT-->
-		<div class="col-sm-6 text-center" style="overflow-x: auto;">
-	   		<ul class="pagination">
-	   			{% if page_indices|length > 1 %}
-	    			{% for index in page_indices %}
-	    				{% if index == "..." %}
-	    					<li class="page-item hidden-xs"><a class="page-link" style="color: black;">...</a></li>
-	    				{% else %}
-	    					{% if index|int == current_page %}
-	    						<style>
-	    							.active {
-	    								color: red !important;
-	    							}
-	    						</style>
-		    					<li class="page-item active"><a class="page-link" href="{{ url_for('dataset_pages.view_dataset_table', dataset_id=dataset_info.setid, tablename=table_name, page_nr=index) }}" style="color: black;"">
-		    						{{ index }}</a></li>
+	{% if table_data != None %}
+		<div class="xs-center">
+			<!--ENTRYCOUNT-->
+			<div class="col-sm-3 text-left">
+			</br>
+				{% from "includes/_formhelpers.html" import render_field %}
+				<form id="entrycount_form" method="post" action="{{ url_for('dataset_pages.set_session_rowcount') }}">
+					{{ entrycount_form.hidden_tag() }}
+					<div class="form-group" style="width: 30%;">
+						{{render_field(entrycount_form.entry_count, class_="form-control")}}
+				    </div>
+				</form>
+			</div>
+			<!--ENTRYCOUNT-->
+			<div class="col-sm-6 text-center" style="overflow-x: auto;">
+		   		<ul class="pagination">
+		   			{% if page_indices|length > 1 %}
+		    			{% for index in page_indices %}
+		    				{% if index == "..." %}
+		    					<li class="page-item hidden-xs"><a class="page-link" style="color: black;">...</a></li>
 		    				{% else %}
-		    					<li class="page-item"><a class="page-link" href="{{ url_for('dataset_pages.view_dataset_table', dataset_id=dataset_info.setid, tablename=table_name, page_nr=index) }}" style="color: black;"">
-		    						{{ index }}</a></li>
-	    					{% endif %}
-	    				{% endif %}
-	    			{% endfor %}
-	    		{% else %}
-		    			<li class="page-item active"><a class="page-link" style="color: black;"">
-			    						{{ page_indices[0] }}</a></li>
-		    	{% endif %}
+		    					{% if index|int == current_page %}
+		    						<style>
+		    							.active {
+		    								color: red !important;
+		    							}
+		    						</style>
+			    					<li class="page-item active"><a class="page-link" href="{{ url_for('dataset_pages.view_dataset_table', dataset_id=dataset_info.setid, tablename=table_name, page_nr=index) }}" style="color: black;"">
+			    						{{ index }}</a></li>
+			    				{% else %}
+			    					<li class="page-item"><a class="page-link" href="{{ url_for('dataset_pages.view_dataset_table', dataset_id=dataset_info.setid, tablename=table_name, page_nr=index) }}" style="color: black;"">
+			    						{{ index }}</a></li>
+		    					{% endif %}
+		    				{% endif %}
+		    			{% endfor %}
+		    		{% else %}
+			    			<li class="page-item active"><a class="page-link" style="color: black;"">
+				    						{{ page_indices[0] }}</a></li>
+			    	{% endif %}
 
-    		</ul>	
-    	</div>
-	</div>
+	    		</ul>	
+	    	</div>
+		</div>
+	{% endif %}
 
 	<script>
 		
@@ -105,9 +107,15 @@
 	        }
 
 		</style>
-		<div>
-			{{ table_data|safe }}
+		{% if table_data != None %}
+			<div>
+				{{ table_data|safe }}
+			</div>
+		{% else %}
+		<div class="text-center">
+			<h5>No history to be shown</h5>
 		</div>
+		{% endif %}
 		<script>
 			$(document).ready( function () {
     			$('#mytable').DataTable( {

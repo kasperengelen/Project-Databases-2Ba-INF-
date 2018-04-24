@@ -4,7 +4,6 @@ from Controller.AccessController import require_login, require_admin
 from Controller.AccessController import require_adminperm, require_writeperm, require_readperm
 from Controller.DatasetManager import DatasetManager
 from Controller.UserManager import UserManager
-from Controller.DatasetHistoryManager import DatasetHistoryManager
 from View.dataset_forms import FindReplaceForm, DeleteAttrForm, DatasetForm, AddUserForm, RemoveUserForm, DatasetListEntryForm, TableUploadForm, EntryCountForm
 from View.dataset_forms import DownloadForm, DataTypeTransform, NormalizeZScore, OneHotEncoding, TableJoinForm, RegexFindReplace, DiscretizeEqualWidth, ExtractDateTimeForm
 from View.dataset_forms import DiscretizeEqualFreq, DiscretizeCustomRange, DeleteOutlier, FillNullsMean, FillNullsMedian, FillNullsCustomValue, AttributeForm
@@ -220,48 +219,58 @@ def view_dataset_table_original(dataset_id, tablename, page_nr):
                                                 downloadform = DownloadForm())
 # ENDFUNCTION
 
-@dataset_pages.route('/dataset/<int:dataset_id>/history', defaults = {'page_nr': 1})
-@dataset_pages.route('/dataset/<int:dataset_id>/history/<int:page_nr>')
+@dataset_pages.route('/dataset/<int:dataset_id>/history', defaults = {'page_nr': 1, 'tablename': None})
+@dataset_pages.route('/dataset/<int:dataset_id>/history/<int:page_nr>', defaults = {'tablename': None})
+@dataset_pages.route('/dataset/<int:dataset_id>/history/<string:tablename>', defaults = {'page_nr': 1})
+@dataset_pages.route('/dataset/<int:dataset_id>/history/<string:tablename>/<int:page_nr>')
 @require_login
 @require_readperm
-def view_dataset_table_history(dataset_id, page_nr):
+def view_dataset_table_history(dataset_id, tablename, page_nr):
     
+    rowcount = 50
+
     if not DatasetManager.existsID(dataset_id):
         abort(404)
 
     dataset = DatasetManager.getDataset(dataset_id)
-    dataset_info = dataset.toDict()
 
+    # handle form
     form = HistoryForm(request.form)
     form.fillForm(dataset.getTableNames())
 
-    # retrieve history manager
-    dhm = DatasetHistoryManager(dataset_id, get_db())
+    # handle POST request to change table
+    if request.method == "POST":
+        if not form.validate():
+            flash(message="Invalid form.", category="error")
+            return redirect(url_for("dataset_pages.view_dataset_table_history", dataset_id = dataset_id, tablename = tablename, page_nr = 1))
+        else:
+            tablename = form.options.data
 
-    # retrieve history data
-    row_count = session['rowcount']
-    table_data = dhm.render_history_table(page_nr, row_count)
+    # check if current tablename is valid
+    if tablename is not None and tablename not in dataset.getTableNames():
+        abort(404)
 
-    print(form.options.data)
+    ## retrieve data from dhm
+    show_all = (tablename is None)
 
-    if not dhm.is_in_range(page_nr, row_count):
+    dhm = dataset.getHistoryManager()
+
+    ## check if the page nr is in range
+    if not dhm.is_in_range(page_nr = page_nr, nr_rows = rowcount, show_all = show_all, table_name = tablename):
         flash(message="Page out of range.", category="error")
-        return redirect(url_for('dataset_pages.view_dataset_table_history', dataset_id=dataset_id, tablename = tablename, page_nr = 1))
+        return redirect(url_for("dataset_pages.view_dataset_table_history", dataset_id = dataset_id, tablename = tablename, page_nr = 1))
 
-    page_indices = dhm.get_page_indices(row_count, page_nr)
-    entrycount_form = EntryCountForm(entry_count = session['rowcount'])
-    history_form = HistoryForm()
-    history_form.fillForm(dataset.getTableNames())
+    ## retrieve render code
+    table_data = dhm.render_history_table(page_nr = page_nr, nr_rows = rowcount, show_all = show_all, table_name = tablename)
 
+    ## retrieve page indices
+    page_indices = dhm.get_page_indices(display_nr = rowcount, page_nr = page_nr)
 
+    ## render the template with the needed variables
     return render_template('dataset_pages.table_history.html',
-                                                dataset_info = dataset_info,
-                                                table_data = table_data,
-                                                entrycount_form = entrycount_form,
-                                                page_indices = page_indices,
-                                                current_page=page_nr,
-                                                original = False,
-                                                history_form = history_form )
+                                            table_data = table_data,
+                                            page_indices = page_indices,
+                                            history_form = form)
 # ENDFUNCTION
 
 @dataset_pages.route('/dataset/set_session_rowcount/', methods = ['POST'])
@@ -331,8 +340,8 @@ def transform_join_tables(dataset_id):
     try:
         tt.join_tables(form.tablename1.data, form.tablename2.data, [form.attribute1.data], [form.attribute2.data], form.newname.data)
         flash(message="Tables joined", category="success")
-    except:
-        flash(message="An error occurred.", category="error")
+    except Exception as e:
+        flash(message="An error occurred. Details: " + str(e), category="error")
     return redirect(url_for('dataset_pages.view_dataset_home', dataset_id=dataset_id))
 # ENDFUNCTION
 
@@ -389,6 +398,7 @@ def transform_predicate(dataset_id, tablename):
         predicate_list.append(predicatethree.input3.data)
 
     tt = dataset.getTableTransformer(tablename)
+
     tt.delete_rows_using_predicate_logic(tablename, predicate_list)
     flash(message="Rows deleted according to predicate.", category="success")
 
@@ -490,8 +500,8 @@ def transform_findreplace(dataset_id, tablename):
         tt.find_and_replace(tablename, form.select_attr.data, form.search.data, form.replacement.data, form.exactmatch.data,
                             form.replace_full_match.data)
         flash(message="Find and replace completed.", category="success")
-    except:
-        flash(message="No matches found.", category="error")
+    except Exception as e:
+        flash(message="No matches found. Details: " + str(e), category="error")
 
     return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 # ENDFUNCTION
@@ -524,8 +534,8 @@ def transform_findreplaceregex(dataset_id, tablename):
     try:
         tt.regex_find_and_replace(tablename, form.select_attr.data, form.regex.data, form.replacement.data, form.case_sens.data)
         flash(message="Find and replace complete.", category="success")
-    except:
-        flash(message="An error occurred.", category="error")
+    except Exception as e:
+        flash(message="An error occurred. Details: " + str(e), category="error")
 
     return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 # ENDFUNCTION
@@ -575,11 +585,11 @@ def transform_typeconversion(dataset_id, tablename):
     if not form.new_datatype.data in tt.get_conversion_options(tablename, form.select_attr.data):
         flash(message="Selected datatype not compatible with the selected attribute.", category="error")
     else:
-        #try:
-        tt.change_attribute_type(tablename, form.select_attr.data, form.new_datatype.data, form.date_type.data, form.char_amount.data)
-        flash(message="Attribute type changed.", category="success")
-        #except Exception:
-        #    flash(message="An error occurred.", category="error")
+        try:
+            tt.change_attribute_type(tablename, form.select_attr.data, form.new_datatype.data, form.date_type.data, form.char_amount.data)
+            flash(message="Attribute type changed.", category="success")
+        except Exception as e:
+            flash(message="An error occurred. Details: " + str(e), category="error")
 
     return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 # ENDFUNCTION
@@ -611,8 +621,8 @@ def transform_onehotencoding(dataset_id, tablename):
     try:
         tt.one_hot_encode(tablename, form.select_attr.data)
         flash(message="One hot encoding complete.", category="success")
-    except:
-        flash(message="An error occurred.", category="error")
+    except Exception as e:
+        flash(message="An error occurred. Details: " + str(e), category="error")
 
     return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 # ENDFUNCTION
@@ -644,8 +654,8 @@ def transform_zscorenormalisation(dataset_id, tablename):
     try:
         tt.normalize_using_zscore(tablename, form.select_attr.data)
         flash(message="Normalization complete.", category="success")
-    except:
-        flash(message="An error occurred.", category="error")
+    except Exception as e:
+        flash(message="An error occurred. Details: " + str(e), category="error")
 
     return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 # ENDFUNCTION
@@ -677,8 +687,8 @@ def transform_discretizeEqualWidth(dataset_id, tablename):
     try:
         tt.discretize_using_equal_width(tablename, form.select_attr.data)
         flash(message="Discretization complete.", category="success")
-    except:
-        flash(message="An error occurred.", category="error")
+    except Exception as e:
+        flash(message="An error occurred. Details: " + str(e), category="error")
 
     return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 # ENDFUNCTION
@@ -710,8 +720,8 @@ def transform_discretizeEqualFreq(dataset_id, tablename):
     try:
         tt.discretize_using_equal_frequency(tablename, form.select_attr.data)
         flash(message="Discretization complete.", category="success")
-    except:
-        flash(message="An error occurred.", category="error")
+    except Exception as e:
+        flash(message="An error occurred. Details: " + str(e), category="error")
 
     return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 # ENDFUNCTION
@@ -766,8 +776,8 @@ def transform_discretizeCustomRange(dataset_id, tablename):
     try:
         tt.discretize_using_custom_ranges(tablename, form.select_attr.data, int_ranges, form.interval_spec.data)
         flash(message="Discretization complete.")
-    except:
-        flash(message="An error occurred.", category="error")
+    except Exception as e:
+        flash(message="An error occurred. Details: " + str(e), category="error")
 
     return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 # ENDFUNCTION
@@ -799,8 +809,8 @@ def transform_deleteOutlier(dataset_id, tablename):
     try:
         tt.delete_outlier(tablename, form.select_attr.data, form.select_comparison.data, form.value.data)
         flash(message="Outliers deleted.", category="success")
-    except:
-        flash(message="An error occurred.", category="error")
+    except Exception as e:
+        flash(message="An error occurred. Details: " + str(e), category="error")
 
     return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 # ENDFUNCTION
@@ -832,8 +842,8 @@ def transform_fillNullsMean(dataset_id, tablename):
     try:
         tt.fill_nulls_with_mean(tablename, form.select_attr.data)
         flash(message="NULL values replaced with mean.", category="success")
-    except:
-        flash(message="An error occurred.", category="error")
+    except Exception as e:
+        flash(message="An error occurred. Details: " + str(e), category="error")
 
     return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 # ENDFUNCTION
@@ -865,8 +875,8 @@ def transform_fillNullsMedian(dataset_id, tablename):
     try:
         tt.fill_nulls_with_median(tablename, form.select_attr.data)
         flash(message="NULL values replaced with median.", category="success")
-    except:
-        flash(message="An error occurred.", category="error")
+    except Exception as e:
+        flash(message="An error occurred. Details: " + str(e), category="error")
 
     return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 # ENDFUNCTION
@@ -898,8 +908,8 @@ def transform_fillNullsCustomValue(dataset_id, tablename):
     try:
         tt.fill_nulls_with_custom_value(tablename, form.select_attr.data, form.replacement.data)
         flash(message="NULL values filled with custom value.", category="success")
-    except:
-        flash(message="An error occurred.", category="error")
+    except Exception as e:
+        flash(message="An error occurred. Details: " + str(e), category="error")
 
     return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 # ENDFUNCTION
@@ -1187,7 +1197,7 @@ def upload(dataset_id):
             
             try:
                 dl.read_file(real_filename, columnnames_included)
-            except DLFileExcept as e:
+            except DLFileExcept as e: # DLFileExcept = FileException
                 flash(message=str(e), category="error")
                 # delete file + folder
                 shutil.rmtree(real_upload_folder, ignore_errors=True)

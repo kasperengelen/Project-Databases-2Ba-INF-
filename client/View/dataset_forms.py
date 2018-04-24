@@ -97,11 +97,11 @@ class AttributeForm(FlaskForm):
 # ENDCLASS
 
 class HistoryForm(FlaskForm):
-    options = SelectField('Attribute', choices=[], id="history_options")
+    options = SelectField('Attribute', choices=[], id="history_options", coerce = lambda x: None if x == "__dataset" else x)
 
     def fillForm(self, tables):
         self.options.choices = [(table, table) for table in tables]
-        self.options.choices.insert(0, ("dataset", "Entire Dataset"))
+        self.options.choices.insert(0, ("__dataset", "Entire Dataset"))
     # ENDMETHOD
 # ENDCLASS
 
