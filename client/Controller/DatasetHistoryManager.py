@@ -217,8 +217,8 @@ class DatasetHistoryManager:
             table_name: Name of the table that has to be shown.
         """
         offset = (page_nr - 1) * nr_rows
-        #dict_cur = self.db_connection.dict_cursor()
-        dict_cur = self.db_connection.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        dict_cur = self.db_connection.dict_cursor()
+        #dict_cur = self.db_connection.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
         if show_all is False:
             query = ("SELECT * FROM system.dataset_history WHERE setid = %s AND (table_name = %s OR origin_table = %s)"
