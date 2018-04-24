@@ -236,22 +236,22 @@ def view_dataset_table_history(dataset_id, tablename, page_nr):
     dataset = DatasetManager.getDataset(dataset_id)
     dataset_info = dataset.toDict()
 
-    # handle form
-    form = HistoryForm(request.form)
-    form.fillForm(dataset.getTableNames())
-
     # handle POST request to change table
     if request.method == "POST":
+        form = HistoryForm(request.form)
+        form.fillForm(dataset.getTableNames())
+
         if not form.validate():
-            print(form.errors)
-            print(form.options.data)
             flash(message="Invalid form.", category="error")
             return redirect(url_for("dataset_pages.view_dataset_table_history", dataset_id = dataset_id, tablename = tablename, page_nr = 1))
         else:
             tablename = form.options.data
             if tablename == '__dataset':
                 tablename = None
-
+            return redirect(url_for("dataset_pages.view_dataset_table_history", dataset_id = dataset_id, tablename = tablename, page_nr = 1))
+    else:
+        form = HistoryForm(options = tablename)
+        form.fillForm(dataset.getTableNames())
 
     # check if current tablename is valid
     if tablename is not None and tablename not in dataset.getTableNames():
@@ -295,23 +295,28 @@ def set_session_rowcount(redirect_type):
     dataset_id = int(form.cur_dataset.data)
     tablename = form.cur_tablename.data
 
-    if not DatasetManager.getDataset(dataset_id):
+    if tablename == '':
+        tablename = None
+
+    if not DatasetManager.existsID(dataset_id):
         abort(404)
 
     dataset = DatasetManager.getDataset(dataset_id)
 
-    if tablename not in dataset.getTableNames():
+    if tablename not in dataset.getTableNames() and tablename is not None:
         abort(404)
 
     form.fillForm(tablename, dataset_id)
 
     if not form.validate():
+        flash(message="Invalid form.", category="error")
         abort(404)
 
     if not redirect_type in ['CURRENT', 'ORIGINAL', 'HISTORY']:
         abort(404)
 
-    print(form.entry_count.data)
+    if tablename is None and redirect_type != 'HISTORY':
+        abort(404)
 
     session['rowcount'] = int(form.entry_count.data)
 
