@@ -4,7 +4,6 @@ from Controller.AccessController import require_login, require_admin
 from Controller.AccessController import require_adminperm, require_writeperm, require_readperm
 from Controller.DatasetManager import DatasetManager
 from Controller.UserManager import UserManager
-from Controller.DatasetHistoryManager import DatasetHistoryManager
 from View.dataset_forms import FindReplaceForm, DeleteAttrForm, DatasetForm, AddUserForm, RemoveUserForm, DatasetListEntryForm, TableUploadForm, EntryCountForm
 from View.dataset_forms import DownloadForm, DataTypeTransform, NormalizeZScore, OneHotEncoding, TableJoinForm, RegexFindReplace, DiscretizeEqualWidth, ExtractDateTimeForm
 from View.dataset_forms import DiscretizeEqualFreq, DiscretizeCustomRange, DeleteOutlier, FillNullsMean, FillNullsMedian, FillNullsCustomValue, AttributeForm
@@ -228,24 +227,50 @@ def view_dataset_table_original(dataset_id, tablename, page_nr):
 @require_readperm
 def view_dataset_table_history(dataset_id, tablename, page_nr):
     
+    rowcount = 50
+
     if not DatasetManager.existsID(dataset_id):
         abort(404)
 
     dataset = DatasetManager.getDataset(dataset_id)
 
     # handle form
-
     form = HistoryForm(request.form)
-    form.fillForm(tables)
+    form.fillForm(dataset.getTableNames())
+
+    # handle POST request to change table
+    if request.method == "POST":
+        if not form.validate():
+            flash(message="Invalid form.", category="error")
+            return redirect(url_for("dataset_pages.view_dataset_table_history", dataset_id = dataset_id, tablename = tablename, page_nr = 1))
+        else:
+            tablename = form.options.data
 
     # check if current tablename is valid
+    if tablename is not None and tablename not in dataset.getTableNames():
+        abort(404)
 
-    # retrieve history manager
-    dhm = DatasetHistoryManager(dataset_id, get_db())
+    ## retrieve data from dhm
+    show_all = (tablename is None)
 
+    dhm = dataset.getHistoryManager()
 
+    ## check if the page nr is in range
+    if not dhm.is_in_range(page_nr = page_nr, nr_rows = rowcount, show_all = show_all, table_name = tablename):
+        flash(message="Page out of range.", category="error")
+        return redirect(url_for("dataset_pages.view_dataset_table_history", dataset_id = dataset_id, tablename = tablename, page_nr = 1))
 
-    return render_template('dataset_pages.table_history.html')
+    ## retrieve render code
+    table_data = dhm.render_history_table(page_nr = page_nr, nr_rows = rowcount, show_all = show_all, table_name = tablename)
+
+    ## retrieve page indices
+    page_indices = dhm.get_page_indices(display_nr = rowcount, page_nr = page_nr)
+
+    ## render the template with the needed variables
+    return render_template('dataset_pages.table_history.html',
+                                            table_data = table_data,
+                                            page_indices = page_indices,
+                                            history_form = form)
 # ENDFUNCTION
 
 @dataset_pages.route('/dataset/set_session_rowcount/', methods = ['POST'])
@@ -1172,7 +1197,7 @@ def upload(dataset_id):
             
             try:
                 dl.read_file(real_filename, columnnames_included)
-            except DLFileExcept as e:
+            except DLFileExcept as e: # DLFileExcept = FileException
                 flash(message=str(e), category="error")
                 # delete file + folder
                 shutil.rmtree(real_upload_folder, ignore_errors=True)
