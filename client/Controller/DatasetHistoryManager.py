@@ -3,6 +3,7 @@ import psycopg2
 import psycopg2.extras
 from psycopg2 import sql
 import pandas as pd
+import re
 
 
 
@@ -138,7 +139,7 @@ class DatasetHistoryManager:
         cur = self.db_connection.cursor()
         if show_all is False:
             query = "SELECT COUNT(*) FROM system.dataset_history WHERE setid = %s AND (table_name = %s OR origin_table = %s)"
-            cur.execute(sql.SQL(query), [self.setid, tablename, tablename])
+            cur.execute(sql.SQL(query), [self.setid, table_name, table_name])
         else:
             query = "SELECT COUNT(*) FROM system.dataset_history WHERE setid = %s"
             cur.execute(sql.SQL(query), [self.setid])
@@ -223,7 +224,7 @@ class DatasetHistoryManager:
         if show_all is False:
             query = ("SELECT * FROM system.dataset_history WHERE setid = %s AND (table_name = %s OR origin_table = %s)"
                      " LIMIT %s OFFSET %s")
-            dict_cur.execute(sql.SQL(query), [self.setid, tablename, tablename, nr_rows, offset])
+            dict_cur.execute(sql.SQL(query), [self.setid, table_name, table_name, nr_rows, offset])
         else:
             query = "SELECT * FROM system.dataset_history WHERE setid = %s LIMIT %s OFFSET %s"
             dict_cur.execute(sql.SQL(query), [self.setid, nr_rows, offset])
@@ -231,7 +232,8 @@ class DatasetHistoryManager:
 
         all_rows = dict_cur.fetchall()
         df = self.__rows_to_dataframe(all_rows)
-        html_string = df.to_html(None, None, None, True, False)
+        #html_string = df.to_html(None, None, None, True, False)
+        html_string = re.sub(' mytable', '" id="mytable', df.to_html(None, None, None, True, False, classes="mytable"))
         return html_string
 
 
