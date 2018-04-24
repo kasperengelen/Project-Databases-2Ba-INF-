@@ -445,7 +445,7 @@ class TableTransformer:
             self.db_connection.cursor().execute(sql.SQL(sql_query).format(sql.Identifier(internal_ref[0]), sql.Identifier(internal_ref[1]),
                                                                       sql.Identifier(attribute)), (replacement, regex))
         except psycopg2.DataError as e:
-            error_msg = str(e)  + "Please refer to the PostgreSQL documentation on regular expressions for more information."
+            error_msg = str(e)  + ". Please refer to the PostgreSQL documentation on regular expressions for more information."
             raise self.ValueError(error_msg)
 
         self.db_connection.commit()
@@ -679,14 +679,15 @@ class TableTransformer:
 
     def __calculate_equifrequent_indices(self, width, remainder, nr_bins):
         """Calculates the indices of the list that represent bin edges for discretize_using_equal_frequency."""
-        index_bins = [0]
+        index_bins = [-1] #Offset all the indices because Nth element is at index N-1
         for i in range(nr_bins):
             index_value = index_bins[i] + width
             if remainder > 0:
                 index_value += 1
                 remainder -= 1
-            index_bins.append(index_value)
+            index_bins.append(index_value)# minus because Nth element is at index N-1
 
+        index_bins[0] = 0 #The first index is always zero.
         return index_bins
 
     def __bin_fits(self, elements, indices_list):
