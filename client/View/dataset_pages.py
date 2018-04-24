@@ -100,6 +100,7 @@ def view_dataset_table(dataset_id, tablename, page_nr):
     extract_form = ExtractDateTimeForm()
 
     entrycount_form = EntryCountForm(entry_count = session['rowcount'])
+    entrycount_form.fillForm(dataset_id, tablename)
 
     # fill forms with data
     findrepl_form.fillForm(attrs)
@@ -115,7 +116,6 @@ def view_dataset_table(dataset_id, tablename, page_nr):
     fillnullmedian_form.fillForm(attrs)
     fillnullcustom_form.fillForm(attrs)
     attr_form.fillForm(attrs)
-    entrycount_form.fillForm(dataset_id, tablename)
     typeconversion_form.fillForm(attrs, [], [])
     extract_form.fillForm(attrs)
     predicateone_form.fillForm(attrs)
@@ -203,6 +203,7 @@ def view_dataset_table_original(dataset_id, tablename, page_nr):
     table_data = tv.render_table(page_nr, row_count)
 
     entrycount_form = EntryCountForm(entry_count = session['rowcount'])
+    entrycount_form.fillForm(dataset_id, tablename)
 
     # get indices
     page_indices = tv.get_page_indices(display_nr = row_count, page_nr = page_nr)
@@ -274,6 +275,7 @@ def view_dataset_table_history(dataset_id, tablename, page_nr):
 
     ## entry count
     entrycount_form = EntryCountForm(entry_count = session['rowcount'])
+    entrycount_form.fillForm(dataset_id, tablename)
 
     ## render the template with the needed variables
     return render_template('dataset_pages.table_history.html',
