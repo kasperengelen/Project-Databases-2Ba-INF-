@@ -3,6 +3,7 @@ import psycopg2
 import psycopg2.extras
 from psycopg2 import sql
 import pandas as pd
+import re
 
 
 
@@ -138,7 +139,7 @@ class DatasetHistoryManager:
         cur = self.db_connection.cursor()
         if show_all is False:
             query = "SELECT COUNT(*) FROM system.dataset_history WHERE setid = %s AND (table_name = %s OR origin_table = %s)"
-            cur.execute(sql.SQL(query), [self.setid, tablename, tablename])
+            cur.execute(sql.SQL(query), [self.setid, table_name, table_name])
         else:
             query = "SELECT COUNT(*) FROM system.dataset_history WHERE setid = %s"
             cur.execute(sql.SQL(query), [self.setid])
@@ -217,13 +218,13 @@ class DatasetHistoryManager:
             table_name: Name of the table that has to be shown.
         """
         offset = (page_nr - 1) * nr_rows
-        #dict_cur = self.db_connection.dict_cursor()
-        dict_cur = self.db_connection.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        dict_cur = self.db_connection.dict_cursor()
+        #dict_cur = self.db_connection.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
         if show_all is False:
             query = ("SELECT * FROM system.dataset_history WHERE setid = %s AND (table_name = %s OR origin_table = %s)"
                      " LIMIT %s OFFSET %s")
-            dict_cur.execute(sql.SQL(query), [self.setid, tablename, tablename, nr_rows, offset])
+            dict_cur.execute(sql.SQL(query), [self.setid, table_name, table_name, nr_rows, offset])
         else:
             query = "SELECT * FROM system.dataset_history WHERE setid = %s LIMIT %s OFFSET %s"
             dict_cur.execute(sql.SQL(query), [self.setid, nr_rows, offset])
@@ -231,7 +232,8 @@ class DatasetHistoryManager:
 
         all_rows = dict_cur.fetchall()
         df = self.__rows_to_dataframe(all_rows)
-        html_string = df.to_html(None, None, None, True, False)
+        #html_string = df.to_html(None, None, None, True, False)
+        html_string = re.sub(' mytable', '" id="mytable', df.to_html(None, None, None, True, False, classes="mytable"))
         return html_string
 
 
@@ -243,6 +245,7 @@ class DatasetHistoryManager:
 
     def __rowstring_generator2(self, dict_obj):
         rowstring = 'Deleted attribute "{}" of table "{}"'.format(dict_obj['attribute'], dict_obj['origin_table'])
+        return rowstring
 
     def __rowstring_generator3(self, dict_obj):
         param = dict_obj['parameters']

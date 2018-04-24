@@ -6,6 +6,7 @@ from Controller.UserManager import UserManager
 from Controller.TableViewer import TableViewer
 from Controller.TableTransformer import TableTransformer
 from Controller.DataLoader import DataLoader
+from Controller.DatasetHistoryManager import DatasetHistoryManager
 
 class DatasetInfo:
     """Class that represents a dataset."""
@@ -83,6 +84,10 @@ class DatasetInfo:
     def getDataLoader(self):
         """Retrieve the dataloader for this dataset."""
         return DataLoader(self.setid, self.db_conn)
+
+    def getHistoryManager(self):
+        """Retrieve the history manager for this dataset."""
+        return DatasetHistoryManager(self.setid, self.db_conn)
 
     def deleteTable(self, tablename):
         """Deletes the specified table from the dataset."""
