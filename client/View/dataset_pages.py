@@ -100,6 +100,7 @@ def view_dataset_table(dataset_id, tablename, page_nr):
     extract_form = ExtractDateTimeForm()
 
     entrycount_form = EntryCountForm(entry_count = session['rowcount'])
+    entrycount_form.fillForm(dataset_id, tablename)
 
     # fill forms with data
     findrepl_form.fillForm(attrs)
@@ -115,7 +116,6 @@ def view_dataset_table(dataset_id, tablename, page_nr):
     fillnullmedian_form.fillForm(attrs)
     fillnullcustom_form.fillForm(attrs)
     attr_form.fillForm(attrs)
-    entrycount_form.fillForm(dataset_id, tablename)
     typeconversion_form.fillForm(attrs, [], [])
     extract_form.fillForm(attrs)
     predicateone_form.fillForm(attrs)
@@ -203,6 +203,7 @@ def view_dataset_table_original(dataset_id, tablename, page_nr):
     table_data = tv.render_table(page_nr, row_count)
 
     entrycount_form = EntryCountForm(entry_count = session['rowcount'])
+    entrycount_form.fillForm(dataset_id, tablename)
 
     # get indices
     page_indices = tv.get_page_indices(display_nr = row_count, page_nr = page_nr)
@@ -272,17 +273,22 @@ def view_dataset_table_history(dataset_id, tablename, page_nr):
     ## retrieve page indices
     page_indices = dhm.get_page_indices(display_nr = rowcount, page_nr = page_nr)
 
+    ## entry count
+    entrycount_form = EntryCountForm(entry_count = session['rowcount'])
+    entrycount_form.fillForm(dataset_id, tablename)
+
     ## render the template with the needed variables
     return render_template('dataset_pages.table_history.html',
                                             table_data = table_data,
                                             dataset_info = dataset_info,
                                             page_indices = page_indices,
-                                            history_form = form)
+                                            history_form = form,
+                                            entrycount_form = entrycount_form)
 # ENDFUNCTION
 
-@dataset_pages.route('/dataset/set_session_rowcount/', methods = ['POST'])
+@dataset_pages.route('/dataset/set_session_rowcount/<string:redirect_type>', methods = ['POST'])
 @require_login
-def set_session_rowcount():
+def set_session_rowcount(redirect_type):
     """Callback to set the session rowcount."""
     form = EntryCountForm(request.form)
 
@@ -300,12 +306,21 @@ def set_session_rowcount():
     form.fillForm(tablename, dataset_id)
 
     if not form.validate():
-        print(form.entry_count.data)
         abort(404)
+
+    if not redirect_type in ['CURRENT', 'ORIGINAL', 'HISTORY']:
+        abort(404)
+
+    print(form.entry_count.data)
 
     session['rowcount'] = int(form.entry_count.data)
 
-    return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
+    if redirect_type == 'CURRENT':
+        return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
+    elif redirect_type == 'ORIGINAL':
+        return redirect(url_for('dataset_pages.view_dataset_table_original', dataset_id = dataset_id, tablename = tablename, page_nr = 1))
+    elif redirect_type == 'HISTORY':
+        return redirect(url_for('dataset_pages.view_dataset_table_history', dataset_id = dataset_id, tablename = tablename, page_nr = 1))
 # ENDFUNCTION
 
 @dataset_pages.route('/dataset/<int:dataset_id>/jointables', methods=['POST'])
