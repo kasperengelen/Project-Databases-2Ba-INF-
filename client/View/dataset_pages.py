@@ -248,6 +248,9 @@ def view_dataset_table_history(dataset_id, tablename, page_nr):
             return redirect(url_for("dataset_pages.view_dataset_table_history", dataset_id = dataset_id, tablename = tablename, page_nr = 1))
         else:
             tablename = form.options.data
+            if tablename == '__dataset':
+                tablename = None
+
 
     # check if current tablename is valid
     if tablename is not None and tablename not in dataset.getTableNames():
@@ -971,6 +974,7 @@ def leave(dataset_id):
     try:
         flash(message="Leaving dataset complete.", category="success")
         dataset = DatasetManager.getDataset(dataset_id)
+        # TODO restructure this
         dataset.removePerm(int(session['userdata']['userid']))
     except:
         flash(message="Error when leaving dataset.", category="error")
