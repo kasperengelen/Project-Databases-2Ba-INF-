@@ -27,6 +27,24 @@
 
 	{% if table_data != None %}
 		<div class="xs-center">
+    	<div class="row">
+	    	<div class="col-sm-3 text-left">
+	    		<input type="text" id="input" placeholder="Search Page No" style="border-style: solid; border-width: 1px; border-radius: 3px;"/>
+				<button onclick="page_search()"><i class="glyphicon glyphicon-arrow-right"></i></button>
+
+				<script type="text/javascript">
+				function page_search(){
+					if(document.getElementById('input').value != "") {
+				    	if(!isNaN(document.getElementById('input').value))
+				    		window.location.href = window.location.href + '/' + document.getElementById('input').value;
+					}
+				 }
+				</script>
+			</div>
+		</div>
+	</div>
+
+		<div class="xs-center">
 			<!--ENTRYCOUNT-->
 			<div class="col-sm-3 text-left">
 			</br>
@@ -127,19 +145,8 @@
     				lengthChange: false,
     				bInfo: false,
     				width: 100%
-    			} );
+    			});
     		} );
-
-    		var $rows = $('#mytable tbody tr');
-			$('#searchInput').keyup(function() {
-			    var val = $.trim($(this).val()).replace(/ +/g, ' ').toLowerCase();
-			    
-			    $rows.show().filter(function() {
-			        var text = $(this).text().replace(/\s+/g, ' ').toLowerCase();
-			        return !~text.indexOf(val);
-			    }).hide();
-
-			});
 		</script>
 	</div>
 
