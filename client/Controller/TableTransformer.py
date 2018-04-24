@@ -257,7 +257,7 @@ class TableTransformer:
     def __convert_numeric(self, internal_ref, attribute, to_type, length):
         """Conversion of "numeric" things (INTEGER and FLOAT, DATE, TIME, TIMESTAMP)"""
         if to_type in ['VARCHAR(n)', 'CHAR(n)']:
-            to_type = to_type.replace('n', length)
+            to_type = to_type.replace('n', str(length))
         sql_query = "ALTER TABLE {}.{} ALTER COLUMN  {} TYPE %s" % to_type
         self.db_connection.cursor().execute(sql.SQL(sql_query).format(sql.Identifier(internal_ref[0]), sql.Identifier(internal_ref[1]),
                                                                                               sql.Identifier(attribute)), [to_type])
@@ -292,7 +292,7 @@ class TableTransformer:
         casting_var = temp.format(ident_attr, data_format)
 
         if temp in ['CHAR' , 'VARCHAR']: #Char and varchar don't need special parameters
-            to_type = to_type.replace('n', length)
+            to_type = to_type.replace('n', str(length))
             casting_var = to_type
             
         sql_query = "ALTER TABLE {}.{} ALTER COLUMN {} TYPE " + casting_var

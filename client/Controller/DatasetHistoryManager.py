@@ -17,7 +17,6 @@ class DatasetHistoryManager:
     def __init__(self, setid, db_connection, track=True):
         self.setid = setid
         self.db_connection = db_connection
-        self.engine = engine
         self.track = track
         self.entry_count = None
         self.choice_dict = None
