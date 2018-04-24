@@ -9,7 +9,7 @@ import re
 
 
 class DatasetHistoryManager:
-    """Class that manages the transformation history of a dataset.
+    """Class that manages the transformation history ofimport reimport re a dataset.
 
     Attributes:
         setid: The id of the dataset that the manager has to access.
