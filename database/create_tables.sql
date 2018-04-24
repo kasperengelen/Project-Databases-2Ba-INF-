@@ -51,7 +51,7 @@ CREATE TABLE SYSTEM.DATASET_HISTORY(
 );
 
 -- Trigger to delete all the corresponding data if the last admin of the data is deleted.
-CREATE FUNCTION delete_clean() RETURNS TRIGGER AS $BODY$
+CREATE OR REPLACE FUNCTION delete_clean() RETURNS TRIGGER AS $BODY$
 DECLARE
 	deadset RECORD;
 BEGIN
