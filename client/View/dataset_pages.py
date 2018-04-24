@@ -219,10 +219,10 @@ def view_dataset_table_original(dataset_id, tablename, page_nr):
                                                 downloadform = DownloadForm())
 # ENDFUNCTION
 
-@dataset_pages.route('/dataset/<int:dataset_id>/history', defaults = {'page_nr': 1, 'tablename': None})
-@dataset_pages.route('/dataset/<int:dataset_id>/history/<int:page_nr>', defaults = {'tablename': None})
-@dataset_pages.route('/dataset/<int:dataset_id>/history/<string:tablename>', defaults = {'page_nr': 1})
-@dataset_pages.route('/dataset/<int:dataset_id>/history/<string:tablename>/<int:page_nr>')
+@dataset_pages.route('/dataset/<int:dataset_id>/history', defaults = {'page_nr': 1, 'tablename': None}, methods=["GET", "POST"])
+@dataset_pages.route('/dataset/<int:dataset_id>/history/<int:page_nr>', defaults = {'tablename': None}, methods=["GET", "POST"])
+@dataset_pages.route('/dataset/<int:dataset_id>/history/<string:tablename>', defaults = {'page_nr': 1}, methods=["GET", "POST"])
+@dataset_pages.route('/dataset/<int:dataset_id>/history/<string:tablename>/<int:page_nr>', methods=["GET", "POST"])
 @require_login
 @require_readperm
 def view_dataset_table_history(dataset_id, tablename, page_nr):
@@ -233,6 +233,7 @@ def view_dataset_table_history(dataset_id, tablename, page_nr):
         abort(404)
 
     dataset = DatasetManager.getDataset(dataset_id)
+    dataset_info = dataset.toDict()
 
     # handle form
     form = HistoryForm(request.form)
@@ -241,6 +242,8 @@ def view_dataset_table_history(dataset_id, tablename, page_nr):
     # handle POST request to change table
     if request.method == "POST":
         if not form.validate():
+            print(form.errors)
+            print(form.options.data)
             flash(message="Invalid form.", category="error")
             return redirect(url_for("dataset_pages.view_dataset_table_history", dataset_id = dataset_id, tablename = tablename, page_nr = 1))
         else:
@@ -269,6 +272,7 @@ def view_dataset_table_history(dataset_id, tablename, page_nr):
     ## render the template with the needed variables
     return render_template('dataset_pages.table_history.html',
                                             table_data = table_data,
+                                            dataset_info = dataset_info,
                                             page_indices = page_indices,
                                             history_form = form)
 # ENDFUNCTION
