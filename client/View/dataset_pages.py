@@ -802,7 +802,7 @@ def transform_discretizeCustomRange(dataset_id, tablename):
 
     try:
         tt.discretize_using_custom_ranges(tablename, form.select_attr.data, int_ranges, form.interval_spec.data)
-        flash(message="Discretization complete.")
+        flash(message="Discretization complete.", category="success")
     except Exception as e:
         flash(message="An error occurred. Details: " + str(e), category="error")
 
