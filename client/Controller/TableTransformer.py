@@ -750,9 +750,11 @@ class TableTransformer:
 
         column_name = attribute + "_categorical"
         category = self.__get_unique_name(tablename, column_name)
+        return None
         df[category] = pd.cut(df[attribute], bins, right=False, labels = binlabels, include_lowest=True)
         new_dtypes = self.__get_simplified_types(tablename, df)
         eventual_table = "" #This the table that eventually becomes the table with the resulting changes
+    
 
         if self.replace is True:
             #If the table should be replaced, drop it and recreate it.
