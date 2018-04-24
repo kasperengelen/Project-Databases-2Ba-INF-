@@ -27,7 +27,19 @@
 
 	{% if table_data != None %}
 		<div class="xs-center">
-			<div class="col-sm-3"></div>
+			<!--ENTRYCOUNT-->
+			<div class="col-sm-3 text-left">
+			</br>
+				{% from "includes/_formhelpers.html" import render_field %}
+				<form id="entrycount_form" method="post" action="{{ url_for('dataset_pages.set_session_rowcount', redirect_type='HISTORY') }}">
+					{{ entrycount_form.hidden_tag() }}
+					<div class="form-group" style="width: 30%;">
+						{{render_field(entrycount_form.entry_count, class_="form-control")}}
+				    </div>
+				</form>
+			</div>
+			<!--ENTRYCOUNT-->
+	
 			<div class="col-sm-6 text-center" style="overflow-x: auto;">
 		   		<ul class="pagination">
 		   			{% if page_indices|length > 1 %}
@@ -62,6 +74,10 @@
 	<script>
 		$('#history_options').change(function() {
 			$('#history').submit();
+		});
+
+		$('#entry_count').change(function() {
+			$('#entrycount_form').submit();
 		});
 	</script>
 

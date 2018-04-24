@@ -119,7 +119,11 @@
 		<div class="col-sm-3 text-left">
 		</br>
 			{% from "includes/_formhelpers.html" import render_field %}
-			<form id="entrycount_form" method="post" action="{{ url_for('dataset_pages.set_session_rowcount') }}">
+			{% if original != True %}
+				<form id="entrycount_form" method="post" action="{{ url_for('dataset_pages.set_session_rowcount', redirect_type='CURRENT') }}">
+			{% else %}
+				<form id="entrycount_form" method="post" action="{{ url_for('dataset_pages.set_session_rowcount', redirect_type='ORIGINAL') }}">
+			{% endif %}	
 				{{ entrycount_form.hidden_tag() }}
 				<div class="form-group" style="width: 30%;">
 					{{render_field(entrycount_form.entry_count, class_="form-control")}}
