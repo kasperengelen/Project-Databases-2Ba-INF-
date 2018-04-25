@@ -125,7 +125,7 @@ def view_dataset_table(dataset_id, tablename, page_nr):
 
 
     # render table
-    table_data = tv.render_table(page_nr, row_count, show_types = False)
+    table_data = tv.render_table(page_nr, row_count, show_types = True)
 
     # get indices
     page_indices = tv.get_page_indices(display_nr = row_count, page_nr = page_nr)
@@ -201,7 +201,7 @@ def view_dataset_table_original(dataset_id, tablename, page_nr):
         return redirect(url_for('dataset_pages.view_dataset_table_original', dataset_id=dataset_id, tablename = tablename, page_nr = 1))
 
     # render table
-    table_data = tv.render_table(page_nr, row_count, show_types = False)
+    table_data = tv.render_table(page_nr, row_count, show_types = True)
 
     entrycount_form = EntryCountForm(entry_count = session['rowcount'])
     entrycount_form.fillForm(dataset_id, tablename)
