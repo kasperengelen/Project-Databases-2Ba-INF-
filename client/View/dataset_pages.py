@@ -280,9 +280,11 @@ def view_dataset_table_history(dataset_id, tablename, page_nr):
     ## render the template with the needed variables
     return render_template('dataset_pages.table_history.html',
                                             table_data = table_data,
+                                            table_name = tablename,
                                             dataset_info = dataset_info,
                                             page_indices = page_indices,
                                             history_form = form,
+                                            current_page = page_nr,
                                             entrycount_form = entrycount_form)
 # ENDFUNCTION
 
