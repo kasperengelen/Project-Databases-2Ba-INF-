@@ -228,7 +228,7 @@ def view_dataset_table_original(dataset_id, tablename, page_nr):
 @require_readperm
 def view_dataset_table_history(dataset_id, tablename, page_nr):
     
-    rowcount = 50
+    rowcount = session['rowcount']
 
     if not DatasetManager.existsID(dataset_id):
         abort(404)
