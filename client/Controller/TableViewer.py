@@ -154,7 +154,7 @@ class TableViewer:
         offset = (page_nr - 1) * nr_rows
         SQL_query = "SELECT * FROM \"%s\".\"%s\" LIMIT %s OFFSET %s" % (self.schema, self.tablename, nr_rows, offset)
         data_frame = pd.read_sql(SQL_query, self.engine)
-        html_table = re.sub(' mytable', '" id="mytable', data_frame.to_html(None, None, None, True, False, classes='mytable'))
+        html_table = re.sub(' mytable', '" id="mytable', data_frame.to_html(None, None, None, True, False, na_rep = 'NULL', classes='mytable'))
         if show_types is False:
             return html_table
         attributes = self.get_attributes()

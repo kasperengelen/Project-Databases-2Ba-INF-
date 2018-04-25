@@ -113,41 +113,87 @@ class TableTransformer:
         list_size = len(arg_list)
         if list_size  in [3, 7, 11]:
             predicate = ''
+            part1 = ''
+            part2 = ''
+            part3 = ''
             if list_size >= 3:
-                predicate += '"{}"'.format(arg_list[0])
-                predicate += ' ' + arg_list[1]
+                part1 += '"{}"'.format(arg_list[0])
+                part1 += ' ' + arg_list[1]
                 attr_type = self.get_attribute_type(tablename, arg_list[0])
                 if not self.is_numerical(attr_type):
-                    predicate += ' ' + "'{}'".format(arg_list[2])                   
+                    part1 += ' ' + "'{}'".format(arg_list[2])                   
                 else:
-                    predicate += ' ' + arg_list[2]
+                    part1 += ' ' + arg_list[2]
+
+                if arg_list[2] == 'None':#Add a NULL check in case user meant to delete NULLS
+                    if attr_type not in ['character', 'character varying']:
+                        part1 = ''
+                    else:
+                        part1 += ' OR '
+                    if arg_list[1] == '=':
+                        part1 = ' (' + part1
+                        part1 += '"{}" IS NULL )'.format(arg_list[0])
+                    elif arg_list[1] == '!=':
+                        part1 = ' (' + part1
+                        part1 += '"{}" IS NOT NULL )'.format(arg_list[0])
+                    
+                    
             
             if list_size >= 7:
                 
-                predicate += ' ' + arg_list[3]
-                predicate += ' ' +'"{}"'.format(arg_list[4])
-                predicate += ' ' + arg_list[5]
+                part1 += ' ' + arg_list[3]
+                part2 += ' ' +'"{}"'.format(arg_list[4])
+                part2 += ' ' + arg_list[5]
                 attr_type = self.get_attribute_type(tablename, arg_list[4])
                 if not self.is_numerical(attr_type):
-                    predicate += ' ' + "'{}'".format(arg_list[6])                   
+                    part2 += ' ' + "'{}'".format(arg_list[6])                   
                 else:
-                    predicate += ' ' + arg_list[6]
+                    part2 += ' ' + arg_list[6]
+
+                if arg_list[6] == 'None':#Add a NULL check in case user meant to delete NULLS
+                    if attr_type not in ['character', 'character varying']:
+                        part2 = ''
+                    else:
+                        part2 += ' OR '
+                    if arg_list[5] == '=':
+                        part2 = ' (' + part2
+                        part2 += '"{}" IS NULL )'.format(arg_list[4])
+                    elif arg_list[5] == '!=':
+                        part2 = ' (' + part2
+                        part2 += '"{}" IS NOT NULL )'.format(arg_list[4])
 
             if list_size == 11:
-                predicate += ' ' + arg_list[7]
-                predicate += ' ' + '"{}"'.format(arg_list[8])
-                predicate += ' ' + arg_list[9]
+                part2 += ' ' + arg_list[7]
+                part3 += ' ' + '"{}"'.format(arg_list[8])
+                part3 += ' ' + arg_list[9]
                 attr_type = self.get_attribute_type(tablename, arg_list[7])
                 if not self.is_numerical(attr_type):
-                    predicate += ' ' + "'{}'".format(arg_list[10])                   
+                    part3 += ' ' + "'{}'".format(arg_list[10])                   
                 else:
-                    predicate += ' ' + arg_list[10]
+                    part3 += ' ' + arg_list[10]
+
+                if arg_list[10] == 'None':#Add a NULL check in case user meant to delete NULLS
+                    if attr_type not in ['character', 'character varying']:
+                        part3 = ''
+                    else:
+                        part3 += ' OR '
+                    if arg_list[9] == '=':
+                        part3 = ' (' + part3
+                        part3 += '"{}" IS NULL )'.format(arg_list[8])
+                    elif arg_list[1] == '!=':
+                        part3 = ' (' + part3
+                        part3 += '"{}" IS NOT NULL )'.format(arg_list[8])
+
+            predicate = part1 + part2 + part3
 
         else:
             raise self.ValueError('Can not delete rows because an invalid predicate has been provided.')
 
         query = "DELETE FROM {}.{} WHERE %s" % predicate
-        self.db_connection.cursor().execute(sql.SQL(query).format(sql.Identifier(internal_ref[0]), sql.Identifier(internal_ref[1])))
+        try:
+            self.db_connection.cursor().execute(sql.SQL(query).format(sql.Identifier(internal_ref[0]), sql.Identifier(internal_ref[1])))
+        except psycopg2.DataError:
+            raise self.ValueError('Could not delete rows using this predicate since it contains invalid input value(s) for the attributes.')
         self.db_connection.commit()
         clean_predicate = predicate.replace('"', '\\"') #Escape double quotes to pass it in postgres array
         self.history_manager.write_to_history(internal_ref[1], tablename, 'None', [clean_predicate], 15)
@@ -410,10 +456,12 @@ class TableTransformer:
                                                                               sql.Identifier(attribute)), (original_value, replacement, value))
                 self.db_connection.commit()
                 return
-                
-
-        self.db_connection.cursor().execute(sql.SQL(sql_query).format(sql.Identifier(internal_ref[0]), sql.Identifier(internal_ref[1]),
-                                                                      sql.Identifier(attribute)), (replacement, value))
+                    
+        try:
+            self.db_connection.cursor().execute(sql.SQL(sql_query).format(sql.Identifier(internal_ref[0]), sql.Identifier(internal_ref[1]),
+                                                                          sql.Identifier(attribute)), (replacement, value))
+        except psycopg2.DataError:
+            raise self.ValueError("Could not perform find-and-replace due to an invalid input value for this attribute.")
         self.db_connection.commit()
         self.history_manager.write_to_history(internal_ref[1], tablename, attribute, [original_value, replacement, exact, replace_all], 8)
 
@@ -630,7 +678,7 @@ class TableTransformer:
         internal_ref = self.get_internal_reference(tablename)
         attr_type = self.get_attribute_type(tablename, attribute)
         if attr_type[0] not in ['integer', 'double precision']:
-            raise self.AttrTypeError("Normalization failed due attribute not being of numeric type (neither integer or float)")
+            raise self.AttrTypeError("Discretization failed due attribute not being of numeric type (neither integer or float)")
         sql_query = "SELECT * FROM \"{}\".\"{}\"".format(*internal_ref)
         df = pd.read_sql(sql_query, self.engine)
         minimum = df[attribute].min()
@@ -689,17 +737,6 @@ class TableTransformer:
 
         index_bins[0] = 0 #The first index is always zero.
         return index_bins
-
-    def __bin_fits(self, elements, indices_list):
-        """Check whether elements will fit properly in bins."""
-        for i in range(1, len(indices_list)):
-            a = indices_list[i-1]
-            b = indices_list[i]
-            #If the element after a supposed bin is still in range in the bin before...
-            if math.ceil(elements[a]) == math.ceil(elements [b]):
-                return False
-            
-        return True
             
             
 
@@ -709,11 +746,15 @@ class TableTransformer:
         #The initial steps are similar to equi-distant discretization
         attr_type = self.get_attribute_type(tablename, attribute)
         if attr_type[0] not in ['integer', 'double precision']:
-            raise self.AttrTypeError("Normalization failed due attribute not being of numeric type (neither integer or float)")
-        
+            raise self.AttrTypeError("Discretization failed due attribute not being of numeric type (neither integer or float)")
+
+        round_to_int = True
         internal_ref = self.get_internal_reference(tablename)
         sql_query = "SELECT * FROM \"{}\".\"{}\"".format(*internal_ref)
         df = pd.read_sql(sql_query, self.engine)
+        if attr_type != 'integer':
+            if df[attribute].max() < 2: #Probably working with values [0-1]
+                round_to_int = False
         nr_values = df[attribute].size
         nr_bins = math.floor(math.sqrt(nr_values))
         if nr_bins < 2:
@@ -726,31 +767,30 @@ class TableTransformer:
         list_size = len(elements)
 
         indices = []
-    
-        while(True):
-            if nr_bins < 2: #We need atleast 2 bins, any less is impossible
-                break
-            bin_width = math.floor(list_size / nr_bins)
-            remainder = list_size % nr_bins
-            indices   = self.__calculate_equifrequent_indices(bin_width, remainder, nr_bins)
-            if self.__bin_fits(elements, indices): #If the data fits in the bins, it's good
-                break
-            else: #If data doesn't fit in the bins, use less bins and thus larger bins.
-                nr_bins -= 1
+
+        #Let's first try the naïve approach
+        bin_width = math.floor(list_size / nr_bins)
+        remainder = list_size % nr_bins
+        indices   = self.__calculate_equifrequent_indices(bin_width, remainder, nr_bins)
 
         #Calculate actual values for the bins
         bins = [elements[0]]
         for i in range(1, len(indices)):
             index = indices[i]
-            value = math.ceil(elements[index] + 0.0001)
+            if round_to_int is True:
+                value = math.ceil(elements[index] + 0.0001)
+            else:
+                value = round((elements[index] + 0.05), 1)
             bins.append(value)
+
+        bins = list(set(bins))
+        bins.sort()
 
         #Make binlabels to represent the bins.
         binlabels = self.__make_binlabels(bins)
 
         column_name = attribute + "_categorical"
         category = self.__get_unique_name(tablename, column_name)
-        return None
         df[category] = pd.cut(df[attribute], bins, right=False, labels = binlabels, include_lowest=True)
         new_dtypes = self.__get_simplified_types(tablename, df)
         eventual_table = "" #This the table that eventually becomes the table with the resulting changes
@@ -783,7 +823,8 @@ class TableTransformer:
         """
         attr_type = self.get_attribute_type(tablename, attribute)
         if attr_type[0] not in ['integer', 'double precision']:
-            raise self.AttrTypeError("Normalization failed due attribute not being of numeric type (neither integer or float)")
+            raise self.AttrTypeError("Discretization failed due attribute not being of numeric type (neither integer or float)")
+
         internal_ref = self.get_internal_reference(tablename)
         sql_query = "SELECT * FROM \"{}\".\"{}\"".format(*internal_ref)
         df = pd.read_sql(sql_query, self.engine)
@@ -840,12 +881,29 @@ class TableTransformer:
         internal_ref = self.get_internal_reference(tablename)
         if self.replace is False:
             internal_ref = self.copy_table(internal_ref, new_name)
+
+        #Let's check if the attribute is a numeric type, this should not be performed on non-numeric types
+        attr_type = self.get_attribute_type(tablename, attribute)
+        if attr_type[0] not in ['integer', 'double precision']:
+            raise self.AttrTypeError("Deleting outliers failed due attribute not being of numeric type (neither integer or float)")
+
+        nullable = False
+
+        if self.is_nullable(tablename, attribute) is True:
+            nullable is True
+            
+        
         if larger is True:
             comparator = '>'
         else:
             comparator = '<'
         #Create query for larger/smaller deletion of outlier
-        sql_query = "UPDATE {0}.{1} SET {2} = null  WHERE {2} %s %s" % (comparator, '%s')
+        if nullable is True:
+            sql_query = "UPDATE {0}.{1} SET {2} = null  WHERE {2} %s %s"
+        else:
+            sql_query = "DELETE FROM {0}.{1} WHERE {2} %s %s"
+
+        sql_query = sql_query % (comparator, '%s')
         self.db_connection.cursor().execute(sql.SQL(sql_query).format(sql.Identifier(internal_ref[0]), sql.Identifier(internal_ref[1]),
                                                                                     sql.Identifier(attribute)), (value,))
         self.db_connection.commit()
@@ -870,6 +928,11 @@ class TableTransformer:
         if self.replace is False:
             internal_ref = self.copy_table(internal_ref, new_name)
 
+        #Let's check if the attribute is a numeric type, this should not be performed on non-numeric types
+        attr_type = self.get_attribute_type(tablename, attribute)
+        if attr_type[0] not in ['integer', 'double precision']:
+            raise self.AttrTypeError("Filling nulls failed due attribute not being of numeric type (neither integer or float)")
+
         sql_query = "SELECT * FROM \"{}\".\"{}\"".format(*internal_ref)
         df = pd.read_sql(sql_query, self.engine)
         mean = df[attribute].mean()
@@ -884,6 +947,11 @@ class TableTransformer:
         if self.replace is False:
             internal_ref = self.copy_table(internal_ref, new_name)
 
+        #Let's check if the attribute is a numeric type, this should not be performed on non-numeric types
+        attr_type = self.get_attribute_type(tablename, attribute)
+        if attr_type[0] not in ['integer', 'double precision']:
+            raise self.AttrTypeError("Filling nulls failed due attribute not being of numeric type (neither integer or float)")
+
         sql_query = "SELECT * FROM \"{}\".\"{}\"".format(*internal_ref)
         df = pd.read_sql(sql_query, self.engine)
         median = df[attribute].median()
@@ -897,6 +965,11 @@ class TableTransformer:
         internal_ref = self.get_internal_reference(tablename)
         if self.replace is False:
             internal_ref = self.copy_table(internal_ref, new_name)
+
+        #Let's check if the attribute is a numeric type, this should not be performed on non-numeric types
+        attr_type = self.get_attribute_type(tablename, attribute)
+        if attr_type[0] not in ['integer', 'double precision']:
+            raise self.AttrTypeError("Filling nulls failed due attribute not being of numeric type (neither integer or float)")
 
         #Perhaps do a sanity check here? I'll see later on.
 
