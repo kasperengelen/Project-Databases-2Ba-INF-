@@ -4,6 +4,7 @@ from Controller.AccessController import require_login, require_admin
 from Controller.AccessController import require_adminperm, require_writeperm, require_readperm
 from Controller.DatasetManager import DatasetManager
 from Controller.UserManager import UserManager
+from Controller.TableTransformer import TableTransformer
 from View.dataset_forms import FindReplaceForm, DeleteAttrForm, DatasetForm, AddUserForm, RemoveUserForm, DatasetListEntryForm, TableUploadForm, EntryCountForm
 from View.dataset_forms import DownloadForm, DataTypeTransform, NormalizeZScore, OneHotEncoding, TableJoinForm, RegexFindReplace, DiscretizeEqualWidth, ExtractDateTimeForm
 from View.dataset_forms import DiscretizeEqualFreq, DiscretizeCustomRange, DeleteOutlier, FillNullsMean, FillNullsMedian, FillNullsCustomValue, AttributeForm
@@ -427,8 +428,11 @@ def transform_predicate(dataset_id, tablename):
         predicate_list.append(predicatethree.input3.data)
 
     tt = dataset.getTableTransformer(tablename)
-
-    tt.delete_rows_using_predicate_logic(tablename, predicate_list)
+    try:
+        tt.delete_rows_using_predicate_logic(tablename, predicate_list)
+    except (TableTransformer.ValueError) as e:
+        flash(message="An error occured. Details: " + str(e), category="error")
+        
     flash(message="Rows deleted according to predicate.", category="success")
 
     return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
@@ -529,7 +533,7 @@ def transform_findreplace(dataset_id, tablename):
         tt.find_and_replace(tablename, form.select_attr.data, form.search.data, form.replacement.data, form.exactmatch.data,
                             form.replace_full_match.data)
         flash(message="Find and replace completed.", category="success")
-    except Exception as e:
+    except (TableTransformer.AttrTypeError, TableTransformer.ValueError) as e:
         flash(message="No matches found. Details: " + str(e), category="error")
 
     return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
