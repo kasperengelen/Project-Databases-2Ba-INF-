@@ -268,7 +268,7 @@ class FillNullsCustomValue(FlaskForm):
 class PredicateFormOne(FlaskForm):
 
     attr1 = SelectField('Attribute', choices = [], id="attr1")
-    op1 = SelectField('Operator', choices = [('=', '='), ('!=', '!='), ('>', '>'), ('<', '<'), ('Contains', 'Contains')], id="op1")
+    op1 = SelectField('Operator', choices = [('=', '='), ('!=', '!='), ('>', '>'), ('<', '<')], id="op1")
     input1 = StringField('Input', [InputRequired(message="Input is required.")], id="input1")
     select1 = SelectField('Logic operator', choices = [('END', 'END'), ('And', 'AND'), ('Or', 'OR')], id="select1")
 
@@ -280,7 +280,7 @@ class PredicateFormOne(FlaskForm):
 class PredicateFormTwo(FlaskForm):
 
     attr2 = SelectField('Attribute', choices = [], id="attr2")
-    op2 = SelectField('Operator', choices = [('=', '='), ('!=', '!='), ('>', '>'), ('<', '<'), ('Contains', 'Contains')], id="op2")
+    op2 = SelectField('Operator', choices = [('=', '='), ('!=', '!='), ('>', '>'), ('<', '<')], id="op2")
     input2 = StringField('Input', [InputRequired(message="Input is required.")], id="input2")
     select2 = SelectField('Logic operator', choices = [('END', 'END'), ('And', 'AND'), ('Or', 'OR')], id="select2")
 
@@ -293,7 +293,7 @@ class PredicateFormTwo(FlaskForm):
 class PredicateFormThree(FlaskForm):
 
     attr3 = SelectField('Attribute', choices = [], id="attr3")
-    op3 = SelectField('Operator', choices = [('=', '='), ('!=', '!='), ('>', '>'), ('<', '<'), ('Contains', 'Contains')], id="op3")
+    op3 = SelectField('Operator', choices = [('=', '='), ('!=', '!='), ('>', '>'), ('<', '<')], id="op3")
     input3 = StringField('Input', [InputRequired(message="Input is required.")], id="input3")
 
     def fillForm(self, attrs):
