@@ -26,7 +26,7 @@ class DatasetPermissionsManager:
                 break;
         # ENDFOR
 
-        user_perm = DatasetPermissionsManager.getPermForUserID(userid, db_conn = db_conn)
+        user_perm = DatasetPermissionsManager.getPermForUserID(setid, userid, db_conn = db_conn)
 
         # determine if the user's permission is higher than or equal to the required permission
         return user_perm in higher_perm_list
@@ -126,7 +126,7 @@ class DatasetPermissionsManager:
         if db_conn is None:
             db_conn = get_db()
 
-        db_conn.cursor().execute("SELECT permission_type FROM SYSTEM.set_permissions WHERE setid = %s AND userid = %s;", [int(setid)])
+        db_conn.cursor().execute("SELECT permission_type FROM SYSTEM.set_permissions WHERE setid = %s AND userid = %s;", [int(setid), int(userid)])
         result = db_conn.cursor().fetchone()
 
         if result is None:

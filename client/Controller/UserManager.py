@@ -65,7 +65,7 @@ class UserManager:
             db_conn = get_db()
 
         if not UserManager.existsID(userid, db_conn = db_conn):
-            raise RuntimeError("User with specified does not exist.")
+            raise RuntimeError("User with specified userid does not exist.")
 
         db_conn.cursor().execute("SELECT * FROM SYSTEM.user_accounts WHERE userid=%s;", [userid])
         result = db_conn.cursor().fetchone()
@@ -81,8 +81,8 @@ class UserManager:
         if db_conn is None:
             db_conn = get_db()
 
-        if not UserManager.existsEmail(userid, db_conn = db_conn):
-            raise RuntimeError("User with specified does not exist.")
+        if not UserManager.existsEmail(email, db_conn = db_conn):
+            raise RuntimeError("User with specified email does not exist.")
 
         db_conn.cursor().execute("SELECT * FROM SYSTEM.user_accounts WHERE email=%s;", [email])
         result = db_conn.cursor().fetchone()
