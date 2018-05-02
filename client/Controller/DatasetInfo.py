@@ -46,8 +46,10 @@ class DatasetInfo:
 
     def getTableNames(self):
         """Retrieve the names of the tables that are part of the dataset."""
-        self.db_conn.cursor().execute("SELECT table_name FROM information_schema.tables WHERE table_schema = %s;", [str(self.setid)])
-        result = self.db_conn.cursor().fetchall()
+
+        cur = self.db_conn.cursor()
+        cur.execute("SELECT table_name FROM information_schema.tables WHERE table_schema = %s;", [str(self.setid)])
+        result = cur.fetchall()
 
         tablenames = [t[0] for t in result]
 
@@ -62,6 +64,7 @@ class DatasetInfo:
 
         if not tablename in self.getTableNames():
             raise RuntimeError("Invalid tablename.")
+
         return TableViewer(setid = self.setid, 
                             tablename = tablename, 
                             engine = engine, 
@@ -94,8 +97,10 @@ class DatasetInfo:
         if not tablename in self.getTableNames():
             raise RuntimeError("Invalid tablename.")
 
-        self.db_conn.cursor().execute("DROP TABLE \"{}\".{};".format(int(self.setid), extensions.quote_ident(tablename, get_db().cursor())))
-        self.db_conn.cursor().execute("DROP TABLE \"original_{}\".{};".format(int(self.setid), extensions.quote_ident(tablename, get_db().cursor())))
+        cur = self.db_conn.cursor()
+        cur.execute("DROP TABLE \"{}\".{};".format(int(self.setid), extensions.quote_ident(tablename, get_db().cursor())))
+        cur.execute("DROP TABLE \"original_{}\".{};".format(int(self.setid), extensions.quote_ident(tablename, get_db().cursor())))
+        # TODO remove history?
         self.db_conn.commit()
     # ENDMETHOD
 
@@ -162,8 +167,9 @@ class DatasetInfo:
         if not UserManager.existsID(int(userid), self.db_conn):
             raise RuntimeError("Specified user does not exist.")
 
-        self.db_conn.cursor().execute("SELECT permission_type FROM SYSTEM.set_permissions WHERE setid=%s AND userid = %s;", [int(self.setid), int(userid)])
-        result = self.db_conn.cursor().fetchone()
+        cur = self.db_conn.cursor()
+        cur.execute("SELECT permission_type FROM SYSTEM.set_permissions WHERE setid=%s AND userid = %s;", [int(self.setid), int(userid)])
+        result = cur.fetchone()
 
         return result[0]
 
@@ -178,8 +184,9 @@ class DatasetInfo:
             raise RuntimeError("The specified permission type is not valid.")
 
         # RETRIEVE userid's
-        self.db_conn.cursor().execute("SELECT userid FROM SYSTEM.set_permissions WHERE setid = %s AND permission_type = %s;", [int(self.setid), perm_type])
-        results = self.db_conn.cursor().fetchall()
+        cur = self.db_conn.cursor()
+        cur.execute("SELECT userid FROM SYSTEM.set_permissions WHERE setid = %s AND permission_type = %s;", [int(self.setid), perm_type])
+        results = cur.fetchall()
 
         retval = [t[0] for t in results]
 

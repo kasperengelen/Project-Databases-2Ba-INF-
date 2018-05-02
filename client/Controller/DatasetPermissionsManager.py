@@ -76,8 +76,9 @@ class DatasetPermissionsManager:
         if not perm_type in ['admin', 'write', 'read']:
             raise RuntimeError("The specified permission type is not valid.")
 
-        db_conn.cursor().execute("SELECT userid FROM SYSTEM.set_permissions WHERE setid = %s and permission_type = %s;", [int(setid), perm_type])
-        results = db_conn.cursor().fetchall()
+        cur = self.db_conn.cursor()
+        cur.execute("SELECT userid FROM SYSTEM.set_permissions WHERE setid = %s and permission_type = %s;", [int(setid), perm_type])
+        results = cur.fetchall()
 
         return [t[0] for t in results]
     # ENDFUNCTION
@@ -125,8 +126,9 @@ class DatasetPermissionsManager:
         if db_conn is None:
             db_conn = get_db()
 
-        db_conn.cursor().execute("SELECT permission_type FROM SYSTEM.set_permissions WHERE setid = %s AND userid = %s;", [int(setid), int(userid)])
-        result = db_conn.cursor().fetchone()
+        cur = self.db_conn.cursor()
+        cur.execute("SELECT permission_type FROM SYSTEM.set_permissions WHERE setid = %s AND userid = %s;", [int(setid), int(userid)])
+        result = cur.fetchone()
 
         if result is None:
             return None

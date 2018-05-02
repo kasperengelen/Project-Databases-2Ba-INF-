@@ -14,8 +14,9 @@ class UserManager:
         if db_conn is None:
             db_conn = get_db()
 
-        db_conn.cursor().execute("SELECT * FROM SYSTEM.user_accounts WHERE email=%s;", [email])
-        result = db_conn.cursor().fetchone()
+        cur = db_conn.cursor()
+        cur.execute("SELECT * FROM SYSTEM.user_accounts WHERE email=%s;", [email])
+        result = cur.fetchone()
 
         if result is None:
             return False # email does not exist
@@ -36,8 +37,9 @@ class UserManager:
         if db_conn is None:
             db_conn = get_db()
         
-        db_conn.cursor().execute("SELECT * FROM SYSTEM.user_accounts WHERE userid=%s;", [userid])
-        result = db_conn.cursor().fetchone()
+        cur = db_conn.cursor()
+        cur.execute("SELECT * FROM SYSTEM.user_accounts WHERE userid=%s;", [userid])
+        result = cur.fetchone()
 
         return result is not None # an entry must exist
     # ENDMETHOD
@@ -50,8 +52,9 @@ class UserManager:
         if db_conn is None:
             db_conn = get_db()
 
-        db_conn.cursor().execute("SELECT * FROM SYSTEM.user_accounts WHERE email=%s;", [email])
-        result = db_conn.cursor().fetchone()
+        cur = db_conn.cursor()
+        cur.execute("SELECT * FROM SYSTEM.user_accounts WHERE email=%s;", [email])
+        result = cur.fetchone()
 
         return result is not None # an entry must exist
     # ENDMETHOD
@@ -67,8 +70,9 @@ class UserManager:
         if not UserManager.existsID(userid, db_conn = db_conn):
             raise RuntimeError("User with specified userid does not exist.")
 
-        db_conn.cursor().execute("SELECT * FROM SYSTEM.user_accounts WHERE userid=%s;", [userid])
-        result = db_conn.cursor().fetchone()
+        cur = db_conn.cursor()
+        cur.execute("SELECT * FROM SYSTEM.user_accounts WHERE userid=%s;", [userid])
+        result = cur.fetchone()
 
         return UserInfo.fromSqlTuple(result)
     # ENDMETHOD
@@ -84,8 +88,9 @@ class UserManager:
         if not UserManager.existsEmail(email, db_conn = db_conn):
             raise RuntimeError("User with specified email does not exist.")
 
-        db_conn.cursor().execute("SELECT * FROM SYSTEM.user_accounts WHERE email=%s;", [email])
-        result = db_conn.cursor().fetchone()
+        cur = db_conn.cursor()
+        cur.execute("SELECT * FROM SYSTEM.user_accounts WHERE email=%s;", [email])
+        result = cur.fetchone()
 
         return UserInfo.fromSqlTuple(result)
     # ENDMETHOD
@@ -106,10 +111,11 @@ class UserManager:
 
         password_hash = sha256_crypt.hash(password)
 
-        db_conn.cursor().execute("INSERT INTO SYSTEM.user_accounts(fname, lname, email, passwd) VALUES (%s, %s, %s, %s) RETURNING userid;", [fname, lname, email, password_hash])
+        cur = db_conn.cursor()
+        cur.execute("INSERT INTO SYSTEM.user_accounts(fname, lname, email, passwd) VALUES (%s, %s, %s, %s) RETURNING userid;", [fname, lname, email, password_hash])
         db_conn.commit()
 
-        userid = db_conn.cursor().fetchone()
+        userid = cur.fetchone()
         return userid
     # ENDMETHOD
 
@@ -134,8 +140,9 @@ class UserManager:
         if db_conn is None:
             db_conn = get_db()
 
-        db_conn.cursor().execute("SELECT * FROM SYSTEM.user_accounts;")
-        results = db_conn.cursor().fetchall()
+        cur = db_conn.cursor()
+        cur.execute("SELECT * FROM SYSTEM.user_accounts;")
+        results = cur.fetchall()
 
         retval = []
 
@@ -170,8 +177,7 @@ class UserManager:
         if not UserManager.existsID(userid, db_conn = db_conn):
             raise RuntimeError("User with specified userid does not exists.")
         
-        db_conn.cursor().execute("UPDATE SYSTEM.user_accounts SET fname = %s, lname = %s, email=%s WHERE userid=%s;", 
-                                                                                                [new_fname, new_lname, new_email, int(userid)])
+        db_conn.cursor().execute("UPDATE SYSTEM.user_accounts SET fname = %s, lname = %s, email=%s WHERE userid=%s;", [new_fname, new_lname, new_email, int(userid)])
         db_conn.commit()
     # ENDMETHOD
 
