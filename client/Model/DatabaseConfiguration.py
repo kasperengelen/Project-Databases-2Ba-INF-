@@ -2,22 +2,28 @@ import configparser
 import io
 import os
 from Model.DBWrapper import DBWrapper
+import psycopg2
 from sqlalchemy import create_engine
 
 
 class DatabaseConfiguration:
     """Class following the singleton pattern that reads and stores the database configuration of the project.
     The data of the configuration can be safely accessed through the public methods of this class.
+    
     """
 
     __instance = None
 
     class __InnerClass:
-        def __init__(self, dbname, user, host, password):
+        def __init__(self, dbname, user, host, password, t_connection):
             self.dbname = dbname
             self.user = user
             self.host = host
             self.password = password
+            self.test_connection = t_connection
+            self.connection_pool = psycopg2.pool.SimpleConnectionPool(5, 20, self.get_packed_values)
+            self.engine = create_engine("postgresql://{}:{}@{}/{}".format(self.user, self.password, self.host, self.dbname)
+                                         pool_size=20, max_overflow=0)
 
         def get_dbname(self):
             """Returns the database name as specified in the config file"""
@@ -41,22 +47,41 @@ class DatabaseConfiguration:
             if the caller makes use of the unpacking operator "*".
             """
             return [self.dbname, self.user, self.host, self.password]
-        
+
+        def is_test_connection(self):
+            """Returns a boolean indicating whether you're connected to the testing database."""
+            return self.test_connection
         def get_db(self):
-            """Returns a DBWrapper object that represents the DB connection to PSQL"""
-            #return self.db_connection
-            return DBWrapper(self.dbname, self.user, self.host, self.password)
+            """Returns a psycopg2 database connection from the connection pool."""
+            return self.connection_pool.getconn()
 
         def get_engine(self):
             """Returns an SQL Alchemy engine."""
-            #return self.engine
-            return create_engine("postgresql://{}:{}@{}/{}".format(self.user, self.password, self.host, self.dbname))
+            return self.engine
 
-    def __init__(self):
+        def close_connection(self, db_conn):
+            """'Closes' a psycopg2 db connection, but in reality returns it to the connection pool.
+
+            Parameters:
+                db_conn: A reference to the connection you're trying to close (return to the pool).
+            """"
+            self.connection.putconn(db_conn)
+            
+
+        def close(self):
+            """Closes all internal resources."""
+            self.connection_pool.closeall()
+            self.engine.dispose()
+            
+
+    def __init__(self, file_path=None):
         if DatabaseConfiguration.__instance is None:
             try: #Try opening the file and loading it
                 #Get path without worrying about current working directory.
-                path = os.path.dirname(os.path.abspath(__file__)) + '/../config.ini'
+                if file_path is None:
+                    file_path = './config.ini'
+                path = file_path
+                #os.path.dirname(os.path.abspath(__file__)) + '/../config.ini'
                 with open(path) as conf:
                     db_config = conf.read()
             
@@ -87,11 +112,17 @@ class DatabaseConfiguration:
             DatabaseConfiguration.__instance = self.__InnerClass(values['db_name'], values['user'], values['host'], values['password'])
 
 
+    def close(self):
+        """Close all the connections of the DB configuration and dispose of the singleton object.
+        Subsequent call to the constructor will create the new singleton object.
+        """
+        self.__instance.close()
+        self.__instance = None
+
+
 
     def __getattr__(self, name):
         return getattr(self.__instance, name)
     
 
 
-if __name__ == '__main__':
-    DatabaseConfiguration()
