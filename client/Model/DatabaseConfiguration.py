@@ -70,7 +70,7 @@ class DatabaseConfiguration:
             Parameters:
                 db_conn: A reference to the connection you're trying to close (return to the pool).
             """
-            self.connection.putconn(db_conn)
+            self.connection_pool.putconn(db_conn)
             
 
         def close(self):
