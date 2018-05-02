@@ -12,24 +12,25 @@ class TestUserManager(unittest.TestCase):
         """Set up the test environment."""
         cls.db_conn = DatabaseConfiguration().get_db()
         cls.engine = DatabaseConfiguration().get_engine()
-
-        cls.db_conn.cursor().execute("DELETE FROM SYSTEM.user_accounts WHERE TRUE;");
+        cls.cur = cls.db_conn.cursor()
+        
+        cls.cur.execute("DELETE FROM SYSTEM.user_accounts WHERE TRUE;");
         cls.db_conn.commit()
 
-        cls.db_conn.cursor().execute("INSERT INTO SYSTEM.user_accounts(fname, lname, email, passwd) VALUES ('Peter', 'Selie', 'peter.selie@abc.com', %s) RETURNING userid;", [sha256_crypt.hash("password123")])
+        cls.cur.execute("INSERT INTO SYSTEM.user_accounts(fname, lname, email, passwd) VALUES ('Peter', 'Selie', 'peter.selie@abc.com', %s) RETURNING userid;", [sha256_crypt.hash("password123")])
         cls.db_conn.commit()
 
-        cls.testuser1_id = int(cls.db_conn.cursor().fetchall()[0][0])
+        cls.testuser1_id = int(cls.cur.fetchone()[0])
 
-        cls.db_conn.cursor().execute("INSERT INTO SYSTEM.user_accounts(fname, lname, email, passwd) VALUES ('Piet', 'Klaas', 'piet.klaas@abc.com', %s) RETURNING userid;", [sha256_crypt.hash("password123")])
+        cls.cur.execute("INSERT INTO SYSTEM.user_accounts(fname, lname, email, passwd) VALUES ('Piet', 'Klaas', 'piet.klaas@abc.com', %s) RETURNING userid;", [sha256_crypt.hash("password123")])
         cls.db_conn.commit()
 
-        cls.testuser2_id = int(cls.db_conn.cursor().fetchall()[0][0])
+        cls.testuser2_id = int(cls.cur.fetchone()[0])
 
     @classmethod
     def tearDownClass(cls):
         """Clean up the test environment."""
-        cls.db_conn.cursor().execute("DELETE FROM SYSTEM.user_accounts WHERE TRUE;");
+        cls.cur.execute("DELETE FROM SYSTEM.user_accounts WHERE TRUE;");
         cls.db_conn.commit()
 
 
@@ -85,26 +86,26 @@ class TestUserManager(unittest.TestCase):
         userid = UserManager.createUser('abcdef123@xyz.com', 'password123', 'abc', 'def', False, db_conn = self.db_conn)
 
         ## check if user exists
-        self.db_conn.cursor().execute("SELECT EXISTS (SELECT * FROM SYSTEM.user_accounts WHERE userid = %s AND fname = %s AND lname = %s AND email = %s);", [userid, 'abc', 'def', 'abcdef123@xyz.com'])
-        result = self.db_conn.cursor().fetchone()[0]
+        self.cur.execute("SELECT EXISTS (SELECT * FROM SYSTEM.user_accounts WHERE userid = %s AND fname = %s AND lname = %s AND email = %s);", [userid, 'abc', 'def', 'abcdef123@xyz.com'])
+        result = self.cur.fetchone()[0]
 
         self.assertTrue(result)
 
         ## destroy user
-        self.db_conn.cursor().execute("DELETE FROM SYSTEM.user_accounts WHERE userid = %s;", [userid])
+        self.cur.execute("DELETE FROM SYSTEM.user_accounts WHERE userid = %s;", [userid])
         self.db_conn.commit()
 
 
     def test_destroyUser(self):
-        self.db_conn.cursor().execute("INSERT INTO SYSTEM.user_accounts(fname, lname, email, passwd) VALUES ('Jan', 'Met de pet', 'Jan.met.de.pet@abc.com', %s) RETURNING userid;", [sha256_crypt.hash("password123")])
+        self.cur.execute("INSERT INTO SYSTEM.user_accounts(fname, lname, email, passwd) VALUES ('Jan', 'Met de pet', 'Jan.met.de.pet@abc.com', %s) RETURNING userid;", [sha256_crypt.hash("password123")])
         self.db_conn.commit()
 
-        userid = int(self.db_conn.cursor().fetchall()[0][0])
+        userid = int(self.cur.fetchone()[0])
 
         UserManager.destroyUser(userid, db_conn = self.db_conn)
 
-        self.db_conn.cursor().execute("SELECT EXISTS (SELECT * FROM SYSTEM.user_accounts WHERE userid = %s);", [userid])
-        result = self.db_conn.cursor().fetchone()[0]
+        self.cur.execute("SELECT EXISTS (SELECT * FROM SYSTEM.user_accounts WHERE userid = %s);", [userid])
+        result = self.cur.fetchone()[0]
 
         self.assertFalse(result)
 
@@ -121,8 +122,8 @@ class TestUserManager(unittest.TestCase):
     def test_updateUserActivity(self):
         ## test if testuser1 is active
         # --> true
-        self.db_conn.cursor().execute("SELECT active FROM SYSTEM.user_accounts WHERE userid = %s;", [self.testuser1_id])
-        result = self.db_conn.cursor().fetchone()[0]
+        self.cur.execute("SELECT active FROM SYSTEM.user_accounts WHERE userid = %s;", [self.testuser1_id])
+        result = self.cur.fetchone()[0]
         self.assertTrue(result)
 
         ## set testuser1 to inactive
@@ -130,8 +131,8 @@ class TestUserManager(unittest.TestCase):
 
         ## test if testuser1 is active
         # --> false
-        self.db_conn.cursor().execute("SELECT active FROM SYSTEM.user_accounts WHERE userid = %s;", [self.testuser1_id])
-        result = self.db_conn.cursor().fetchone()[0]
+        self.cur.execute("SELECT active FROM SYSTEM.user_accounts WHERE userid = %s;", [self.testuser1_id])
+        result = self.cur.fetchone()[0]
         self.assertFalse(result)
 
         ## set testuser1 to active
@@ -139,8 +140,8 @@ class TestUserManager(unittest.TestCase):
 
         ## test if testuser1 is active
         # --> true
-        self.db_conn.cursor().execute("SELECT active FROM SYSTEM.user_accounts WHERE userid = %s;", [self.testuser1_id])
-        result = self.db_conn.cursor().fetchone()[0]
+        self.cur.execute("SELECT active FROM SYSTEM.user_accounts WHERE userid = %s;", [self.testuser1_id])
+        result = self.cur.fetchone()[0]
         self.assertTrue(result)
 
     def test_editUserInfo(self):
@@ -149,8 +150,8 @@ class TestUserManager(unittest.TestCase):
         UserManager.editUserInfo(self.testuser2_id, "Luke", "Skywalker", "luke.skywalker@holo.net", db_conn = self.db_conn)
 
         ## retrieve information
-        self.db_conn.cursor().execute("SELECT * FROM SYSTEM.user_accounts WHERE userid = %s;", [self.testuser2_id])
-        result = self.db_conn.cursor().fetchone()
+        self.cur.execute("SELECT * FROM SYSTEM.user_accounts WHERE userid = %s;", [self.testuser2_id])
+        result = self.cur.fetchone()
 
         # Format: (userid, fname, lname, email, passwd, registerdate, admin, active)
 
@@ -165,8 +166,8 @@ class TestUserManager(unittest.TestCase):
         UserManager.editUserPass(self.testuser2_id, new_pass, db_conn = self.db_conn)
 
         ## retrieve password
-        self.db_conn.cursor().execute("SELECT * FROM SYSTEM.user_accounts WHERE userid = %s;", [self.testuser2_id])
-        result = self.db_conn.cursor().fetchone()
+        self.cur.execute("SELECT * FROM SYSTEM.user_accounts WHERE userid = %s;", [self.testuser2_id])
+        result = self.cur.fetchone()
 
         ## check if the passwords match
         retrieved_passwd_hash = result[4]
