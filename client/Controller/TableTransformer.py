@@ -1080,6 +1080,7 @@ class TableTransformer:
 
     def join_tables(self, table1, table2, table1_columns, table2_columns, new_table):
         # not complete
+        cur = self.db_connection.cursor()
 
         query = sql.SQL("CREATE TABLE {} AS (SELECT * FROM {} t1 JOIN {} t2 ON ").format(sql.Identifier(new_table),
                                                                                          sql.Identifier(table1),
@@ -1092,8 +1093,8 @@ class TableTransformer:
         query += sql.SQL("t1.{} = t2.{})").format(sql.Identifier(table1_columns[-1]),
                                                   sql.Identifier(table2_columns[-1]))
 
-        self.db_connection.cursor().execute("SET search_path TO {};".format(self.setid))
-        self.db_connection.cursor().execute(query)
+        cur.execute("SET search_path TO {};".format(self.setid))
+        cur.execute(query)
         self.db_connection.commit()
 
 

@@ -45,6 +45,7 @@ class DataLoader:
 
     def __init__(self, setid, db_connection=None):
         self.db_conn = db_connection
+        self.cur = self.db_conn.cursor()
         self.setid = setid
 
         # predefine attribute
@@ -117,18 +118,18 @@ class DataLoader:
         query += sql.SQL(" VARCHAR);")
 
         # insert everything into the database
-        self.db_conn.cursor().execute("SET search_path TO {};".format(self.setid))
-        self.db_conn.cursor().execute(query)
+        self.cur.execute("SET search_path TO {};".format(self.setid))
+        self.cur.execute(query)
         with open(filename, 'r', encoding="utf-8") as csv:
             try:
                 # tablename has to be wrapped in quotes for this function to work
-                self.db_conn.cursor().copy_from(csv, "\"" + tablename + "\"", sep=',')
+                self.cur.copy_from(csv, "\"" + tablename + "\"", sep=',')
             except psycopg2.DataError:
                 raise ColumnInconsistencyException
 
         # if the first line in the csv contained the names of the columns, that row has to be deleted from the table
         if self.header:
-            self.db_conn.cursor().execute(sql.SQL("DELETE FROM {} WHERE ctid IN (SELECT ctid FROM {} LIMIT 1);").format(
+            self.cur.execute(sql.SQL("DELETE FROM {} WHERE ctid IN (SELECT ctid FROM {} LIMIT 1);").format(
                 sql.Identifier(tablename), sql.Identifier(tablename)))
 
         # make backup
@@ -150,9 +151,9 @@ class DataLoader:
                     if not self.__check_alnum(tablename):
                         raise ValueError("Table names should be alphanumeric")
 
-                    self.db_conn.cursor().execute("SET search_path TO {};".format(self.setid))
+                    self.cur.execute("SET search_path TO {};".format(self.setid))
                     try:
-                        self.db_conn.cursor().execute(command.replace("\n", ""))
+                        self.cur.execute(command.replace("\n", ""))
                     except psycopg2.ProgrammingError:
                         raise DumpInconsistencyException
 
@@ -161,9 +162,9 @@ class DataLoader:
                 elif re.search("INSERT INTO.*", command, re.DOTALL | re.IGNORECASE):
                     tablename = command.split()[2]
 
-                    self.db_conn.cursor().execute("SET search_path TO {};".format(self.setid))
+                    self.cur.execute("SET search_path TO {};".format(self.setid))
                     try:
-                        self.db_conn.cursor().execute(command.replace("\n", ""))
+                        self.cur.execute(command.replace("\n", ""))
                     except psycopg2.ProgrammingError:
                         raise DumpInconsistencyException
 
@@ -198,11 +199,11 @@ class DataLoader:
         shutil.rmtree(unzip_folder_complete)
 
     def __make_backup(self, tablename):
-        self.db_conn.cursor().execute("CREATE SCHEMA IF NOT EXISTS original_{}".format(self.setid))
-        self.db_conn.cursor().execute("SET search_path TO original_{};".format(self.setid))
+        self.cur.execute("CREATE SCHEMA IF NOT EXISTS original_{}".format(self.setid))
+        self.cur.execute("SET search_path TO original_{};".format(self.setid))
 
         # copy table into the backup schema
-        self.db_conn.cursor().execute(sql.SQL("SELECT * INTO {} FROM {}.{}").format(sql.Identifier(tablename),
+        self.cur.execute(sql.SQL("SELECT * INTO {} FROM {}.{}").format(sql.Identifier(tablename),
                                                                                     sql.Identifier(str(self.setid)),
                                                                                     sql.Identifier(tablename)))
 
@@ -214,9 +215,9 @@ class DataLoader:
     def __get_valid_name(self, tablename):
         # create a new tablename if the current one is already in use
 
-        self.db_conn.cursor().execute("SELECT table_name FROM information_schema.tables WHERE table_schema = %s;",
+        self.cur.execute("SELECT table_name FROM information_schema.tables WHERE table_schema = %s;",
                                       [str(self.setid)])
-        result = self.db_conn.cursor().fetchall()
+        result = self.cur.fetchall()
         table_names = [t[0] for t in result]
         new_name = tablename
 

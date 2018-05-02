@@ -25,6 +25,7 @@ class TableViewer:
         self.engine = engine
         self.tablename = tablename
         self.db_connection = db_connection
+        self.cur = self.db_connection.cursor()
         if is_original is True:
             self.schema = 'original_' + str(setid)
         else:
@@ -159,10 +160,9 @@ class TableViewer:
             return html_table
         attributes = self.get_attributes()
         for string in attributes: #Let's add the types to the tablenames
-            cur = self.db_connection.cursor()
-            cur.execute(sql.SQL("SELECT pg_typeof({}) FROM {}.{} LIMIT 1").format(sql.Identifier(string), sql.Identifier(self.schema),
+            self.cur.execute(sql.SQL("SELECT pg_typeof({}) FROM {}.{} LIMIT 1").format(sql.Identifier(string), sql.Identifier(self.schema),
                                                                                   sql.Identifier(self.tablename)))
-            sqltype = self.__translate_system_type(cur.fetchone()[0])
+            sqltype = self.__translate_system_type(self.cur.fetchone()[0])
             new_string = string + "<br>(" + sqltype + ")"
             html_table = html_table.replace(string, new_string, 1)
             
@@ -179,15 +179,14 @@ class TableViewer:
 
         with open(filename, 'w', encoding="utf-8") as outfile:
             outcsv = csv.writer(outfile, delimiter=delimiter, quotechar=quotechar)
-            conn = self.db_connection
 
-            conn.cursor().execute("SELECT column_name FROM information_schema.columns WHERE table_schema = '{}' AND table_name = '{}'".format(self.schema, self.tablename))
+            self.cur.execute("SELECT column_name FROM information_schema.columns WHERE table_schema = '{}' AND table_name = '{}'".format(self.schema, self.tablename))
 
             # write header
-            outcsv.writerow([x[0] for x in conn.cursor().fetchall()])
+            outcsv.writerow([x[0] for x in self.cur.fetchall()])
 
-            conn.cursor().execute(sql.SQL("SELECT * FROM {}.{}").format(sql.Identifier(self.schema), sql.Identifier(self.tablename)))
-            rows = conn.cursor().fetchall()
+            self.cur.execute(sql.SQL("SELECT * FROM {}.{}").format(sql.Identifier(self.schema), sql.Identifier(self.tablename)))
+            rows = self.cur.fetchall()
 
             # replace NULL values with parameter 'null'
             for i in range(len(rows)):
@@ -200,10 +199,10 @@ class TableViewer:
 
     def get_numerical_histogram(self, columnname, bar_nr=10):
         # first check if the attribute type is numerical
-        self.db_connection.cursor().execute(sql.SQL("SELECT pg_typeof({}) FROM {}.{}").format(sql.Identifier(columnname),
+        self.cur.execute(sql.SQL("SELECT pg_typeof({}) FROM {}.{}").format(sql.Identifier(columnname),
                                                                                                      sql.Identifier(self.schema),
                                                                                                      sql.Identifier(self.tablename)))
-        type = self.db_connection.cursor().fetchone()[0]
+        type = self.cur.fetchone()[0]
         if not self.is_numerical(type):
             return "N/A"
 
@@ -219,15 +218,13 @@ class TableViewer:
         return html
 
     def get_frequency_pie_chart(self, columnname):
-        conn = self.db_connection
-
         # get the frequency of every value
-        conn.cursor().execute(sql.SQL("SELECT {}, COUNT(*) FROM {}.{} GROUP BY {} ORDER BY COUNT(*) DESC,"
+        self.cur.execute(sql.SQL("SELECT {}, COUNT(*) FROM {}.{} GROUP BY {} ORDER BY COUNT(*) DESC,"
                                       " {}").format(sql.Identifier(columnname), sql.Identifier(self.schema),
                                                             sql.Identifier(self.tablename),
                                                             sql.Identifier(columnname),
                                                             sql.Identifier(columnname)))
-        data = conn.cursor().fetchall()
+        data = self.cur.fetchall()
 
         # pre processed data
         temp_labels = [x[0] for x in data]
@@ -271,27 +268,25 @@ class TableViewer:
 
     def get_most_frequent_value(self, columnname):
         """Return the value that appears most often in the column"""
-        conn = self.db_connection
 
         # get the frequency of every value and select the one that has the highest one
-        conn.cursor().execute(sql.SQL("SELECT {}, COUNT(*) FROM {}.{} GROUP BY {} ORDER BY COUNT(*) DESC,"
+        self.cur.execute(sql.SQL("SELECT {}, COUNT(*) FROM {}.{} GROUP BY {} ORDER BY COUNT(*) DESC,"
                                       " {} LIMIT 1").format(sql.Identifier(columnname), sql.Identifier(self.schema),
                                                             sql.Identifier(self.tablename),
                                                             sql.Identifier(columnname),
                                                             sql.Identifier(columnname)))
-        return conn.cursor().fetchone()[0]
+        return self.cur.fetchone()[0]
 
 
     def get_null_frequency(self, columnname):
         """Return the amount of times NULL appears in the column"""
-        conn = self.db_connection
 
-        conn.cursor().execute(sql.SQL("SELECT {}, COUNT(*) FROM {}.{} WHERE {} IS NULL GROUP BY {}"
+        self.cur.execute(sql.SQL("SELECT {}, COUNT(*) FROM {}.{} WHERE {} IS NULL GROUP BY {}"
                                       "").format(sql.Identifier(columnname), sql.Identifier(self.schema),
                                                             sql.Identifier(self.tablename),
                                                             sql.Identifier(columnname),
                                                             sql.Identifier(columnname)))
-        frequency_tuple = conn.cursor().fetchone()
+        frequency_tuple = self.cur.fetchone()
         if frequency_tuple is None:
             return 0
         else:
@@ -299,22 +294,21 @@ class TableViewer:
 
     def __aggregate_function(self, columnname, aggregate):
         """Wrapper that returns result of aggregate function"""
-        conn = self.db_connection
 
         # first check if the attribute type is numerical
-        conn.cursor().execute(
+        self.cur.execute(
             sql.SQL("SELECT pg_typeof({}) FROM {}.{}").format(sql.Identifier(columnname),
                                                                      sql.Identifier(self.schema),
                                                                      sql.Identifier(self.tablename)))
-        type = conn.cursor().fetchone()[0]
+        type = self.cur.fetchone()[0]
         if not self.is_numerical(type):
             return "N/A"
 
-        conn.cursor().execute(sql.SQL("SELECT " + aggregate + "({}) FROM {}.{}").format(sql.Identifier(columnname),
+        self.cur.execute(sql.SQL("SELECT " + aggregate + "({}) FROM {}.{}").format(sql.Identifier(columnname),
                                                                           sql.Identifier(self.schema),
                                                                           sql.Identifier(self.tablename)))
 
-        return conn.cursor().fetchone()[0]
+        return self.cur.fetchone()[0]
 
     def get_max(self, columnname):
         """Return max value of the column"""
