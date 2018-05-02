@@ -1,6 +1,5 @@
 
-# AccessController: userHasSpecifiedAccessTo
-# dataset_pages: getAdminPerms, getWritePerms, getReadPerms, addPerm, removePerm, getPermForUserID
+# dataset_pages: addPerm, removePerm, getPermForUserID
 
 from utils import get_db
 
