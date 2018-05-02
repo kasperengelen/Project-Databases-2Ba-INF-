@@ -16,6 +16,6 @@ def suite():
 
 if __name__ == "__main__":
     #tests = [TestDatasetInfo, TestDataLoader, TestTableTransformer, TestTransformerCopy, TestTableViewer, TestUserManager, TestDatasetManager]
-    tests = [TestTableTransformer, TestTransformerCopy]
+    tests = [TestTableTransformer, TestTransformerCopy, TestDataLoader]
     tester = ProjectTester(tests)
     tester.run()
