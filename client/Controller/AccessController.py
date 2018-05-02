@@ -1,5 +1,5 @@
 from flask import session, abort
-from Controller.DatasetManager import DatasetManager
+from Controller.DatasetPermissionsManager import DatasetPermissionsManager
 from functools import wraps
 
 # SOURCE: https://docs.python.org/2/library/functools.html
@@ -46,7 +46,7 @@ def require_perm(func, perm):
 
 
         # only acces if user has correct permission or is site admin
-        if DatasetManager.userHasAccessTo(dataset_id, userid, perm) or session['userdata']['admin']:
+        if DatasetPermissionsManager.userHasSpecifiedAccessTo(dataset_id, userid, perm) or session['userdata']['admin']:
             return func(*args, **kwargs)
         else:
             abort(403)
