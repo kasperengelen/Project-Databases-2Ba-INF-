@@ -1,6 +1,3 @@
-
-# dataset_pages: addPerm, removePerm, getPermForUserID
-
 from utils import get_db
 
 class DatasetPermissionsManager:

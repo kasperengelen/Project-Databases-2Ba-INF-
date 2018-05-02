@@ -9,11 +9,6 @@ from unit_tests.test_DataLoader import TestDataLoader
 
 import unittest
 
-def suite():
-    suite = unittest.TestSuite()
-
-    suite.addTest(TestUserManager('test_validateLogin'))
-
 if __name__ == "__main__":
     #tests = [TestDatasetInfo, TestDataLoader, TestTableTransformer, TestTransformerCopy, TestTableViewer, TestUserManager, TestDatasetManager]
     tests = [TestTableTransformer, TestTransformerCopy, TestDataLoader]
