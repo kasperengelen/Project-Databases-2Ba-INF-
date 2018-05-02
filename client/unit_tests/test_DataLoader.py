@@ -16,7 +16,7 @@ class TestDataLoader(unittest.TestCase):
     def setUp(self):
         self.db_connection = DatabaseConfiguration().get_db()
         self.test_object = dl.DataLoader(0, self.db_connection)
-        self.cur = self.cur
+        self.cur = self.db_connection.cursor()
         
         self.cur.execute("CREATE SCHEMA IF NOT EXISTS \"0\"")
 
