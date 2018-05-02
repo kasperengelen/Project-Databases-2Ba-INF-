@@ -3,6 +3,7 @@ import io
 import os
 from Model.DBWrapper import DBWrapper
 import psycopg2
+import psycopg2.pool
 from sqlalchemy import create_engine
 
 
@@ -21,8 +22,8 @@ class DatabaseConfiguration:
             self.host = host
             self.password = password
             self.test_connection = t_connection
-            self.connection_pool = psycopg2.pool.SimpleConnectionPool(5, 20, self.get_packed_values)
-            self.engine = create_engine("postgresql://{}:{}@{}/{}".format(self.user, self.password, self.host, self.dbname)
+            self.connection_pool = psycopg2.pool.SimpleConnectionPool(5, 20, dbname=dbname, user=user, password=password, host=host)
+            self.engine = create_engine("postgresql://{}:{}@{}/{}".format(self.user, self.password, self.host, self.dbname),
                                          pool_size=20, max_overflow=0)
 
         def get_dbname(self):
@@ -64,7 +65,7 @@ class DatabaseConfiguration:
 
             Parameters:
                 db_conn: A reference to the connection you're trying to close (return to the pool).
-            """"
+            """
             self.connection.putconn(db_conn)
             
 
@@ -74,14 +75,15 @@ class DatabaseConfiguration:
             self.engine.dispose()
             
 
-    def __init__(self, file_path=None):
+    def __init__(self, release=True):
         if DatabaseConfiguration.__instance is None:
             try: #Try opening the file and loading it
                 #Get path without worrying about current working directory.
-                if file_path is None:
-                    file_path = './config.ini'
-                path = file_path
-                #os.path.dirname(os.path.abspath(__file__)) + '/../config.ini'
+                if release is False:
+                    path = os.path.dirname(os.path.abspath(__file__)) + '/../test_config.ini'
+                else:
+                    path = os.path.dirname(os.path.abspath(__file__)) + '/../config.ini'
+                    
                 with open(path) as conf:
                     db_config = conf.read()
             
@@ -109,7 +111,7 @@ class DatabaseConfiguration:
                     error_msg = 'Error! The value for the field "' + e + '"can not be empty!'
                     raise ValueError(error_msg)
             
-            DatabaseConfiguration.__instance = self.__InnerClass(values['db_name'], values['user'], values['host'], values['password'])
+            DatabaseConfiguration.__instance = self.__InnerClass(values['db_name'], values['user'], values['host'], values['password'], release)
 
 
     def close(self):
