@@ -10,53 +10,53 @@ class TestDatasetInfo(unittest.TestCase):
     """Tests for the DatasetInfo class."""
 
     def __create_dataset_manually(self, name, desc):
-        self.db_conn.cursor().execute("INSERT INTO SYSTEM.datasets(setname, description) VALUES (%s, %s) RETURNING setid;", [name, desc])
+        self.cur.execute("INSERT INTO SYSTEM.datasets(setname, description) VALUES (%s, %s) RETURNING setid;", [name, desc])
         self.db_conn.commit()
-        setid = int(self.db_conn.cursor().fetchall()[0][0])
+        setid = int(self.cur.fetchone()[0])
 
         # CREATE SCHEMA
-        self.db_conn.cursor().execute("CREATE SCHEMA \"{}\";".format(int(setid)))
+        self.cur.execute("CREATE SCHEMA \"{}\";".format(int(setid)))
         self.db_conn.commit()
 
         # CREATE BACKUP SCHEMA
-        self.db_conn.cursor().execute("CREATE SCHEMA \"original_{}\";".format(int(setid)))
+        self.cur.execute("CREATE SCHEMA \"original_{}\";".format(int(setid)))
         self.db_conn.commit()
 
         return setid
 
     def __delete_dataset_manually(self, setid):
-        self.db_conn.cursor().execute("DELETE FROM SYSTEM.datasets WHERE setid = %s;", [setid])
+        self.cur.execute("DELETE FROM SYSTEM.datasets WHERE setid = %s;", [setid])
         self.db_conn.commit()
 
-        self.db_conn.cursor().execute("DROP SCHEMA IF EXISTS \"{}\";".format(int(setid)))
+        self.cur.execute("DROP SCHEMA IF EXISTS \"{}\";".format(int(setid)))
         self.db_conn.commit()
 
-        self.db_conn.cursor().execute("DROP SCHEMA IF EXISTS \"original_{}\";".format(int(setid)))
+        self.cur.execute("DROP SCHEMA IF EXISTS \"original_{}\";".format(int(setid)))
         self.db_conn.commit()
 
     def __create_user_manually(self, fname, lname, email):
-        self.db_conn.cursor().execute("INSERT INTO SYSTEM.user_accounts(fname, lname, email, passwd) VALUES (%s, %s, %s, %s) RETURNING userid;", [fname, lname, email, sha256_crypt.hash("password123")])
+        self.cur.execute("INSERT INTO SYSTEM.user_accounts(fname, lname, email, passwd) VALUES (%s, %s, %s, %s) RETURNING userid;", [fname, lname, email, sha256_crypt.hash("password123")])
         self.db_conn.commit()
-        return int(self.db_conn.cursor().fetchone()[0])
+        return int(self.cur.fetchone()[0])
 
     def __delete_user_manually(self, userid):
-        self.db_conn.cursor().execute("DELETE FROM SYSTEM.user_accounts WHERE userid = %s;", [userid])
+        self.cur.execute("DELETE FROM SYSTEM.user_accounts WHERE userid = %s;", [userid])
         self.db_conn.commit()
 
     def __add_perms_manually(self, setid, userid, permtype):
-        self.db_conn.cursor().execute("INSERT INTO SYSTEM.set_permissions(userid, setid, permission_type) VALUES (%s, %s, %s);", [userid, setid, permtype])
+        self.cur.execute("INSERT INTO SYSTEM.set_permissions(userid, setid, permission_type) VALUES (%s, %s, %s);", [userid, setid, permtype])
         self.db_conn.commit()
 
     def __delete_perms_manually(self, setid, userid):
-        self.db_conn.cursor().execute("DELETE FROM SYSTEM.set_permissions WHERE setid = %s AND userid = %s;", [setid, userid])
+        self.cur.execute("DELETE FROM SYSTEM.set_permissions WHERE setid = %s AND userid = %s;", [setid, userid])
         self.db_conn.commit()
 
     @classmethod
     def setUpClass(cls):
         """Set up the test environment."""
         cls.db_conn = DatabaseConfiguration().get_db()
+        cls.cur = cls.db_conn.cursor()
         cls.engine = DatabaseConfiguration().get_engine()
-
 
         # create the dataset
         dataset_id = cls.__create_dataset_manually(cls, 'Dataset', 'Test Dataset')
@@ -102,7 +102,6 @@ class TestDatasetInfo(unittest.TestCase):
         cls.__delete_user_manually(cls, cls.user_7)
 
         cls.db_conn.close()
-        cls.engine.dispose()
 
     def test_getAdminPerms(self):
         admin_ids = self.dataset.getAdminPerms()
@@ -134,8 +133,8 @@ class TestDatasetInfo(unittest.TestCase):
 
         self.dataset.addPerm('user7@email.com', 'admin')
 
-        self.db_conn.cursor().execute("SELECT * FROM SYSTEM.set_permissions WHERE userid = %s and setid = %s;", [self.user_7, self.dataset.setid])
-        result = self.db_conn.cursor().fetchone()
+        self.cur.execute("SELECT * FROM SYSTEM.set_permissions WHERE userid = %s and setid = %s;", [self.user_7, self.dataset.setid])
+        result = self.cur.fetchone()
 
         self.assertTrue(result is not None)
 
@@ -144,15 +143,15 @@ class TestDatasetInfo(unittest.TestCase):
     def test_removePerm(self):
         self.__add_perms_manually(self.dataset.setid, self.user_7, 'admin')
 
-        self.db_conn.cursor().execute("SELECT * FROM SYSTEM.set_permissions WHERE userid = %s and setid = %s;", [self.user_7, self.dataset.setid])
-        result = self.db_conn.cursor().fetchone()
+        self.cur.execute("SELECT * FROM SYSTEM.set_permissions WHERE userid = %s and setid = %s;", [self.user_7, self.dataset.setid])
+        result = self.cur.fetchone()
 
         self.assertTrue(result is not None)
 
         self.dataset.removePerm(self.user_7)
 
-        self.db_conn.cursor().execute("SELECT * FROM SYSTEM.set_permissions WHERE userid = %s and setid = %s;", [self.user_7, self.dataset.setid])
-        result = self.db_conn.cursor().fetchone()
+        self.cur.execute("SELECT * FROM SYSTEM.set_permissions WHERE userid = %s and setid = %s;", [self.user_7, self.dataset.setid])
+        result = self.cur.fetchone()
 
         self.assertTrue(result is None)
 

@@ -5,6 +5,7 @@ from Controller.AccessController import require_adminperm, require_writeperm, re
 from Controller.DatasetManager import DatasetManager
 from Controller.UserManager import UserManager
 from Controller.TableTransformer import TableTransformer
+from Controller.DatasetPermissionsManager import DatasetPermissionsManager
 from View.dataset_forms import FindReplaceForm, DeleteAttrForm, DatasetForm, AddUserForm, RemoveUserForm, DatasetListEntryForm, TableUploadForm, EntryCountForm
 from View.dataset_forms import DownloadForm, DataTypeTransform, NormalizeZScore, OneHotEncoding, TableJoinForm, RegexFindReplace, DiscretizeEqualWidth, ExtractDateTimeForm
 from View.dataset_forms import DiscretizeEqualFreq, DiscretizeCustomRange, DeleteOutlier, FillNullsMean, FillNullsMedian, FillNullsCustomValue, AttributeForm
@@ -1039,11 +1040,9 @@ def edit_perms_dataset(dataset_id):
     if not DatasetManager.existsID(dataset_id):
         abort(404)
 
-    dataset = DatasetManager.getDataset(dataset_id)
-
     ## RETRIEVE ADMIN FORMS
     admin_form_list = []
-    admins = dataset.getAdminPerms()
+    admins = DatasetPermissionsManager.getAdminPerms(dataset_id)
     admins.remove(session['userdata']['userid']) # ADMIN CANNOT REMOVE ITSELF FROM DATASET.
 
     for admin_id in admins:
@@ -1061,7 +1060,7 @@ def edit_perms_dataset(dataset_id):
 
     ## RETRIEVE WRITER FORMS
     write_form_list = []
-    writers = dataset.getWritePerms()
+    writers = DatasetPermissionsManager.getWritePerms(dataset_id)
     for writer_id in writers:
         write_user = UserManager.getUserFromID(writer_id)
 
@@ -1077,8 +1076,7 @@ def edit_perms_dataset(dataset_id):
 
     ## RETRIEVE READER FORMS
     read_form_list = []
-    readers = dataset.getReadPerms()
-
+    readers = DatasetPermissionsManager.getReadPerms(dataset_id)
     for reader_id in readers:
         read_user = UserManager.getUserFromID(reader_id)
 

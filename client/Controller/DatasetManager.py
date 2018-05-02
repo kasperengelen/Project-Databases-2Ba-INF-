@@ -10,8 +10,9 @@ class DatasetManager:
         if db_conn is None:
             db_conn = get_db()
 
-        db_conn.cursor().execute("SELECT * FROM SYSTEM.datasets WHERE setid=%s;", [setid])
-        result = db_conn.cursor().fetchone()
+        cur = db_conn.cursor()
+        cur.execute("SELECT * FROM SYSTEM.datasets WHERE setid=%s;", [setid])
+        result = cur.fetchone()
 
         return result is not None
     # ENDMETHOD
@@ -26,8 +27,9 @@ class DatasetManager:
         if not DatasetManager.existsID(setid, db_conn = db_conn):
             raise RuntimeError("There exists no dataset with the specified set id.")
 
-        db_conn.cursor().execute("SELECT * FROM SYSTEM.datasets WHERE setid=%s;", [setid])
-        result = db_conn.cursor().fetchone()
+        cur = db_conn.cursor()
+        cur.execute("SELECT * FROM SYSTEM.datasets WHERE setid=%s;", [setid])
+        result = cur.fetchone()
 
         return DatasetInfo.fromSqlTuple(result, db_conn = db_conn)
     # ENDMETHOD
@@ -39,8 +41,9 @@ class DatasetManager:
         if db_conn is None:
             db_conn = get_db()
 
-        db_conn.cursor().execute("SELECT * FROM SYSTEM.datasets WHERE setid IN (SELECT setid FROM SYSTEM.set_permissions WHERE userid = %s);", [userid])
-        results = db_conn.cursor().fetchall()
+        cur = db_conn.cursor()
+        cur.execute("SELECT * FROM SYSTEM.datasets WHERE setid IN (SELECT setid FROM SYSTEM.set_permissions WHERE userid = %s);", [userid])
+        results = cur.fetchall()
 
         retval = []
 
@@ -58,8 +61,10 @@ class DatasetManager:
         if db_conn is None:
             db_conn = get_db()
 
-        db_conn.cursor().execute("INSERT INTO SYSTEM.datasets(setname, description) VALUES (%s, %s) RETURNING setid;", [name, desc])
-        setid = int(db_conn.cursor().fetchall()[0][0])
+        cur = db_conn.cursor()
+        cur.execute("INSERT INTO SYSTEM.datasets(setname, description) VALUES (%s, %s) RETURNING setid;", [name, desc])
+        db_conn.commit()
+        setid = int(cur.fetchone()[0])
 
         # CREATE SCHEMA
         db_conn.cursor().execute("CREATE SCHEMA \"{}\";".format(int(setid)))
@@ -103,8 +108,9 @@ class DatasetManager:
         if db_conn is None:
             db_conn = get_db()
 
-        db_conn.cursor().execute("SELECT * FROM SYSTEM.datasets;")
-        results = db_conn.cursor().fetchall()
+        cur = db_conn.cursor()
+        cur.execute("SELECT * FROM SYSTEM.datasets;")
+        results = cur.fetchall()
 
         retval = []
 
@@ -138,8 +144,9 @@ class DatasetManager:
                 break;
         # ENDFOR
 
-        db_conn.cursor().execute("SELECT permission_type FROM SYSTEM.set_permissions WHERE setid=%s AND userid = %s;", [int(setid), int(userid)])
-        result = db_conn.cursor().fetchone()
+        cur = db_conn.cursor()
+        cur.execute("SELECT permission_type FROM SYSTEM.set_permissions WHERE setid=%s AND userid = %s;", [int(setid), int(userid)])
+        result = cur.fetchone()
 
         if result is None:
             return False
