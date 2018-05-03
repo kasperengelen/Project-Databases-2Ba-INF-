@@ -70,7 +70,7 @@ class TestDatasetManager(unittest.TestCase):
         cls.cur.execute("INSERT INTO SYSTEM.user_accounts(fname, lname, email, passwd) VALUES ('Jan', 'Met de pet', 'Jan.met.de.pet@abc.com', %s) RETURNING userid;", [sha256_crypt.hash("password123")])
         cls.db_conn.commit()
 
-        cls.user_1 = int(cls.db_conn.cursor().fetchone()[0])
+        cls.user_1 = int(cls.cur.fetchone()[0])
 
         # add user to dataset
         cls.cur.execute("INSERT INTO SYSTEM.set_permissions(userid, setid, permission_type) VALUES (%s, %s, 'read');", [cls.user_1, cls.testset_1])
@@ -155,26 +155,6 @@ class TestDatasetManager(unittest.TestCase):
 
         # a nonexisting id must not be in the list
         self.assertFalse(self.deletedset in setid_list)
-    # ENDTEST
-
-    def test_userHasAccessTo(self):
-        # admin access
-        self.assertFalse(DatasetManager.userHasAccessTo(self.testset_1, self.user_1, 'admin', db_conn = self.db_conn))
-        self.assertFalse(DatasetManager.userHasAccessTo(self.testset_2, self.user_1, 'admin', db_conn = self.db_conn))
-        self.assertTrue(DatasetManager.userHasAccessTo(self.testset_3, self.user_1, 'admin', db_conn = self.db_conn))
-        self.assertFalse(DatasetManager.userHasAccessTo(self.testset_4, self.user_1, 'admin', db_conn = self.db_conn))
-
-        # write access
-        self.assertFalse(DatasetManager.userHasAccessTo(self.testset_1, self.user_1, 'write', db_conn = self.db_conn))
-        self.assertTrue(DatasetManager.userHasAccessTo(self.testset_2, self.user_1, 'write', db_conn = self.db_conn))
-        self.assertTrue(DatasetManager.userHasAccessTo(self.testset_3, self.user_1, 'write', db_conn = self.db_conn))
-        self.assertFalse(DatasetManager.userHasAccessTo(self.testset_4, self.user_1, 'write', db_conn = self.db_conn))
-
-        # read access
-        self.assertTrue(DatasetManager.userHasAccessTo(self.testset_1, self.user_1, 'read', db_conn = self.db_conn))
-        self.assertTrue(DatasetManager.userHasAccessTo(self.testset_2, self.user_1, 'read', db_conn = self.db_conn))
-        self.assertTrue(DatasetManager.userHasAccessTo(self.testset_3, self.user_1, 'read', db_conn = self.db_conn))
-        self.assertFalse(DatasetManager.userHasAccessTo(self.testset_4, self.user_1, 'read', db_conn = self.db_conn))
     # ENDTEST
 
     def test_changeMetaData(self):

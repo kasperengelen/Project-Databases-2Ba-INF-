@@ -1,6 +1,3 @@
-
-# dataset_pages: addPerm, removePerm, getPermForUserID
-
 from utils import get_db
 
 class DatasetPermissionsManager:
@@ -76,7 +73,7 @@ class DatasetPermissionsManager:
         if not perm_type in ['admin', 'write', 'read']:
             raise RuntimeError("The specified permission type is not valid.")
 
-        cur = self.db_conn.cursor()
+        cur = db_conn.cursor()
         cur.execute("SELECT userid FROM SYSTEM.set_permissions WHERE setid = %s and permission_type = %s;", [int(setid), perm_type])
         results = cur.fetchall()
 
@@ -112,7 +109,7 @@ class DatasetPermissionsManager:
         if db_conn is None:
             db_conn = get_db()
 
-        if getPermForUserID(setid, userid, db_conn = db_conn) is None:
+        if DatasetPermissionsManager.getPermForUserID(setid, userid, db_conn = db_conn) is None:
             raise RuntimeError("The specifeid user does not have access to the specified dataset.")
 
         db_conn.cursor().execute("DELETE FROM SYSTEM.set_permissions WHERE setid = %s AND userid = %s;", [int(setid), int(userid)])
@@ -126,7 +123,7 @@ class DatasetPermissionsManager:
         if db_conn is None:
             db_conn = get_db()
 
-        cur = self.db_conn.cursor()
+        cur = db_conn.cursor()
         cur.execute("SELECT permission_type FROM SYSTEM.set_permissions WHERE setid = %s AND userid = %s;", [int(setid), int(userid)])
         result = cur.fetchone()
 

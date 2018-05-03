@@ -67,12 +67,12 @@ class UserManager:
         if db_conn is None:
             db_conn = get_db()
 
-        if not UserManager.existsID(userid, db_conn = db_conn):
-            raise RuntimeError("User with specified userid does not exist.")
-
         cur = db_conn.cursor()
         cur.execute("SELECT * FROM SYSTEM.user_accounts WHERE userid=%s;", [userid])
         result = cur.fetchone()
+
+        if result is None:
+            return None
 
         return UserInfo.fromSqlTuple(result)
     # ENDMETHOD
@@ -85,12 +85,12 @@ class UserManager:
         if db_conn is None:
             db_conn = get_db()
 
-        if not UserManager.existsEmail(email, db_conn = db_conn):
-            raise RuntimeError("User with specified email does not exist.")
-
         cur = db_conn.cursor()
         cur.execute("SELECT * FROM SYSTEM.user_accounts WHERE email=%s;", [email])
         result = cur.fetchone()
+
+        if result is None:
+            return None
 
         return UserInfo.fromSqlTuple(result)
     # ENDMETHOD
@@ -98,16 +98,12 @@ class UserManager:
     @staticmethod
     def createUser(email, password, fname, lname, admin, db_conn = None):
         """Create a user with the specified parameters. The user
-        will be inserted into the database. If a user with the
-        specified email already exists, RuntimeError will be raised.
+        will be inserted into the database.
 
         The userid of the created user will be returned."""
         
         if db_conn is None:
             db_conn = get_db()
-
-        if UserManager.existsEmail(email, db_conn = db_conn):
-            raise RuntimeError("User already exists.")
 
         password_hash = sha256_crypt.hash(password)
 
@@ -125,9 +121,6 @@ class UserManager:
 
         if db_conn is None:
             db_conn = get_db()
-
-        if not UserManager.existsID(userid, db_conn = db_conn):
-            raise RuntimeError("User with specified userid does not exists.")
 
         db_conn.cursor().execute("DELETE FROM SYSTEM.user_accounts WHERE userid=%s;", [userid])
         db_conn.commit()
@@ -159,9 +152,6 @@ class UserManager:
         if db_conn is None:
             db_conn = get_db()
 
-        if not UserManager.existsID(userid, db_conn = db_conn):
-            raise RuntimeError("User with specified userid does not exists.")
-
         db_conn.cursor().execute("UPDATE SYSTEM.user_accounts SET active=%s WHERE userid=%s", [bool(active), int(userid)])
         db_conn.commit()
     # ENDMETHOD
@@ -173,9 +163,6 @@ class UserManager:
 
         if db_conn is None:
             db_conn = get_db()
-
-        if not UserManager.existsID(userid, db_conn = db_conn):
-            raise RuntimeError("User with specified userid does not exists.")
         
         db_conn.cursor().execute("UPDATE SYSTEM.user_accounts SET fname = %s, lname = %s, email=%s WHERE userid=%s;", [new_fname, new_lname, new_email, int(userid)])
         db_conn.commit()
