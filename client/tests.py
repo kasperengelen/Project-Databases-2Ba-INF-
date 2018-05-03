@@ -15,7 +15,6 @@ def suite():
     suite.addTest(TestUserManager('test_validateLogin'))
 
 if __name__ == "__main__":
-    #tests = [TestDatasetInfo, TestDataLoader, TestTableTransformer, TestTransformerCopy, TestTableViewer, TestUserManager, TestDatasetManager]
-    tests = [TestTableTransformer, TestTransformerCopy, TestDataLoader]
+    tests = [TestDatasetInfo, TestDataLoader, TestTableTransformer, TestTransformerCopy, TestTableViewer, TestUserManager, TestDatasetManager]
     tester = ProjectTester(tests)
     tester.run()
