@@ -121,40 +121,6 @@ class DatasetManager:
     # ENDMETHOD
 
     @staticmethod
-    def userHasAccessTo(setid, userid, minimum_perm_type, db_conn = None):
-        """Determine if the specfied user has at least
-        the specified permissions for the specified set."""
-
-        if db_conn is None:
-            db_conn = get_db()
-
-        # CHECK
-        if not DatasetManager.existsID(setid, db_conn = db_conn):
-            raise RuntimeError("There exists no dataset with the specified set id.")
-
-        # list of permission types that are equivalent or higher
-        higher_perm_list = []
-
-        for ptype in ['admin', 'write', 'read']:
-            # higher or equivalent perm is always added to the list
-            higher_perm_list.append(ptype)
-
-            # stop if equivalent perm is reached
-            if ptype == minimum_perm_type:
-                break;
-        # ENDFOR
-
-        cur = db_conn.cursor()
-        cur.execute("SELECT permission_type FROM SYSTEM.set_permissions WHERE setid=%s AND userid = %s;", [int(setid), int(userid)])
-        result = cur.fetchone()
-
-        if result is None:
-            return False
-
-        return result[0] in higher_perm_list
-    # ENDMETHOD
-
-    @staticmethod
     def changeMetadata(setid, new_name, new_desc, db_conn = None):
         """Change the metadata of the specified dataset."""
 
