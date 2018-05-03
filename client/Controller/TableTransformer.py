@@ -26,9 +26,7 @@ class TableTransformer:
         self.db_connection = db_conn
         self.engine = engine
         self.history_manager = DatasetHistoryManager(setid, db_conn, track_history)
-
-
-    
+        
     class AttrTypeError(Exception):
         """
         This exception is raised whenever an user attempts to perform a transformation on an attribute
@@ -98,7 +96,8 @@ class TableTransformer:
         Parameters:
             arg_list: A list of strings containing the strings representing the predicates (Identifiers, logical operators).
         """
-        internal_ref = self.get_internal_reference(tablename)
+        #NEED TO REVIEW THIS METHOD AFTER NEW FRONT-END
+        """internal_ref = self.get_internal_reference(tablename)
         if self.replace is False:
             internal_ref = self.copy_table(internal_ref, new_name)
         #List of length 4 is of type ['ATTRIBUTE' '=' 'X' 'END]
@@ -111,8 +110,8 @@ class TableTransformer:
             if list_size >= 3:
                 part1 += '"{}"'.format(arg_list[0])
                 part1 += ' ' + arg_list[1]
-                attr_type = self.get_attribute_type(tablename, arg_list[0])
-                if not self.is_numerical(attr_type):
+                attr_type = self.get_attribute_type(tablename, arg_list[0])[0]
+                if SQLTypeHandler().is_numerical(attr_type) is not True:
                     part1 += ' ' + "'{}'".format(arg_list[2])                   
                 else:
                     part1 += ' ' + arg_list[2]
@@ -136,8 +135,8 @@ class TableTransformer:
                 part1 += ' ' + arg_list[3]
                 part2 += ' ' +'"{}"'.format(arg_list[4])
                 part2 += ' ' + arg_list[5]
-                attr_type = self.get_attribute_type(tablename, arg_list[4])
-                if not self.is_numerical(attr_type):
+                attr_type = self.get_attribute_type(tablename, arg_list[4])[0]
+                if SQLTypeHandler().is_numerical(attr_type) is not True:
                     part2 += ' ' + "'{}'".format(arg_list[6])                   
                 else:
                     part2 += ' ' + arg_list[6]
@@ -158,14 +157,14 @@ class TableTransformer:
                 part2 += ' ' + arg_list[7]
                 part3 += ' ' + '"{}"'.format(arg_list[8])
                 part3 += ' ' + arg_list[9]
-                attr_type = self.get_attribute_type(tablename, arg_list[7])
-                if not self.is_numerical(attr_type):
+                attr_type = self.get_attribute_type(tablename, arg_list[8])[0]
+                if SQLTypeHandler().is_numerical(attr_type):
                     part3 += ' ' + "'{}'".format(arg_list[10])                   
                 else:
                     part3 += ' ' + arg_list[10]
 
                 if arg_list[10] == 'None':#Add a NULL check in case user meant to delete NULLS
-                    if attr_type not in ['character', 'character varying']:
+                    if SQLTypeHandler().is_string(attr_type) is False:
                         part3 = ''
                     else:
                         part3 += ' OR '
@@ -188,7 +187,7 @@ class TableTransformer:
             raise self.ValueError('Could not delete rows using this predicate since it contains invalid input value(s) for the attributes.')
         self.db_connection.commit()
         clean_predicate = predicate.replace('"', '\\"') #Escape double quotes to pass it in postgres array
-        self.history_manager.write_to_history(internal_ref[1], tablename, 'None', [clean_predicate], 15)
+        self.history_manager.write_to_history(internal_ref[1], tablename, 'None', [clean_predicate], 15)"""
     
     def delete_attribute(self, tablename, attribute, new_name=""):
         """Delete an attribute of a table"""
@@ -203,15 +202,6 @@ class TableTransformer:
     def get_supported_types(self):
         """Quick method that returns all the types supported by the TableTransformer for conversion purposes"""
         return ['VARCHAR(255)', 'CHAR(255)', 'INTEGER', 'FLOAT', 'DATE', 'TIME', 'TIMESTAMP']
-
-    def is_numerical(self, attr_type):
-        """Method that returns whether a postgres attribute type is a numerical type."""
-        
-        numericals = ['integer', 'double precision', 'bigint', 'bigserial', 'real', 'smallint', 'smallserial', 'serial']
-        if attr_type in numericals:
-            return True
-        else:
-            return False
 
     def get_conversion_options(self, tablename, attribute):
         """Returns a list of supported types that the given attribute can be converted to."""
@@ -272,7 +262,8 @@ class TableTransformer:
         row = cur.fetchone()
         self.db_connection.commit()
         if row is None: #Nothing fetched? Return None.
-            return None
+            error_msg = 'Error occured! Column "' + attribute + '" of table "' + tablename + '" does not exist.'
+            raise self.ValueError(error_msg)
         if detailed is False:
             return (row[0], internal_ref)
         else:
@@ -353,7 +344,6 @@ class TableTransformer:
         
         if (cur_type == 'character varying') or (cur_type == 'character'):
             to_type = self.__convert_character(internal_ref, attribute, to_type, data_format, length)
-
         else:
             to_type = self.__convert_numeric(internal_ref, attribute, to_type, length)
             
@@ -414,8 +404,9 @@ class TableTransformer:
             if value.isalnum() is not True: #Only alphanumerical substrings are supported
                 raise self.ValueError("Values not containing alphanumerical characters can not be used for substring matching. "
                                       "Please use whole-word matching to find and replace the values.")
-            
-            if self.get_attribute_type(tablename, attribute)[0] not in ['character', 'character varying']:
+
+            attr_type = self.get_attribute_type(tablename, attribute)[0]
+            if SQLTypeHandler().is_string(attr_type) is False:
                 raise self.AttrTypeError("Substring matching is only possible with character strings. "
                                          "Please convert the attribute to a character string type.")
                 
@@ -452,7 +443,7 @@ class TableTransformer:
         if self.replace is False:
             internal_ref = self.copy_table(internal_ref, new_name)
 
-        if cur_type not in ['character', 'character varying']:
+        if SQLTypeHandler().is_string(cur_type) is False:
             raise self.AttrTypeError("Find-and-replace using regular epxressions is only possible with character type attributes. "
                                      "Please convert the needed attribute to VARCHAR or CHAR.")
         
@@ -479,9 +470,24 @@ class TableTransformer:
         """
         new_attributes = data_frame.columns.values.tolist()
         new_types = {}
-        for elem in new_attributes:
-            psql_type = self.get_attribute_type(tablename, elem, True)
-            sqla_type = None
+        sqla_type = None
+        for  i in range(len(new_attributes)):
+            elem = new_attributes[i]
+            try:
+                self.get_attribute_type(tablename, elem, True)
+                continue
+            except self.ValueError:
+                temp = str(data_frame[elem].dtype)
+                if temp == 'uint8':
+                    sqla_type = sqlalchemy.types.INTEGER()
+                elif temp == 'int64':
+                    sqla_type = sqlalchemy.types.INTEGER()
+                elif temp == 'float64':
+                    sqla_type = sqlalchemy.types.Float(precision=25, asdecimal=True)
+                elif temp == 'object' or temp == 'category':
+                    sqla_type = sqlalchemy.types.VARCHAR(length=255)
+                
+            """sqla_type = None
             if psql_type is None: #This means it's an attribute made in the pandas df but not yet in the SQL table
                 temp = str(data_frame[elem].dtype)
                 if temp == 'uint8':
@@ -506,7 +512,7 @@ class TableTransformer:
                 elif psql_type[0] == 'timestamp without time zone':
                     sqla_type = sqlalchemy.types.DateTime()
                 elif psql_type[0] == 'time without time zone':
-                    sqla_type = sqlalchemy.types.TIME()
+                    sqla_type = sqlalchemy.types.TIME()"""
                     
             if sqla_type is None:
                 error_msg = "Couldn't convert to a value! " + str(psql_type[0]) + " from " + elem +  " is unknown to the system."
@@ -549,8 +555,8 @@ class TableTransformer:
         This will normalize everything in a 1-point range, thus [0-1].
         """
         #Let's check if the attribute is a numeric type, this should not be performed on non-numeric types
-        attr_type = self.get_attribute_type(tablename, attribute)
-        if attr_type[0] not in ['integer', 'double precision']:
+        attr_type = self.get_attribute_type(tablename, attribute)[0]
+        if SQLTypeHandler().is_numerical(attr_type) is False:
             raise self.AttrTypeError("Normalization failed due attribute not being of numeric type (neither integer or float)")
         
         internal_ref = self.get_internal_reference(tablename)
@@ -702,8 +708,8 @@ class TableTransformer:
     def discretize_using_equal_frequency(self, tablename, attribute, new_name=""):
         """Method that calulates the bins for an equi-frequent discretization and performs it"""
         #The initial steps are similar to equi-distant discretization
-        attr_type = self.get_attribute_type(tablename, attribute)
-        if attr_type[0] not in ['integer', 'double precision']:
+        attr_type = self.get_attribute_type(tablename, attribute)[0]
+        if SQLTypeHandler().is_numerical(attr_type) is False:
             raise self.AttrTypeError("Discretization failed due attribute not being of numeric type (neither integer or float)")
 
         round_to_int = True
@@ -771,8 +777,8 @@ class TableTransformer:
             exclude_right: A boolean indicating whether the rightmost edge should be included
                            True if the rightmost edge is excluded [X - Y[, False if rightmost edge is included ]X - Y]
         """
-        attr_type = self.get_attribute_type(tablename, attribute)
-        if attr_type[0] not in ['integer', 'double precision']:
+        attr_type = self.get_attribute_type(tablename, attribute)[0]
+        if SQLTypeHandler().is_numerical(attr_type) is False:
             raise self.AttrTypeError("Discretization failed due attribute not being of numeric type (neither integer or float)")
 
         internal_ref = self.get_internal_reference(tablename)
@@ -829,8 +835,8 @@ class TableTransformer:
             internal_ref = self.copy_table(internal_ref, new_name)
 
         #Let's check if the attribute is a numeric type, this should not be performed on non-numeric types
-        attr_type = self.get_attribute_type(tablename, attribute)
-        if attr_type[0] not in ['integer', 'double precision']:
+        attr_type = self.get_attribute_type(tablename, attribute)[0]
+        if SQLTypeHandler().is_numerical(attr_type) is False:
             raise self.AttrTypeError("Deleting outliers failed due attribute not being of numeric type (neither integer or float)")
 
         nullable = False
@@ -838,7 +844,6 @@ class TableTransformer:
         if self.is_nullable(tablename, attribute) is True:
             nullable is True
             
-        
         if larger is True:
             comparator = '>'
         else:
@@ -874,8 +879,8 @@ class TableTransformer:
             internal_ref = self.copy_table(internal_ref, new_name)
 
         #Let's check if the attribute is a numeric type, this should not be performed on non-numeric types
-        attr_type = self.get_attribute_type(tablename, attribute)
-        if attr_type[0] not in ['integer', 'double precision']:
+        attr_type = self.get_attribute_type(tablename, attribute)[0]
+        if SQLTypeHandler().is_numerical(attr_type) is False:
             raise self.AttrTypeError("Filling nulls failed due attribute not being of numeric type (neither integer or float)")
 
         sql_query = "SELECT * FROM \"{}\".\"{}\"".format(*internal_ref)
@@ -893,8 +898,8 @@ class TableTransformer:
             internal_ref = self.copy_table(internal_ref, new_name)
 
         #Let's check if the attribute is a numeric type, this should not be performed on non-numeric types
-        attr_type = self.get_attribute_type(tablename, attribute)
-        if attr_type[0] not in ['integer', 'double precision']:
+        attr_type = self.get_attribute_type(tablename, attribute)[0]
+        if SQLTypeHandler().is_numerical(attr_type) is False:
             raise self.AttrTypeError("Filling nulls failed due attribute not being of numeric type (neither integer or float)")
 
         sql_query = "SELECT * FROM \"{}\".\"{}\"".format(*internal_ref)
@@ -912,8 +917,8 @@ class TableTransformer:
             internal_ref = self.copy_table(internal_ref, new_name)
 
         #Let's check if the attribute is a numeric type, this should not be performed on non-numeric types
-        attr_type = self.get_attribute_type(tablename, attribute)
-        if attr_type[0] not in ['integer', 'double precision']:
+        attr_type = self.get_attribute_type(tablename, attribute)[0]
+        if SQLTypeHandler().is_numerical(attr_type) is False:
             raise self.AttrTypeError("Filling nulls failed due attribute not being of numeric type (neither integer or float)")
 
         #Perhaps do a sanity check here? I'll see later on.
@@ -927,8 +932,8 @@ class TableTransformer:
         if self.replace is False:
             internal_ref = self.copy_table(internal_ref, new_name)
 
-        attr_type = self.get_attribute_type(tablename, attribute)
-        if attr_type[0] not in ['date', 'timestamp without time zone']:
+        attr_type = self.get_attribute_type(tablename, attribute)[0]
+        if SQLTypeHandler().is_date_type(attr_type) is False:
             raise self.AttrTypeError("Extraction of date part failed due attribute not being a date type (neither DATE or TIMESTAMP).")
 
         if extraction_arg not in ['YEAR', 'MONTH + YEAR', 'MONTH', 'DAY OF THE WEEK']:

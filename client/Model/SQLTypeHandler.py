@@ -40,8 +40,7 @@ class SQLTypeHandler:
                 }
 
             return sqla_dict
-            
-
+        
         def is_numerical(self, attr_type):
             """Method that returns whether a postgres attribute type is a numerical type."""
             numericals = ['integer', 'double precision', 'bigint', 'real', 'smallint', 'numeric']
@@ -58,21 +57,36 @@ class SQLTypeHandler:
             else:
                 return False
 
+        def is_date_type(self, attr_type):
+            """Method that returns whether a postgres type is a date type."""
+            date_types = ['date', 'timestamp without time zone', 'timestamp with time zone']
+            if attr_type in date_types:
+                return True
+            else:
+                return False
+
+        def is_string(self, attr_type):
+            """Method that returns whether a postgres type is a sequence of characters (string)."""
+            str_types = ['character varying', 'character', 'text']
+            if attr_type in str_types:
+                return True
+            else:
+                return False
+
         def get_type_alias(self, systype):
             """Method that translates a type known to postgres' system to its standard SQL alias if it has one."""
             try:
                 # Try to find the alias in the dict using the EAFP principle.
                 alias = self.type_dict[systype]
-
             except KeyError:
                 # There is no alias for this type, so the type itself is correct.
                 alias = systype.upper()
 
             return alias
                 
-        def pandas_to_postgres(self, pandas_type):
-            """Method that maps a pandas-type object to a SQLAlchemy type object that represents a PostgreSQL type."""
-            p_type = self.sqla_dict[pandas_type]
+        def to_sqla_object(self, p_type):
+            """Method that maps a pandas-type/postgres type to a SQLAlchemy type object that represents a PostgreSQL type."""
+            p_type = self.sqla_dict[p_type]
             return p_type
 
         def sql_time_to_dict(sql_date_string):
