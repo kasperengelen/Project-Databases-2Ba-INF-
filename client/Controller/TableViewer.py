@@ -1,5 +1,6 @@
 import pandas as pd
 import matplotlib
+from Model.SQLTypeHandler import SQLTypeHandler
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import math
@@ -203,7 +204,7 @@ class TableViewer:
                                                                                                      sql.Identifier(self.schema),
                                                                                                      sql.Identifier(self.tablename)))
         type = self.cur.fetchone()[0]
-        if not self.is_numerical(type):
+        if not SQLTypeHandler().is_numerical(type):
             return "N/A"
 
         sql_query = "SELECT \"{}\" FROM \"{}\".\"{}\"".format(columnname, self.schema, self.tablename)
@@ -301,7 +302,7 @@ class TableViewer:
                                                                      sql.Identifier(self.schema),
                                                                      sql.Identifier(self.tablename)))
         type = self.cur.fetchone()[0]
-        if not self.is_numerical(type):
+        if not SQLTypeHandler().is_numerical(type):
             return "N/A"
 
         self.cur.execute(sql.SQL("SELECT " + aggregate + "({}) FROM {}.{}").format(sql.Identifier(columnname),

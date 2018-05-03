@@ -10,7 +10,6 @@ from unit_tests.test_DataLoader import TestDataLoader
 import unittest
 
 if __name__ == "__main__":
-    #tests = [TestDatasetInfo, TestDataLoader, TestTableTransformer, TestTransformerCopy, TestTableViewer, TestUserManager, TestDatasetManager]
-    tests = [TestTableTransformer, TestTransformerCopy, TestDataLoader]
+    tests = [TestDatasetInfo, TestDataLoader, TestTableTransformer, TestTransformerCopy, TestTableViewer, TestUserManager, TestDatasetManager]
     tester = ProjectTester(tests)
     tester.run()
