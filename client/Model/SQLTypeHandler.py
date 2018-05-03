@@ -44,9 +44,16 @@ class SQLTypeHandler:
 
         def is_numerical(self, attr_type):
             """Method that returns whether a postgres attribute type is a numerical type."""
-            
-            numericals = ['integer', 'double precision', 'bigint', 'real', 'smallint']
+            numericals = ['integer', 'double precision', 'bigint', 'real', 'smallint', 'numeric']
             if attr_type in numericals:
+                return True
+            else:
+                return False
+
+        def is_integer(self, attr_type):
+            """Method that returns whether a postgres type is an integer type."""
+            integers = ['integer', 'smallint', 'bigint']
+            if attr_type in integers:
                 return True
             else:
                 return False

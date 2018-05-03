@@ -279,7 +279,7 @@ class TestTransformerCopy(unittest.TestCase):
     def test_equidistant_discretization(self):
         """Test the equidistant discretization method. This will result in a new table."""
         cur = self.db_connection.cursor()
-        self.test_object.discretize_using_equal_width('test_table', 'number', 'new_table18')
+        self.test_object.discretize_using_equal_width('test_table', 'number', 4, 'new_table18')
         result = self.__test_table_exists('new_table18')
         self.assertTrue(result)
         cur.execute('SELECT DISTINCT number_categorical FROM "TEST".new_table18')
