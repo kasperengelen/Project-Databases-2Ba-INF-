@@ -63,12 +63,28 @@ BEGIN
 		system.set_permissions.userid = OLD.userid AND system.set_permissions.permission_type = 'admin')
 		RETURNING * LOOP
 		
+		EXECUTE 'DELETE FROM system.datasets WHERE setid = ' || deadset.setid::varchar;
 		EXECUTE 'DROP SCHEMA IF EXISTS ' || quote_ident(deadset.setid::varchar) || ' CASCADE';
 		EXECUTE 'DROP SCHEMA IF EXISTS ' || quote_ident('original_' || deadset.setid::varchar) || ' CASCADE';
 	END LOOP;
     RETURN OLD;
 END;
 $BODY$ LANGUAGE PLPGSQL;
- 
+
+--Trigger to delete a dataset if the last admin leaves the dataset.
+CREATE OR REPLACE FUNCTION leave_clean() RETURNS TRIGGER AS $BODY$
+BEGIN
+	IF EXISTS(SELECT * FROM system.set_permissions WHERE setid = OLD.setid AND permission_type = 'admin') THEN
+		EXECUTE 'DELETE FROM system.datasets WHERE setid = ' || OLD.setid::varchar;
+		EXECUTE 'DROP SCHEMA IF EXISTS ' || quote_ident(OLD.setid::varchar) || ' CASCADE';
+		EXECUTE 'DROP SCHEMA IF EXISTS ' || quote_ident('original_' || OLD.setid::varchar) || ' CASCADE';
+	END IF;
+	RETURN NULL;
+END;
+$BODY$ LANGUAGE PLPGSQL;
+		 
 CREATE TRIGGER deleted_user BEFORE DELETE ON SYSTEM.user_accounts
 FOR EACH ROW EXECUTE PROCEDURE delete_clean();
+
+CREATE TRIGGER left_dataset AFTER DELETE ON SYSTEM.set_permissions
+FOR EACH ROW WHEN (OLD.permission_type = 'admin') EXECUTE PROCEDURE leave_clean();
