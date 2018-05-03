@@ -1,13 +1,11 @@
 import unittest
-
-from passlib.hash import sha256_crypt
-
-from Controller.DatasetInfo import DatasetInfo
+from Controller.DatasetPermissionsManager import DatasetPermissionsManager
 from Controller.DatasetManager import DatasetManager
 from Model.DatabaseConfiguration import DatabaseConfiguration
+from passlib.hash import sha256_crypt
 
-class TestDatasetInfo(unittest.TestCase):
-    """Tests for the DatasetInfo class."""
+class TestDatasetPermissionsManager(unittest.TestCase):
+    """Tests for the DatasetPermissionManager class."""
 
     def __create_dataset_manually(self, name, desc):
         self.cur.execute("INSERT INTO SYSTEM.datasets(setname, description) VALUES (%s, %s) RETURNING setid;", [name, desc])
@@ -87,6 +85,10 @@ class TestDatasetInfo(unittest.TestCase):
         # user to add and remove perms
         cls.user_7 = cls.__create_user_manually(cls, 'User7', 'User7', 'user7@email.com')
 
+        # user that is not associated with any dataset.
+        cls.user_8 = cls.__create_user_manually(cls, 'User8', 'User8', 'user8@gmail.com')
+    # ENDMETHOD
+
     @classmethod
     def tearDownClass(cls):
         """Clean up the test environment."""
@@ -100,38 +102,41 @@ class TestDatasetInfo(unittest.TestCase):
         cls.__delete_user_manually(cls, cls.user_5)
         cls.__delete_user_manually(cls, cls.user_6)
         cls.__delete_user_manually(cls, cls.user_7)
+        cls.__delete_user_manually(cls, cls.user_8)
 
         cls.db_conn.close()
+    # ENDMETHOD
 
     def test_getAdminPerms(self):
-        admin_ids = self.dataset.getAdminPerms()
+        admin_ids = DatasetPermissionsManager.getAdminPerms(self.dataset.setid, db_conn = self.db_conn)
 
         self.assertTrue(self.user_1 in admin_ids)
         self.assertTrue(self.user_2 in admin_ids)
 
         self.assertEqual(len(admin_ids), 2)
+    # ENDTEST
 
     def test_getWritePerms(self):
-        write_ids = self.dataset.getWritePerms()
+        write_ids = DatasetPermissionsManager.getWritePerms(self.dataset.setid, db_conn = self.db_conn)
 
         self.assertTrue(self.user_3 in write_ids)
 
         self.assertEqual(len(write_ids), 1)
+    # ENDTEST
 
     def test_getReadPerms(self):
-        read_ids = self.dataset.getReadPerms()
+        read_ids = DatasetPermissionsManager.getReadPerms(self.dataset.setid, db_conn = self.db_conn)
 
         self.assertTrue(self.user_4 in read_ids)
         self.assertTrue(self.user_5 in read_ids)
         self.assertTrue(self.user_6 in read_ids)
 
         self.assertEqual(len(read_ids), 3)
+    # ENDTEST
 
     def test_addPerm(self):
-        
         # add perm
-
-        self.dataset.addPerm('user7@email.com', 'admin')
+        DatasetPermissionsManager.addPerm(self.dataset.setid, self.user_7, 'admin', db_conn = self.db_conn)
 
         self.cur.execute("SELECT * FROM SYSTEM.set_permissions WHERE userid = %s and setid = %s;", [self.user_7, self.dataset.setid])
         result = self.cur.fetchone()
@@ -139,6 +144,7 @@ class TestDatasetInfo(unittest.TestCase):
         self.assertTrue(result is not None)
 
         self.__delete_perms_manually(self.dataset.setid, self.user_7)
+    # ENDTEST
 
     def test_removePerm(self):
         self.__add_perms_manually(self.dataset.setid, self.user_7, 'admin')
@@ -148,18 +154,52 @@ class TestDatasetInfo(unittest.TestCase):
 
         self.assertTrue(result is not None)
 
-        self.dataset.removePerm(self.user_7)
+        # remove perm
+        DatasetPermissionsManager.removePerm(self.dataset.setid, self.user_7, db_conn = self.db_conn)
 
         self.cur.execute("SELECT * FROM SYSTEM.set_permissions WHERE userid = %s and setid = %s;", [self.user_7, self.dataset.setid])
         result = self.cur.fetchone()
 
         self.assertTrue(result is None)
 
+        self.__delete_perms_manually(self.dataset.setid, self.user_7)
+    # ENDTEST
 
     def test_getPermForUserID(self):
-        self.assertEqual(self.dataset.getPermForUserID(self.user_1), 'admin')
-        self.assertEqual(self.dataset.getPermForUserID(self.user_2), 'admin')
-        self.assertEqual(self.dataset.getPermForUserID(self.user_3), 'write')
-        self.assertEqual(self.dataset.getPermForUserID(self.user_4), 'read')
-        self.assertEqual(self.dataset.getPermForUserID(self.user_5), 'read')
-        self.assertEqual(self.dataset.getPermForUserID(self.user_6), 'read')
+        self.assertEqual(DatasetPermissionsManager.getPermForUserID(self.dataset.setid, self.user_1, db_conn = self.db_conn), 'admin')
+        self.assertEqual(DatasetPermissionsManager.getPermForUserID(self.dataset.setid, self.user_2, db_conn = self.db_conn), 'admin')
+        self.assertEqual(DatasetPermissionsManager.getPermForUserID(self.dataset.setid, self.user_3, db_conn = self.db_conn), 'write')
+        self.assertEqual(DatasetPermissionsManager.getPermForUserID(self.dataset.setid, self.user_4, db_conn = self.db_conn), 'read')
+        self.assertEqual(DatasetPermissionsManager.getPermForUserID(self.dataset.setid, self.user_5, db_conn = self.db_conn), 'read')
+        self.assertEqual(DatasetPermissionsManager.getPermForUserID(self.dataset.setid, self.user_6, db_conn = self.db_conn), 'read')
+        self.assertEqual(DatasetPermissionsManager.getPermForUserID(self.dataset.setid, self.user_8, db_conn = self.db_conn), None)
+    # ENDTEST
+
+    def test_userHasAccessTo(self):
+        # admin access
+        self.assertTrue(DatasetPermissionsManager.userHasSpecifiedAccessTo(self.dataset.setid, self.user_1, 'admin', db_conn = self.db_conn))
+        self.assertTrue(DatasetPermissionsManager.userHasSpecifiedAccessTo(self.dataset.setid, self.user_2, 'admin', db_conn = self.db_conn))
+        self.assertFalse(DatasetPermissionsManager.userHasSpecifiedAccessTo(self.dataset.setid, self.user_3, 'admin', db_conn = self.db_conn))
+        self.assertFalse(DatasetPermissionsManager.userHasSpecifiedAccessTo(self.dataset.setid, self.user_4, 'admin', db_conn = self.db_conn))
+        self.assertFalse(DatasetPermissionsManager.userHasSpecifiedAccessTo(self.dataset.setid, self.user_5, 'admin', db_conn = self.db_conn))
+        self.assertFalse(DatasetPermissionsManager.userHasSpecifiedAccessTo(self.dataset.setid, self.user_6, 'admin', db_conn = self.db_conn))
+        self.assertFalse(DatasetPermissionsManager.userHasSpecifiedAccessTo(self.dataset.setid, self.user_8, 'admin', db_conn = self.db_conn))
+
+        # write access
+        self.assertTrue(DatasetPermissionsManager.userHasSpecifiedAccessTo(self.dataset.setid, self.user_1, 'write', db_conn = self.db_conn))
+        self.assertTrue(DatasetPermissionsManager.userHasSpecifiedAccessTo(self.dataset.setid, self.user_2, 'write', db_conn = self.db_conn))
+        self.assertTrue(DatasetPermissionsManager.userHasSpecifiedAccessTo(self.dataset.setid, self.user_3, 'write', db_conn = self.db_conn))
+        self.assertFalse(DatasetPermissionsManager.userHasSpecifiedAccessTo(self.dataset.setid, self.user_4, 'write', db_conn = self.db_conn))
+        self.assertFalse(DatasetPermissionsManager.userHasSpecifiedAccessTo(self.dataset.setid, self.user_5, 'write', db_conn = self.db_conn))
+        self.assertFalse(DatasetPermissionsManager.userHasSpecifiedAccessTo(self.dataset.setid, self.user_6, 'write', db_conn = self.db_conn))
+        self.assertFalse(DatasetPermissionsManager.userHasSpecifiedAccessTo(self.dataset.setid, self.user_8, 'write', db_conn = self.db_conn))
+
+        # read access
+        self.assertTrue(DatasetPermissionsManager.userHasSpecifiedAccessTo(self.dataset.setid, self.user_1, 'read', db_conn = self.db_conn))
+        self.assertTrue(DatasetPermissionsManager.userHasSpecifiedAccessTo(self.dataset.setid, self.user_2, 'read', db_conn = self.db_conn))
+        self.assertTrue(DatasetPermissionsManager.userHasSpecifiedAccessTo(self.dataset.setid, self.user_3, 'read', db_conn = self.db_conn))
+        self.assertTrue(DatasetPermissionsManager.userHasSpecifiedAccessTo(self.dataset.setid, self.user_4, 'read', db_conn = self.db_conn))
+        self.assertTrue(DatasetPermissionsManager.userHasSpecifiedAccessTo(self.dataset.setid, self.user_5, 'read', db_conn = self.db_conn))
+        self.assertTrue(DatasetPermissionsManager.userHasSpecifiedAccessTo(self.dataset.setid, self.user_6, 'read', db_conn = self.db_conn))
+        self.assertFalse(DatasetPermissionsManager.userHasSpecifiedAccessTo(self.dataset.setid, self.user_8, 'read', db_conn = self.db_conn))
+    # ENDTEST

@@ -39,7 +39,7 @@ def view_dataset_home(dataset_id):
     join_form = TableJoinForm()
     join_form.fillForm(table_list)
 
-    perm_type = DatasetPermissionsManager.getPermForUserID(session['userdata']['userid'])
+    perm_type = DatasetPermissionsManager.getPermForUserID(dataset_id, session['userdata']['userid'])
 
     return render_template('dataset_pages.home.html', dataset_info = dataset_info, 
                                                       table_list = table_list,
@@ -960,7 +960,7 @@ def create_dataset():
         setid = DatasetManager.createDataset(form.name.data, form.description.data)
         dataset = DatasetManager.getDataset(setid)
 
-        DatasetPermissionsManager.addPerm(session['userdata']['userid'], 'admin')
+        DatasetPermissionsManager.addPerm(setid, session['userdata']['userid'], 'admin')
         flash(message="The dataset was created.", category="success")
 
         return redirect(url_for('dataset_pages.view_dataset_home', dataset_id = setid))
@@ -1000,9 +1000,8 @@ def leave(dataset_id):
 
     try:
         flash(message="Leaving dataset complete.", category="success")
-        dataset = DatasetManager.getDataset(dataset_id)
         # TODO restructure this
-        DatasetPermissionsManager.removePerm(int(session['userdata']['userid']))
+        DatasetPermissionsManager.removePerm(dataset_id, int(session['userdata']['userid']))
     except:
         flash(message="Error when leaving dataset.", category="error")
 
@@ -1119,7 +1118,7 @@ def add_user_dataset(dataset_id):
 
         userid = UserManager.getUserFromEmail(form.email.data).userid
 
-        DatasetPermissionsManager.addPerm(userid, form.permission_type.data)
+        DatasetPermissionsManager.addPerm(dataset_id, userid, form.permission_type.data)
     except RuntimeError as e:
         flash(message="Cannot add user to dataset.", category="error")
 
@@ -1147,7 +1146,7 @@ def remove_user_dataset(dataset_id):
             flash(message="User cannot remove itself from dataset.", category="error")
             return redirect(url_for('dataset_pages.edit_perms_dataset', dataset_id=dataset_id))
 
-        DatasetPermissionsManager.removePerm(int(form.userid.data))
+        DatasetPermissionsManager.removePerm(dataset_id, int(form.userid.data))
     except RuntimeError as e:
         flash(message="Cannot remove user from dataset.", category="error")
 
