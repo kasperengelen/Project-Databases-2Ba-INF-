@@ -5,6 +5,7 @@ from psycopg2 import sql
 import sqlalchemy
 import sys, os
 from Controller.DatasetHistoryManager import DatasetHistoryManager
+from Model.SQLTypeHandler import SQLTypeHandler
 
 class TableTransformer:
     """Class that performs transformations and various actions on SQL tables to support the data cleaning process.
@@ -45,9 +46,7 @@ class TableTransformer:
         This exception is raised whenever an operation is provided with an inappropiate value causing
         the operation to fail.
         """
-
-
-
+        
     def is_nullable(self, tablename, attribute):
         """Extra option to check whether an attribute is nullable or not. If deleting something is impossible due to a not null
         constraint, the row will be deleted as a whole.
@@ -63,25 +62,18 @@ class TableTransformer:
         elif result == 'NO':
             return False
         raise ValueError("Error: is_nullabe returned else than YES or NO.")
-
-
     
     def set_to_overwrite(self):
         """Method that changes the behavior of the TableTransforler to overwrite the table when performing modifcations."""
         self.replace = True
-
-
-    
+        
     def set_to_copy(self):
         """Method that changes the behavior of the TableTransforler to create a new table when performing modifcations."""
         self.replace = False
-
-
-    
+        
     def get_internal_reference(self, tablename):
         """Get the internal reference for the table of (setid) and (tablename). This returns a pair (id, name)."""
         return (str(self.setid), tablename)
-
     
     def copy_table(self, internal_ref, new_name):
         """In case the transformation has to result in a new table, we copy the existing one and perform modifications on this copy.
@@ -197,9 +189,6 @@ class TableTransformer:
         self.db_connection.commit()
         clean_predicate = predicate.replace('"', '\\"') #Escape double quotes to pass it in postgres array
         self.history_manager.write_to_history(internal_ref[1], tablename, 'None', [clean_predicate], 15)
-
-
-        pass
     
     def delete_attribute(self, tablename, attribute, new_name=""):
         """Delete an attribute of a table"""
@@ -209,17 +198,11 @@ class TableTransformer:
         self.db_connection.cursor().execute(sql.SQL("ALTER TABLE {}.{} DROP COLUMN {}").format(sql.Identifier(internal_ref[0]), sql.Identifier(internal_ref[1]),
                                                                                     sql.Identifier(attribute)))
         self.db_connection.commit()
-
         self.history_manager.write_to_history(internal_ref[1], tablename, attribute, [], 2)
-
-        # create history entry
-        #self.__create_history(tablename, attribute, "delete_attribute", None, new_name)
-
 
     def get_supported_types(self):
         """Quick method that returns all the types supported by the TableTransformer for conversion purposes"""
         return ['VARCHAR(255)', 'CHAR(255)', 'INTEGER', 'FLOAT', 'DATE', 'TIME', 'TIMESTAMP']
-
 
     def is_numerical(self, attr_type):
         """Method that returns whether a postgres attribute type is a numerical type."""
@@ -229,7 +212,6 @@ class TableTransformer:
             return True
         else:
             return False
-
 
     def get_conversion_options(self, tablename, attribute):
         """Returns a list of supported types that the given attribute can be converted to."""
@@ -251,7 +233,6 @@ class TableTransformer:
                     'TIME'      : ['HH24:MI:SS', 'HH12:MI:SS AM/PM', 'HH12:MI AM/PM', 'HH12 AM/PM'],
                     'TIMESTAMP' : ['DD/MM/YYYY TIME', 'DD-MM-YYYY TIME', 'MM/DD/YYYY TIME', 'MM-DD-YYYY TIME', 'YYYY/MM/DD TIME', 'YYYY-MM-DD TIME']
                     }
-
         return formats.setdefault(data_type, [])
 
     def get_extraction_options(self, data_type):
@@ -277,8 +258,6 @@ class TableTransformer:
         error_msg = "This method should only be called when converting to date/time."
         raise ValueError(error_msg)
         
-        
-
     def get_attribute_type(self, tablename, attribute, detailed=False):
         """Return the postgres data type of an attribute.
         Parameters:
@@ -377,10 +356,8 @@ class TableTransformer:
 
         else:
             to_type = self.__convert_numeric(internal_ref, attribute, to_type, length)
-
-        #Write this transformation to the dataset history.
+            
         self.history_manager.write_to_history(internal_ref[1], tablename, attribute, [to_type, data_format, length], 1)
-
 
     def force_attribute_type(self, tablename, attribute, to_type, data_format="", new_name=""):
         """In case that change_attribute_type fails due to elements that can't be converted
@@ -415,9 +392,6 @@ class TableTransformer:
             # But we don't want to copy this table once again, only overwrite it
             self.replace = True
             self.change_attribute_type(new_name, attribute, to_type, data_format, new_name)
-
-
-
 
     def find_and_replace(self, tablename, attribute, value, replacement, exact=True, replace_all=True, new_name=""):
         """Method that finds values and replaces them with the provided argument.
@@ -465,8 +439,6 @@ class TableTransformer:
         self.db_connection.commit()
         self.history_manager.write_to_history(internal_ref[1], tablename, attribute, [original_value, replacement, exact, replace_all], 8)
 
-
-    #INCOMPLETE
     def regex_find_and_replace(self, tablename, attribute, regex, replacement, case_sens=False, new_name=""):
         """Method that finds values with a provided regex and replaces them with a provided replacement.
 
@@ -505,7 +477,6 @@ class TableTransformer:
         Our system handles only the base data types, but pandas might use types not supported
         by our code. With this method we force it to comply to our limited set of data types.
         """
-
         new_attributes = data_frame.columns.values.tolist()
         new_types = {}
         for elem in new_attributes:
@@ -566,18 +537,13 @@ class TableTransformer:
             df.to_sql(new_name, self.engine, None, internal_ref[0], 'fail', index = False, dtype = new_dtypes)
             eventual_table = new_name
             
-
         self.history_manager.write_to_history(eventual_table, tablename, attribute, [], 14)
-        
-
         
     def __calculate_zscore(self, mean, standard_dev, value):
         """Method to quickly calculate z-scores"""
         zscore = (value - mean) / standard_dev
         return zscore
-            
-
-
+    
     def normalize_using_zscore(self, tablename, attribute, new_name = ""):
         """Method that normalizes the values of an attribute using the z-score.
         This will normalize everything in a 1-point range, thus [0-1].
@@ -625,9 +591,7 @@ class TableTransformer:
             eventual_table = new_name
 
         self.history_manager.write_to_history(internal_ref[1], tablename, attribute, [mean], 10)
-
-
-
+        
     def __get_unique_name(self, tablename, name, is_attribute=True):
         """Method that makes sure an attribute name or table name given the name
         is unique or else make an unique variation of it by appending a number.
@@ -656,56 +620,54 @@ class TableTransformer:
 
         if count == 0:
             return name
-
         else:
             new_name = name + "_" + str(count)
             return new_name
-
-                
         
-
-
     def __make_binlabels(self, bins):
         binlabels = []
         for i in range(1, len(bins)):
             label = "[" + str(bins[i-1]) + " , " + str(bins[i]) + "["                                
             binlabels.append(label)
         return binlabels
-        
 
-    def discretize_using_equal_width(self, tablename, attribute, new_name=""):
+    def __truncate_float(self, fp_num):
+        truncated = "%.3f" % fp_num
+        return float(truncated)
+        
+    def discretize_using_equal_width(self, tablename, attribute, nr_bins, new_name=""):
         """Method that calulates the bins for an equi-distant discretization and performs it"""
         internal_ref = self.get_internal_reference(tablename)
-        attr_type = self.get_attribute_type(tablename, attribute)
-        if attr_type[0] not in ['integer', 'double precision']:
+        attr_type = self.get_attribute_type(tablename, attribute)[0]
+        if SQLTypeHandler().is_numerical(attr_type) is False:
             raise self.AttrTypeError("Discretization failed due attribute not being of numeric type (neither integer or float)")
-        sql_query = "SELECT * FROM \"{}\".\"{}\"".format(*internal_ref)
+
+        integer_bool = SQLTypeHandler().is_integer(attr_type)
+        sql_query = 'SELECT * FROM "{}"."{}"'.format(*internal_ref)
         df = pd.read_sql(sql_query, self.engine)
         minimum = df[attribute].min()
-
         maximum = df[attribute].max() + 0.0001 #Add a little bit to make sure the max element is included
-        leftmost_edge = math.floor(minimum)
-        rightmost_edge = math.ceil(maximum)
+        leftmost_edge = (math.floor(minimum * 1000) / 1000)
+        rightmost_edge = (math.ceil(maximum * 1000) / 1000)
         value_range = rightmost_edge - leftmost_edge
-        nr_values = df[attribute].size
-        #A good rule of thumb for the amount of bins is the square root of the amount of elements
-        nr_bins = math.ceil(math.sqrt(nr_values))
-        #Generally speaking we want to keep the amount of bins between 2 and 20 for readibility
-        if nr_bins < 2:
-            nr_bins = 2
-        elif nr_bins > 20:
-            nr_bins = 20
+
         #Calculate the width of the bins
-        bin_width = math.ceil(value_range / nr_bins)
-        bins = [leftmost_edge]
+        bin_width = (math.ceil((value_range / nr_bins) * 1000)) / 1000
+        if integer_bool is True:
+            bin_width = math.ceil(bin_width)
+        else:
+            bin_width = self.__truncate_float(bin_width)
+        bins = [leftmost_edge if integer_bool is False else math.ceil(leftmost_edge)]
         #Get all the intervals in list form
         for i in range(nr_bins):
-            next_interval = bins[i] + bin_width
+            if integer_bool is True:
+                next_interval = math.ceil(bins[i]) + bin_width
+            else:
+                next_interval = self.__truncate_float(bins[i] + bin_width)
             bins.append(next_interval)
 
         #Make labels for these intervals using the list of bin values
         binlabels = self.__make_binlabels(bins)
-
         column_name = attribute + "_categorical"
         category = self.__get_unique_name(tablename, column_name)
         df[category] = pd.cut(df[attribute], bins, right=False, labels = binlabels, include_lowest=True)
@@ -721,8 +683,7 @@ class TableTransformer:
             new_name = self.__get_unique_name("", new_name, False)
             df.to_sql(new_name, self.engine, None, internal_ref[0], 'fail', index = False, dtype = new_dtypes)
             eventual_table = new_name
-
-
+        
         self.history_manager.write_to_history(eventual_table, tablename, attribute, [], 6)
 
     def __calculate_equifrequent_indices(self, width, remainder, nr_bins):
@@ -738,9 +699,6 @@ class TableTransformer:
         index_bins[0] = 0 #The first index is always zero.
         return index_bins
             
-            
-
-
     def discretize_using_equal_frequency(self, tablename, attribute, new_name=""):
         """Method that calulates the bins for an equi-frequent discretization and performs it"""
         #The initial steps are similar to equi-distant discretization
@@ -765,7 +723,6 @@ class TableTransformer:
         elements = df[attribute].tolist() #Load all the elements in a python list
         elements.sort()
         list_size = len(elements)
-
         indices = []
 
         #Let's first try the naïve approach
@@ -788,14 +745,12 @@ class TableTransformer:
 
         #Make binlabels to represent the bins.
         binlabels = self.__make_binlabels(bins)
-
         column_name = attribute + "_categorical"
         category = self.__get_unique_name(tablename, column_name)
         df[category] = pd.cut(df[attribute], bins, right=False, labels = binlabels, include_lowest=True)
         new_dtypes = self.__get_simplified_types(tablename, df)
         eventual_table = "" #This the table that eventually becomes the table with the resulting changes
-    
-
+        
         if self.replace is True:
             #If the table should be replaced, drop it and recreate it.
             df.to_sql(tablename, self.engine, None, internal_ref[0], 'replace', index = False, dtype = new_dtypes)
@@ -805,14 +760,9 @@ class TableTransformer:
             new_name = self.__get_unique_name("", new_name, False)
             df.to_sql(new_name, self.engine, None, internal_ref[0], 'fail', index = False, dtype = new_dtypes)
             eventual_table = new_name
-
-
-        self.history_manager.write_to_history(eventual_table, tablename, attribute, [], 5)
             
-
-
-
-
+        self.history_manager.write_to_history(eventual_table, tablename, attribute, [], 5)
+        
     def discretize_using_custom_ranges(self, tablename, attribute, ranges, exclude_right=True, new_name=""):
         """Method that discretizes given a a list representing the bins.
 
@@ -833,7 +783,6 @@ class TableTransformer:
 
         if exclude_right is True:
             bracket = "["
-
         else:
             bracket = "]"
 
@@ -866,10 +815,7 @@ class TableTransformer:
             eventual_table = new_name
 
         self.history_manager.write_to_history(eventual_table, tablename, attribute, [ranges, exclude_right], 4)
-
-
-            
-
+        
     def delete_outlier(self, tablename, attribute, larger, value, new_name=""):
         """Method that gets rid of outliers of an attribute by setting them to null.
 
@@ -907,7 +853,6 @@ class TableTransformer:
         self.db_connection.cursor().execute(sql.SQL(sql_query).format(sql.Identifier(internal_ref[0]), sql.Identifier(internal_ref[1]),
                                                                                     sql.Identifier(attribute)), (value,))
         self.db_connection.commit()
-        
         self.history_manager.write_to_history(internal_ref[1], tablename, attribute, [larger, value], 3)
         
 
@@ -972,7 +917,6 @@ class TableTransformer:
             raise self.AttrTypeError("Filling nulls failed due attribute not being of numeric type (neither integer or float)")
 
         #Perhaps do a sanity check here? I'll see later on.
-
         self.__fill_nulls_with_x(attribute, internal_ref, value)
         self.history_manager.write_to_history(internal_ref[1], tablename, attribute, [value], 12)
 
@@ -998,12 +942,9 @@ class TableTransformer:
                                                                sql.Identifier(internal_ref[1]),
                                                                sql.Identifier(attr_name)))
 
-
-
         cur = self.db_connection.cursor()
         if extraction_arg == 'YEAR':
             query = "UPDATE {}.{} SET {} = EXTRACT(YEAR from {})::VARCHAR(255)"
-
 
         elif extraction_arg == 'MONTH + YEAR':
             query = (
@@ -1021,8 +962,7 @@ class TableTransformer:
                 WHEN 11 THEN 'November'
                 WHEN 12 THEN 'December'
                 END, EXTRACT(YEAR from {3})::VARCHAR(255))""")
-
-
+            
         elif extraction_arg == 'MONTH':
             query = (
                 """UPDATE {}.{} SET {} =  CASE (EXTRACT(MONTH from {}))
@@ -1040,7 +980,6 @@ class TableTransformer:
                 WHEN 12 THEN 'December'
                 END""")
 
-
         elif extraction_arg == 'DAY OF THE WEEK':
             query = (
                 """UPDATE {}.{} SET {} =  CASE (EXTRACT(DOW from {}))
@@ -1053,21 +992,11 @@ class TableTransformer:
                 WHEN 6 THEN 'Saturday'
                 END""")
 
-
         cur.execute(sql.SQL(query).format(sql.Identifier(internal_ref[0]), sql.Identifier(internal_ref[1]),
                                           sql.Identifier(attr_name), sql.Identifier(attribute)))
         self.db_connection.commit()
         self.history_manager.write_to_history(internal_ref[1], tablename, attribute, [extraction_arg], 7)
                 
-         
-        
-        
-
-
-
-
-        
-        
 
     def change_column_name(self, tablename, old_name, new_name):
         self.db_connection.cursor().execute(sql.SQL(
