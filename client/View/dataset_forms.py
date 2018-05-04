@@ -3,7 +3,7 @@ from flask_wtf.file import FileField as FWFileField, FileRequired as FWFileRequi
 from wtforms import StringField, PasswordField, TextAreaField, SelectField, HiddenField, FileField, BooleanField, IntegerField
 from wtforms.widgets import HiddenInput
 from wtforms.validators import Length, InputRequired, Email, EqualTo, Regexp
-from utils import EnumCheck, FilenameCheck
+from View.form_utils import EnumCheck, FilenameCheck
 
 class DatasetForm(FlaskForm):
     """Form that queries the user for the metadata of a dataset."""
@@ -30,7 +30,7 @@ class RemoveUserForm(FlaskForm):
     """Form to revoke a user's permission to alter the dataset."""
     userid = IntegerField('UserID', widget = HiddenInput())
     email = HiddenField('Email', [Email()])
-    permission_type = HiddenField('Permission Type', [EnumCheck(message="Invalid permission type.", choises=['read', 'write', 'admin'])])
+    permission_type = HiddenField('Permission Type', [EnumCheck(message="Invalid permission type.", choices=['read', 'write', 'admin'])])
 # ENDCLASS
 
 class DatasetListEntryForm(FlaskForm):

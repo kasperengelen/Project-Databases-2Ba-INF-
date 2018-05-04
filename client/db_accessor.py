@@ -1,8 +1,4 @@
-# file for various utility functions
-
-from wtforms.validators import ValidationError
 from flask import g
-import re
 
 def get_db():
     """Retrieve the DB connection."""
