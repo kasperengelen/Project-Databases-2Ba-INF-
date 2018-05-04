@@ -42,7 +42,7 @@ def manage_users():
 @require_login
 @require_admin
 def edit_user(userid):
-    """Returns a page that provides a way to for an admin edit user information."""
+    """Callback for admin to edit user information."""
 
     # CHECK IF USER EXISTS
     if not UserManager.existsID(userid):
