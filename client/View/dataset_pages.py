@@ -132,7 +132,7 @@ def view_dataset_table(dataset_id, tablename, page_nr):
     page_indices = tv.get_page_indices(display_nr = row_count, page_nr = page_nr)
 
     # RETRIEVE USER PERMISSION
-    perm_type = DatasetPermissionsManager.getPermForUserID(session['userdata']['userid'])
+    perm_type = DatasetPermissionsManager.getPermForUserID(dataset_id, session['userdata']['userid'])
 
     attributes = tv.get_attributes()
 
