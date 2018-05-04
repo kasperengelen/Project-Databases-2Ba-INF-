@@ -461,68 +461,30 @@ class TableTransformer:
 
         self.db_connection.commit()
         self.history_manager.write_to_history(internal_ref[1], tablename, attribute, [regex, replacement, case_sens], 9)
-
-
+        
     def __get_simplified_types(self, tablename, data_frame):
-        """Method that limits the types of column the pandas dataframe can use for to_sql.
-        Our system handles only the base data types, but pandas might use types not supported
-        by our code. With this method we force it to comply to our limited set of data types.
-        """
+        """Method that makes sure pandas dataframe uses correct datatypes when writing to SQL."""
         new_attributes = data_frame.columns.values.tolist()
         new_types = {}
         sqla_type = None
-        for  i in range(len(new_attributes)):
-            elem = new_attributes[i]
+        for  elem in new_attributes:
             try:
-                self.get_attribute_type(tablename, elem, True)
-                continue
+                psql_type = self.get_attribute_type(tablename, elem, True)
+                sqla_type = SQLTypeHandler().to_sqla_object(psql_type[0])
+                if sqla_type is None:
+                    if psql_type[0] == 'character varying':
+                        sqla_type = sqlalchemy.types.VARCHAR(psql_type[1])
+                    elif psql_type[0] == 'character':
+                        sqla_type = sqlalchemy.types.CHAR(psql_type[1])
+                    else:
+                        continue
             except self.ValueError:
-                temp = str(data_frame[elem].dtype)
-                if temp == 'uint8':
-                    sqla_type = sqlalchemy.types.INTEGER()
-                elif temp == 'int64':
-                    sqla_type = sqlalchemy.types.INTEGER()
-                elif temp == 'float64':
-                    sqla_type = sqlalchemy.types.Float(precision=25, asdecimal=True)
-                elif temp == 'object' or temp == 'category':
-                    sqla_type = sqlalchemy.types.VARCHAR(length=255)
+                pd_type = str(data_frame[elem].dtype)
+                sqla_type = SQLTypeHandler().to_sqla_object(pd_type)
                 
-            """sqla_type = None
-            if psql_type is None: #This means it's an attribute made in the pandas df but not yet in the SQL table
-                temp = str(data_frame[elem].dtype)
-                if temp == 'uint8':
-                    sqla_type = sqlalchemy.types.INTEGER()
-                elif temp == 'int64':
-                    sqla_type = sqlalchemy.types.INTEGER()
-                elif temp == 'float64':
-                    sqla_type = sqlalchemy.types.Float(precision=25, asdecimal=True)
-                elif temp == 'object' or temp == 'category':
-                    sqla_type = sqlalchemy.types.VARCHAR(length=255)
-            else:
-                if psql_type[0] == 'character varying' or psql_type[0] == 'text':
-                    sqla_type = sqlalchemy.types.VARCHAR(psql_type[1])
-                elif psql_type[0] == 'character':
-                    sqla_type = sqlalchemy.types.CHAR(psql_type[1])
-                elif psql_type[0] == 'double precision':
-                    sqla_type = sqlalchemy.types.Float(precision=25, asdecimal=True)
-                elif psql_type[0] == 'integer':
-                    sqla_type = sqlalchemy.types.INTEGER()
-                elif psql_type[0] == 'date':
-                    sqla_type = sqlalchemy.types.Date()
-                elif psql_type[0] == 'timestamp without time zone':
-                    sqla_type = sqlalchemy.types.DateTime()
-                elif psql_type[0] == 'time without time zone':
-                    sqla_type = sqlalchemy.types.TIME()"""
-                    
-            if sqla_type is None:
-                error_msg = "Couldn't convert to a value! " + str(psql_type[0]) + " from " + elem +  " is unknown to the system."
-                raise ValueError(error_msg)
             new_types[elem] = sqla_type
-
         return new_types
-
-
-
+    
     def one_hot_encode(self, tablename, attribute, new_name=""):
         """Method that performs one hot encoding given an attribute"""
         internal_ref = self.get_internal_reference(tablename)
@@ -1029,11 +991,3 @@ class TableTransformer:
         self.db_connection.cursor().execute("SET search_path TO {};".format(self.setid))
         self.db_connection.cursor().execute(query)
         self.db_connection.commit()
-
-
-if __name__ == '__main__':
-    connection_string = "dbname='{}' user='{}' host='{}' password='{}'".format(*(DatabaseConfiguration().get_packed_values()))
-    db_connection = psycopg2.connect(connection_string)
-    engine = DatabaseConfiguration().get_engine()
-    tt = TableTransformer(7, db_connection, engine)
-    tt.normalize_using_zscore('workingtable', 'age')

@@ -343,7 +343,7 @@ class TestTableTransformer(unittest.TestCase):
         self.test_object.one_hot_encode('test_table1', 'string')
         #Query to get all columns from the encoded table
         query = ("SELECT column_name FROM information_schema.columns "
-               "WHERE table_schema = 'TEST' AND table_name =  'test_table1'")
+                 "WHERE table_schema = 'TEST' AND table_name =  'test_table1'")
         cur.execute(query)
         all_columns  = cur.fetchall()
         #This should be all the columns

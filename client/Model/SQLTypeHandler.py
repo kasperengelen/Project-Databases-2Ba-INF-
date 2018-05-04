@@ -36,7 +36,12 @@ class SQLTypeHandler:
                 'int64'   : sqlalchemy.types.INTEGER(),
                 'float64' : sqlalchemy.types.Float(precision=25, asdecimal=True),
                 'object'  : sqlalchemy.types.VARCHAR(length=255),
-                'category': sqlalchemy.types.VARCHAR(length=255)
+                'category': sqlalchemy.types.VARCHAR(length=255),
+                'integer' : sqlalchemy.types.INTEGER(),
+                'date'    : sqlalchemy.types.Date(),
+                'double precision' : sqlalchemy.types.Float(precision=25, asdecimal=True),
+                'time without time zone' : sqlalchemy.types.TIME(),
+                'timestamp without time zone' : sqlalchemy.types.DateTime()
                 }
 
             return sqla_dict
@@ -86,7 +91,7 @@ class SQLTypeHandler:
                 
         def to_sqla_object(self, p_type):
             """Method that maps a pandas-type/postgres type to a SQLAlchemy type object that represents a PostgreSQL type."""
-            p_type = self.sqla_dict[p_type]
+            p_type = self.sqla_dict.get(p_type, None)
             return p_type
 
         def sql_time_to_dict(sql_date_string):
