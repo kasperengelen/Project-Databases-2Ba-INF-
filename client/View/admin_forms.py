@@ -4,32 +4,28 @@ from wtforms.widgets import HiddenInput
 from wtforms.validators import Email, InputRequired, Length
 
 class DeleteUserForm(FlaskForm):
-    """Class that represents a form that allows an admin
-    to delete a user. It also contains information to identify the user."""
+    """Form for admins to delete a user."""
     
-    userid = HiddenField('User ID')
-    email = HiddenField('Email', [Email()])
+    userid = IntegerField('User ID', widget = HiddenInput())
 
     def fillForm(self, user):
         self.userid.data = str(user.userid)
-        self.email.data = str(user.email)
     # ENDMETHOD
 # ENDCLASS
 
 class DeleteDatasetForm(FlaskForm):
-    """Class that represents a form that allows an admin to delete
-    a dataset."""
+    """Form for admins to delete a dataset."""
     
     setid = IntegerField('Set id', widget = HiddenInput())
-    setname = HiddenField('Set name')
 
     def fillForm(self, dataset):
         self.setid.data = dataset.setid
-        self.setname.data = dataset.name
     # ENDMETHOD
 # ENDCLASS
 
 class AdminUserEditForm(FlaskForm):
+    """Form for admins to edit the information of a user."""
+
     firstname = StringField('Firstname', [InputRequired(message="Firstname is required."),
                                           Length(min=1, max=50, message="Firstname should contain between 1 and 50 characters.")])
     lastname = StringField('Lastname', [InputRequired(message="Lastname is required."),
@@ -45,7 +41,7 @@ class AdminUserEditForm(FlaskForm):
     # ENDMETHOD
 # ENDCLASS
 
-class ActivateDecactivateUser(FlaskForm):
+class ActivateDeactivateUser(FlaskForm):
     userid = IntegerField('User id', widget = HiddenInput())
     new_activation_status = HiddenField('New activation status')
 
