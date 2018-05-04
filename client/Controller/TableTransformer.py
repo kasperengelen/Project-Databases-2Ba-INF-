@@ -59,7 +59,7 @@ class TableTransformer:
             return True
         elif result == 'NO':
             return False
-        raise ValueError("Error: is_nullabe returned else than YES or NO.")
+        raise self.ValueError("Error: is_nullabe returned something else than YES or NO.")
     
     def set_to_overwrite(self):
         """Method that changes the behavior of the TableTransforler to overwrite the table when performing modifcations."""
@@ -963,6 +963,21 @@ class TableTransformer:
                                           sql.Identifier(attr_name), sql.Identifier(attribute)))
         self.db_connection.commit()
         self.history_manager.write_to_history(internal_ref[1], tablename, attribute, [extraction_arg], 7)
+
+
+    def undo_transformation(self, t_id):
+        """Method to undo changes brought by an operation of TableTransformer."""
+        pass
+
+
+    def recreate_table_from_history(self, t_id, new_name):
+        """Method that recreates a previous table described in the transformation history.
+
+        Parameters:
+            t_id: The internal id of the transformation as used in the DatasetHistory table.
+            new_name: A string representing the name of the recreated table.
+        """
+        pass
                 
 
     def change_column_name(self, tablename, old_name, new_name):
