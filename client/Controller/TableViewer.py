@@ -117,31 +117,24 @@ class TableViewer:
         else:
             return True
 
-    def __translate_system_type(self, systype):
-        """Method that translates a type known to postgres' system to its standard SQL name"""
-        translations = {
-            'character varying' : 'VARCHAR',
-            'character'         : 'CHAR',
-            'integer'           : 'INTEGER',
-            'double precision'  : 'FLOAT',
-            'date'              : 'DATE',
-            'time without time zone' : 'TIME',
-            'timestamp without time zone' : 'TIMESTAMP'
-            }
+    def __render_types(self, attr_list):
+        """Method that generates all the types of the table attributes."""
+        cur = self.db_connection.cursor()
+        type_list = []
+        for elem in attr_list:
+            query = ("SELECT data_type, character_maximum_length FROM information_schema.columns"
+                     " WHERE table_schema = %s AND table_name =  %s AND column_name = %s LIMIT 1")
+            cur.execute(sql.SQL(query), [self.schema, self.tablename, elem])
+            row = cur.fetchone()
+            sql_type = SQLTypeHandler().get_type_alias(row[0])
+            if (SQLTypeHandler().is_string(row[0]) is True) and (row[1] is not None): #This has a length limit
+                type_name = sql_type + '({})'.format(row[1])       
+            else:
+                type_name = sql_type
 
-        return translations.setdefault(systype, 'UNKNOWN TYPE')
+            type_list.append(type_name)
 
-
-    def is_numerical(self, attr_type):
-        """Method that returns whether a postgres attribute type is a numerical type."""
-        
-        numericals = ['integer', 'double precision', 'bigint', 'bigserial', 'real', 'smallint', 'smallserial', 'serial']
-        if attr_type in numericals:
-            return True
-        else:
-            return False
-
-        
+        return type_list
 
 
     def render_table(self, page_nr, nr_rows, show_types=False):
@@ -160,11 +153,10 @@ class TableViewer:
         if show_types is False:
             return html_table
         attributes = self.get_attributes()
-        for string in attributes: #Let's add the types to the tablenames
-            self.cur.execute(sql.SQL("SELECT pg_typeof({}) FROM {}.{} LIMIT 1").format(sql.Identifier(string), sql.Identifier(self.schema),
-                                                                                  sql.Identifier(self.tablename)))
-            sqltype = self.__translate_system_type(self.cur.fetchone()[0])
-            new_string = string + "<br>(" + sqltype + ")"
+        type_list = self.__render_types(attributes)
+        for i in range(len(attributes)): #Let's add the types to the tablenames
+            string = attributes[i]
+            new_string = string + "<br>(" + type_list[i] + ")"
             html_table = html_table.replace(string, new_string, 1)
             
         return html_table
