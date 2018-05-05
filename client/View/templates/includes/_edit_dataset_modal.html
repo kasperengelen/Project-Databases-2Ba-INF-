@@ -1,6 +1,6 @@
 <a id="edit" href="#" style="color: black;" class="glyphicon glyphicon-pencil" data-toggle="modal"
-                                    data-target="#editDatasetModal{{ dataset.datasetinfo.userid  }}"></a>
-<div id="editDatasetModal{{ dataset.datasetinfo.userid }}" class="modal fade text-left" role="dialog">
+                                    data-target="#editDatasetModal_{{ dataset.datasetinfo.setid  }}"></a>
+<div id="editDatasetModal_{{ dataset.datasetinfo.setid }}" class="modal fade text-left" role="dialog">
     <div class="modal-dialog">
     
         <!-- Modal content-->
@@ -11,16 +11,13 @@
             </div>
             <div class="modal-body">
             	{% from "includes/_formhelpers.html" import render_field %}
-                <form method="post" action="{{ url_for('admin_pages.edit_user', userid=user.userinfo.userid) }}">
+                <form method="post" action="{{ url_for('dataset_pages.manage_dataset', dataset_id=dataset.datasetinfo.setid) }}">
                     {{ dataset.editform.csrf_token }}
                     <div class="form-group">
-                        {{render_field(user.editform.firstname, class_="form-control")}}
+                        {{render_field(dataset.editform.name, class_="form-control")}}
                     </div>
                     <div class="form-group">
-                        {{render_field(user.editform.lastname, class_="form-control")}}
-                    </div>
-                    <div class="form-group">
-                        {{render_field(user.editform.email, class_="form-control")}}
+                        {{render_field(dataset.editform.description, class_="form-control")}}
                     </div>
                     <p><input type="submit" class="btn btn-primary" value="Save Changes"></p>
                 </form>

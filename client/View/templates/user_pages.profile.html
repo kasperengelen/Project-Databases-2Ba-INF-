@@ -27,7 +27,7 @@
                     </div>
                     <div class="modal-body">
                         {% from "includes/_formhelpers.html" import render_field %}
-                        <form method="post" action="{{ url_for('user_pages.edit_info') }}">
+                        <form method="post" action="{{ url_for('user_pages.edit_pass') }}">
                             {{ editpassform.csrf_token }}
                             <div class="form-group">
                                 {{render_field(editpassform.password, class_="form-control")}}

@@ -141,10 +141,10 @@ def manage_datasets():
         deleteform.fillForm(dataset)
 
         editform = DatasetForm()
-        editform.fillForm(dataset)
+        editform.fillForm(dataset.toDict())
 
         datasets.append({
-            'datasetinfo': dataset,
+            'datasetinfo': dataset.toDict(),
             'deleteform': deleteform,
             'editform': editform
         })
