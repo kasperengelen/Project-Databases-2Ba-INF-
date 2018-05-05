@@ -34,8 +34,8 @@ class UserRegisterForm(FlaskForm):
     passwordconfirm = PasswordField('Confirm Password')
 # ENDCLASS
 
-class UserEditForm(FlaskForm):
-    """Class that represents a form used to update user information."""
+class UserEditInfoForm(FlaskForm):
+    """Form for users to edit their information."""
     firstname = StringField('Firstname', [InputRequired(message="Firstname is required."),
                                           Length(min=1, max=50, message="Firstname should contain between 1 and 50 characters.")])
     lastname = StringField('Lastname', [InputRequired(message="Lastname is required."),
@@ -43,10 +43,6 @@ class UserEditForm(FlaskForm):
     email = StringField('Email', [InputRequired(message="Email address is required."),
                                   Email(message="The supplied email address is not of a valid format."),
                                   Length(min=6, max=70, message="Email address should contain between 1 and 50 characters.")])
-    password = PasswordField('Password', [InputRequired("Password is required."),
-                                          EqualTo('passwordconfirm', message="Passwords do not match."),
-                                          Length(min=6, max=50, message="Password needs to be between 6 and 50 characters long.")])
-    passwordconfirm = PasswordField('Confirm Password')
 
     def fillFields(self, user_data):
       """Given a dict that contains information about
@@ -56,4 +52,13 @@ class UserEditForm(FlaskForm):
       self.lastname.data = user_data['lastname']
       self.email.data = user_data['email']
     # ENDMETHOD
+# ENDCLASS
+
+class UserEditPasswordForm(FlaskForm):
+    """Form for users to edit their password."""
+
+    password = PasswordField('Password', [InputRequired("Password is required."),
+                                          EqualTo('passwordconfirm', message="Passwords do not match."),
+                                          Length(min=6, max=50, message="Password needs to be between 6 and 50 characters long.")])
+    passwordconfirm = PasswordField('Confirm Password')
 # ENDCLASS

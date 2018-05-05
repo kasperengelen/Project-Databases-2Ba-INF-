@@ -2,7 +2,7 @@ from flask import render_template, request, abort, Blueprint, flash, redirect, u
 from Controller.AccessController import require_login
 from Controller.LoginManager import LoginManager
 from Controller.UserManager import UserManager
-from View.user_forms import UserEditForm, UserLoginForm, UserRegisterForm
+from View.user_forms import UserEditInfoForm, UserLoginForm, UserRegisterForm, UserEditPasswordForm
 
 user_pages = Blueprint('user_pages', __name__)
 
@@ -76,27 +76,33 @@ def profile(user_id):
     if not UserManager.existsID(user_id):
         abort(404)
 
-    user_data = UserManager.getUserFromID(user_id)
+    userinfo = UserManager.getUserFromID(user_id)
+    editform = UserEditInfoForm().fillForm(userinfo)
 
-    return render_template('user_pages.profile.html', user_data = user_data.toDict())
+    return render_template('user_pages.profile.html', 
+                                userinfo = userinfo.toDict(), 
+                                editform = editform,
+                                editpassform = UserEditPasswordForm())
 # ENDFUNCTION
 
-@user_pages.route('/user/edit/', methods=['GET', 'POST'])
+@user_pages.route('/user/edit_info/', methods=['POST'])
 @require_login
-def edit():
-    """Returns a page that provides a way to edit user information."""
+def edit_info():
+    """Callback to edit user info."""
 
     userid = session['userdata']['userid']
 
-    current_user = UserManager.getUserFromID(userid)
-
     # CHECK IF USER EXISTS
     if not UserManager.existsID(userid):
-        abort(404)
+        return redirect(url_for('user_pages.profile'))
 
-    form = UserEditForm(request.form)
+    form = UserEditInfoForm(request.form)
 
-    if request.method == 'POST' and form.validate():
+    if not form.validate():
+        flash(message="Invalid form.", category="error")
+        # TODO flash errors
+    else:
+        current_user = UserManager.getUserFromID(userid)
 
         # check if new email is in use.
         if form.email.data != current_user.email and UserManager.existsEmail(form.email.data):
@@ -107,20 +113,39 @@ def edit():
         new_email = form.email.data
         new_fname = form.firstname.data
         new_lname = form.lastname.data
-        new_pass = form.password.data
-
-        #current_user.editInfo(new_email, new_fname, new_lname, new_pass)
 
         UserManager.editUserInfo(userid, new_fname, new_lname, new_email)
-        UserManager.editUserPass(userid, new_pass)
 
-        #session['userdata'] = current_user.toDict()
-        session['userdata'] = UserManager.getUserFromID(userid).toDict()
+        LoginManager.syncSession()
         flash(message="Information updated.", category="success")
-    else:
-        form.fillFields(session['userdata'])
     
-    return render_template('user_pages.edit.html', form = form)
+    return redirect(url_for('user_pages.profile'))
+# ENDFUNCTION
+
+@user_pages.route('/user/edit_pass/', methods=['POST'])
+@require_login
+def edit_pass():
+    """Callback to edit password."""
+    
+    userid = session['userdata']['userid']
+
+    # CHECK IF USER EXISTS
+    if not UserManager.existsID(userid):
+        return redirect(url_for('user_pages.profile'))
+
+    form = UserEditPasswordForm(request.form)
+
+    if not form.validate():
+        flash(message="Invalid form.", category="error")
+    else:
+        current_user = UserManager.getUserFromID(userid)
+
+        new_pass = form.password.data
+
+        UserManager.editUserPass(userid, new_pass)
+        flash(message="Password updated.", category="success")
+
+    return redirect(url_for('user_pages.profile'))
 # ENDFUNCTION
 
 @user_pages.route('/user/delete/', methods = ['POST'])

@@ -3,7 +3,7 @@ from Controller.AccessController import require_admin
 from Controller.AccessController import require_login
 from Controller.UserManager import UserManager
 from Controller.DatasetManager import DatasetManager
-from View.admin_forms import DeleteUserForm, DeleteDatasetForm, AdminUserEditForm, ActivateDecactivateUser
+from View.admin_forms import DeleteUserForm, DeleteDatasetForm, AdminUserEditForm, ActivateDeactivateUser
 
 admin_pages = Blueprint('admin_pages', __name__)
 
@@ -13,45 +13,48 @@ admin_pages = Blueprint('admin_pages', __name__)
 def manage_users():
     """Returns a page with which an admin can remove and manage users."""
 
-    ## retrieve list of all users
-    user_list = UserManager.getAllUsers()
+    users = []
 
-    user_forms = []
+    for user in UserManager.getAllUsers():
 
-    for user in user_list:
-
-
+        # create forms
         deleteform = DeleteUserForm()
-        activationform = ActivateDecactivateUser()
+        activationform = ActivateDeactivateUser()
+        editform = AdminUserEditForm()
 
+        # fill forms
         deleteform.fillForm(user)
         activationform.fillForm(user)
+        editform.fillForm(user)
 
-        user_forms.append({
+        users.append({
+            'userinfo': user,
+            'editform': editform,
             'deleteform': deleteform,
             'activationform': activationform
         })
     # ENDFOR
 
-    return render_template('admin_pages.manage_users.html', user_forms = user_forms)
+    return render_template('admin_pages.manage_users.html', users = users)
 # ENDFUNCTION
 
-@admin_pages.route('/admin/edit_user/<int:userid>/', methods=['POST', 'GET'])
+@admin_pages.route('/admin/edit_user/<int:userid>/', methods=['POST'])
 @require_login
 @require_admin
 def edit_user(userid):
-    """Returns a page that provides a way to for an admin edit user information."""
+    """Callback for admin to edit user information."""
 
     # CHECK IF USER EXISTS
     if not UserManager.existsID(userid):
-        abort(404)
-
-    current_user = UserManager.getUserFromID(userid)
+        return redirect(url_for('admin_pages.manage_users'))
 
     form = AdminUserEditForm(request.form)
 
-    if request.method == 'POST' and form.validate():
-
+    if not form.validate():
+        flash(message="Invalid input.", category="error")
+        # TODO display errors
+    else:
+        current_user = UserManager.getUserFromID(userid)
         # check if new email is in use.
         if form.email.data != current_user.email and UserManager.existsEmail(form.email.data):
             flash(message="Specified e-mail address already in use.", category="error")
@@ -62,15 +65,11 @@ def edit_user(userid):
         new_fname = form.firstname.data
         new_lname = form.lastname.data
 
-        #current_user.editInfoNoPass(new_email, new_fname, new_lname)
-
         UserManager.editUserInfo(userid, new_fname, new_lname, new_email)
 
         flash(message="Information updated.", category="success")
-    else:
-        form.fillFields(current_user)
 
-    return render_template('admin_pages.edit_user.html', form=form)
+    return redirect(url_for('admin_pages.manage_users'))
 # ENDFUNCTION
 
 @admin_pages.route('/admin/delete_user/', methods=['POST'])
@@ -103,7 +102,7 @@ def delete_user():
 def set_user_activation():
     """Callback for admins to activate a user."""
 
-    form = ActivateDecactivateUser(request.form)
+    form = ActivateDeactivateUser(request.form)
 
     if not form.validate():
         return redirect(url_for('admin_pages.manage_users'))
@@ -133,17 +132,21 @@ def manage_datasets():
 
     dataset_list = DatasetManager.getAllDatasets()
 
-    destroy_dataset_forms = []
+    datasets = []
 
     for dataset in dataset_list:
-        form = DeleteDatasetForm()
 
-        form.fillForm(dataset)
+        deleteform = DeleteDatasetForm()
 
-        destroy_dataset_forms.append(form)
+        deleteform.fillForm(dataset)
+
+        datasets.append({
+            'datasetinfo': dataset,
+            'deleteform': deleteform
+        })
     # ENDFOR
 
-    return render_template('admin_pages.manage_datasets.html', destroy_dataset_forms = destroy_dataset_forms)
+    return render_template('admin_pages.manage_datasets.html', datasets = datasets)
 # ENDFUNCTION
 
 @admin_pages.route('/admin/delete_dataset/', methods=['POST'])
@@ -157,9 +160,11 @@ def delete_dataset():
     dataset_id = int(form.setid.data)
 
     if not DatasetManager.existsID(dataset_id):
-        abort(404)
+        return redirect(url_for('admin_pages.manage_datasets'))
 
     DatasetManager.destroyDataset(dataset_id)
+
+    flash(message="Dataset deleted.", category="success")
 
     return redirect(url_for('admin_pages.manage_datasets'))
 # ENDFUNCTION
