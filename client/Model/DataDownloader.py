@@ -3,6 +3,7 @@ import csv
 import os
 import zipfile
 import shutil
+from Model.DatabaseConfiguration import DatabaseConfiguration
 
 class DataDownloader():
     """Class that reads tables from a schema and puts them into a file"""
@@ -46,9 +47,15 @@ class DataDownloader():
         csv_folder = ".csv_temp_" + self.schema
         csv_folder_complete = os.path.dirname(os.path.abspath(__file__)) + "/" + csv_folder
 
+        # check if the folder already exists or not
+        if os.path.exists(csv_folder_complete):
+            shutil.rmtree(csv_folder_complete)
+        else:
+            os.makedirs(csv_folder_complete)
+
         # fetch all tablenames
         self.cur.execute("SELECT table_name FROM information_schema.tables WHERE table_schema = %s;",
-                         [str(self.setid)])
+                         [self.schema])
         result = self.cur.fetchall()
         table_names = [t[0] for t in result]
 
@@ -57,11 +64,12 @@ class DataDownloader():
             self.get_csv(table, csv_folder_complete, delimiter, quotechar, null)
 
         # make a zip of all csv's
-        zip_file = zipfile.ZipFile(foldername + "_" + self.schema + ".zip", 'w', zipfile.ZIP_DEFLATED)
+        shutil.make_archive(foldername + "/" + self.schema, 'zip', csv_folder_complete)
 
-        for root, dirs, files, in os.walk(csv_folder_complete):
-            for file in files:
-                zip_file.write(os.path.join(root, file))
-
-        zip_file.close()
         shutil.rmtree(csv_folder_complete)
+
+if __name__ == "__main__":
+    DC = DatabaseConfiguration()
+    db = DC.load_db(True)
+    DL = DataDownloader(37, db.get_db())
+    DL.get_csv_zip("test")
