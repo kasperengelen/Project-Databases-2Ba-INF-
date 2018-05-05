@@ -4,6 +4,7 @@ from Controller.AccessController import require_login
 from Controller.UserManager import UserManager
 from Controller.DatasetManager import DatasetManager
 from View.admin_forms import DeleteUserForm, DeleteDatasetForm, AdminUserEditForm, ActivateDeactivateUser
+from View.dataset_forms import DatasetForm
 
 admin_pages = Blueprint('admin_pages', __name__)
 
@@ -137,12 +138,15 @@ def manage_datasets():
     for dataset in dataset_list:
 
         deleteform = DeleteDatasetForm()
-
         deleteform.fillForm(dataset)
+
+        editform = DatasetForm()
+        editform.fillForm(dataset)
 
         datasets.append({
             'datasetinfo': dataset,
-            'deleteform': deleteform
+            'deleteform': deleteform,
+            'editform': editform
         })
     # ENDFOR
 
