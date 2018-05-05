@@ -49,12 +49,9 @@ class _DatabaseLoader:
             """Returns a boolean indicating whether you're connected to the testing database."""
             return not self.release
         
-        def get_db2(self):
+        def get_db(self):
             """Returns a psycopg2 database connection from the connection pool."""
             return self.connection_pool.getconn()
-
-        def get_db(self):
-            return psycopg2.connect(user=self.user, password=self.password, host=self.host, dbname=self.dbname)
 
         def get_engine(self):
             """Returns an SQL Alchemy engine."""
