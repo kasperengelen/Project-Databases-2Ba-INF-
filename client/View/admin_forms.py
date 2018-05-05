@@ -41,6 +41,19 @@ class AdminUserEditForm(FlaskForm):
     # ENDMETHOD
 # ENDCLASS
 
+class DatasetEditForm(FlaskForm):
+    """Form for admins to edit the information of a user."""
+    setid = IntegerField('Set id', widget = HiddenInput())
+    name = StringField("Dataset name", [InputRequired(message="Name is required."), Length(min=2, max=64, message="Name must be between 6 and 64 characters long.")])
+    description = TextAreaField("Description", [Length(min=0, max=256, message="Description can contain max 256 characters.")])
+
+    def fillForm(self, dataset_info):
+        self.setid.data = dataset.setid
+        self.name.data = dataset.setname
+        self.description.data = dataset.description
+    # ENDMETHOD
+# ENDCLASS
+
 class ActivateDeactivateUser(FlaskForm):
     userid = IntegerField('User id', widget = HiddenInput())
     new_activation_status = HiddenField('New activation status')
