@@ -44,7 +44,7 @@ class UserEditInfoForm(FlaskForm):
                                   Email(message="The supplied email address is not of a valid format."),
                                   Length(min=6, max=70, message="Email address should contain between 1 and 50 characters.")])
 
-    def fillFields(self, user_data):
+    def fillForm(self, user_data):
       """Given a dict that contains information about
       the user, this will fill in the fields of this form."""
 
