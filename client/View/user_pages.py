@@ -77,7 +77,8 @@ def profile(user_id):
         abort(404)
 
     userinfo = UserManager.getUserFromID(user_id)
-    editform = UserEditInfoForm().fillForm(userinfo)
+    editform = UserEditInfoForm()
+    editform.fillForm(userinfo)
 
     return render_template('user_pages.profile.html', 
                                 userinfo = userinfo.toDict(), 
