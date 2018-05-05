@@ -47,10 +47,10 @@ class DatasetEditForm(FlaskForm):
     name = StringField("Dataset name", [InputRequired(message="Name is required."), Length(min=2, max=64, message="Name must be between 6 and 64 characters long.")])
     description = TextAreaField("Description", [Length(min=0, max=256, message="Description can contain max 256 characters.")])
 
-    def fillForm(self, dataset_info):
+    def fillForm(self, dataset):
         self.setid.data = dataset.setid
-        self.name.data = dataset.setname
-        self.description.data = dataset.description
+        self.name.data = dataset.name
+        self.description.data = dataset.desc
     # ENDMETHOD
 # ENDCLASS
 

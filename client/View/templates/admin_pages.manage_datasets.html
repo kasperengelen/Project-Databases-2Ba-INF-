@@ -48,7 +48,7 @@
                 <tr>
                     <td>{{ dataset.datasetinfo.name }}</td>
                     <td>{{ dataset.datasetinfo.desc }}</td>
-                    <td>{% include "includes/_edit_dataset_modal.html" %}</td>
+                    <td>{% include "includes/_admin_edit_dataset_modal.html" %}</td>
 
                     <td>{% from "includes/_formhelpers.html" import render_field %}
                         <input type="hidden" id="input" value="delete this dataset?">
