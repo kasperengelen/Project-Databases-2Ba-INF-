@@ -5,48 +5,103 @@
         <h2>Manage Users</h2>
     </div>            
 
-    <div class="jumbotron">
-        <div style="overflow-x: auto;">
-            <table>
-                {% if user_forms %}
-                    <tr>
-                        <th>ID</th>
-                        <th>Email</th>
-                        <th>Edit</th>
-                        <th>(De)Activate</th>
-                        <th>Delete</th>
-                    </tr>
-                    {% for user in user_forms %}
-                        <tr>
-                            <td>{{ user.deleteform.userid.data }}</td>
-                            <td>{{ user.deleteform.email.data }}</td>
-                            <td><a style="color: black;" href="{{ url_for('admin_pages.edit_user', userid = user.deleteform.userid.data) }}">
-                                <span class="glyphicon glyphicon-pencil"></span></a>
-                            </td>
-                            <td>{% from "includes/_formhelpers.html" import render_field %}
-                                <form method="post" action="{{ url_for('admin_pages.set_user_activation') }}" name="activate">
-                                    {{ user.activationform.hidden_tag() }}
-                                    {% if user.activationform.new_activation_status.data == False %}
-                                        <label for="activate{{ user.activationform.userid.data }}" class="glyphicon glyphicon-stop"></label>
-                                    {% else %}
-                                        <label for="activate{{ user.activationform.userid.data }}" class="glyphicon glyphicon-play"></label>
-                                    {% endif %}
-                                    <input id="activate{{ user.activationform.userid.data }}" style="visibility: hidden;" type="submit">
-                                </form>
-                            </td>
-                            <td>{% from "includes/_formhelpers.html" import render_field %}
-                                <input type="hidden" id="input" value="delete this user?">
-                                <form method="post" action="{{ url_for('admin_pages.delete_user') }}" name="remove" onsubmit="return check()">
-                                    {{ user.deleteform.hidden_tag() }}
-                                    <label for="remove{{ user.deleteform.userid.data }}" class="glyphicon glyphicon-remove"></label>
-                                    <input id="remove{{ user.deleteform.userid.data }}" style="visibility: hidden;" type="submit">
-                                </form>
-                            </td>                     
-                            
-                        </tr>
-                    {% endfor %}
-                {% endif %}
-            </table>
-        </div>
-    </div>
+    <style>
+        table {
+            border-collapse: collapse;
+            float:left;
+            padding:3px;
+            border-radius: 3px;
+            }
+
+        td, th {
+            font-size: 15px;
+            text-align: left;
+            padding: 8px;
+            width: 25%;
+        }
+
+        table thead {
+            background-color: lightgrey;
+        }
+
+        table tbody tr:nth-child(even) {
+            background-color: #eaeaea;
+        }
+
+        .dataTables_filter {
+            display: none;
+        }
+    </style>
+
+    {% if users %}
+        <table id="usertable">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Admin</th>
+                    <th>Status</th>
+                    <th>Set Status</th>
+                    <th>Edit</th>
+                    <th>Delete</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for user in users %}
+                <tr>
+                    <td>{{ user.userinfo.fname }} {{ user.userinfo.lname }}</td>
+                    <td>{{ user.userinfo.email }}</td>
+                    <td>{% if user.userinfo.admin == true %}
+                            Yes
+                        {% else %}
+                            No
+                        {% endif %}
+                    </td>
+                    <td>{% if user.userinfo.active == true %}
+                            Active
+                        {% else %}
+                            Deactive
+                        {% endif %}
+                    </td>
+                    <td>{% from "includes/_formhelpers.html" import render_field %}
+                        <form method="post" action="{{ url_for('admin_pages.set_user_activation') }}" name="activate">
+                            {{ user.activationform.hidden_tag() }}
+                            {% if user.activationform.new_activation_status.data == False %}
+                            <button style="border: none; background-color: transparent;" type="submit" id="activate{{ user.userinfo.userid }}">
+                                <span class="glyphicon glyphicon-stop"></span>
+                            </button>
+                            {% else %}
+                            <button style="border: none; background-color: transparent;" type="submit" id="activate{{ user.userinfo.userid }}">
+                                <span  class="glyphicon glyphicon-play"></span>
+                            </button>
+                            {% endif %}
+                        </form>
+                    </td>
+                    <td>
+                        {% include "includes/_edit_user_modal.html" %}
+                    </td>
+                    <td>{% from "includes/_formhelpers.html" import render_field %}
+                        <input type="hidden" id="input" value="delete this user?">
+                        <form method="post" action="{{ url_for('admin_pages.delete_user') }}" id="remove{{ user.userinfo.userid }}"
+                            onsubmit="return check()">
+                            {{ user.deleteform.hidden_tag() }}
+                            <button style="border: none; background-color: transparent;" type="submit" id="remove{{ user.userinfo.userid }}" ><span class="glyphicon glyphicon-remove"></span></button>
+                        </form>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+    <script>
+        $(document).ready( function () {
+            $('#usertable').DataTable( {
+                scrollX: true,
+                scrollY: true,
+                paging: false,
+                info: false
+            } );
+        } );
+    </script>
 {% endblock %}
+

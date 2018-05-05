@@ -34,7 +34,7 @@ class AdminUserEditForm(FlaskForm):
                                   Email(message="The supplied email address is not of a valid format."),
                                   Length(min=6, max=70, message="Email address should contain between 1 and 50 characters.")])
 
-    def fillFields(self, user_data):
+    def fillForm(self, user_data):
         self.firstname.data = user_data.fname
         self.lastname.data = user_data.lname
         self.email.data = user_data.email
