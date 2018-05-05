@@ -50,8 +50,7 @@ def before_request():
 @app.teardown_request
 def teardown_request(e):
     """Postprocess request."""
-    g.db_conn.close()
-    g.sqla_engine.dispose()
+    DatabaseConfiguration().close_connection(g.db_conn) # close DB connection
 # ENDFUNCTION
 
 @app.route('/')
