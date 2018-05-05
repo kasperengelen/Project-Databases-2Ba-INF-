@@ -5,29 +5,99 @@
     <div class="jumbotron text-center" style="padding: 1%">
         <h2>My Profile</h2>
     </div>
-    <div class="jumbotron text-center">
+    <div class="jumbotron text-left">
+        <div class="pull-right text-right">
+            <a id="editinfo" href="#" class="btn btn-primary" data-toggle="modal"
+                                data-target="#editModal_{{ userinfo.userid }}">Edit Profile</a>
+            </br>
+            </br>
+            </br>
+            <a id="editpass" href="#" class="btn btn-primary" data-toggle="modal"
+                                data-target="#editPassModal_{{ userinfo.userid }}">Change Password</a>
+        </div>
 
-        <div class="jumbotron text-left">
-            <div class="pull-right text-center">
-                <a href="{{ url_for('user_pages.edit_info') }}" class="btn btn-primary">Edit</a>
+        <div id="editPassModal_{{ userinfo.userid }}" class="modal fade text-left" role="dialog">
+            <div class="modal-dialog">
+            
+                <!-- Modal content-->
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                        <h4 class="modal-title">Change Password</h4>
+                    </div>
+                    <div class="modal-body">
+                        {% from "includes/_formhelpers.html" import render_field %}
+                        <form method="post" action="{{ url_for('user_pages.edit_pass') }}">
+                            {{ editpassform.csrf_token }}
+                            <div class="form-group">
+                                {{render_field(editpassform.password, class_="form-control")}}
+                            </div>
+                            <div class="form-group">
+                                {{render_field(editpassform.passwordconfirm, class_="form-control")}}
+                            </div>
+                            <p><input type="submit" class="btn btn-primary" value="Save Changes"></p>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+                <!-- Modal content -->
             </div>
-            <div style="overflow-x: auto;">
-                <table style="width: 100%">
-                    <tr>
-                        <th>Name</th>
-                        <td>{{ userinfo.fname }} {{ userinfo.lname }}</td>
-                    </tr>
-                    <tr>
-                        <th>Email</th>
-                        <td>{{ userinfo.email }}</td>
-                    </tr>
-                    <tr>
-                        <th>Register Date</th>
-                        <td>{{ userinfo.register_date.D }}-{{ userinfo.register_date.M }}-{{ userinfo.register_date.Y }}</td>
-                    </tr>
-                </table>
+        </div>
+
+
+        <div id="editModal_{{ userinfo.userid }}" class="modal fade text-left" role="dialog">
+            <div class="modal-dialog">
+            
+                <!-- Modal content-->
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                        <h4 class="modal-title">Edit Profile</h4>
+                    </div>
+                    <div class="modal-body">
+                        {% from "includes/_formhelpers.html" import render_field %}
+                        <form method="post" action="{{ url_for('user_pages.edit_info') }}">
+                            {{ editform.csrf_token }}
+                            <div class="form-group">
+                                {{render_field(editform.firstname, class_="form-control")}}
+                            </div>
+                            <div class="form-group">
+                                {{render_field(editform.lastname, class_="form-control")}}
+                            </div>
+                            <div class="form-group">
+                                {{render_field(editform.email, class_="form-control")}}
+                            </div>
+                            <p><input type="submit" class="btn btn-primary" value="Save Changes"></p>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+                <!-- Modal content -->
             </div>
+        </div>
+
+        <div style="overflow-x: auto;">
+            <table style="width: 100%">
+                <tr>
+                    <th>Name</th>
+                    <td>{{ userinfo.firstname }} {{ userinfo.lastname }}</td>
+                </tr>
+                <tr>
+                    <th>Email</th>
+                    <td>{{ userinfo.email }}</td>
+                </tr>
+                <tr>
+                    <th>Register Date</th>
+                    <td>{{ userinfo.register_date.D }}-{{ userinfo.register_date.M }}-{{ userinfo.register_date.Y }}</td>
+                </tr>
+            </table>
         </div>
     </div>
 
 {% endblock %}
+
+
