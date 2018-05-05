@@ -128,18 +128,6 @@ class TestTableViewer(unittest.TestCase):
         indices = self.test_object.get_page_indices(50, 997)
         self.assertEqual(indices, ['1', '...', '996', '997', '998', '999', '1000'])
 
-    def test_is_numerical(self):
-        is_numerical = self.test_object.is_numerical("double precision")
-        self.assertTrue(is_numerical)
-        is_numerical = self.test_object.is_numerical("bigserial")
-        self.assertTrue(is_numerical)
-        is_numerical = self.test_object.is_numerical("real")
-        self.assertTrue(is_numerical)
-        is_numerical = self.test_object.is_numerical("character")
-        self.assertFalse(is_numerical)
-        is_numerical = self.test_object.is_numerical("character varying")
-        self.assertFalse(is_numerical)
-
     def test_get_most_frequent_value(self):
         most_frequent = self.test_object2.get_most_frequent_value("string")
         self.assertEqual(most_frequent, "haha")
