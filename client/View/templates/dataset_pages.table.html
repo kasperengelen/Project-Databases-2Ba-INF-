@@ -18,7 +18,7 @@
 			<div class="col-sm-3 text-right">
 				<div>
 					<a id="file" href="#" class="btn btn-primary" data-toggle="modal" data-target="#downloadFormModal_{{ table }}">Download</a>
-					{% include "includes/_download_modal.html" %}
+					{% include "includes/modals/_download_modal.html" %}
 				</div>
 			</div>
 		</div>
@@ -199,7 +199,7 @@
         		float:left;
 				padding:3px;
 				border-radius: 3px;
-				}
+			}
 
 	        td, th {
 	         	font-size: 15px;
@@ -225,12 +225,14 @@
 		</div>
 		<script>
 			$(document).ready( function () {
-    			$('#mytable').DataTable( {
+    			var table = $('#mytable').DataTable( {
     				scrollX: true,
     				scrollY: true,
     				paging: false,
     				lengthChange: false,
-    				bInfo: false
+    				bInfo: false,
+    				autoWidth: false,
+    				ordering: false
     			} );
     		} );
 
@@ -243,6 +245,11 @@
 			        return !~text.indexOf(val);
 			    }).hide();
 
+			});
+
+			$('#mytable thead').on('click', 'tr th', function() {
+				var cell = $(this).text();
+				alert(cell);
 			});
 		</script>
 	</div>

@@ -71,9 +71,11 @@ class _DatabaseLoader:
         if type(self) == _DatabaseLoader:
             raise Exception('DatabaseLoader should not be directly constructed. '
                             'Use DatabaseConfiguration or TestConnection instead.')
+        self.loaded = False
 
-    def load_db(self, release):
+    def _load_db(self, release):
         """Read database details and create the internal object and return it."""
+        
         try: #Try opening the file and loading it
             #Get path without worrying about current working directory.
             if release is False:
@@ -109,6 +111,7 @@ class _DatabaseLoader:
                 raise ValueError(error_msg)
         
         new_obj = self.__InnerClass(values['db_name'], values['user'], values['host'], values['password'], release)
+        self.loaded = True
         return new_obj
 
 
@@ -121,7 +124,7 @@ class DatabaseConfiguration(_DatabaseLoader):
 
     def __init__(self):
         if self.__instance is None:
-            fresh_obj = super().load_db(True)
+            fresh_obj = super()._load_db(True)
             DatabaseConfiguration.__instance = fresh_obj
 
     def __getattr__(self, name):
@@ -137,7 +140,7 @@ class TestConnection(_DatabaseLoader):
 
     def __init__(self):
         if self.__instance is None:
-            fresh_obj = super().load_db(False)
+            fresh_obj = super()._load_db(False)
             TestConnection.__instance = fresh_obj
 
     def __getattr__(self, name):
