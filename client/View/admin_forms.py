@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import HiddenField, StringField, IntegerField
+from wtforms import HiddenField, StringField, IntegerField, TextAreaField
 from wtforms.widgets import HiddenInput
 from wtforms.validators import Email, InputRequired, Length
 
@@ -38,6 +38,19 @@ class AdminUserEditForm(FlaskForm):
         self.firstname.data = user_data.fname
         self.lastname.data = user_data.lname
         self.email.data = user_data.email
+    # ENDMETHOD
+# ENDCLASS
+
+class DatasetEditForm(FlaskForm):
+    """Form for admins to edit the information of a user."""
+    setid = IntegerField('Set id', widget = HiddenInput())
+    name = StringField("Dataset name", [InputRequired(message="Name is required."), Length(min=2, max=64, message="Name must be between 6 and 64 characters long.")])
+    description = TextAreaField("Description", [Length(min=0, max=256, message="Description can contain max 256 characters.")])
+
+    def fillForm(self, dataset):
+        self.setid.data = dataset.setid
+        self.name.data = dataset.name
+        self.description.data = dataset.desc
     # ENDMETHOD
 # ENDCLASS
 

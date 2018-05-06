@@ -3,8 +3,7 @@ from Controller.AccessController import require_admin
 from Controller.AccessController import require_login
 from Controller.UserManager import UserManager
 from Controller.DatasetManager import DatasetManager
-from View.admin_forms import DeleteUserForm, DeleteDatasetForm, AdminUserEditForm, ActivateDeactivateUser
-from View.dataset_forms import DatasetForm
+from View.admin_forms import DeleteUserForm, DeleteDatasetForm, AdminUserEditForm, ActivateDeactivateUser, DatasetEditForm
 
 admin_pages = Blueprint('admin_pages', __name__)
 
@@ -140,8 +139,8 @@ def manage_datasets():
         deleteform = DeleteDatasetForm()
         deleteform.fillForm(dataset)
 
-        editform = DatasetForm()
-        editform.fillForm(dataset.toDict())
+        editform = DatasetEditForm()
+        editform.fillForm(dataset)
 
         datasets.append({
             'datasetinfo': dataset.toDict(),
@@ -153,6 +152,33 @@ def manage_datasets():
     return render_template('admin_pages.manage_datasets.html', datasets = datasets)
 # ENDFUNCTION
 
+@admin_pages.route('/admin/edit_dataset/', methods=['POST'])
+@require_login
+@require_admin
+def edit_dataset():
+    """Callback for admins to edit the metadata of a dataset."""
+
+    form = DatasetEditForm(request.form)
+
+    if not form.validate():
+        flash(message="Invalid form.", category="error")
+        # print errors
+        return redirect(url_for('admin_pages.manage_datasets'))
+
+    dataset_id = int(form.setid.data)
+
+    if not DatasetManager.existsID(dataset_id):
+        return redirect(url_for('admin_pages.manage_datasets'))
+
+    dataset = DatasetManager.getDataset(dataset_id)
+
+    flash(message="Information updated.", category="success")
+
+    DatasetManager.changeMetadata(dataset_id, form.name.data, form.description.data)
+
+    return redirect(url_for('admin_pages.manage_datasets'))
+# ENDFUNCTION
+
 @admin_pages.route('/admin/delete_dataset/', methods=['POST'])
 @require_login
 @require_admin
@@ -160,6 +186,9 @@ def delete_dataset():
     """Callback for admins to delete a dataset."""
 
     form = DeleteDatasetForm(request.form)
+
+    if not form.validate():
+        return redirect(url_for('admin_pages.manage_datasets'))
 
     dataset_id = int(form.setid.data)
 

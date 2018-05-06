@@ -420,14 +420,14 @@ class TableTransformer:
                 cur.execute(sql.SQL(sql_query).format(sql.Identifier(internal_ref[0]), sql.Identifier(internal_ref[1]),
                                                                               sql.Identifier(attribute)), (original_value, replacement, value))
                 self.db_connection.commit()
-                return
-                    
-        try:
-            self.db_connection.cursor().execute(sql.SQL(sql_query).format(sql.Identifier(internal_ref[0]), sql.Identifier(internal_ref[1]),
+                
+        if replace_all is True: #If replace_all was False the operation was already performed by the query above.           
+            try:
+                self.db_connection.cursor().execute(sql.SQL(sql_query).format(sql.Identifier(internal_ref[0]), sql.Identifier(internal_ref[1]),
                                                                           sql.Identifier(attribute)), (replacement, value))
-        except psycopg2.DataError:
-            raise self.ValueError("Could not perform find-and-replace due to an invalid input value for this attribute.")
-        self.db_connection.commit()
+            except psycopg2.DataError:
+                raise self.ValueError("Could not perform find-and-replace due to an invalid input value for this attribute.")
+            self.db_connection.commit()
         self.history_manager.write_to_history(internal_ref[1], tablename, attribute, [original_value, replacement, exact, replace_all], 8)
 
     def regex_find_and_replace(self, tablename, attribute, regex, replacement, case_sens=False, new_name=""):
