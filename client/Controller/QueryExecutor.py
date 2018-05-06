@@ -1,9 +1,11 @@
 import re
+
 import psqlparse
 import psycopg2
 from psycopg2 import sql
 import sqlalchemy
 
+from Controller.DatasetHistoryManager import DatasetHistoryManager
 
 
 class QueryExecutor:
@@ -22,6 +24,7 @@ class QueryExecutor:
         self.db_conn = db_conn
         self.engine = engine
         self.write_perm = write_perm
+        self.history_manager = DatasetHistoryManager(setid, db_conn, True)
 
 
     def execute_query(self, query):
@@ -53,14 +56,14 @@ class QueryExecutor:
             internal_query = re.sub(cur_regex, internal_table, internal_query)
 
         if type(statement) == psqlparse.nodes.SelectStmt:
-            self.__execute_show(internal_query)
+            self.__execute_visual(internal_query)
         else:
-            self.__execute_simple(internal_query)
+            self.__execute_simple(internal_query, used_tables, query)
         
             
 
 
-    def __execute_simple(self, query):
+    def __execute_simple(self, query, tables, original_query):
         """Method used for simple execution of queries. This method is used for queries
         without result that needs to be visualized (INSERT INTO, UPDATE, DELETE statements).
         """
@@ -68,14 +71,17 @@ class QueryExecutor:
         try:
             cur.execute(query)
             
-        except e:
+        except Exception as e:
             raise ValueError(e)
 
         self.db_conn.commit()
+        modified_table = self.__get_modified_table(original_query, tables)
+        parameter = '"{}"'.format(original_query)
+        self.history_manager.write_to_history(modified_table, modified_table, '', [parameter], 16)
         print(query)
             
 
-    def __execute_show(self, query):
+    def __execute_visual(self, query):
         """Method that needs to visualize the result of the query. This is the
         case for SELECT statements that obviously need to be visualized.
         """
@@ -83,7 +89,7 @@ class QueryExecutor:
         try:
             cur.execute(query)
             
-        except e:
+        except Exception as e:
             raise ValueError(e)
 
         self.db_conn.commit()
@@ -114,6 +120,14 @@ class QueryExecutor:
         result = cur.fetchall()
         tablenames = [t[0] for t in result]
         return tablenames
+
+    def __get_modified_table(self, query, tables):
+        """Method that returns which table has been modified after a INSERT / UPDATE / DELETE statement."""
+        words = query.split()
+        for w in words:
+            if w in tables:
+                return w
+        raise ValueError()
         
 
 
