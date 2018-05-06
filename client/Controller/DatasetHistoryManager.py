@@ -57,8 +57,9 @@ class DatasetHistoryManager:
         if nr_elements == 0: #Return an empty postgres array string
             return "{}"
 
-        if transformation_type == 15: #The predicate is already quoted and only element in the list
+        if transformation_type > 14: #Arguments for transformation 15 and 16 are already quoted
             param_array = "{" + py_list[0] + "}"
+            print(param_array)
             return param_array
             
         param_array = "{}"
@@ -177,7 +178,8 @@ class DatasetHistoryManager:
             12 : self.__rowstring_generator12,
             13 : self.__rowstring_generator13,
             14 : self.__rowstring_generator14,
-            15 : self.__rowstring_generator15
+            15 : self.__rowstring_generator15,
+            16 : self.__rowstring_generator16
             }
         
         self.choice_dict =  choice_dict
@@ -186,17 +188,21 @@ class DatasetHistoryManager:
         """Method that translates row results of a query to a pandas dataframe."""
         list_a = []
         list_b = []
+        list_c = []
         self.__generate_choice_dict()
 
         for elem in row_list:
             tr_type = int(elem['transformation_type'])
             field1 = self.choice_dict[tr_type](elem)
             field2 = elem['transformation_date']
+            field3 = elem['transformation_id']
             list_a.append(field1)
             list_b.append(field2)
+            list_c.append(field3)
 
         val_dict = { 'Transformation description' : list_a,
-                     'Operation date'             : list_b}
+                     'Operation date'             : list_b,
+                     't_id'                       : list_c}
         
         pd.set_option('display.max_colwidth', -1)
         df = pd.DataFrame(data=val_dict)
@@ -337,12 +343,13 @@ class DatasetHistoryManager:
         rowstring = rowstring.format(dict_obj['origin_table'], param[0])
         return rowstring
 
+    def __rowstring_generator16(self, dict_obj):
+        param = dict_obj['parameters']
+        rowstring = 'Executed user-generated query on table "{}". Used query: {}'
+        rowstring = rowstring.format(dict_obj['origin_table'], param[0])
+        return rowstring
+        
 
-if __name__ == '__main__':
-    connection = psycopg2.connect("dbname='projectdb18' user='postgres' host='localhost' password='Sch00l2k17'")
-    obj = DatasetHistoryManager(5, connection, True)
-    obj.is_in_range(1, 50)
-    print(obj.render_history_table(1, 50))
 
 
 
