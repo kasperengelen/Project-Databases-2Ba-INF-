@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 import matplotlib
 from Model.SQLTypeHandler import SQLTypeHandler
 matplotlib.use('Agg')
@@ -149,10 +150,11 @@ class TableViewer:
         offset = (page_nr - 1) * nr_rows
         SQL_query = "SELECT * FROM \"%s\".\"%s\" LIMIT %s OFFSET %s" % (self.schema, self.tablename, nr_rows, offset)
         data_frame = pd.read_sql(SQL_query, self.engine)
+        attributes = self.get_attributes()
+        data_frame = data_frame.replace([None] * len(attributes), [np.nan] * len(attributes))
         html_table = re.sub(' mytable', '" id="mytable', data_frame.to_html(None, None, None, True, False, na_rep = 'NULL', classes='mytable'))
         if show_types is False:
             return html_table
-        attributes = self.get_attributes()
         type_list = self.__render_types(attributes)
         for i in range(len(attributes)): #Let's add the types to the tablenames
             string = attributes[i]
