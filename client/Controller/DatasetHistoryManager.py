@@ -61,10 +61,10 @@ class DatasetHistoryManager:
             param_array = "{" + py_list[0] + "}"
             return param_array
             
-        param_array = "'{}'"
+        param_array = "{}"
         if nr_elements > 1:
             for i in range(nr_elements-1):
-                param_array += ", '{}'"
+                param_array += ", {}"
 
         param_array = param_array.format(*py_list)
         param_array = "{" + param_array  + "}"
@@ -218,8 +218,7 @@ class DatasetHistoryManager:
             table_name: Name of the table that has to be shown.
         """
         offset = (page_nr - 1) * nr_rows
-        dict_cur = self.db_connection.dict_cursor()
-        #dict_cur = self.db_connection.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        dict_cur = self.db_connection.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
         if show_all is False:
             query = ("SELECT * FROM system.dataset_history WHERE setid = %s AND (table_name = %s OR origin_table = %s)"
@@ -281,7 +280,7 @@ class DatasetHistoryManager:
         return rowstring   
 
     def __rowstring_generator8(self, dict_obj):
-        rowstring = 'Performed find-and-replace on attribute "{}" of table "{}" looking for {}, {} substring matches and replacing the {} with {}.'
+        rowstring = 'Performed find-and-replace on attribute "{}" of table "{}" looking for \'{}\', {} substring matches and replacing the {} with \'{}\'.'
         param = dict_obj['parameters']
         replacement_style = 'whole string'
         if param[2] == 'True':
@@ -300,7 +299,7 @@ class DatasetHistoryManager:
             sens_option = 'case sensitive'
         else:
             sens_option = 'case insensitive'
-        rowstring = 'Performed find-and-replace on attribute "{}" of table "{}" with the regular expression {} ({}) replacing the matches with {}.'
+        rowstring = 'Performed find-and-replace on attribute "{}" of table "{}" with the regular expression \'{}\' ({}) replacing the matches with \'{}\'.'
         rowstring = rowstring.format(dict_obj['attribute'], dict_obj['origin_table'], param[0], sens_option, param[1])
         return rowstring
 
