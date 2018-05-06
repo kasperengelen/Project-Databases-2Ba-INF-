@@ -1,7 +1,9 @@
+import re
 import psqlparse
 import psycopg2
 from psycopg2 import sql
 import sqlalchemy
+
 
 
 class QueryExecutor:
@@ -19,11 +21,16 @@ class QueryExecutor:
         self.schema = str(setid)
         self.db_conn = db_conn
         self.engine = engine
+        self.write_perm = write_perm
 
 
     def execute_query(self, query):
         """Execute user-generated query."""
-        statement = psqlparse.parse(query)[0]
+        try: #Let's try parsing the query purely on syntax.
+            statement = psqlparse.parse(query)[0]
+
+        except psqlparse.exceptions.PSqlParseError as e:
+            raise ValueError(str(e))
 
         #Check if the statement is permitted
         if self.__assert_permitted_statement(statement) is False:
@@ -38,19 +45,49 @@ class QueryExecutor:
                 raise ValueError(error_msg)
 
         #Modify the query by mapping the tables to the correct internal tables.
+        internal_query = query
+        regex = '(?<!([^\s,])){}(?!([^\s,]))' #Matches {} only seperated by whitespaces or commas, just like SQL tables in queries.
+        for table in used_tables:
+            internal_table = '"{}".'.format(self.schema) + table
+            cur_regex = regex.format(table)
+            internal_query = re.sub(cur_regex, internal_table, internal_query)
+
+        if type(statement) == psqlparse.nodes.SelectStmt:
+            self.__execute_show(internal_query)
+        else:
+            self.__execute_simple(internal_query)
+        
+            
 
 
     def __execute_simple(self, query):
         """Method used for simple execution of queries. This method is used for queries
         without result that needs to be visualized (INSERT INTO, UPDATE, DELETE statements).
         """
-        pass
+        cur = self.db_conn.cursor()
+        try:
+            cur.execute(query)
+            
+        except e:
+            raise ValueError(e)
+
+        self.db_conn.commit()
+        print(query)
+            
 
     def __execute_show(self, query):
         """Method that needs to visualize the result of the query. This is the
         case for SELECT statements that obviously need to be visualized.
         """
-        pass
+        cur = self.db_conn.cursor()
+        try:
+            cur.execute(query)
+            
+        except e:
+            raise ValueError(e)
+
+        self.db_conn.commit()
+        print(query)
 
 
     def __assert_permitted_statement(self, statement_obj):
@@ -88,5 +125,8 @@ class QueryExecutor:
 
 
 if __name__ == '__main__':
-    qe = QueryExecutor(1, None, None)
-    qe.execute_query('SELECT * FROM mytable; DROP DATABASE pingu')        
+    #qe = QueryExecutor(1, None, None)
+    #qe.execute_query('SELECT * FROM mytable; DROP DATABASE pingu')
+    strong = 'SELECT mytable_col FROM mytable,mytable'
+    ap = re.sub('(?<!([^\s,]))mytable(?!([^\s,]))', 'pom', strong)
+    print(ap)
