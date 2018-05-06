@@ -6,7 +6,7 @@ from Controller.DatasetManager import DatasetManager
 from Controller.UserManager import UserManager
 from Controller.TableTransformer import TableTransformer
 from Controller.DatasetPermissionsManager import DatasetPermissionsManager
-from View.dataset_forms import FindReplaceForm, DeleteAttrForm, DatasetForm, AddUserForm, RemoveUserForm, DatasetListEntryForm, TableUploadForm, EntryCountForm
+from View.dataset_forms import DatasetForm, FindReplaceForm, DeleteAttrForm, DatasetForm, AddUserForm, RemoveUserForm, DatasetListEntryForm, TableUploadForm, EntryCountForm
 from View.dataset_forms import DownloadForm, DataTypeTransform, NormalizeZScore, OneHotEncoding, TableJoinForm, RegexFindReplace, DiscretizeEqualWidth, ExtractDateTimeForm
 from View.dataset_forms import DiscretizeEqualFreq, DiscretizeCustomRange, DeleteOutlier, FillNullsMean, FillNullsMedian, FillNullsCustomValue, AttributeForm
 from View.dataset_forms import PredicateFormOne, PredicateFormTwo, PredicateFormThree, HistoryForm
@@ -38,6 +38,8 @@ def view_dataset_home(dataset_id):
     upload_form = TableUploadForm()
     join_form = TableJoinForm()
     join_form.fillForm(table_list)
+    editform = DatasetForm()
+    editform.fillForm(dataset_info)
 
     perm_type = DatasetPermissionsManager.getPermForUserID(dataset_id, session['userdata']['userid'])
 
@@ -45,6 +47,7 @@ def view_dataset_home(dataset_id):
                                                       table_list = table_list,
                                                       uploadform = upload_form,
                                                       join_form = join_form,
+                                                      editform = editform,
                                                       perm_type=perm_type)
 # ENDFUNCTION
 
