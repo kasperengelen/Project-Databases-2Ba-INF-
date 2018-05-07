@@ -1,15 +1,14 @@
 from flask import Blueprint, url_for, redirect, flash, abort
-from View.transf_forms import FindReplaceForm, DeleteAttrForm, AddUserForm, RemoveUserForm, DatasetListEntryForm
 from View.transf_forms import DataTypeTransform, NormalizeZScore, OneHotEncoding, RegexFindReplace, DiscretizeEqualWidth, ExtractDateTimeForm
 from View.transf_forms import DiscretizeEqualFreq, DiscretizeCustomRange, DeleteOutlier, FillNullsMean, FillNullsMedian, FillNullsCustomValue
-from View.transf_forms import PredicateFormOne, PredicateFormTwo, PredicateFormThree
+from View.transf_forms import PredicateFormOne, PredicateFormTwo, PredicateFormThree, FindReplaceForm, DeleteAttrForm
 from Controller.TableTransformer import TableTransformer
 from Controller.AccessController import require_login, require_admin
 from Controller.AccessController import require_adminperm, require_writeperm, require_readperm
 
-transf_callbacks = Blueprint('transf_callbacks')
+transf_callbacks = Blueprint('transf_callbacks', __name__)
 
-@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/transform/transform_predicate', methods=['POST'])
+@transf_callbacks.route('/dataset/<int:dataset_id>/<string:tablename>/transform/transform_predicate', methods=['POST'])
 @require_login
 @require_writeperm
 def transform_predicate(dataset_id, tablename):
@@ -35,7 +34,7 @@ def transform_predicate(dataset_id, tablename):
     if not predicateone.validate():
         print(predicateone.errors)
         flash(message="Invalid form.", category="error")
-        return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
+        return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 
     predicate_list = [predicateone.attr1.data, predicateone.op1.data, predicateone.input1.data]
 
@@ -43,7 +42,7 @@ def transform_predicate(dataset_id, tablename):
         if not predicatetwo.validate():
             print(predicatetwo.errors)
             flash(message="Invalid form.", category="error")
-            return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))    
+            return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename, page_nr=1))    
 
         predicate_list.append(predicateone.select1.data)
         predicate_list.append(predicatetwo.attr2.data)
@@ -54,7 +53,7 @@ def transform_predicate(dataset_id, tablename):
         if not predicatethree.validate():
             print(predicatethree.errors)
             flash(message="Invalid form.", category="error")
-            return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
+            return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 
         predicate_list.append(predicatetwo.select2.data)
         predicate_list.append(predicatethree.attr3.data)
@@ -69,10 +68,10 @@ def transform_predicate(dataset_id, tablename):
         
     flash(message="Rows deleted according to predicate.", category="success")
 
-    return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
+    return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 # ENDFUNCTION
 
-@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/transform/transform_extractdatetime', methods=['POST'])
+@transf_callbacks.route('/dataset/<int:dataset_id>/<string:tablename>/transform/transform_extractdatetime', methods=['POST'])
 @require_login
 @require_writeperm
 def transform_extractdatetime(dataset_id, tablename):
@@ -93,21 +92,21 @@ def transform_extractdatetime(dataset_id, tablename):
 
     if not form.validate():
         flash(message="Invalid form.", category="error")
-        return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
+        return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 
     attr_type = tt.get_attribute_type(tablename, form.select_attr.data)[0]
 
     if tt.get_extraction_options(attr_type) == []:
         flash(message="Selected Attribute not of type 'DATE' or 'TIMESTAMP'.", category="error")
-        return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
+        return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 
     tt.extract_part_of_date(tablename, form.select_attr.data, form.select_extracttype.data)
     flash(message="Part of date extracted.", category="success")
 
-    return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
+    return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 # ENDFUNCTION
 
-@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/transform/deleteattr', methods=['POST'])
+@transf_callbacks.route('/dataset/<int:dataset_id>/<string:tablename>/transform/deleteattr', methods=['POST'])
 @require_login
 @require_writeperm
 def transform_deleteattr(dataset_id, tablename):
@@ -128,17 +127,17 @@ def transform_deleteattr(dataset_id, tablename):
 
     if not form.validate():
         flash(message="Invalid form.", category="error")
-        return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
+        return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 
     tt = dataset.getTableTransformer(tablename)
 
     tt.delete_attribute(tablename, form.select_attr.data)
     flash(message="Attribute deleted.", category="success")
 
-    return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
+    return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 # ENDFUNCTION
 
-@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/transform/findreplace', methods=['POST'])
+@transf_callbacks.route('/dataset/<int:dataset_id>/<string:tablename>/transform/findreplace', methods=['POST'])
 @require_login
 @require_writeperm
 def transform_findreplace(dataset_id, tablename):
@@ -159,7 +158,7 @@ def transform_findreplace(dataset_id, tablename):
 
     if not form.validate():
         flash(message="Invalid form.", category="error")
-        return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
+        return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 
     tt = dataset.getTableTransformer(tablename)
 
@@ -170,10 +169,10 @@ def transform_findreplace(dataset_id, tablename):
     except (TableTransformer.AttrTypeError, TableTransformer.ValueError) as e:
         flash(message="No matches found. Details: " + str(e), category="error")
 
-    return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
+    return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 # ENDFUNCTION
 
-@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/transform/regexfindreplace', methods=['POST'])
+@transf_callbacks.route('/dataset/<int:dataset_id>/<string:tablename>/transform/regexfindreplace', methods=['POST'])
 @require_login
 @require_writeperm
 def transform_findreplaceregex(dataset_id, tablename):
@@ -196,7 +195,7 @@ def transform_findreplaceregex(dataset_id, tablename):
     if not form.validate():
         print(form.errors)
         flash(message="Invalid form.", category="error")
-        return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
+        return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 
     try:
         tt.regex_find_and_replace(tablename, form.select_attr.data, form.regex.data, form.replacement.data, form.case_sens.data)
@@ -204,10 +203,10 @@ def transform_findreplaceregex(dataset_id, tablename):
     except Exception as e:
         flash(message="An error occurred. Details: " + str(e), category="error")
 
-    return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
+    return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 # ENDFUNCTION
 
-@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/transform/typeconversion', methods = ['POST'])
+@transf_callbacks.route('/dataset/<int:dataset_id>/<string:tablename>/transform/typeconversion', methods = ['POST'])
 @require_login
 @require_writeperm
 def transform_typeconversion(dataset_id, tablename):
@@ -247,7 +246,7 @@ def transform_typeconversion(dataset_id, tablename):
     if not form.validate():
         flash(message="Invalid form.", category="error")
         print(form.errors)
-        return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
+        return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 
     if not form.new_datatype.data in tt.get_conversion_options(tablename, form.select_attr.data):
         flash(message="Selected datatype not compatible with the selected attribute.", category="error")
@@ -258,10 +257,10 @@ def transform_typeconversion(dataset_id, tablename):
         except Exception as e:
             flash(message="An error occurred. Details: " + str(e), category="error")
 
-    return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
+    return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 # ENDFUNCTION
 
-@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/transform/onehotencoding', methods = ['POST'])
+@transf_callbacks.route('/dataset/<int:dataset_id>/<string:tablename>/transform/onehotencoding', methods = ['POST'])
 @require_login
 @require_writeperm
 def transform_onehotencoding(dataset_id, tablename):
@@ -283,7 +282,7 @@ def transform_onehotencoding(dataset_id, tablename):
 
     if not form.validate():
         flash(message="Invalid form.", category="error")
-        return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
+        return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 
     try:
         tt.one_hot_encode(tablename, form.select_attr.data)
@@ -291,10 +290,10 @@ def transform_onehotencoding(dataset_id, tablename):
     except Exception as e:
         flash(message="An error occurred. Details: " + str(e), category="error")
 
-    return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
+    return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 # ENDFUNCTION
 
-@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/transform/zscorenormalisation', methods = ['POST'])
+@transf_callbacks.route('/dataset/<int:dataset_id>/<string:tablename>/transform/zscorenormalisation', methods = ['POST'])
 @require_login
 @require_writeperm
 def transform_zscorenormalisation(dataset_id, tablename):
@@ -316,7 +315,7 @@ def transform_zscorenormalisation(dataset_id, tablename):
 
     if not form.validate():
         flash(message="Invalid form.", category="error")
-        return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
+        return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 
     try:
         tt.normalize_using_zscore(tablename, form.select_attr.data)
@@ -324,10 +323,10 @@ def transform_zscorenormalisation(dataset_id, tablename):
     except Exception as e:
         flash(message="An error occurred. Details: " + str(e), category="error")
 
-    return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
+    return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 # ENDFUNCTION
 
-@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/transform/discretize/equalwidth', methods = ['POST'])
+@transf_callbacks.route('/dataset/<int:dataset_id>/<string:tablename>/transform/discretize/equalwidth', methods = ['POST'])
 @require_login
 @require_writeperm
 def transform_discretizeEqualWidth(dataset_id, tablename):
@@ -349,7 +348,7 @@ def transform_discretizeEqualWidth(dataset_id, tablename):
 
     if not form.validate():
         flash(message="Invalid form.", category="error")
-        return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
+        return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 
     try:
         tt.discretize_using_equal_width(tablename, form.select_attr.data)
@@ -357,10 +356,10 @@ def transform_discretizeEqualWidth(dataset_id, tablename):
     except Exception as e:
         flash(message="An error occurred. Details: " + str(e), category="error")
 
-    return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
+    return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 # ENDFUNCTION
 
-@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/transform/discretize/equalfreq', methods = ['POST'])
+@transf_callbacks.route('/dataset/<int:dataset_id>/<string:tablename>/transform/discretize/equalfreq', methods = ['POST'])
 @require_login
 @require_writeperm
 def transform_discretizeEqualFreq(dataset_id, tablename):
@@ -382,7 +381,7 @@ def transform_discretizeEqualFreq(dataset_id, tablename):
 
     if not form.validate():
         flash(message="Invalid form.", category="error")
-        return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
+        return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 
     try:
         tt.discretize_using_equal_frequency(tablename, form.select_attr.data)
@@ -390,10 +389,10 @@ def transform_discretizeEqualFreq(dataset_id, tablename):
     except Exception as e:
         flash(message="An error occurred. Details: " + str(e), category="error")
 
-    return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
+    return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 # ENDFUNCTION
 
-@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/transform/discretize/customrange', methods = ['POST'])
+@transf_callbacks.route('/dataset/<int:dataset_id>/<string:tablename>/transform/discretize/customrange', methods = ['POST'])
 @require_login
 @require_writeperm
 def transform_discretizeCustomRange(dataset_id, tablename):
@@ -415,7 +414,7 @@ def transform_discretizeCustomRange(dataset_id, tablename):
 
     if not form.validate():
         flash(message="Invalid form.", category="error")
-        return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
+        return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 
     # determine intervals
     split = form.ranges.data.split(',')
@@ -428,17 +427,17 @@ def transform_discretizeCustomRange(dataset_id, tablename):
             int_ranges.append(int(i))
         except:
             flash(message="Invalid range specifier: " + str(i), category="error")
-            return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
+            return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
     # ENDFOR
 
     # check if interval is in correct order and no empty bins
     if not all(int_ranges[i] < int_ranges[i+1] for i in range(0, len(int_ranges)-1)):
         flash(message="Range specifiers not in correct order or empty range detected.", category="error")
-        return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
+        return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 
     if len(int_ranges) < 2:
         flash(message="At least two range specifiers needed.", category="error")
-        return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
+        return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 
     try:
         tt.discretize_using_custom_ranges(tablename, form.select_attr.data, int_ranges, form.interval_spec.data)
@@ -446,10 +445,10 @@ def transform_discretizeCustomRange(dataset_id, tablename):
     except Exception as e:
         flash(message="An error occurred. Details: " + str(e), category="error")
 
-    return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
+    return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 # ENDFUNCTION
 
-@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/transform/delete_outlier', methods = ['POST'])
+@transf_callbacks.route('/dataset/<int:dataset_id>/<string:tablename>/transform/delete_outlier', methods = ['POST'])
 @require_login
 @require_writeperm
 def transform_deleteOutlier(dataset_id, tablename):
@@ -471,7 +470,7 @@ def transform_deleteOutlier(dataset_id, tablename):
 
     if not form.validate():
         flash(message="Invalid form.", category="error")
-        return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
+        return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 
     try:
         tt.delete_outlier(tablename, form.select_attr.data, form.select_comparison.data, form.value.data)
@@ -479,10 +478,10 @@ def transform_deleteOutlier(dataset_id, tablename):
     except Exception as e:
         flash(message="An error occurred. Details: " + str(e), category="error")
 
-    return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
+    return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 # ENDFUNCTION
 
-@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/transform/fill_null/mean', methods = ['POST'])
+@transf_callbacks.route('/dataset/<int:dataset_id>/<string:tablename>/transform/fill_null/mean', methods = ['POST'])
 @require_login
 @require_writeperm
 def transform_fillNullsMean(dataset_id, tablename):
@@ -504,7 +503,7 @@ def transform_fillNullsMean(dataset_id, tablename):
 
     if not form.validate():
         flash(message="Invalid form.", category="error")
-        return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
+        return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 
     try:
         tt.fill_nulls_with_mean(tablename, form.select_attr.data)
@@ -512,10 +511,10 @@ def transform_fillNullsMean(dataset_id, tablename):
     except Exception as e:
         flash(message="An error occurred. Details: " + str(e), category="error")
 
-    return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
+    return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 # ENDFUNCTION
 
-@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/transform/fill_null/median', methods = ['POST'])
+@transf_callbacks.route('/dataset/<int:dataset_id>/<string:tablename>/transform/fill_null/median', methods = ['POST'])
 @require_login
 @require_writeperm
 def transform_fillNullsMedian(dataset_id, tablename):
@@ -537,7 +536,7 @@ def transform_fillNullsMedian(dataset_id, tablename):
 
     if not form.validate():
         flash(message="Invalid form.", category="error")
-        return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
+        return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 
     try:
         tt.fill_nulls_with_median(tablename, form.select_attr.data)
@@ -545,10 +544,10 @@ def transform_fillNullsMedian(dataset_id, tablename):
     except Exception as e:
         flash(message="An error occurred. Details: " + str(e), category="error")
 
-    return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
+    return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 # ENDFUNCTION
 
-@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/transform/fill_null/custom', methods = ['POST'])
+@transf_callbacks.route('/dataset/<int:dataset_id>/<string:tablename>/transform/fill_null/custom', methods = ['POST'])
 @require_login
 @require_writeperm
 def transform_fillNullsCustomValue(dataset_id, tablename):
@@ -570,7 +569,7 @@ def transform_fillNullsCustomValue(dataset_id, tablename):
 
     if not form.validate():
         flash(message="Invalid form.", category="error")
-        return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
+        return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 
     try:
         tt.fill_nulls_with_custom_value(tablename, form.select_attr.data, form.replacement.data)
@@ -578,5 +577,5 @@ def transform_fillNullsCustomValue(dataset_id, tablename):
     except Exception as e:
         flash(message="An error occurred. Details: " + str(e), category="error")
 
-    return redirect(url_for('dataset_pages.view_dataset_table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
+    return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 # ENDFUNCTION
