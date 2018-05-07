@@ -4,10 +4,10 @@
 	<div class="jumbotron" style="padding: 1%;">
 		<div class="row">
 			<div class="col-sm-3 text-left">
-				<a href="{{ url_for('dataset_pages.list_dataset') }}" class="btn btn-primary">Datasets</a>
+				<a href="{{ url_for('dataset_pages.list') }}" class="btn btn-primary">Datasets</a>
 				</br>
 				</br>
-				<a href="{{ url_for('dataset_pages.view_dataset_table_history', dataset_id=dataset_info.setid) }}" class="btn btn-primary">History</a>
+				<a href="{{ url_for('dataset_pages.history', dataset_id=dataset_info.setid) }}" class="btn btn-primary">History</a>
 			</div>
 			<div class="col-sm-6 text-center">
 				<h2>{{ dataset_info.name }}</h2>
@@ -104,10 +104,10 @@
 
 					{% for table in table_list %}
 					<tr>
-						<td><a href="{{ url_for('dataset_pages.view_dataset_table', dataset_id=dataset_info.setid, tablename=table) }}">
+						<td><a href="{{ url_for('dataset_pages.table', dataset_id=dataset_info.setid, tablename=table) }}">
 							{{ table }}</a></td>
 						
-						<td><a href="{{ url_for('dataset_pages.view_dataset_table_original', dataset_id=dataset_info.setid, tablename=table) }}">
+						<td><a href="{{ url_for('dataset_pages.table_original', dataset_id=dataset_info.setid, tablename=table) }}">
 							View Raw</a></td>
 
 						<td><input type="hidden" id="input" value="delete this table?">
