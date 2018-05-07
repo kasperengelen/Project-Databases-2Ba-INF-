@@ -46,7 +46,7 @@
         <tbody>
             {% for dataset in datasets %}
                 <tr>
-                    <td>{{ dataset.datasetinfo.name }}</td>
+                    <td><a href="{{ url_for('dataset_pages.home', dataset_id=dataset.datasetinfo.setid) }}">{{ dataset.datasetinfo.name }}</a></td>
                     <td>{{ dataset.datasetinfo.desc }}</td>
                     <td>{% include "includes/modals/_admin_edit_dataset_modal.html" %}</td>
                     <td>{% from "includes/_formhelpers.html" import render_field %}
