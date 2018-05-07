@@ -5,7 +5,7 @@ import zipfile
 import shutil
 from Model.DatabaseConfiguration import DatabaseConfiguration
 
-class DataDownloader():
+class TableDownloader():
     """Class that reads tables from a schema and puts them into a file"""
 
     def __init__(self, setid, db_connection):
@@ -71,5 +71,5 @@ class DataDownloader():
 if __name__ == "__main__":
     DC = DatabaseConfiguration()
     db = DC.load_db(True)
-    DL = DataDownloader(37, db.get_db())
+    DL = TableDownloader(37, db.get_db())
     DL.get_csv_zip("test")
