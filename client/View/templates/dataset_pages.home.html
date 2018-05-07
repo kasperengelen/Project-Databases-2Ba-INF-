@@ -92,35 +92,75 @@
 	  	</div>		
 	{% endif %}
 
-    <div class="jumbotron">
-    	<div style="overflow-x: auto;">
-			<table>
-				{% if table_list %}
-					<tr>
-						<th>Tables</th>
-						<th></th>
-						<th></th>
-					</tr>
 
-					{% for table in table_list %}
-					<tr>
-						<td><a href="{{ url_for('dataset_pages.table', dataset_id=dataset_info.setid, tablename=table) }}">
-							{{ table }}</a></td>
-						
-						<td><a href="{{ url_for('dataset_pages.table_original', dataset_id=dataset_info.setid, tablename=table) }}">
-							View Raw</a></td>
+	<div style="overflow-x: auto;">
+		<style>
+	        table {
+	            border-collapse: collapse;
+	            float:left;
+	            padding:3px;
+	            border-radius: 3px;
+	            }
 
-						<td><input type="hidden" id="input" value="delete this table?">
-							<form method="post" action="{{ url_for('dataset_pages.delete_table', dataset_id=dataset_info.setid, tablename=table) }}"
-										name="delete{{ table }}" onsubmit="return check()">
-									<label for="delete{{ table }}" class="glyphicon glyphicon-remove"></label>
-									<input href="" id="delete{{ table }}" style="visibility: hidden;" type="submit"></form></td>
-					</tr>
-					{% endfor %}
+	        td, th {
+	            font-size: 15px;
+	            text-align: left;
+	            padding: 8px;
+	            width: 25%;
+	        }
+
+	        table thead {
+	            background-color: lightgrey;
+	        }
+
+	        table tbody tr:nth-child(even) {
+	            background-color: #eaeaea;
+	        }
+
+	        .dataTables_filter {
+	            display: none;
+	        }
+	    </style>
+		<table id="tabletable">
+			<thead>
+				<tr>
+					<th>Tables</th>
+					<th>Original</th>
+					<th>Delete</th>
+				</tr>
+			</thead>
+			<tbody>
+			{% if table_list %}
+				{% for table in table_list %}
+				<tr>
+					<td><a href="{{ url_for('dataset_pages.table', dataset_id=dataset_info.setid, tablename=table) }}">
+						{{ table }}</a></td>
 					
-				{% endif %}
-			</table>
-		</div>
+					<td><a href="{{ url_for('dataset_pages.table_original', dataset_id=dataset_info.setid, tablename=table) }}">
+						View Raw</a></td>
+
+					<td><input type="hidden" id="input" value="delete this table?">
+						<form method="post" action="{{ url_for('dataset_pages.delete_table', dataset_id=dataset_info.setid, tablename=table) }}"
+									name="delete{{ table }}" onsubmit="return check()">
+								<label for="delete{{ table }}" class="glyphicon glyphicon-remove"></label>
+								<input href="" id="delete{{ table }}" style="visibility: hidden;" type="submit"></form></td>
+				</tr>
+				{% endfor %}
+			{% endif %}
+			</tbody>
+		</table>
+		<script>
+	        $(document).ready( function () {
+	            $('#tabletable').DataTable( {
+	                scrollX: true,
+	                scrollY: true,
+	                paging: false,
+	                info: false,
+	                lengthChange: false,
+	                autoWidth: false
+	            } );
+	        } );
+	    </script>
 	</div>
 
 	<script charset="utf-8" type="text/javascript">
