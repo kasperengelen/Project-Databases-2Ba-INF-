@@ -2,7 +2,8 @@ import re
 
 import psqlparse
 import psycopg2
-from psycopg2 import sql
+import sqlalchemy
+import numpy as np
 import pandas as pd
 
 from Controller.DatasetHistoryManager import DatasetHistoryManager
@@ -56,9 +57,9 @@ class QueryExecutor:
             internal_query = re.sub(cur_regex, internal_table, internal_query)
 
         if type(statement) == psqlparse.nodes.SelectStmt:
-            self.__execute_visual(internal_query)
+            return self.__execute_visual(internal_query, used_tables)
         else:
-            self.__execute_simple(internal_query, used_tables, query)
+            return self.__execute_simple(internal_query, used_tables, query)
         
             
 
@@ -71,28 +72,31 @@ class QueryExecutor:
         try:
             cur.execute(query)
             
-        except Exception as e:
+        except psycopg2.ProgrammingError as e:
             error_msg = self.__get_clean_exception(str(e), True)
-            raise ValueError(error_msg)
+            raise ValueError(error_msg) from e
 
         self.db_conn.commit()
         modified_table = self.__get_modified_table(original_query, tables)
         parameter = '"{}"'.format(original_query)
         self.history_manager.write_to_history(modified_table, modified_table, '', [parameter], 16)
-        print(query)
+        return None
             
 
-    def __execute_visual(self, query):
+    def __execute_visual(self, query, tables):
         """Method that needs to visualize the result of the query. This is the
         case for SELECT statements that obviously need to be visualized.
         """
         try:
+            pd.set_option('display.max_colwidth', -1)
             data_frame = pd.read_sql(query, self.engine)
             
-        except Exception as e:
-            raise ValueError(e)
+        except sqlalchemy.exc.ProgrammingError as e:
+            raise ValueError(e.__context__) from e
 
-        print(query)
+        data_frame = data_frame.replace([None] * len(tables), [np.nan] * len(tables))
+        html_table = data_frame.to_html(None, None, None, True, False, na_rep = 'NULL')
+        return html_table
 
 
     def __assert_permitted_statement(self, statement_obj):
@@ -121,7 +125,9 @@ class QueryExecutor:
         return tablenames
 
     def __get_modified_table(self, query, tables):
-        """Method that returns which table has been modified after a INSERT / UPDATE / DELETE statement."""
+        """Method that returns which table has been modified after a INSERT / UPDATE / DELETE statement.
+        This is usually the first table occurence in the query.
+        """
         words = query.split()
         for w in words:
             if w in tables:
@@ -136,19 +142,5 @@ class QueryExecutor:
             error_pointer = ' ' * len(schema_prefix) + '^'
             clean_exception = clean_exception.replace(error_pointer, '^')
         return clean_exception
-        
+    
 
-
-
-        
-
-
-
-
-
-if __name__ == '__main__':
-    #qe = QueryExecutor(1, None, None)
-    #qe.execute_query('SELECT * FROM mytable; DROP DATABASE pingu')
-    strong = 'SELECT mytable_col FROM mytable,mytable'
-    ap = re.sub('(?<!([^\s,]))mytable(?!([^\s,]))', 'pom', strong)
-    print(ap)
