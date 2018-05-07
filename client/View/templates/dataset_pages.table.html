@@ -4,7 +4,7 @@
 	<div class="jumbotron" style="padding: 1%;">
 		<div class="row">
 			<div class="col-sm-3 text-left">
-				<a href="{{ url_for('dataset_pages.view_dataset_home', dataset_id=dataset_info.setid) }}"
+				<a href="{{ url_for('dataset_pages.home', dataset_id=dataset_info.setid) }}"
 				class="btn btn-primary">Tables</a>
 			</div>
 			<div class="col-sm-6 text-center">
@@ -70,7 +70,7 @@
 			      	<div id="transform" class="panel-collapse collapse">
 			      		<div class="panel-body">
 			      			<div class="panel-group" id="accordion2">
-						        {% include "includes/_transformations.html" %}
+						        
 							</div>    			
 				        </div>
 		     		</div>
@@ -145,10 +145,10 @@
 		    								color: red !important;
 		    							}
 		    						</style>
-			    					<li class="page-item active"><a class="page-link" href="{{ url_for('dataset_pages.view_dataset_table', dataset_id=dataset_info.setid, tablename=table_name, page_nr=index) }}" style="color: black;"">
+			    					<li class="page-item active"><a class="page-link" href="{{ url_for('dataset_pages.table', dataset_id=dataset_info.setid, tablename=table_name, page_nr=index) }}" style="color: black;"">
 			    						{{ index }}</a></li>
 			    				{% else %}
-			    					<li class="page-item"><a class="page-link" href="{{ url_for('dataset_pages.view_dataset_table', dataset_id=dataset_info.setid, tablename=table_name, page_nr=index) }}" style="color: black;"">
+			    					<li class="page-item"><a class="page-link" href="{{ url_for('dataset_pages.table', dataset_id=dataset_info.setid, tablename=table_name, page_nr=index) }}" style="color: black;"">
 			    						{{ index }}</a></li>
 		    					{% endif %}
 		    				{% endif %}
@@ -174,10 +174,10 @@
 		    								color: red !important;
 		    							}
 		    						</style>
-			    					<li class="page-item active"><a class="page-link" href="{{ url_for('dataset_pages.view_dataset_table_original', dataset_id=dataset_info.setid, tablename=table_name, page_nr=index) }}" style="color: black;"">
+			    					<li class="page-item active"><a class="page-link" href="{{ url_for('dataset_pages.table_original', dataset_id=dataset_info.setid, tablename=table_name, page_nr=index) }}" style="color: black;"">
 			    						{{ index }}</a></li>
 			    				{% else %}
-			    					<li class="page-item"><a class="page-link" href="{{ url_for('dataset_pages.view_dataset_table_original', dataset_id=dataset_info.setid, tablename=table_name, page_nr=index) }}" style="color: black;"">
+			    					<li class="page-item"><a class="page-link" href="{{ url_for('dataset_pages.table_original', dataset_id=dataset_info.setid, tablename=table_name, page_nr=index) }}" style="color: black;"">
 			    						{{ index }}</a></li>
 		    					{% endif %}
 		    				{% endif %}
