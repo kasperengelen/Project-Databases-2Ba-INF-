@@ -62,7 +62,8 @@ class UserManager:
     @staticmethod
     def getUserFromID(userid, db_conn = None):
         """Retrieve a UserInfo object that contains
-        information about the user with the specified id."""
+        information about the user with the specified id.
+        If there is no user with the specified ID, None will be returned."""
         
         if db_conn is None:
             db_conn = get_db()
@@ -80,7 +81,8 @@ class UserManager:
     @staticmethod
     def getUserFromEmail(email, db_conn = None):
         """Retrieve a UserInfo object that contains
-        information about the user with the specified email."""
+        information about the user with the specified email.
+        If there is no user with the specified email, None will be returned."""
         
         if db_conn is None:
             db_conn = get_db()
