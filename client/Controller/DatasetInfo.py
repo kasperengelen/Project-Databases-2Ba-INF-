@@ -4,7 +4,7 @@ from utils import get_db
 from utils import get_sqla_eng
 from Controller.TableViewer import TableViewer
 from Controller.TableTransformer import TableTransformer
-from Controller.TableLoader import TableLoader
+from Model.TableLoader import TableLoader
 from Controller.DatasetHistoryManager import DatasetHistoryManager
 
 class DatasetInfo:

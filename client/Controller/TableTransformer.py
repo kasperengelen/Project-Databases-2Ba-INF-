@@ -1,9 +1,12 @@
-import pandas as pd
+import sys
+import os
 import math
+
 import psycopg2
 from psycopg2 import sql
 import sqlalchemy
-import sys, os
+import pandas as pd
+
 from Controller.DatasetHistoryManager import DatasetHistoryManager
 from Model.SQLTypeHandler import SQLTypeHandler
 
