@@ -18,7 +18,7 @@ app.config.update(dict(
 app.register_blueprint(user_pages)
 app.register_blueprint(admin_pages)
 app.register_blueprint(dataset_pages)
-app.register_blueprint(trans_callbacks)
+app.register_blueprint(transf_callbacks)
 
 @app.before_request
 def before_request():
