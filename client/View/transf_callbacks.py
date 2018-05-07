@@ -1,10 +1,11 @@
-from flask import Blueprint, url_for, redirect, flash, abort
+from flask import Blueprint, url_for, redirect, flash, abort, request
 from View.transf_forms import DataTypeTransform, NormalizeZScore, OneHotEncoding, RegexFindReplace, DiscretizeEqualWidth, ExtractDateTimeForm
 from View.transf_forms import DiscretizeEqualFreq, DiscretizeCustomRange, DeleteOutlier, FillNullsMean, FillNullsMedian, FillNullsCustomValue
 from View.transf_forms import PredicateFormOne, PredicateFormTwo, PredicateFormThree, FindReplaceForm, DeleteAttrForm
 from Controller.TableTransformer import TableTransformer
 from Controller.AccessController import require_login, require_admin
 from Controller.AccessController import require_adminperm, require_writeperm, require_readperm
+from Controller.DatasetManager import DatasetManager
 
 transf_callbacks = Blueprint('transf_callbacks', __name__)
 

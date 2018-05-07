@@ -9,7 +9,7 @@
   			{% from "includes/_formhelpers.html" import render_field %}
   			<!-- Type Conversion -->
 			<div class="col-sm-12" style="overflow-x: auto;">
-				<form method="post" action="{{ url_for('.transform_typeconversion', dataset_id=dataset_info.setid, tablename=table_name) }}">
+				<form method="post" action="{{ url_for('transf_callbacks.transform_typeconversion', dataset_id=dataset_info.setid, tablename=table_name) }}">
 				{{ typeconversion_form.hidden_tag() }}
 				<div class="form-group" style="width: 20%; display: inline-block;">
 					{{render_field(typeconversion_form.select_attr, class_="form-control") }}
@@ -42,7 +42,7 @@
   			<!-- Find & Replace -->
   			<div class="col-sm-12" style="overflow-x: auto;">
   				{% from "includes/_formhelpers.html" import render_field %}
-				<form method="post" action="{{ url_for('.transform_findreplace', dataset_id=dataset_info.setid, tablename=table_name) }}">
+				<form method="post" action="{{ url_for('transf_callbacks.transform_findreplace', dataset_id=dataset_info.setid, tablename=table_name) }}">
 				{{ findrepl_form.csrf_token }}
 				<div class="form-group" style="width: 20%; display: inline-block;">
 					{{render_field(findrepl_form.select_attr, class_="form-control")}}
@@ -78,7 +78,7 @@
   			{% from "includes/_formhelpers.html" import render_field %}
   			<!-- Regex Find & Replace -->
   			<div class="col-sm-12" style="overflow-x: auto;">
-				<form method="post" action="{{ url_for('.transform_findreplaceregex', dataset_id=dataset_info.setid, tablename=table_name) }}">
+				<form method="post" action="{{ url_for('transf_callbacks.transform_findreplaceregex', dataset_id=dataset_info.setid, tablename=table_name) }}">
 				{{ findrepl_form.csrf_token }}
 				<div class="form-group" style="width: 20%; display: inline-block;">
 					{{render_field(regexfindreplace_form.select_attr, class_="form-control")}}
@@ -130,7 +130,7 @@
   			<!-- Delete Attribute -->
   			<div class="col-sm-12" style="overflow-x: auto;">
   				<h5><u><strong>Delete an Attribute</strong></u></h5>
-				<form method="post" action="{{ url_for('.transform_deleteattr', dataset_id=dataset_info.setid, tablename=table_name) }}">
+				<form method="post" action="{{ url_for('transf_callbacks.transform_deleteattr', dataset_id=dataset_info.setid, tablename=table_name) }}">
 				{{ delete_form.csrf_token }}
 				<div class="form-group" style="width: 30%; display: inline-block;">
 					{{render_field(delete_form.select_attr, class_="form-control")}}
@@ -154,7 +154,7 @@
   			{% from "includes/_formhelpers.html" import render_field %}
   			<!-- Delete Outliers -->
   			<div class="col-sm-12" style="overflow-x: auto;">
-				<form method="post" action="{{ url_for('.transform_deleteOutlier', dataset_id=dataset_info.setid,
+				<form method="post" action="{{ url_for('transf_callbacks.transform_deleteOutlier', dataset_id=dataset_info.setid,
 					tablename=table_name) }}">
 				{{ deleteoutlier_form.csrf_token }}
 				<div class="form-group" style="width: 30%; display: inline-block;">
@@ -184,7 +184,7 @@
   		<div class="panel-body">
   			<!-- Normalize Using Z-Score -->
 			<div class="col-sm-6" style="overflow-x: auto;">
-				<form method="post" action="{{ url_for('.transform_zscorenormalisation', dataset_id=dataset_info.setid,
+				<form method="post" action="{{ url_for('transf_callbacks.transform_zscorenormalisation', dataset_id=dataset_info.setid,
 					tablename=table_name) }}">
 				{{ zscoreform.csrf_token }}
 				<div class="form-group" style="width: 30%; display: inline-block;">
@@ -208,7 +208,7 @@
   		<div class="panel-body">
 			<!-- Discretize Equal Width -->
   			<div class="col-sm-6" style="overflow-x: auto;">
-				<form method="post" action="{{ url_for('.transform_discretizeEqualWidth', dataset_id=dataset_info.setid, tablename=table_name) }}">
+				<form method="post" action="{{ url_for('transf_callbacks.transform_discretizeEqualWidth', dataset_id=dataset_info.setid, tablename=table_name) }}">
 				{{ discretizeWidth_form.csrf_token }}
 				<div class="form-group" style="width: 30%; display: inline-block;">
 					{{render_field(discretizeWidth_form.select_attr, class_="form-control")}}
@@ -232,7 +232,7 @@
 			<!-- Discretize Equal Frequency -->
   			<div class="col-sm-6" style="overflow-x: auto;">
   				<h5><u><strong>Discretize with Equal Frequency</strong></u></h5>
-				<form method="post" action="{{ url_for('.transform_discretizeEqualFreq', dataset_id=dataset_info.setid, tablename=table_name) }}">
+				<form method="post" action="{{ url_for('transf_callbacks.transform_discretizeEqualFreq', dataset_id=dataset_info.setid, tablename=table_name) }}">
 				{{ discretizeFreq_form.csrf_token }}
 				<div class="form-group" style="width: 30%; display: inline-block;">
 					{{render_field(discretizeFreq_form.select_attr, class_="form-control")}}
@@ -255,7 +255,7 @@
   		<div class="panel-body">
 			<!-- Discretize Equal Width -->
   			<div class="col-sm-12" style="overflow-x: auto;">
-				<form method="post" action="{{ url_for('.transform_discretizeCustomRange', dataset_id=dataset_info.setid, tablename=table_name) }}">
+				<form method="post" action="{{ url_for('transf_callbacks.transform_discretizeCustomRange', dataset_id=dataset_info.setid, tablename=table_name) }}">
 				{{ discretizeCustom_form.csrf_token }}
 				<div class="form-group" style="width: 20%; display: inline-block;">
 					{{render_field(discretizeCustom_form.select_attr, class_="form-control")}}
@@ -285,7 +285,7 @@
   			{% from "includes/_formhelpers.html" import render_field %}
   			<!-- Extract Date/Time -->
   			<div class="col-sm-12" style="overflow-x: auto;">
-				<form method="post" action="{{ url_for('.transform_extractdatetime', dataset_id=dataset_info.setid,
+				<form method="post" action="{{ url_for('transf_callbacks.transform_extractdatetime', dataset_id=dataset_info.setid,
 					tablename=table_name) }}">
 				{{ extract_form.csrf_token }}
 				<div class="form-group" style="width: 30%; display: inline-block;">
@@ -313,7 +313,7 @@
   			{% from "includes/_formhelpers.html" import render_field %}
   			<!-- One Hot Encoding -->
       		<div class="col-sm-6" style="overflow-x: auto;">
-	        	<form method="post" action="{{ url_for('.transform_onehotencoding', dataset_id=dataset_info.setid,
+	        	<form method="post" action="{{ url_for('transf_callbacks.transform_onehotencoding', dataset_id=dataset_info.setid,
 	        	tablename=table_name) }}">
 				{{ onehotencodingform.csrf_token }}
 				<div class="form-group" style="width: 30%; display: inline-block;">
@@ -337,7 +337,7 @@
   		<div class="panel-body">
 			<!-- Fill Nulls Mean -->
 			<div class="col-sm-6" style="overflow-x: auto;">
-				<form method="post" action="{{ url_for('.transform_fillNullsMean', dataset_id=dataset_info.setid,
+				<form method="post" action="{{ url_for('transf_callbacks.transform_fillNullsMean', dataset_id=dataset_info.setid,
 					tablename=table_name) }}">
 				{{ fillnullmean_form.csrf_token }}
 				<div class="form-group" style="width: 30%; display: inline-block;">
@@ -361,7 +361,7 @@
   		<div class="panel-body">
 			<!-- Fill Nulls Median -->
   			<div class="col-sm-6" style="overflow-x: auto;">
-				<form method="post" action="{{ url_for('.transform_fillNullsMedian', dataset_id=dataset_info.setid,
+				<form method="post" action="{{ url_for('transf_callbacks.transform_fillNullsMedian', dataset_id=dataset_info.setid,
 					tablename=table_name) }}">
 				{{ fillnullmedian_form.csrf_token }}
 				<div class="form-group" style="width: 30%; display: inline-block;">
@@ -385,7 +385,7 @@
   		<div class="panel-body">
 			<!-- Fill Nulls Custom Value -->
   			<div class="col-sm-6" style="overflow-x: auto;">
-				<form method="post" action="{{ url_for('.transform_fillNullsCustomValue', dataset_id=dataset_info.setid,
+				<form method="post" action="{{ url_for('transf_callbacks.transform_fillNullsCustomValue', dataset_id=dataset_info.setid,
 					tablename=table_name) }}">
 				{{ fillnullcustom_form.csrf_token }}
 				<div class="form-group" style="width: 30%; display: inline-block;">
