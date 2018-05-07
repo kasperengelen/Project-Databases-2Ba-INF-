@@ -3,7 +3,7 @@ import re
 import psqlparse
 import psycopg2
 from psycopg2 import sql
-import sqlalchemy
+import pandas as pd
 
 from Controller.DatasetHistoryManager import DatasetHistoryManager
 
@@ -72,7 +72,8 @@ class QueryExecutor:
             cur.execute(query)
             
         except Exception as e:
-            raise ValueError(e)
+            error_msg = self.__get_clean_exception(str(e), True)
+            raise ValueError(error_msg)
 
         self.db_conn.commit()
         modified_table = self.__get_modified_table(original_query, tables)
@@ -85,14 +86,12 @@ class QueryExecutor:
         """Method that needs to visualize the result of the query. This is the
         case for SELECT statements that obviously need to be visualized.
         """
-        cur = self.db_conn.cursor()
         try:
-            cur.execute(query)
+            data_frame = pd.read_sql(query, self.engine)
             
         except Exception as e:
             raise ValueError(e)
 
-        self.db_conn.commit()
         print(query)
 
 
@@ -128,6 +127,15 @@ class QueryExecutor:
             if w in tables:
                 return w
         raise ValueError()
+
+    def __get_clean_exception(self, exception_msg, adjust_error_pointer):
+        """Method that returns a clean exception message without including internal system schemas etc."""
+        schema_prefix = '"{}".'.format(self.schema)
+        clean_exception = exception_msg.replace(schema_prefix, '')
+        if adjust_error_pointer is True:
+            error_pointer = ' ' * len(schema_prefix) + '^'
+            clean_exception = clean_exception.replace(error_pointer, '^')
+        return clean_exception
         
 
 
