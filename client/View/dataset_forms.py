@@ -29,8 +29,10 @@ class AddUserForm(FlaskForm):
 class RemoveUserForm(FlaskForm):
     """Form to revoke a user's permission to alter the dataset."""
     userid = IntegerField('UserID', widget = HiddenInput())
-    email = HiddenField('Email', [Email()])
-    permission_type = HiddenField('Permission Type', [EnumCheck(message="Invalid permission type.", choices=['read', 'write', 'admin'])])
+
+    def fillForm(self, user):
+        self.userid.data = user.userid
+    # ENDMETHOD
 # ENDCLASS
 
 class LeaveForm(FlaskForm):

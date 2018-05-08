@@ -9,7 +9,7 @@
 	<div class="jumbotron" style="padding: 2%;">
 		<div class="text-left">
 			{% from "includes/_formhelpers.html" import render_field %}
-			<form method="post" action="{{ url_for('dataset_pages.add_user_dataset', dataset_id=dataset_id) }}" name="add">
+			<form method="post" action="{{ url_for('dataset_pages.add_user', dataset_id=dataset_id) }}" name="add">
 			{{ add_user_form.csrf_token }}
 			<div class="form-group" style="width: 40%; display: inline-block;">
 				{{render_field(add_user_form.email, class_="form-control")}}
@@ -61,25 +61,25 @@
 				</tr>
 			</thead>
 			<tbody>		
-			{% with remove_form_list = admin_form_list + write_form_list + read_form_list %}
-				{% if remove_form_list %}
-					{% for form in remove_form_list %}
+				{% if members %}
+					{% for member in members %}
 						<tr>
-							<td>{{ form.userid.data }}</td>
-							<td>{{ form.email.data }}</td>
-							<td>{{ form.permission_type.data }}</td>
+							<td>{{ member.userinfo.userid }}</td>
+							<td>{{ member.userinfo.email }}</td>
+							<td>{{ member.perm_type }}</td>
+                            {% if member.removeform %}
 							<td>{% from "includes/_formhelpers.html" import render_field %}
-								<form method="post" action="{{ url_for('dataset_pages.remove_user_dataset', dataset_id=dataset_id) }}"
-									name="remove">
-								{{ form.hidden_tag() }}
-								<label for="remove{{ form.userid.data }}" class="glyphicon glyphicon-remove"></label>
-								<input id="remove{{ form.userid.data }}" style="visibility: hidden;" type="submit"></form></td>
+								<form method="post" action="{{ url_for('dataset_pages.remove_user', dataset_id=dataset_id) }}" name="remove">
+								    {{ member.removeform.hidden_tag() }}
+								    <label for="remove{{ member.userinfo.userid }}" class="glyphicon glyphicon-remove"></label>
+								    <input id="remove{{ member.userinfo.userid }}" style="visibility: hidden;" type="submit">
+                                </form>
+                            </td>
+                            {% endif %}
 						</tr>
 					{% endfor %}
 				{% endif %}
-			{% endwith %}
 			</tbody>
-			
 		</table>
 		<script>
 			$(document).ready( function () {
