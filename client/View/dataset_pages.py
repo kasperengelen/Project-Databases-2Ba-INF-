@@ -473,74 +473,47 @@ def edit_info(dataset_id):
 @dataset_pages.route('/dataset/<int:dataset_id>/permissions')
 @require_login
 @require_adminperm
-def edit_perms_dataset(dataset_id):
+def permissions(dataset_id):
 
     if not DatasetManager.existsID(dataset_id):
         abort(404)
 
-    ## RETRIEVE ADMIN FORMS
-    admin_form_list = []
-    admins = DatasetPermissionsManager.getAdminPerms(dataset_id)
-    admins.remove(session['userdata']['userid']) # ADMIN CANNOT REMOVE ITSELF FROM DATASET.
+    members = []
 
-    for admin_id in admins:
-        admin_user = UserManager.getUserFromID(admin_id)
+    member_ids = DatasetPermissionsManager.getAdminPerms(dataset_id)
+    member_ids.extend(DatasetPermissionsManager.getWritePerms(dataset_id))
+    member_ids.extend(DatasetPermissionsManager.getReadPerms(dataset_id))
 
-        form = RemoveUserForm()
+    for userid in member_ids:
+        user = UserManager.getUserFromID(userid)
 
-        form.userid.data = admin_user.userid
-        form.email.data = admin_user.email
-        form.permission_type.data = 'admin'
+        perm_type = DatasetPermissionsManager.getPermForUserID(dataset_id, userid)
 
-        admin_form_list.append(form)
-    # ENDFOR
+        removeform = RemoveUserForm()
+        removeform.fillForm(user)
 
+        # user cannot remove itself
+        if userid == session['userdata']['userid']:
+            removeform = None
 
-    ## RETRIEVE WRITER FORMS
-    write_form_list = []
-    writers = DatasetPermissionsManager.getWritePerms(dataset_id)
-    for writer_id in writers:
-        write_user = UserManager.getUserFromID(writer_id)
-
-        form = RemoveUserForm()
-
-        form.userid.data = write_user.userid
-        form.email.data = write_user.email
-        form.permission_type.data = 'write'
-
-        write_form_list.append(form)
-    # ENDFOR
-
-
-    ## RETRIEVE READER FORMS
-    read_form_list = []
-    readers = DatasetPermissionsManager.getReadPerms(dataset_id)
-    for reader_id in readers:
-        read_user = UserManager.getUserFromID(reader_id)
-
-        form = RemoveUserForm()
-
-        form.userid.data = read_user.userid
-        form.email.data = read_user.email
-        form.permission_type.data = 'read'
-
-        read_form_list.append(form)
-    # ENDFOR
+        members.append({
+            'userinfo': user.toDict(),
+            'perm_type': perm_type,
+            'removeform': removeform
+        })
 
     add_user_form = AddUserForm()
 
-    return render_template('dataset_pages.edit_perms.html', 
+    return render_template('dataset_pages.permissions.html', 
                                             dataset_id = dataset_id, 
                                             add_user_form = add_user_form, 
-                                            admin_form_list = admin_form_list,
-                                            write_form_list = write_form_list,
-                                            read_form_list = read_form_list)
+                                            members = members)
 # ENDFUNCTION
 
 @dataset_pages.route('/dataset/<int:dataset_id>/add_user', methods=['POST'])
 @require_login
 @require_adminperm
-def add_user_dataset(dataset_id):
+def add_user(dataset_id):
     """Callback for form to add user access to dataset."""
 
     if not DatasetManager.existsID(dataset_id):
@@ -550,26 +523,30 @@ def add_user_dataset(dataset_id):
 
     if not form.validate():
         flash(message="Invalid form, please check email and permission type.", category="error")
-        return redirect(url_for('dataset_pages.edit_perms_dataset', dataset_id=dataset_id))
+        return redirect(url_for('dataset_pages.permissions', dataset_id=dataset_id))
 
     
     dataset = DatasetManager.getDataset(dataset_id)
 
     if not UserManager.existsEmail(form.email.data):
         flash(message="There is no user with the specified email address.", category="error")
-        return redirect(url_for('dataset_pages.edit_perms_dataset', dataset_id=dataset_id))
+        return redirect(url_for('dataset_pages.permissions', dataset_id=dataset_id))
 
     userid = UserManager.getUserFromEmail(form.email.data).userid
 
+    if DatasetPermissionsManager.getPermForUserID(dataset_id, userid):
+        flash(message="User already has access to the dataset.", category="error")
+        return redirect(url_for('dataset_pages.permissions', dataset_id=dataset_id))
+
     DatasetPermissionsManager.addPerm(dataset_id, userid, form.permission_type.data)
     
-    return redirect(url_for('dataset_pages.edit_perms_dataset', dataset_id=dataset_id))
+    return redirect(url_for('dataset_pages.permissions', dataset_id=dataset_id))
 # ENDFUNCTION
 
 @dataset_pages.route('/dataset/<int:dataset_id>/remove_user', methods=['POST'])
 @require_login
 @require_adminperm
-def remove_user_dataset(dataset_id):
+def remove_user(dataset_id):
     """Callback for form to remove user access from dataset."""
 
     if not DatasetManager.existsID(dataset_id):
@@ -578,19 +555,19 @@ def remove_user_dataset(dataset_id):
     form = RemoveUserForm(request.form)
 
     if not form.validate():
-        return redirect(url_for('dataset_pages.edit_perms_dataset', dataset_id=dataset_id))
+        return redirect(url_for('dataset_pages.permissions', dataset_id=dataset_id))
 
     dataset = DatasetManager.getDataset(dataset_id)
 
     if int(form.userid.data) == session['userdata']['userid']:
         flash(message="User cannot remove itself from dataset.", category="error")
-        return redirect(url_for('dataset_pages.edit_perms_dataset', dataset_id=dataset_id))
+        return redirect(url_for('dataset_pages.permissions', dataset_id=dataset_id))
     try:
         DatasetPermissionsManager.removePerm(dataset_id, int(form.userid.data))
     except RuntimeError as e:
         flash(message="Cannot remove user from dataset.", category="error")
 
-    return redirect(url_for('dataset_pages.edit_perms_dataset', dataset_id=dataset_id))
+    return redirect(url_for('dataset_pages.permissions', dataset_id=dataset_id))
 # ENDFUNCTION
 
 @dataset_pages.route('/dataset/<int:dataset_id>/delete', methods=['POST'])
