@@ -6,13 +6,8 @@
 		<h2>Permissions</h2>
 	</div>
 
-	<div class="jumbotron col-sm-12">
-		<div class="text-center">
-			<h3>Add/Remove User</h3>
-			</br>
-		</div>
-
-		<div>
+	<div class="jumbotron" style="padding: 2%;">
+		<div class="text-left">
 			{% from "includes/_formhelpers.html" import render_field %}
 			<form method="post" action="{{ url_for('dataset_pages.add_user_dataset', dataset_id=dataset_id) }}" name="add">
 			{{ add_user_form.csrf_token }}
@@ -27,35 +22,78 @@
 			</div>
 			</form>
 		</div>
+	</div>
+	<div style="overflow-x: auto;">
+		<style>
+	        table {
+	            border-collapse: collapse;
+	            float:left;
+	            padding:3px;
+	            border-radius: 3px;
+	            }
 
-		<div style="overflow-x: auto;">
-			<table>			
-				{% with remove_form_list = admin_form_list + write_form_list + read_form_list %}
-					{% if remove_form_list %}
+	        td, th {
+	            font-size: 15px;
+	            text-align: left;
+	            padding: 8px;
+	            width: 25%;
+	        }
+
+	        table thead {
+	            background-color: lightgrey;
+	        }
+
+	        table tbody tr:nth-child(even) {
+	            background-color: #eaeaea;
+	        }
+
+	        .dataTables_filter {
+	            display: none;
+	        }
+	    </style>
+		<table id="usertable">	
+			<thead>
+				<tr>
+					<th>ID</th>
+					<th>Email</th>
+					<th>Permission</th>
+					<th>Remove</th>
+				</tr>
+			</thead>
+			<tbody>		
+			{% with remove_form_list = admin_form_list + write_form_list + read_form_list %}
+				{% if remove_form_list %}
+					{% for form in remove_form_list %}
 						<tr>
-							<th>ID</th>
-							<th>Email</th>
-							<th>Permission</th>
-							<th></th>
+							<td>{{ form.userid.data }}</td>
+							<td>{{ form.email.data }}</td>
+							<td>{{ form.permission_type.data }}</td>
+							<td>{% from "includes/_formhelpers.html" import render_field %}
+								<form method="post" action="{{ url_for('dataset_pages.remove_user_dataset', dataset_id=dataset_id) }}"
+									name="remove">
+								{{ form.hidden_tag() }}
+								<label for="remove{{ form.userid.data }}" class="glyphicon glyphicon-remove"></label>
+								<input id="remove{{ form.userid.data }}" style="visibility: hidden;" type="submit"></form></td>
 						</tr>
-						{% for form in remove_form_list %}
-							<tr>
-								<td>{{ form.userid.data }}</td>
-								<td>{{ form.email.data }}</td>
-								<td>{{ form.permission_type.data }}</td>
-								<td>{% from "includes/_formhelpers.html" import render_field %}
-									<form method="post" action="{{ url_for('dataset_pages.remove_user_dataset', dataset_id=dataset_id) }}"
-										name="remove">
-									{{ form.hidden_tag() }}
-									<label for="remove{{ form.userid.data }}" class="glyphicon glyphicon-remove"></label>
-									<input id="remove{{ form.userid.data }}" style="visibility: hidden;" type="submit"></form></td>
-							</tr>
-						{% endfor %}
-					{% endif %}
-				{% endwith %}
-				
-			</table>
-		</div>
+					{% endfor %}
+				{% endif %}
+			{% endwith %}
+			</tbody>
+			
+		</table>
+		<script>
+			$(document).ready( function () {
+    			var table = $('#usertable').DataTable( {
+    				scrollX: true,
+    				scrollY: true,
+    				paging: false,
+    				lengthChange: false,
+    				bInfo: false,
+    				autoWidth: false,
+    				ordering: true
+    			} );
+    		} );
+		</script>
 	</div>
 	
 {% endblock %}

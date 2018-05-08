@@ -137,17 +137,28 @@
 		</div>
 		{% endif %}
 		<script>
-			$(document).ready( function () {
-    			$('#mytable').DataTable( {
-    				scrollX: true,
-    				scrollY: true,
-    				paging: false,
-    				lengthChange: false,
-    				bInfo: false,
-    				autoWidth: false
-    			});
-    		} );
+			var table = $('#mytable').DataTable( {
+				scrollX: true,
+				scrollY: true,
+				paging: false,
+				lengthChange: false,
+				bInfo: false,
+				autoWidth: false,
+				columnDefs: [
+					{
+						targets: 1,
+						visible: true
+					}
+				]
+			});
+
+    		$('#mytable tbody').on('click', 'tr td', function() {
+				var idx = table.cell(this, 1).data();
+				alert(idx);
+				
+			});
 		</script>
+
 	</div>
 
 {% endblock %}
