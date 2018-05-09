@@ -13,7 +13,7 @@ from View.dataset_forms import PredicateFormOne, PredicateFormTwo, PredicateForm
 from Controller.TableViewer import TableViewer
 from werkzeug.utils import secure_filename
 import os
-from Controller.TableLoader import TableLoader, FileException as DLFileExcept
+from Model.TableLoader import TableLoader, FileException as DLFileExcept
 import shutil
 import webbrowser
 from utils import get_db
