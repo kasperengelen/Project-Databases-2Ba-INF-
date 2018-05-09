@@ -22,25 +22,20 @@
         </div>
         <ul class="nav navbar-nav navbar-collapse collapse out">
             <li><a href="/">Home</a></li>
+            <li><a href="{{ url_for('dataset_pages.list') }}">Datasets</a></li>
+            <li><a href="{{ url_for('user_pages.profile') }}">Profile</a></li>
             {% if session.userdata and session.userdata.admin %}
                 <li class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" href="#">Admin</a>
-                <ul class="dropdown-menu">
-                    <li><a href="{{ url_for('admin_pages.manage_users') }}">Manage Users</a></li>
-                    <li><a href="{{ url_for('admin_pages.manage_datasets') }}">Manage Datasets</a></li>
-                </ul>
+	                <ul class="dropdown-menu">
+	                    <li><a href="{{ url_for('admin_pages.manage_users') }}">Manage Users</a></li>
+	                    <li><a href="{{ url_for('admin_pages.manage_datasets') }}">Manage Datasets</a></li>
+	                </ul>
                 </li>
             {% endif %}
         </ul>
 
         <ul class="nav navbar-nav navbar-right navbar-collapse collapse out">
             {% if session.loggedin %}
-                <li class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" href="#"><span class="glyphicon glyphicon-user">
-                </span></a>
-                <ul class="dropdown-menu">
-                    <li><a href="{{ url_for('user_pages.profile') }}">My Profile</a></li>
-                    <li><a href="{{ url_for('dataset_pages.list') }}">My Datasets</a></li>
-                </ul>
-                </li>
                 <li><a href="/logout">Logout</a></li>
             {% else %}
                 <li><a href="{{ url_for('user_pages.login') }}">Login/Register</a></li>
