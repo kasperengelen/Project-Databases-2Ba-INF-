@@ -55,6 +55,18 @@ class DatasetInfo:
         return tablenames
     # ENDMETHOD
 
+    def getOriginalTableNames(self):
+        """Retrieve the names of the original tables that are part of the dataset."""
+
+        cur = self.db_conn.cursor()
+        cur.execute("SELECT table_name FROM information_schema.tables WHERE table_schema = %s;", ["original_" + str(self.setid)])
+        result = fetchall()
+
+        tablenames = [t[0] for t in result]
+
+        return tablenames
+    # ENDMETHOD
+
     def getTableViewer(self, tablename, engine = None, original = False):
         """Retrieves a TableViewer object associated with the specified set and table."""
         
