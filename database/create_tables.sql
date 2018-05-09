@@ -1,4 +1,5 @@
 CREATE SCHEMA SYSTEM;
+CREATE SCHEMA BACKUP;
 
 -- Table for keeping track of users.
 CREATE TABLE SYSTEM.user_accounts (

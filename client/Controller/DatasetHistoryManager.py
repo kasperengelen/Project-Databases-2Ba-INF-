@@ -1,9 +1,11 @@
+import re
 import math
+
 import psycopg2
 import psycopg2.extras
 from psycopg2 import sql
 import pandas as pd
-import re
+
 
 
 
@@ -164,6 +166,7 @@ class DatasetHistoryManager:
             return
         
         choice_dict = {
+            0  : self.__rowstring_generator0,
             1  : self.__rowstring_generator1,
             2  : self.__rowstring_generator2,
             3  : self.__rowstring_generator3,
@@ -240,6 +243,10 @@ class DatasetHistoryManager:
         #html_string = df.to_html(None, None, None, True, False)
         html_string = re.sub(' mytable', '" id="mytable', df.to_html(None, None, None, True, False, classes="mytable"))
         return html_string
+
+    def __rowstring_generator0(self, dict_obj):
+        rowstring = 'User-generated query performed on table "{}". The query used: {}'
+        return rowstring
 
 
     def __rowstring_generator1(self, dict_obj):
