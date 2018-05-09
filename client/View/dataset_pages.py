@@ -934,3 +934,10 @@ def _get_attr2_options(dataset_id):
 
     return jsonify(options)
 # ENDFUNCTION
+
+@dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>/_get_table', defaults = {'original': False})
+@dataset_pages.route('/dataset/<int:dataset_id>/original_table/<string:tablename>/_get_table', defaults = {'original': True})
+def _get_table(dataset_id, tablename, original):
+    """Callback to retrieve the dataset in JSON format."""
+    # TODO page_nr, entry count
+    pass
