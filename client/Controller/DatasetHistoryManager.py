@@ -61,7 +61,6 @@ class DatasetHistoryManager:
 
         if transformation_type > 14: #Arguments for transformation 15 and 16 are already quoted
             param_array = "{" + py_list[0] + "}"
-            print(param_array)
             return param_array
             
         param_array = "{}"
@@ -73,6 +72,10 @@ class DatasetHistoryManager:
         param_array = "{" + param_array  + "}"
 
         return param_array
+
+    def __backup_table(self, t_id):
+        pass
+        
 
     def get_page_indices(self, display_nr, page_nr=1):
         """Method that returns the relevant indices for the history table that's being viewed.
@@ -243,6 +246,13 @@ class DatasetHistoryManager:
         #html_string = df.to_html(None, None, None, True, False)
         html_string = re.sub(' mytable', '" id="mytable', df.to_html(None, None, None, True, False, classes="mytable"))
         return html_string
+
+    def __is_new_table(self, dict_obj):
+        """Method that checks whether a table is a new table created from a transformation."""
+        if dict_obj['table_name'] != dict_obj['origin_table'] :
+            return False
+        else:
+            return False
 
     def __rowstring_generator0(self, dict_obj):
         rowstring = 'User-generated query performed on table "{}". The query used: {}'
