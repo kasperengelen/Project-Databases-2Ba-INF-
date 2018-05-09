@@ -194,21 +194,19 @@ class DatasetHistoryManager:
         """Method that translates row results of a query to a pandas dataframe."""
         list_a = []
         list_b = []
-        list_c = []
         self.__generate_choice_dict()
 
         for elem in row_list:
             tr_type = int(elem['transformation_type'])
             field1 = self.choice_dict[tr_type](elem)
+            if self.__is_new_table(elem):
+                field1 += self.__get_new_table_string(elem)
             field2 = elem['transformation_date']
-            field3 = elem['transformation_id']
             list_a.append(field1)
             list_b.append(field2)
-            list_c.append(field3)
 
         val_dict = { 'Transformation description' : list_a,
-                     'Operation date'             : list_b,
-                     't_id'                       : list_c}
+                     'Operation date'             : list_b}
         
         pd.set_option('display.max_colwidth', -1)
         df = pd.DataFrame(data=val_dict)
@@ -253,6 +251,11 @@ class DatasetHistoryManager:
             return False
         else:
             return False
+
+    def __get_new_table_string(self, dict_obj):
+        """Get a string that explains what new table the transformation resulted in."""
+        string = 'This transformation resulted in a new table "{}".'.format(dict_obj['table_name'])
+        return string
 
     def __rowstring_generator0(self, dict_obj):
         rowstring = 'User-generated query performed on table "{}". The query used: {}'
