@@ -12,7 +12,7 @@ from Controller.DataLoader import DataLoader, FileException as DLFileExcept
 from View.dataset_forms import DatasetForm, AddUserForm, RemoveUserForm, LeaveForm, TableUploadForm, EntryCountForm, DownloadForm, TableJoinForm, AttributeForm, HistoryForm, AddUserForm, RemoveUserForm
 from View.transf_forms import FindReplaceForm, DataTypeTransform, NormalizeZScore, OneHotEncoding, RegexFindReplace, DiscretizeEqualWidth, ExtractDateTimeForm
 from View.transf_forms import DiscretizeEqualFreq, DiscretizeCustomRange, DeleteOutlier, FillNullsMean, FillNullsMedian, FillNullsCustomValue
-from View.transf_forms import PredicateFormOne, PredicateFormTwo, PredicateFormThree, DeleteAttrForm
+from View.transf_forms import PredicateFormOne, PredicateFormTwo, PredicateFormThree, DeleteAttrForm, NewTableForm
 from View.form_utils import flash_errors
 
 from werkzeug.utils import secure_filename
@@ -38,6 +38,7 @@ def home(dataset_id):
 
     dataset_info = dataset.toDict()
     table_list = dataset.getTableNames()
+    # original_table_list = dataset.getOriginalTableNames()
 
     upload_form = TableUploadForm()
     join_form = TableJoinForm()
@@ -194,6 +195,7 @@ def table(dataset_id, tablename, page_nr):
 # TODO change this
 @dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>/original', defaults = {'page_nr': 1})
 @dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>/original/<int:page_nr>')
+# /dataset/<int:dataset_id>/original_table/<string:tablename>/<int:page_nr>
 @require_login
 @require_readperm
 def table_original(dataset_id, tablename, page_nr):
@@ -207,6 +209,7 @@ def table_original(dataset_id, tablename, page_nr):
     dataset_info = dataset.toDict()
 
     if tablename not in dataset.getTableNames():
+    # if tablename not in dataset.getOriginalTableNames():
         abort(404)
 
     # get tableviewer
