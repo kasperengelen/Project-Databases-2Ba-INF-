@@ -5,7 +5,7 @@ from wtforms.validators import Length, InputRequired, Email, EqualTo, Regexp
 from wtforms.form import Form
 from View.form_utils import EnumCheck, FilenameCheck
 
-class NewTableForm(FlaskForm):
+class NewTableForm(Form):
     """Base class for all transformation forms."""
 
     make_new_table = BooleanField('Make backup?', default = False)
@@ -39,7 +39,7 @@ class RegexFindReplace(FlaskForm):
     # ENDMETHOD
 # ENDCLASS
 
-class DeleteAttrForm(Form):
+class DeleteAttrForm(FlaskForm):
     """Form for the delete attribute/column transformation."""
     select_attr = SelectField('Attribute', choices=[])
 
