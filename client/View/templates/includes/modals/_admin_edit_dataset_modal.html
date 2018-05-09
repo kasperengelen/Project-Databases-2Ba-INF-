@@ -11,8 +11,8 @@
             </div>
             <div class="modal-body">
             	{% from "includes/_formhelpers.html" import render_field %}
-                <form method="post" action="{{ url_for('admin_pages.edit_dataset', dataset_id=dataset.datasetinfo.setid) }}">
-                    {{ dataset.editform.csrf_token }}
+                <form method="post" action="{{ url_for('admin_pages.edit_dataset') }}">
+                    {{ dataset.editform.hidden_tag() }}
                     <div class="form-group">
                         {{render_field(dataset.editform.name, class_="form-control")}}
                     </div>

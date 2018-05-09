@@ -23,7 +23,15 @@
 				<div class="form-group" style="width: 20%; display: inline-block;" id="date_div">
 					{{render_field(typeconversion_form.date_type, class_="form-control") }}
 				</div>
+
 				<p style="display: inline-block;"><input type="submit" id="typeconversion" class="btn btn-primary" value="Convert Attribute Type"></p>
+				</br>
+				<div class="form-group" style="width: 20%; display: inline-block;">
+					{{render_field(typeconversion_form.make_backup, class_="checkbox-inline", id="tcc") }}
+				</div>
+				<div class="form-group" style="width: 20%; display: inline-block;" id="tcn">
+					{{render_field(typeconversion_form.backup_name, class_="form-control") }}
+				</div>
 				</form>
 			</div>
 			<!-- Type Conversion -->
