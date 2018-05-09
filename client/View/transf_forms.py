@@ -4,16 +4,16 @@ from wtforms.widgets import HiddenInput
 from wtforms.validators import Length, InputRequired, Email, EqualTo, Regexp
 from View.form_utils import EnumCheck, FilenameCheck
 
-class TransformationFormBase(FlaskForm):
+class NewTableForm(FlaskForm):
     """Base class for all transformation forms."""
 
-    make_backup = BooleanField('Make backup?', default = False)
-    backup_name = StringField('Backup name', [InputRequired(message="Input is required."), 
+    make_new_table = BooleanField('Make backup?', default = False)
+    new_table_name = StringField('Backup name', [InputRequired(message="Input is required."), 
                                               Length(min=3, max=20, message="Tablename needs to be between 3 and 20 characters long."), 
                                               Regexp('^[A-Za-z0-9][A-Za-z0-9]+$')], default="backup name")
 # ENDCLASS
 
-class FindReplaceForm(TransformationFormBase):
+class FindReplaceForm(FlaskForm):
     """Form for the search and replace transformation."""
     select_attr = SelectField('Attribute', choices=[])
     search = StringField('Search', [InputRequired(message="Input is required.")])
@@ -26,7 +26,7 @@ class FindReplaceForm(TransformationFormBase):
     # ENDMETHOD
 # ENDCLASS
 
-class RegexFindReplace(TransformationFormBase):
+class RegexFindReplace(FlaskForm):
     """Form for the regex find and replace transformation."""
     select_attr = SelectField('Attribute', choices=[])
     regex = StringField('Search regex', [InputRequired(message="Input is required.")])
@@ -38,7 +38,7 @@ class RegexFindReplace(TransformationFormBase):
     # ENDMETHOD
 # ENDCLASS
 
-class DeleteAttrForm(TransformationFormBase):
+class DeleteAttrForm(FlaskForm):
     """Form for the delete attribute/column transformation."""
     select_attr = SelectField('Attribute', choices=[])
 
@@ -47,7 +47,7 @@ class DeleteAttrForm(TransformationFormBase):
     # ENDMETHOD
 # ENDCLASS
 
-class ExtractDateTimeForm(TransformationFormBase):
+class ExtractDateTimeForm(FlaskForm):
     """Form for the delete attribute/column transformation."""
     select_attr = SelectField('Attribute', choices=[])
     select_extracttype = SelectField('Attribute', choices=[("YEAR", "YEAR"), ("MONTH + YEAR", "MONTH + YEAR"), 
@@ -58,7 +58,7 @@ class ExtractDateTimeForm(TransformationFormBase):
     # ENDMETHOD
 # ENDCLASS
 
-class DataTypeTransform(TransformationFormBase):
+class DataTypeTransform(FlaskForm):
     """Form for datatype conversion transformation."""
     select_attr = SelectField('Attribute', choices=[], id='attribute')
     new_datatype = SelectField('New Datatype', choices=[], id='typeOptions')
@@ -75,7 +75,7 @@ class DataTypeTransform(TransformationFormBase):
     # ENDMETHOD
 # ENDCLASS
 
-class NormalizeZScore(TransformationFormBase):
+class NormalizeZScore(FlaskForm):
     """Form to normalize an attribute by it's z-score."""
     select_attr = SelectField('Attribute', choices=[])
 
@@ -84,7 +84,7 @@ class NormalizeZScore(TransformationFormBase):
     # ENDMETHOD
 # ENDCLASS
 
-class OneHotEncoding(TransformationFormBase):
+class OneHotEncoding(FlaskForm):
     """Form to perform the one-hot-encoding transformation."""
     select_attr = SelectField('Attribute', choices=[])
 
@@ -93,7 +93,7 @@ class OneHotEncoding(TransformationFormBase):
     # ENDMETHOD
 # ENDCLASS
 
-class DiscretizeEqualWidth(TransformationFormBase):
+class DiscretizeEqualWidth(FlaskForm):
     """Form to discretize values into equidistant intervals."""
     select_attr = SelectField('Attribute', choices=[])
 
@@ -102,7 +102,7 @@ class DiscretizeEqualWidth(TransformationFormBase):
     # ENDMETHOD
 # ENDCLASS
 
-class DiscretizeEqualFreq(TransformationFormBase):
+class DiscretizeEqualFreq(FlaskForm):
     """Form to discretize values into equifrequent intervals."""
     select_attr = SelectField('Attribute', choices=[])
 
@@ -111,7 +111,7 @@ class DiscretizeEqualFreq(TransformationFormBase):
     # ENDMETHOD
 # ENDCLASS
 
-class DiscretizeCustomRange(TransformationFormBase):
+class DiscretizeCustomRange(FlaskForm):
     select_attr = SelectField('Attribute', choices=[])
     ranges = StringField('Ranges (comma separated values)', [InputRequired("Input is required.")])
     interval_spec = SelectField('Right/Left open', choices = [(True, '[a, b['), (False, ']a, b]')], coerce = lambda x : x == 'True')
@@ -121,7 +121,7 @@ class DiscretizeCustomRange(TransformationFormBase):
     # ENDMETHOD
 # ENDCLASS
 
-class DeleteOutlier(TransformationFormBase):
+class DeleteOutlier(FlaskForm):
     """Form to replace outlier values with NULL."""
     select_attr = SelectField('Attribute', choices=[])
     select_comparison = SelectField('Larger/Smaller', choices=[(True, 'Larger'), (False, 'Smaller')], coerce = lambda x : x == 'True')
@@ -132,7 +132,7 @@ class DeleteOutlier(TransformationFormBase):
     # ENDMETHOD
 # ENDCLASS
 
-class FillNullsMean(TransformationFormBase):
+class FillNullsMean(FlaskForm):
     """Form to fill all NULL values with the mean value."""
     select_attr = SelectField('Attribute', choices=[])
 
@@ -141,7 +141,7 @@ class FillNullsMean(TransformationFormBase):
     # ENDMETHOD
 # ENDCLASS
 
-class FillNullsMedian(TransformationFormBase):
+class FillNullsMedian(FlaskForm):
     """Form to fill all NULL values with the median value."""
     select_attr = SelectField('Attribute', choices=[])
 
@@ -150,7 +150,7 @@ class FillNullsMedian(TransformationFormBase):
     # ENDMETHOD
 # ENDCLASS
 
-class FillNullsCustomValue(TransformationFormBase):
+class FillNullsCustomValue(FlaskForm):
     """Form to fill all NULL values with custom value."""
     select_attr = SelectField('Attribute', choices=[])
     replacement = StringField('Replacement', [InputRequired(message="Input is required.")])
@@ -160,7 +160,7 @@ class FillNullsCustomValue(TransformationFormBase):
     # ENDMETHOD
 # ENDCLASS
 
-class PredicateFormOne(TransformationFormBase):
+class PredicateFormOne(FlaskForm):
 
     attr1 = SelectField('Attribute', choices = [], id="attr1")
     op1 = SelectField('Operator', choices = [('=', '='), ('!=', '!='), ('>', '>'), ('<', '<')], id="op1")
@@ -172,7 +172,7 @@ class PredicateFormOne(TransformationFormBase):
     # ENDMETHOD
 # ENDCLASS
 
-class PredicateFormTwo(TransformationFormBase):
+class PredicateFormTwo(FlaskForm):
 
     attr2 = SelectField('Attribute', choices = [], id="attr2")
     op2 = SelectField('Operator', choices = [('=', '='), ('!=', '!='), ('>', '>'), ('<', '<')], id="op2")
@@ -185,7 +185,7 @@ class PredicateFormTwo(TransformationFormBase):
     #ENDMETHOD
 # ENDCLASS
 
-class PredicateFormThree(TransformationFormBase):
+class PredicateFormThree(FlaskForm):
 
     attr3 = SelectField('Attribute', choices = [], id="attr3")
     op3 = SelectField('Operator', choices = [('=', '='), ('!=', '!='), ('>', '>'), ('<', '<')], id="op3")

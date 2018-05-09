@@ -60,8 +60,8 @@ def home(dataset_id):
                                                       perm_type=perm_type)
 # ENDFUNCTION
 
-@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>', defaults = {'page_nr': 1})
-@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/<int:page_nr>')
+@dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>', defaults = {'page_nr': 1})
+@dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>/<int:page_nr>')
 @require_login
 @require_readperm
 def table(dataset_id, tablename, page_nr):
@@ -109,6 +109,8 @@ def table(dataset_id, tablename, page_nr):
     predicatetwo_form     = PredicateFormTwo()
     predicatethree_form   = PredicateFormThree()
     extract_form          = ExtractDateTimeForm()
+
+    new_table_form = NewTableForm()
 
     entrycount_form       = EntryCountForm(entry_count = session['rowcount'])
     entrycount_form.fillForm(dataset_id, tablename)
@@ -185,11 +187,13 @@ def table(dataset_id, tablename, page_nr):
                                                 predicatetwo_form     = predicatetwo_form,
                                                 predicatethree_form   = predicatethree_form,
                                                 downloadform          = DownloadForm(),
-                                                original              = False)
+                                                original              = False,
+                                                new_table_form        = new_table_form)
 # ENDFUNCTION
 
-@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/original', defaults = {'page_nr': 1})
-@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/original/<int:page_nr>')
+# TODO change this
+@dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>/original', defaults = {'page_nr': 1})
+@dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>/original/<int:page_nr>')
 @require_login
 @require_readperm
 def table_original(dataset_id, tablename, page_nr):
@@ -585,7 +589,7 @@ def delete(dataset_id):
     return redirect(url_for('dataset_pages.list'))
 # ENDFUNCTION
 
-@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/delete', methods=['POST'])
+@dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>/delete', methods=['POST'])
 @require_login
 @require_adminperm
 def delete_table(dataset_id, tablename):
@@ -651,6 +655,7 @@ def upload(dataset_id):
                 dl.read_file(real_filename, columnnames_included)
             except DLFileExcept as e: # DLFileExcept = FileException
                 flash(message=str(e), category="error")
+                # TODO print error message
                 # delete file + folder
                 shutil.rmtree(real_upload_folder, ignore_errors=True)
                 return redirect(url_for('dataset_pages.home', dataset_id=dataset_id))
@@ -669,11 +674,11 @@ def upload(dataset_id):
     return redirect(url_for('dataset_pages.home', dataset_id=dataset_id))
 # ENDFUNCTION
 
-@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/download/', defaults = {'original': False})
-@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/original/download', defaults = {'original': True})
+@dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>/download/', defaults = {'original': False})
+@dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>/original/download', defaults = {'original': True})
 @require_login
 @require_readperm
-def download(dataset_id, tablename, original):
+def download_table(dataset_id, tablename, original):
     """Callback to download the specified table from the specified dataset."""
 
     if not DatasetManager.existsID(dataset_id):
@@ -727,9 +732,28 @@ def download(dataset_id, tablename, original):
     return send_file
 # ENDFUNCTION
 
+@dataset_pages.route('/dataset/<int:dataset_id>/download/')
+@require_login
+@require_readperm
+def download_dataset(dataset_id):
+    """Callback to download an entire dataset."""
+
+    if not DatasetManager.existsID(dataset_id):
+        abort(404)
+
+    # create csv's
+    # create zip
+
+    # delete
+
+    # return send_from_director()
+
+    pass
+# ENDFUNCTION
+
 ############################################################# DYNAMIC CALLBACKS #############################################################
 
-@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/_get_options')
+@dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>/_get_options')
 @require_login
 @require_writeperm
 def _get_options(dataset_id, tablename):
@@ -755,7 +779,7 @@ def _get_options(dataset_id, tablename):
 
 # ENDFUNCTION
 
-@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/_get_datetype')
+@dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>/_get_datetype')
 @require_login
 @require_writeperm
 def _get_datetype(dataset_id, tablename):
@@ -781,7 +805,7 @@ def _get_datetype(dataset_id, tablename):
 
 # ENDFUNCTION
 
-@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/_get_hist_num')
+@dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>/_get_hist_num')
 @require_login
 @require_readperm
 def _get_hist_num(dataset_id, tablename):
@@ -806,7 +830,7 @@ def _get_hist_num(dataset_id, tablename):
     return hist_num
 # ENDFUNCTION
 
-@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/_get_chart_freq')
+@dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>/_get_chart_freq')
 @require_login
 @require_readperm
 def _get_chart_freq(dataset_id, tablename):
@@ -831,7 +855,7 @@ def _get_chart_freq(dataset_id, tablename):
     return chart_freq
 # ENDFUNCTION
 
-@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/_get_colstats')
+@dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>/_get_colstats')
 @require_login
 @require_readperm
 def _get_colstats(dataset_id, tablename):
