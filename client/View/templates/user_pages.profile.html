@@ -6,6 +6,7 @@
         <h2>My Profile</h2>
     </div>
     <div class="jumbotron text-left">
+    	{% if view_self %}
         <div class="pull-right text-right">
             <a id="editinfo" href="#" class="btn btn-primary" data-toggle="modal"
                                 data-target="#editModal_{{ userinfo.userid }}">Edit Profile</a>
@@ -79,6 +80,8 @@
                 <!-- Modal content -->
             </div>
         </div>
+
+        {% endif %}
 
         <div style="overflow-x: auto;">
             <table style="width: 100%">
