@@ -2,6 +2,7 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, SelectField, BooleanField, IntegerField
 from wtforms.widgets import HiddenInput
 from wtforms.validators import Length, InputRequired, Email, EqualTo, Regexp
+from wtforms.form import Form
 from View.form_utils import EnumCheck, FilenameCheck
 
 class NewTableForm(FlaskForm):
@@ -38,7 +39,7 @@ class RegexFindReplace(FlaskForm):
     # ENDMETHOD
 # ENDCLASS
 
-class DeleteAttrForm(FlaskForm):
+class DeleteAttrForm(Form):
     """Form for the delete attribute/column transformation."""
     select_attr = SelectField('Attribute', choices=[])
 
