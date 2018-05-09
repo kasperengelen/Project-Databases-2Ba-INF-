@@ -60,7 +60,7 @@ class DatasetInfo:
 
         cur = self.db_conn.cursor()
         cur.execute("SELECT table_name FROM information_schema.tables WHERE table_schema = %s;", ["original_" + str(self.setid)])
-        result = fetchall()
+        result = cur.fetchall()
 
         tablenames = [t[0] for t in result]
 
