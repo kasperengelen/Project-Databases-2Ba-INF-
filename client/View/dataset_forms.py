@@ -54,9 +54,9 @@ class TableUploadForm(FlaskForm):
 class DownloadForm(FlaskForm):
     """Form to specify CSV properties for download."""
 
-    delimiter = StringField('Delimiter', [InputRequired('Input is required.'), Length(min=1, max=1)], default=",")
-    quotechar = StringField('Qoute character', [InputRequired('Input is required.'), Length(min=1, max=1)], default='"')
-    nullrep = StringField('NULL representation', [InputRequired('Input is required.'), Length(min=1, max=10)], default="NULL")
+    delimiter = StringField('Delimiter', [InputRequired('Delimiter is required.'), Length(min=1, max=1)], default=",")
+    quotechar = StringField('Qoute character', [InputRequired('Qoute character is required.'), Length(min=1, max=1)], default='"')
+    nullrep = StringField('NULL representation', [InputRequired('NULL representation is required.'), Length(min=1, max=10)], default="NULL")
 
 # ENDCLASS
 
@@ -66,7 +66,7 @@ class TableJoinForm(FlaskForm):
     attribute1 = SelectField('First Table Attribute', choices=[], id='attribute1')
     tablename2 = SelectField('Second Table', choices=[], id='tablename2')
     attribute2 = SelectField('Second Table Attribute', choices=[], id='attribute2')
-    newname = StringField('New Table Name', [InputRequired(message="Input is required."), Regexp('^[A-Za-z0-9][A-Za-z0-9]+$')])
+    newname = StringField('New Table Name', [InputRequired(message="New table name is required."), Regexp('^[A-Za-z0-9][A-Za-z0-9]+$')])
 
     def fillForm(self, tables):
         self.tablename1.choices = [(table, table) for table in tables]

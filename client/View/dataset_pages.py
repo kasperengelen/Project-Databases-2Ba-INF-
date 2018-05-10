@@ -262,7 +262,7 @@ def history(dataset_id, tablename, page_nr):
         form.fillForm(dataset.getTableNames())
 
         if not form.validate():
-            flash(message="Invalid form.", category="error")
+            flash_errors(form)
             return redirect(url_for("dataset_pages.history", dataset_id = dataset_id, tablename = tablename, page_nr = 1))
         else:
             tablename = form.options.data
@@ -343,8 +343,8 @@ def set_session_rowcount(redirect_type):
     form.fillForm(tablename, dataset_id)
 
     if not form.validate():
-        flash(message="Invalid form.", category="error")
-        abort(404)
+        flash_errors(form)
+        abort(500)
 
     if tablename is None and redirect_type != 'HISTORY':
         abort(404)
@@ -390,7 +390,7 @@ def transform_join_tables(dataset_id):
     form.fillTable2(table2_info.get_attributes())
 
     if not form.validate():
-        flash(message="Invalid form.", category="error")
+        flash_errors(form)
         return redirect(url_for('dataset_pages.home', dataset_id=dataset_id))
 
     tt = dataset.getTableTransformer(table2_name)
@@ -535,7 +535,7 @@ def add_user(dataset_id):
     form = AddUserForm(request.form)
 
     if not form.validate():
-        flash(message="Invalid form, please check email and permission type.", category="error")
+        flash_errors(form)
         return redirect(url_for('dataset_pages.permissions', dataset_id=dataset_id))
 
     
@@ -716,7 +716,7 @@ def __download_helper(dataset_id, mode, tablename = None):
     form = DownloadForm(request.args)
 
     if not form.validate():
-        flash(message="Invalid parameters.", category="error")
+        flash_errors(form)
         return redirect(url_for('dataset_pages.home', dataset_id=dataset_id))
 
     if not mode in ["TABLE", "ORIGINAL", "DATASET"]:

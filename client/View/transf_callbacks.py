@@ -34,16 +34,14 @@ def transform_predicate(dataset_id, tablename):
     predicatethree.fillForm(tv.get_attributes())
 
     if not predicateone.validate():
-        print(predicateone.errors)
-        flash(message="Invalid form.", category="error")
+        flash_errors(form)
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 
     predicate_list = [predicateone.attr1.data, predicateone.op1.data, predicateone.input1.data]
 
     if(predicateone.select1.data != "END"):
         if not predicatetwo.validate():
-            print(predicatetwo.errors)
-            flash(message="Invalid form.", category="error")
+            flash_errors(form)
             return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename, page_nr=1))    
 
         predicate_list.append(predicateone.select1.data)
@@ -53,8 +51,7 @@ def transform_predicate(dataset_id, tablename):
 
     if(predicatetwo.select2.data != "END"):
         if not predicatethree.validate():
-            print(predicatethree.errors)
-            flash(message="Invalid form.", category="error")
+            flash_errors(form)
             return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 
         predicate_list.append(predicatetwo.select2.data)
@@ -93,7 +90,7 @@ def transform_extractdatetime(dataset_id, tablename):
     form.fillForm(tv.get_attributes())
 
     if not form.validate():
-        flash(message="Invalid form.", category="error")
+        flash_errors(form)
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 
     attr_type = tt.get_attribute_type(tablename, form.select_attr.data)[0]
@@ -128,8 +125,7 @@ def transform_deleteattr(dataset_id, tablename):
     form.fillForm(tv.get_attributes())
 
     if not form.validate():
-        print(form.errors)
-        flash(message="Invalid form.", category="error")
+        flash_errors(form)
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 
     tt = dataset.getTableTransformer(tablename)
@@ -160,7 +156,7 @@ def transform_findreplace(dataset_id, tablename):
     form.fillForm(tv.get_attributes())
 
     if not form.validate():
-        flash(message="Invalid form.", category="error")
+        flash_errors(form)
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 
     tt = dataset.getTableTransformer(tablename)
@@ -196,8 +192,7 @@ def transform_findreplaceregex(dataset_id, tablename):
     form.fillForm(tv.get_attributes())
 
     if not form.validate():
-        print(form.errors)
-        flash(message="Invalid form.", category="error")
+        flash_errors(form)
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 
     try:
@@ -215,6 +210,7 @@ def transform_findreplaceregex(dataset_id, tablename):
 def transform_typeconversion(dataset_id, tablename):
     """Callback for typeconversion transformation."""
 
+    # input checks
     if not DatasetManager.existsID(dataset_id):
         abort(404)
 
@@ -223,12 +219,11 @@ def transform_typeconversion(dataset_id, tablename):
     if tablename not in dataset.getTableNames():
         abort(404)
 
-    tv = dataset.getTableViewer(tablename)
     tt = dataset.getTableTransformer(tablename)
 
     form = DataTypeTransform(request.form)
-    print(form.new_datatype.data)
 
+    # prepare formats
     datetimetypes = []
     datetimetypes.append("None")
     for datetype in tt.get_datetime_formats("DATE"):
@@ -238,27 +233,44 @@ def transform_typeconversion(dataset_id, tablename):
         datetimetypes.append(datetype)
 
     for datetype in tt.get_datetime_formats("TIMESTAMP"):
-        datetimetypes.append(datetype)   
+        datetimetypes.append(datetype)
 
-    print(type(form.date_type.data))
-    print(datetimetypes)
-
+    # TODO change this
     form.fillForm(tv.get_attributes(), tt.get_conversion_options(tablename, form.select_attr.data), datetimetypes)
 
-
+    # validate form
     if not form.validate():
-        flash(message="Invalid form.", category="error")
-        print(form.errors)
+        flash_errors(form)
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 
-    if not form.new_datatype.data in tt.get_conversion_options(tablename, form.select_attr.data):
-        flash(message="Selected datatype not compatible with the selected attribute.", category="error")
-    else:
+    # retrieve force attribute information
+
+    do_force = form.do_force.data
+    force_mode = form.force_mode.data
+
+
+    if do_force:
         try:
-            tt.change_attribute_type(tablename, form.select_attr.data, form.new_datatype.data, form.date_type.data, form.char_amount.data)
+            tt.force_attribute_type(tablename=tablename, 
+                                    attribute=form.select_attr.data, 
+                                    to_type=form.new_datatype.data, 
+                                    data_format=form.datatype.data)
             flash(message="Attribute type changed.", category="success")
         except Exception as e:
             flash(message="An error occurred. Details: " + str(e), category="error")
+    else:
+        if not form.new_datatype.data in tt.get_conversion_options(tablename, form.select_attr.data):
+            flash(message="Selected datatype not compatible with the selected attribute.", category="error")
+        else:
+            try:
+                tt.change_attribute_type(tablename=tablename, 
+                                         attribute=form.select_attr.data, 
+                                         to_type=form.new_datatype.data, 
+                                         data_format=form.date_type.data, 
+                                         length=form.char_amount.data)
+                flash(message="Attribute type changed.", category="success")
+            except Exception as e:
+                flash(message="An error occurred. Details: " + str(e), category="error")
 
     return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 # ENDFUNCTION
@@ -284,7 +296,7 @@ def transform_onehotencoding(dataset_id, tablename):
     form.fillForm(tv.get_attributes())
 
     if not form.validate():
-        flash(message="Invalid form.", category="error")
+        flash_errors(form)
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 
     try:
@@ -310,14 +322,13 @@ def transform_zscorenormalisation(dataset_id, tablename):
     if tablename not in dataset.getTableNames():
         abort(404)
 
-    tv = dataset.getTableViewer(tablename)
     tt = dataset.getTableTransformer(tablename)
 
     form = NormalizeZScore(request.form)
     form.fillForm(tv.get_attributes())
 
     if not form.validate():
-        flash(message="Invalid form.", category="error")
+        flash_errors(form)
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 
     try:
@@ -350,7 +361,7 @@ def transform_discretizeEqualWidth(dataset_id, tablename):
     form.fillForm(tv.get_attributes())
 
     if not form.validate():
-        flash(message="Invalid form.", category="error")
+        flash_errors(form)
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 
     try:
@@ -383,7 +394,7 @@ def transform_discretizeEqualFreq(dataset_id, tablename):
     form.fillForm(tv.get_attributes())
 
     if not form.validate():
-        flash(message="Invalid form.", category="error")
+        flash_errors(form)
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 
     try:
@@ -416,7 +427,7 @@ def transform_discretizeCustomRange(dataset_id, tablename):
     form.fillForm(tv.get_attributes())
 
     if not form.validate():
-        flash(message="Invalid form.", category="error")
+        flash_errors(form)
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 
     # determine intervals
@@ -472,7 +483,7 @@ def transform_deleteOutlier(dataset_id, tablename):
     form.fillForm(tv.get_attributes())
 
     if not form.validate():
-        flash(message="Invalid form.", category="error")
+        flash_errors(form)
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 
     try:
@@ -505,7 +516,7 @@ def transform_fillNullsMean(dataset_id, tablename):
     form.fillForm(tv.get_attributes())
 
     if not form.validate():
-        flash(message="Invalid form.", category="error")
+        flash_errors(form)
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 
     try:
@@ -538,7 +549,7 @@ def transform_fillNullsMedian(dataset_id, tablename):
     form.fillForm(tv.get_attributes())
 
     if not form.validate():
-        flash(message="Invalid form.", category="error")
+        flash_errors(form)
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 
     try:
@@ -571,7 +582,7 @@ def transform_fillNullsCustomValue(dataset_id, tablename):
     form.fillForm(tv.get_attributes())
 
     if not form.validate():
-        flash(message="Invalid form.", category="error")
+        flash_errors(form)
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 
     try:
