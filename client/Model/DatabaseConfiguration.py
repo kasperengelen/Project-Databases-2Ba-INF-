@@ -82,7 +82,7 @@ class _DatabaseLoader:
                 path = os.path.dirname(os.path.abspath(__file__)) + '/../test_config.ini'
             else:
                 path = os.path.dirname(os.path.abspath(__file__)) + '/../config.ini'
-                
+
             with open(path) as conf:
                 db_config = conf.read()
         
