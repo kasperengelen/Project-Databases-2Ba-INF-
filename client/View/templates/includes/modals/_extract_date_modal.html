@@ -1,4 +1,4 @@
-<div id="dam" class="modal fade text-left" role="dialog">
+<div id="extractmodal" class="modal fade text-left" role="dialog">
     <div class="modal-dialog">
     
         <!-- Modal content-->
@@ -11,13 +11,17 @@
             	<!-- Download form -->
             	{% from "includes/_formhelpers.html" import render_field %}
             	<div class="form-group">
-            		{{ render_field(delete_form.make_new_table, class_="checkbox") }}
+            		{{ render_field(extract_form.make_new_table, class_="checkbox", id="edc") }}
             	</div>
-            	<div class="form-group">
-            		{{ render_field(delete_form.new_table_name, class_="form-control") }}
+            	<div class="form-group" id="eddiv">
+            		{{ render_field(extract_form.new_table_name, class_="form-control") }}
             	</div>
-        		<button type="submit">Submit</button>
+                <button class="btn btn-primary" type="submit">Submit</button>
+        		
                 <!-- Download form -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="extractdate" class="btn btn-default" data-dismiss="modal">Cancel</button>
             </div>
         </div>
         <!-- Modal content -->

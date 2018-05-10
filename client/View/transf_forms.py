@@ -11,7 +11,7 @@ class TransformationFormBase(FlaskForm):
     make_new_table = BooleanField('Make backup?', default = False)
     new_table_name = StringField('Backup name', [InputRequired(message="Input is required."), 
                                               Length(min=3, max=20, message="Tablename needs to be between 3 and 20 characters long."), 
-                                              Regexp('^[A-Za-z0-9][A-Za-z0-9]+$')], default="backup name")
+                                              Regexp('^[A-Za-z0-9][A-Za-z0-9]+$')], default="name")
 # ENDCLASS
 
 class FindReplaceForm(TransformationFormBase):

@@ -1,4 +1,4 @@
-<div id="dam" class="modal fade text-left" role="dialog">
+<div id="predicatemodal" class="modal fade text-left" role="dialog">
     <div class="modal-dialog">
     
         <!-- Modal content-->
@@ -11,13 +11,17 @@
             	<!-- Download form -->
             	{% from "includes/_formhelpers.html" import render_field %}
             	<div class="form-group">
-            		{{ render_field(delete_form.make_new_table, class_="checkbox") }}
+            		{{ render_field(predicateone_form.make_new_table, class_="checkbox", id="prc") }}
             	</div>
-            	<div class="form-group">
-            		{{ render_field(delete_form.new_table_name, class_="form-control") }}
+            	<div class="form-group" id="prdiv">
+            		{{ render_field(predicateone_form.new_table_name, class_="form-control") }}
             	</div>
-        		<button type="submit">Submit</button>
+                <button class="btn btn-primary" type="submit">Submit</button>
+        		
                 <!-- Download form -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" id="predicate" data-dismiss="modal">Cancel</button>
             </div>
         </div>
         <!-- Modal content -->
