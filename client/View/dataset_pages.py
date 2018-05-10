@@ -53,13 +53,13 @@ def home(dataset_id):
     if session['userdata']['admin']:
         perm_type = 'admin'
 
-    return render_template('dataset_pages.home.html', dataset_info = dataset_info, 
-                                                      table_list = table_list,
+    return render_template('dataset_pages.home.html', dataset_info        = dataset_info, 
+                                                      table_list          = table_list,
                                                       original_table_list = original_table_list,
-                                                      uploadform = upload_form,
-                                                      join_form = join_form,
-                                                      editform = editform,
-                                                      perm_type=perm_type)
+                                                      uploadform          = upload_form,
+                                                      join_form           = join_form,
+                                                      editform            = editform,
+                                                      perm_type           = perm_type)
 # ENDFUNCTION
 
 @dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>', defaults = {'page_nr': 1})
@@ -137,7 +137,6 @@ def table(dataset_id, tablename, page_nr):
     predicatetwo_form.fillForm(attrs)
     predicatethree_form.fillForm(attrs)
 
-
     # render table
     table_data = tv.render_table(page_nr, row_count, show_types = True)
 
@@ -160,7 +159,7 @@ def table(dataset_id, tablename, page_nr):
             "attr_name": attr_name
         })
 
-    return render_template('dataset_pages.table.html', 
+    return render_template('dataset_pages.table_test.html', 
                                                 table_name            = tablename,
                                                 dataset_info          = dataset_info,
                                                 page_indices          = page_indices,
@@ -190,7 +189,8 @@ def table(dataset_id, tablename, page_nr):
                                                 predicatethree_form   = predicatethree_form,
                                                 downloadform          = DownloadForm(),
                                                 original              = False,
-                                                new_table_form        = new_table_form)
+                                                new_table_form        = new_table_form,
+                                                table_columns         = ['First', 'Second', 'Third'])
 # ENDFUNCTION
 
 @dataset_pages.route('/dataset/<int:dataset_id>/original_table/<string:tablename>', defaults = {'page_nr': 1})
@@ -311,6 +311,10 @@ def history(dataset_id, tablename, page_nr):
 @require_login
 def set_session_rowcount(redirect_type):
     """Callback to set the session rowcount."""
+
+    if not redirect_type in ['CURRENT', 'ORIGINAL', 'HISTORY']:
+        abort(404)
+
     form = EntryCountForm(request.form)
 
     # retrieve raw data
@@ -326,16 +330,18 @@ def set_session_rowcount(redirect_type):
 
     dataset = DatasetManager.getDataset(dataset_id)
 
-    if tablename not in dataset.getTableNames() and tablename is not None:
-        abort(404)
+    # check if dataset exists
+    if tablename is not None:
+        if redirect_type == "ORIGINAL" and not tablename in dataset.getOriginalTableNames():
+            abort(404)
+        elif redirect_type == "CURRENT" and not tablename in dataset.getTableNames():
+            abort(404)
+    # ENDIF
 
     form.fillForm(tablename, dataset_id)
 
     if not form.validate():
         flash(message="Invalid form.", category="error")
-        abort(404)
-
-    if not redirect_type in ['CURRENT', 'ORIGINAL', 'HISTORY']:
         abort(404)
 
     if tablename is None and redirect_type != 'HISTORY':
@@ -372,7 +378,7 @@ def transform_join_tables(dataset_id):
 
     # check if tables exist.
     if not (table1_name in dataset.getTableNames() and table2_name in dataset.getTableNames()):
-        flash("Invalid table names.")
+        flash(message="Invalid table names.", category="error")
         return redirect(url_for('dataset_pages.home', dataset_id=dataset_id))
 
     table1_info = dataset.getTableViewer(table1_name)
@@ -682,13 +688,27 @@ def upload(dataset_id):
 def download_table(dataset_id, tablename, original):
     """Callback to download the specified table from the specified dataset."""
 
+    if original:
+        mode = "ORIGINAL"
+    else:
+        mode = "TABLE"
+
+    return __download_helper(dataset_id=dataset_id, mode=mode, tablename=tablename)
+# ENDFUNCTION
+
+@dataset_pages.route('/dataset/<int:dataset_id>/download/')
+@require_login
+@require_readperm
+def download_dataset(dataset_id):
+    """Callback to download all the tables from the specified dataset."""
+    return __download_helper(dataset_id, mode="DATASET")
+# ENDFUNCTION
+
+def __download_helper(dataset_id, mode, tablename = None):
     if not DatasetManager.existsID(dataset_id):
         abort(404)
 
     dataset = DatasetManager.getDataset(dataset_id)
-
-    if tablename not in dataset.getTableNames():
-        abort(404)
 
     # get form
     form = DownloadForm(request.args)
@@ -697,7 +717,15 @@ def download_table(dataset_id, tablename, original):
         flash(message="Invalid parameters.", category="error")
         return redirect(url_for('dataset_pages.home', dataset_id=dataset_id))
 
-    tv = dataset.getTableViewer(tablename, original = original)
+    if not mode in ["TABLE", "ORIGINAL", "DATASET"]:
+        raise RuntimeError("Invalid download mode")
+
+    if mode == "TABLE":
+        if not tablename in dataset.getTableNames():
+            abort(404)
+    elif mode == "ORIGINAL":
+        if not tablename in dataset.getOriginalTableNames():
+            abort(404)
 
     real_download_dir = None
 
@@ -710,6 +738,7 @@ def download_table(dataset_id, tablename, original):
             os.makedirs(temp_dir)
             real_download_dir = temp_dir
             break
+    # ENDFOR
 
     if real_download_dir is None:
         abort(500)
@@ -720,9 +749,16 @@ def download_table(dataset_id, tablename, original):
     quotechar = str(form.quotechar.data)
 
     # PREPARE FILE FOR DOWNLOAD
-    tv.to_csv(foldername=real_download_dir, delimiter=delimiter, null=nullrep, quotechar=quotechar)
+    dd = dataset.getDownloader()
+    if mode == "DATASET":
+        dd.get_csv_zip(foldername=real_download_dir, delimiter=delimiter, null=nullrep, quotechar=quotechar)
+    elif mode == "TABLE":
+        dd.to_csv(tablename=tablename, foldername=real_download_dir, delimiter=delimiter, null=nullrep, quotechar=quotechar, original = False)
+    elif mode == "ORIGINAL":
+        dd.to_csv(tablename=tablename, foldername=real_download_dir, delimiter=delimiter, null=nullrep, quotechar=quotechar, original = True)
 
-    filename = tablename + ".csv"
+    # determine the filename of the zip
+    filename = str(dataset_id) + ".zip"
 
     # SEND TO USER
     send_file = send_from_directory(real_download_dir, filename, mimetype="text/csv", attachment_filename=filename, as_attachment = True)
@@ -731,25 +767,6 @@ def download_table(dataset_id, tablename, original):
     shutil.rmtree(real_download_dir, ignore_errors=True)
 
     return send_file
-# ENDFUNCTION
-
-@dataset_pages.route('/dataset/<int:dataset_id>/download/')
-@require_login
-@require_readperm
-def download_dataset(dataset_id):
-    """Callback to download an entire dataset."""
-
-    if not DatasetManager.existsID(dataset_id):
-        abort(404)
-
-    # create csv's
-    # create zip
-
-    # delete
-
-    # return send_from_director()
-
-    pass
 # ENDFUNCTION
 
 ############################################################# DYNAMIC CALLBACKS #############################################################
@@ -940,4 +957,44 @@ def _get_attr2_options(dataset_id):
 def _get_table(dataset_id, tablename, original):
     """Callback to retrieve the dataset in JSON format."""
     # TODO page_nr, entry count
-    pass
+    return 
+    {
+        'recordsTotal': 7,
+        'data': [
+            [
+                "A",
+                "B",
+                "C"
+            ],
+            [
+                "D",
+                "E",
+                "F"
+            ],
+            [
+                "G",
+                "H",
+                "I"
+            ],
+            [
+                "1",
+                "2",
+                "3"
+            ],
+            [
+                "4",
+                "5",
+                "6"
+            ],
+            [
+                "7",
+                "8",
+                "9"
+            ],
+            [
+                "10",
+                "11",
+                "12"
+            ]
+        ]
+    }
