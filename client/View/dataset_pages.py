@@ -113,8 +113,6 @@ def table(dataset_id, tablename, page_nr):
     predicatethree_form   = PredicateFormThree()
     extract_form          = ExtractDateTimeForm()
 
-    new_table_form = NewTableForm()
-
     entrycount_form       = EntryCountForm(entry_count = session['rowcount'])# TODO remove
     entrycount_form.fillForm(dataset_id, tablename)# TODO remove
 
@@ -190,7 +188,6 @@ def table(dataset_id, tablename, page_nr):
                                                 predicatethree_form   = predicatethree_form,
                                                 downloadform          = DownloadForm(),
                                                 original              = False,
-                                                new_table_form        = new_table_form,
                                                 table_columns         = ['First', 'Second', 'Third'])
 # ENDFUNCTION
 
