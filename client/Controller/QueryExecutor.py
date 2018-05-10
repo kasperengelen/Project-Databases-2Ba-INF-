@@ -27,6 +27,23 @@ class QueryExecutor:
         self.write_perm = write_perm
         self.history_manager = DatasetHistoryManager(setid, db_conn, True)
 
+    class SyntaxError(Exception):
+        """
+        This exception is raised whenever the user provides a query with a syntax error.
+        """
+
+    class PermissionError(Exception):
+        """
+        This exception is raised whenever an user attempts to execute a statement in a query, but
+        the user does not have the permission to do so.
+        """
+
+    class ProgrammingError(Exception):
+        """
+        This exception is raised whenever a quey with the correct syntax still contains elements
+        that make it fail (e.g., referencing tables / columns that don't exist in the dataset).
+        """
+
 
     def execute_query(self, query):
         """Execute user-generated query."""
@@ -34,19 +51,19 @@ class QueryExecutor:
             statement = psqlparse.parse(query)[0]
 
         except psqlparse.exceptions.PSqlParseError as e:
-            raise ValueError(str(e))
+            raise self.SyntaxError(str(e))
 
         #Check if the statement is permitted
         if self.__assert_permitted_statement(statement) is False:
-            raise ValueError('Permission denied, users are only allowed to execute ...')
+            raise self.PermissionError('Unable to execute query: permission denied to this user.')
 
         #Check if the query doesn't contain bogus tables
         valid_tables = self.__get_valid_tables()
         used_tables = statement.tables()
         for table in used_tables:
             if table not in valid_tables:
-                error_msg = 'Error, table "' + table + '" does not exist in this dataset. Please verify.'
-                raise ValueError(error_msg)
+                error_msg = 'Error, table "' + table + '" does not exist in this dataset. Please verify the spelling is correct.'
+                raise self.ProgrammingError(error_msg)
 
         #Modify the query by mapping the tables to the correct internal tables.
         internal_query = query
@@ -104,7 +121,7 @@ class QueryExecutor:
         to use. Only INSERT INTO, UPDATE, DELETE and SELECT statements are allowed.
         """
 
-        if self.write_perm is False:
+        if self.write_perm is False: # Without write permissions, you can only use SELECT statmements.
             if type(statement_obj) != psqlparse.nodes.SelectStmt:
                 return False
                 
