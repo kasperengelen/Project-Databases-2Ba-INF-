@@ -159,7 +159,7 @@ def table(dataset_id, tablename, page_nr):
             "attr_name": attr_name
         })
 
-    return render_template('dataset_pages.table_test.html', 
+    return render_template('dataset_pages.table.html', 
                                                 table_name            = tablename,
                                                 dataset_info          = dataset_info,
                                                 page_indices          = page_indices,
@@ -957,9 +957,12 @@ def _get_attr2_options(dataset_id):
 def _get_table(dataset_id, tablename, original):
     """Callback to retrieve the dataset in JSON format."""
     # TODO page_nr, entry count
-    return 
-    {
+
+
+
+    retval = {
         'recordsTotal': 7,
+        'recordsFiltered': 20,
         'data': [
             [
                 "A",
@@ -998,3 +1001,5 @@ def _get_table(dataset_id, tablename, original):
             ]
         ]
     }
+
+    return jsonify(retval)
