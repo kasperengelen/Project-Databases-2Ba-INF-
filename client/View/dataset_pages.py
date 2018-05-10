@@ -38,7 +38,7 @@ def home(dataset_id):
 
     dataset_info = dataset.toDict()
     table_list = dataset.getTableNames()
-    # original_table_list = dataset.getOriginalTableNames()
+    original_table_list = dataset.getOriginalTableNames()
 
     upload_form = TableUploadForm()
     join_form = TableJoinForm()
@@ -55,6 +55,7 @@ def home(dataset_id):
 
     return render_template('dataset_pages.home.html', dataset_info = dataset_info, 
                                                       table_list = table_list,
+                                                      original_table_list = original_table_list,
                                                       uploadform = upload_form,
                                                       join_form = join_form,
                                                       editform = editform,
@@ -192,10 +193,8 @@ def table(dataset_id, tablename, page_nr):
                                                 new_table_form        = new_table_form)
 # ENDFUNCTION
 
-# TODO change this
-@dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>/original', defaults = {'page_nr': 1})
-@dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>/original/<int:page_nr>')
-# /dataset/<int:dataset_id>/original_table/<string:tablename>/<int:page_nr>
+@dataset_pages.route('/dataset/<int:dataset_id>/original_table/<string:tablename>', defaults = {'page_nr': 1})
+@dataset_pages.route('/dataset/<int:dataset_id>/original_table/<string:tablename>/<int:page_nr>')
 @require_login
 @require_readperm
 def table_original(dataset_id, tablename, page_nr):
@@ -208,8 +207,7 @@ def table_original(dataset_id, tablename, page_nr):
     dataset = DatasetManager.getDataset(dataset_id)
     dataset_info = dataset.toDict()
 
-    if tablename not in dataset.getTableNames():
-    # if tablename not in dataset.getOriginalTableNames():
+    if tablename not in dataset.getOriginalTableNames():
         abort(404)
 
     # get tableviewer
@@ -678,7 +676,7 @@ def upload(dataset_id):
 # ENDFUNCTION
 
 @dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>/download/', defaults = {'original': False})
-@dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>/original/download', defaults = {'original': True})
+@dataset_pages.route('/dataset/<int:dataset_id>/original_table/<string:tablename>/download', defaults = {'original': True})
 @require_login
 @require_readperm
 def download_table(dataset_id, tablename, original):
