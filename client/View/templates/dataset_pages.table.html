@@ -485,7 +485,7 @@
 	<script>
 		$(document).ready(function() {
 
-			var formdata = $("#deleteattribute", "NewTableForm").serialize();
+			var formdata = $("#deleteattribute, NewTableForm").serialize();
 
 			$("#NewTableForm").submit(function(e){
 				e.preventDefault();
@@ -494,8 +494,8 @@
 					type: "POST",
 					url: $("#deleteattribute").prop('action'),
 					data: formdata,
-					success: function(){
-						location.reload();
+					success: function(response){
+						document.write(response);
 					}
 				});
 			});

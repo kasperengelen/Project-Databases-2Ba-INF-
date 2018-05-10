@@ -12,7 +12,6 @@
             	<!-- Download form -->
             	{% from "includes/_formhelpers.html" import render_field %}
                 <form action="" method="post" id="NewTableForm">
-                    {{ new_table_form.hidden_tag() }}
                 	<div class="form-group">
                 		{{ render_field(new_table_form.make_new_table, class_="checkbox") }}
                 	</div>
