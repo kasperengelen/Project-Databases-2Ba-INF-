@@ -163,35 +163,6 @@ class TableViewer:
             
         return html_table
 
-
-    
-
-    def to_csv(self, foldername, delimiter=',', quotechar='"', null="NULL"):
-        """Convert a table from the dataset to a CSV file. The csv file will be stored
-        in the specified folder. The filename will be the tablename followed by '.csv'."""
-
-        filename = os.path.join(foldername, self.tablename + ".csv")
-
-        with open(filename, 'w', encoding="utf-8") as outfile:
-            outcsv = csv.writer(outfile, delimiter=delimiter, quotechar=quotechar)
-
-            self.cur.execute("SELECT column_name FROM information_schema.columns WHERE table_schema = '{}' AND table_name = '{}'".format(self.schema, self.tablename))
-
-            # write header
-            outcsv.writerow([x[0] for x in self.cur.fetchall()])
-
-            self.cur.execute(sql.SQL("SELECT * FROM {}.{}").format(sql.Identifier(self.schema), sql.Identifier(self.tablename)))
-            rows = self.cur.fetchall()
-
-            # replace NULL values with parameter 'null'
-            for i in range(len(rows)):
-                rows[i] = list(rows[i])
-                for j in range(len(rows[i])):
-                    if rows[i][j] is None: rows[i][j] = null
-
-            # write rows
-            outcsv.writerows(rows)
-
     def get_numerical_histogram(self, columnname, bar_nr=10):
         # first check if the attribute type is numerical
         self.cur.execute(sql.SQL("SELECT pg_typeof({}) FROM {}.{}").format(sql.Identifier(columnname),
