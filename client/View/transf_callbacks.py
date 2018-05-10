@@ -6,6 +6,7 @@ from Controller.TableTransformer import TableTransformer
 from Controller.AccessController import require_login, require_admin
 from Controller.AccessController import require_adminperm, require_writeperm, require_readperm
 from Controller.DatasetManager import DatasetManager
+from View.form_utils import flash_errors
 
 transf_callbacks = Blueprint('transf_callbacks', __name__)
 
@@ -127,6 +128,7 @@ def transform_deleteattr(dataset_id, tablename):
     form.fillForm(tv.get_attributes())
 
     if not form.validate():
+        print(form.errors)
         flash(message="Invalid form.", category="error")
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 
