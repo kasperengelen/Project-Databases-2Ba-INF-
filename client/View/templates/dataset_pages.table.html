@@ -494,8 +494,8 @@
 					type: "POST",
 					url: $("#deleteattribute").prop('action'),
 					data: formdata,
-					success: function(){
-						location.reload();
+					success: function(response){
+						document.write(response);
 					}
 				});
 			});
