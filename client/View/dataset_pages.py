@@ -160,7 +160,7 @@ def table(dataset_id, tablename, page_nr):
             "attr_name": attr_name
         })
 
-    return render_template('dataset_pages.table_test.html', 
+    return render_template('dataset_pages.table.html', 
                                                 table_name            = tablename,
                                                 dataset_info          = dataset_info,
                                                 page_indices          = page_indices,# TODO remove
