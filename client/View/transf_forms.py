@@ -5,7 +5,7 @@ from wtforms.validators import Length, InputRequired, Email, EqualTo, Regexp
 from wtforms.form import Form
 from View.form_utils import EnumCheck, FilenameCheck
 
-class TransformationFormBase(Form):
+class TransformationFormBase(FlaskForm):
     """Base class for all transformation forms."""
 
     make_new_table = BooleanField('Make backup?', default = False)
