@@ -145,7 +145,6 @@ def edit_pass():
     form = UserEditPasswordForm(request.form)
 
     if not form.validate():
-        flash(message="Invalid form.", category="error")
         flash_errors(form)
     else:
         current_user = UserManager.getUserFromID(userid)
