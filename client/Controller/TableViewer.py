@@ -120,7 +120,7 @@ class TableViewer:
         """ 
         if((page_nr - 1) * nr_rows >= self.maxrows):
             #In case it's an empty table, the first page should still be in range
-            if (table_size == 0) and (page_nr == 1):
+            if (self.maxrows == 0) and (page_nr == 1):
                 return True
             else:
                 return False

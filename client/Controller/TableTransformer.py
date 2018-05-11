@@ -807,7 +807,7 @@ class TableTransformer:
         nullable = False
 
         if self.is_nullable(tablename, attribute) is True:
-            nullable is True
+            nullable = True
             
         if larger is True:
             comparator = '>'
