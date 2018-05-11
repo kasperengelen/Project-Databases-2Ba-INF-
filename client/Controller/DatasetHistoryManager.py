@@ -22,7 +22,6 @@ class DatasetHistoryManager:
         self.track = track
         self.entry_count = self.__initialize_entrycount()
         self.choice_dict = None
-        self.distance_dict = None
 
 
     def __initialize_entrycount(self):
@@ -43,8 +42,7 @@ class DatasetHistoryManager:
             cur.execute(sql.SQL(query), [self.setid, table_name, table_name])
             cur.fetchone()[0]
             
-        
-        
+              
     def write_to_history(self, table_name, origin_table, attribute, parameters, transformation_type):
         """Method thar writes an entry to the dataset history table for a performed transformation.
 
@@ -64,7 +62,6 @@ class DatasetHistoryManager:
         query = 'INSERT INTO SYSTEM.DATASET_HISTORY VALUES (%s, %s, %s, %s, %s, %s)'
         cur.execute(sql.SQL(query), [self.setid, table_name, attribute, transformation_type, param_array, origin_table])
         self.db_connection.commit()
-
 
 
     def __python_list_to_postgres_array(self, py_list, transformation_type):
@@ -92,11 +89,20 @@ class DatasetHistoryManager:
     def __backup_table(self, t_id):
         pass
 
+    def __get_latest_backup(self, t_id):
+        pass
+
     def __get_edit_distance_table(self, t_id):
         """Method that calculates the edit distance defined by us to determine how dissimilar two tables are.
         This is done by looking at various transformations and rating how hard a transformation changed the
         data and how expensive that transformation was.
         """
+        #These are the expensive operations, so performing these will warrant creating a backup sooner.
+        if t_id in [4, 5, 6, 13, 14, 16]:
+            return 1.0
+        #These are light transformations and only should make a backup after several operations.
+        else:
+            return 0.3
         
     #DEPRECATED
     def get_page_indices(self, display_nr, page_nr=1):
@@ -122,8 +128,6 @@ class DatasetHistoryManager:
             else:
                 indices = []
                 start = 1
-
-                
 
             end = start + 3 #Show 3 indices including current page
             if(start == 1):
@@ -229,34 +233,6 @@ class DatasetHistoryManager:
         
         self.choice_dict =  choice_dict
 
-
-    def __generate_distance_dict(self):
-        """Generate the dictionary used to write away history table entries."""
-        if self.choice_dict is not None:
-            return
-        
-        choice_dict = {
-            0  : 1.0,
-            1  : 0.3,
-            2  : 0.3,
-            3  : 0.5,
-            4  : 1.0,
-            5  : 1.0,
-            6  : 1.0,
-            7  : self.__rowstring_generator7,
-            8  : self.__rowstring_generator8,
-            9  : self.__rowstring_generator9,
-            10 : self.__rowstring_generator10,
-            11 : self.__rowstring_generator11,
-            12 : self.__rowstring_generator12,
-            13 : self.__rowstring_generator13,
-            14 : self.__rowstring_generator14,
-            15 : self.__rowstring_generator15,
-            16 : self.__rowstring_generator16
-            }
-        
-        self.choice_dict =  choice_dict
-
     def __rows_to_dataframe(self, row_list):
         """Method that translates row results of a query to a pandas dataframe."""
         list_a = []
@@ -326,7 +302,7 @@ class DatasetHistoryManager:
         return string
 
     def __rowstring_generator0(self, dict_obj):
-        rowstring = 'User-generated query performed on table "{}". The query used: {}'
+        rowstring = 'Renamed ...'
         return rowstring
 
 
@@ -347,8 +323,11 @@ class DatasetHistoryManager:
         else:
             operand = 'smaller'
 
-        rowstring = 'Deleted outliers {} than {} from attribute "{}" of table "{}".'
-        rowstring = rowstring.format(operand, self.__unquote_string(param[1]), dict_obj['attribute'], dict_obj['origin_table'])
+        value = self.__unquote_string(param[1])
+        replacement = self.__unquote_string(param[2])
+
+        rowstring = 'Deleted outliers {} than {} from attribute "{}" of table "{}" by replacing them with the value {}.'
+        rowstring = rowstring.format(operand, value, dict_obj['attribute'], dict_obj['origin_table'], replacement)
         return rowstring
 
     def __rowstring_generator4(self, dict_obj):
