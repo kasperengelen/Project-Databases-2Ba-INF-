@@ -1,16 +1,24 @@
-import pandas as pd
-import numpy as np
-import matplotlib
-from Model.SQLTypeHandler import SQLTypeHandler
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
 import math
 import re
 import os
 import csv
+
+
+import pandas as pd
+import numpy as np
 import psycopg2
 from psycopg2 import sql
 import mpld3
+import matplotlib
+import matplotlib.pyplot as plt
+matplotlib.use('Agg')
+
+from Model.SQLTypeHandler import SQLTypeHandler
+
+
+
+
+
 
 class TableViewer:
     """Class that extracts table information for viewing purposes.
