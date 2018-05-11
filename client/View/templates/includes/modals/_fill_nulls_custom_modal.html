@@ -5,10 +5,28 @@
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal">&times;</button>
-                <h4 class="modal-title">Create New Table?</h4>
+                <h4 class="modal-title">Fill Nulls - Custom</h4>
             </div>
-            <div class="modal-body">
-            	<!-- Download form -->
+            <div class="modal-body" id="fillnullscustom_div">
+                <!-- Fill Nulls Custom Value -->
+            <div class="col-sm-6" style="overflow-x: auto;">
+                <form method="post" action="{{ url_for('transf_callbacks.transform_fillNullsCustomValue', dataset_id=dataset_info.setid,
+                    tablename=table_name) }}" name="fillnullscustom">
+                {% from "includes/_formhelpers.html" import render_field %}
+                {{ fillnullcustom_form.csrf_token }}
+                <div class="form-group" style="width: 30%; display: inline-block;">
+                    {{render_field(fillnullcustom_form.select_attr, class_="form-control")}}
+                </div>
+                <div class="form-group" style="width: 30%; display: inline-block;">
+                    {{render_field(fillnullcustom_form.replacement, class_="form-control", placeholder="Replacement")}}
+                </div>
+                <a href="#" class="btn btn-primary" id="fillnullscustom" onclick="$('#fillnullscustom_newtable').show();
+                        $('#fillnullscustom_div').hide();">Fill Nulls</a> 
+            </div>
+            <!-- Fill Nulls Median -->
+            </div>
+
+            <div class="modal-body" id="fillnullscustom_newtable">
             	{% from "includes/_formhelpers.html" import render_field %}
             	<div class="form-group">
             		{{ render_field(fillnullcustom_form.make_new_table, class_="checkbox", id="fncc") }}
@@ -17,8 +35,7 @@
             		{{ render_field(fillnullcustom_form.new_table_name, class_="form-control") }}
             	</div>
                 <button class="btn btn-primary" type="submit">Submit</button>
-        		
-                <!-- Download form -->
+        		</form>
             </div>
             <div class="modal-footer">
                 <button type="button" id="fillnullscustom" class="btn btn-default" data-dismiss="modal">Cancel</button>

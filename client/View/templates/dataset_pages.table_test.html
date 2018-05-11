@@ -25,74 +25,166 @@
 	</div>    		
 
 
+	<div class="row">
+		<div class="col-sm-3" style="position: sticky; top: 65px;">
+			<nav class="navbar-inverse sidebar" style="border-radius: 5px;">
+				<div class="container-fluid">
+					<style>
+						ul .nav .navbar-nav .sidebar li ul nav navbar-nav .collapse .sidebar li a .padding {
+							padding-right: 6em; padding-left: 2em;
+						}
+					</style>
+					<ul class="nav navbar-nav sidebar">
+			            <li><a href="#" data-toggle="modal" data-target="#tcmodal" onclick="$('#typeconversion_newtable').hide()">
+			            	Attribute Type Conversion</a></li>
 
-	<div class="text-center">
-		<style>
-			table {
-       			border-collapse: collapse;
-        		float:left;
-				padding:3px;
-				border-radius: 3px;
-			}
+			            <li><a style="padding-right: 6em;" data-toggle="collapse" data-target="#navbar-collapse-1">
+			            	Find and Replace&nbsp;&nbsp;<span class="glyphicon glyphicon-chevron-down"></span></a>
 
-	        td, th {
-	         	font-size: 15px;
-	            text-align: left;
-	            padding: 8px;
-	        }
+							<ul class="nav navbar-nav collapse sidebar" id="navbar-collapse-1">
+								<li><a style="padding-right: 6em; padding-left: 2em;" href="#"
+									data-toggle="modal" data-target="#findreplacemodal" onclick="$('#findandreplace_newtable').hide()">
+									<span class="glyphicon glyphicon-chevron-right">&nbsp;</span>Regular</a></li>
 
-	        table thead {
-	        	background-color: lightgrey;
-	        }
+								<li><a style="padding-right: 6em; padding-left: 2em;" href="#"
+									data-toggle="modal" data-target="#findreplaceregexmodal" onclick="$('#findandreplaceregex_newtable').hide()">
+									<span class="glyphicon glyphicon-chevron-right">&nbsp;</span>With Regex</a></li>
+							</ul>
 
-	        table tbody tr:nth-child(even) {
-	        	background-color: #eaeaea;
-	        }
+						</li>
 
-	        .dataTables_filter {
-	        	display: none;
-	        }
+			            <li><a href="#" data-toggle="modal" data-target="#deleteoutliersmodal" onclick="$('#deleteoutliers_newtable').hide()">
+			            	Delete Outliers</a></li>
 
-		</style>
+			            <li><a href="#" data-toggle="modal" data-target="#onehotencodemodal" onclick="$('#onehotencode_newtable').hide()">
+			            	One Hot Encoding</a></li>
 
-		<!-- TABLE -->
+			            <li><a href="#" data-toggle="modal" data-target="#normalizemodal" onclick="$('#normalize_newtable').hide()">Normalize By Z-Score</a></li>
 
-		<div>
-			<table id="mytable">
-				<thead>
-					<tr>
-						{% for col in table_columns %}
-							<th>
-								{{ col }}
-							</th>
-						{% endfor %}
-					</tr>
-				</thead>
-			</table>
+			            <li><a style="padding-right: 6em;" data-toggle="collapse" data-target="#navbar-collapse">
+			            	Discretize&nbsp;&nbsp;<span class="glyphicon glyphicon-chevron-down"></span></a>
+
+							<ul class="nav navbar-nav collapse sidebar" id="navbar-collapse">
+								<li><a href="#" style="padding-right: 6em; padding-left: 2em;" href="#"
+									data-toggle="modal" data-target="#discretizewidthmodal" onclick="$('#discretizewidth_newtable').hide()">
+									<span class="glyphicon glyphicon-chevron-right">&nbsp;</span>Equal Width</a></li>
+
+								<li><a href="#" style="padding-right: 6em; padding-left: 2em;" href="#"
+									data-toggle="modal" data-target="#discretizefreqmodal" onclick="$('#discretizefreq_newtable').hide()">
+									<span class="glyphicon glyphicon-chevron-right">&nbsp;</span>Equal Frequency</a></li>
+
+								<li><a href="#" style="padding-right: 6em; padding-left: 2em;" href="#"
+									data-toggle="modal" data-target="#discretizecustommodal" onclick="$('#discretizecustom_newtable').hide()">
+									<span class="glyphicon glyphicon-chevron-right">&nbsp;</span>Custom Range</a></li>
+							</ul>
+						</li>
+						<li><a style="padding-right: 6em;" data-toggle="collapse" data-target="#navbar-collapse-2">
+			            	Fill Nulls&nbsp;&nbsp;<span class="glyphicon glyphicon-chevron-down"></span></a>
+
+							<ul class="nav navbar-nav collapse sidebar" id="navbar-collapse-2">
+
+								<li><a href="#" style="padding-right: 6em; padding-left: 2em;" href="#"
+									data-toggle="modal" data-target="#fillnullsmeanmodal" onclick="$('#fillnullsmean_newtable').hide()">
+									<span class="glyphicon glyphicon-chevron-right">&nbsp;</span>Mean</a></li>
+
+								<li><a href="#" style="padding-right: 6em; padding-left: 2em;" href="#"
+									data-toggle="modal" data-target="#fillnullsmedianmodal" onclick="$('#fillnullsmedian_newtable').hide()">
+									<span class="glyphicon glyphicon-chevron-right">&nbsp;</span>Median</a></li>
+
+								<li><a href="#" style="padding-right: 6em; padding-left: 2em;" href="#"
+									data-toggle="modal" data-target="#fillnullscustommodal" onclick="$('#fillnullscustom_newtable').hide()">
+									<span class="glyphicon glyphicon-chevron-right">&nbsp;</span>Custom Value</a></li>
+							</ul>
+						</li>
+
+			            <li><a href="#" data-toggle="modal" data-target="#extractmodal" onclick="$('#extractdate_newtable').hide()">
+			            	Extract Part of Date</a></li>
+
+			            <li><a href="#" data-toggle="modal" data-target="#predicatemodal" onclick="$('#predicate_newtable').hide()">
+			            	Delete Rows using Predicate</a></li>
+			        </ul>
+				</div>
+			</nav>
 		</div>
+		{% include "includes/modals/_type_conversion_modal.html" %}
+		{% include "includes/modals/_find_replace_modal.html" %}
+		{% include "includes/modals/_find_replace_regex_modal.html" %}
+		{% include "includes/modals/_discretize_width_modal.html" %}
+		{% include "includes/modals/_discretize_freq_modal.html" %}
+		{% include "includes/modals/_discretize_custom_modal.html" %}
+		{% include "includes/modals/_delete_outliers_modal.html" %}
+		{% include "includes/modals/_one_hot_encode_modal.html" %}
+		{% include "includes/modals/_fill_nulls_mean_modal.html" %}
+		{% include "includes/modals/_fill_nulls_median_modal.html" %}
+		{% include "includes/modals/_fill_nulls_custom_modal.html" %}
+		{% include "includes/modals/_predicate_modal.html" %}
+		{% include "includes/modals/_extract_date_modal.html" %}
+		{% include "includes/modals/_normalize_modal.html" %}
+		<div class="col-sm-9">
+			<div class="text-center">
+				<style>
+					table {
+		       			border-collapse: collapse;
+		        		float:left;
+						padding:3px;
+						border-radius: 3px;
+					}
 
-		<!-- TABLE -->
-		<script>
-			$(document).ready( function () {
-    			var table = $('#mytable').DataTable( {
-    				scrollX: true,
-    				scrollY: true,
-    				processing: true,
-    				serverSide: true,
-    				order: [[1, 'asc']], 
-    				ajax: '{{ url_for("dataset_pages._get_table", dataset_id=dataset_info.setid, tablename=table_name, original = original) }}'
-    			} );
-    		} );
-		</script>
+			        td, th {
+			         	font-size: 15px;
+			            text-align: left;
+			            padding: 8px;
+			        }
+
+			        table thead {
+			        	background-color: lightgrey;
+			        }
+
+			        table tbody tr:nth-child(even) {
+			        	background-color: #eaeaea;
+			        }
+
+			        .dataTables_filter {
+			        	display: none;
+			        }
+
+				</style>
+
+				<!-- TABLE -->
+
+				<div>
+					<table id="mytable">
+						<thead>
+							<tr>
+								{% for col in table_columns %}
+									<th>
+										{{ col }}
+									</th>
+								{% endfor %}
+							</tr>
+						</thead>
+					</table>
+				</div>
+
+				<!-- TABLE -->
+				<script>
+					$(document).ready( function () {
+		    			var table = $('#mytable').DataTable( {
+		    				scrollX: true,
+		    				scrollY: true,
+		    				processing: true,
+		    				serverSide: true,
+		    				autoWidth: false,
+		    				order: [[1, 'asc']], 
+		    				ajax: '{{ url_for("dataset_pages._get_table", dataset_id=dataset_info.setid, tablename=table_name, original = original) }}'
+		    			} );
+		    		} );
+				</script>
+			</div>
+		</div>
 	</div>
 
-	<script>
-		
-			$('#tcdiv').hide();
-
-
-			
-	</script>
+	{% include "includes/scripts/_new_table_form_script.html" %}
 
 	<script>
 		

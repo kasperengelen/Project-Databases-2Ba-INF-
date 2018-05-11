@@ -38,6 +38,5 @@
 	<div class="form-group" style="width: 20%; display: inline-block;" id="pred_3_input">
 		{{render_field(predicatethree_form.input3, class_="form-control", placeholder="Input") }}
 	</div>
-	<a href="#" class="btn btn-primary" id="predicates" data-toggle="modal" data-target="#predicatemodal">Delete By Predicate</a>
-	{% include "includes/modals/_predicate_modal.html" %}
-</form>
+	<a href="#" class="btn btn-primary" id="predicate" onclick="$('#predicate_newtable').show();
+                        $('#predicate_div').hide();">Delete by Predicate</a> 
