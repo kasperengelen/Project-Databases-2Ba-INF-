@@ -188,6 +188,18 @@ class DatasetHistoryManager:
     def render_history_json(self, page_nr, nr_rows, show_all=True, table_name=""):
         offset = (page_nr - 1) * nr_rows
         cur = self.db_connection.cursor()
+        if show_all is False:
+            query = ("SELECT * FROM system.dataset_history WHERE setid = %s AND (table_name = %s OR origin_table = %s)"
+                     " LIMIT %s OFFSET %s")
+            dict_cur.execute(sql.SQL(query), [self.setid, table_name, table_name, nr_rows, offset])
+        else:
+            query = "SELECT * FROM system.dataset_history WHERE setid = %s LIMIT %s OFFSET %s"
+            dict_cur.execute(sql.SQL(query), [self.setid, nr_rows, offset])
+
+        all_rows = dict_cur.fetchall()
+        df = self.__rows_to_dataframe(all_rows)
+        json_string = data_frame.to_json()
+        return json_string
 
 
     def __generate_choice_dict(self):
@@ -228,9 +240,9 @@ class DatasetHistoryManager:
             1  : 0.3,
             2  : 0.3,
             3  : 0.5,
-            4  : self.__rowstring_generator4,
-            5  : self.__rowstring_generator5,
-            6  : self.__rowstring_generator6,
+            4  : 1.0,
+            5  : 1.0,
+            6  : 1.0,
             7  : self.__rowstring_generator7,
             8  : self.__rowstring_generator8,
             9  : self.__rowstring_generator9,
@@ -307,19 +319,6 @@ class DatasetHistoryManager:
             return False
         else:
             return False
-
-        if show_all is False:
-            query = ("SELECT * FROM system.dataset_history WHERE setid = %s AND (table_name = %s OR origin_table = %s)"
-                     " LIMIT %s OFFSET %s")
-            dict_cur.execute(sql.SQL(query), [self.setid, table_name, table_name, nr_rows, offset])
-        else:
-            query = "SELECT * FROM system.dataset_history WHERE setid = %s LIMIT %s OFFSET %s"
-            dict_cur.execute(sql.SQL(query), [self.setid, nr_rows, offset])
-
-        all_rows = dict_cur.fetchall()
-        df = self.__rows_to_dataframe(all_rows)
-        json_string = data_frame.to_json()
-        return json_string
 
     def __get_new_table_string(self, dict_obj):
         """Get a string that explains what new table the transformation resulted in."""
