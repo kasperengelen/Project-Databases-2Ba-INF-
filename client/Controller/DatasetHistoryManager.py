@@ -6,10 +6,6 @@ import psycopg2.extras
 from psycopg2 import sql
 import pandas as pd
 
-
-
-
-
 class DatasetHistoryManager:
     """Class that manages the transformation history ofimport reimport re a dataset.
 
@@ -24,11 +20,30 @@ class DatasetHistoryManager:
         self.setid = setid
         self.db_connection = db_connection
         self.track = track
-        self.entry_count = None
+        self.entry_count = self.__initialize_entrycount()
         self.choice_dict = None
+
+
+    def __initialize_entrycount(self):
+            cur = 
+            query = "SELECT COUNT(*) FROM system.dataset_history WHERE setid = %s"
+            cur.execute(sql.SQL(query), [self.setid])
+            return cur.fetchone()[0]
+
+
+    def get_rowcount(self, tablename=None):
+        """Quick methdo to get the number of rows in the dataset history table."""
+        if tablename is None: #If we're viewing history of all the tables.
+            return self.entry_count
+
+        else:
+            cur = self.db_connection.cursor()
+            query = "SELECT COUNT(*) FROM system.dataset_history WHERE setid = %s AND (table_name = %s OR origin_table = %s)"
+            cur.execute(sql.SQL(query), [self.setid, table_name, table_name])
+            cur.fetchone()[0]
+            
         
-
-
+        
     def write_to_history(self, table_name, origin_table, attribute, parameters, transformation_type):
         """Method thar writes an entry to the dataset history table for a performed transformation.
 
@@ -76,7 +91,7 @@ class DatasetHistoryManager:
     def __backup_table(self, t_id):
         pass
         
-
+    #DEPRECATED
     def get_page_indices(self, display_nr, page_nr=1):
         """Method that returns the relevant indices for the history table that's being viewed.
 
@@ -245,12 +260,29 @@ class DatasetHistoryManager:
         html_string = re.sub(' mytable', '" id="mytable', df.to_html(None, None, None, True, False, classes="mytable"))
         return html_string
 
+    def render_history_json(self, page_nr, nr_rows, show_all=True, table_name):
+        offset = (page_nr - 1) * nr_rows
+        cur = self.db_connection.cursor()
+        
     def __is_new_table(self, dict_obj):
         """Method that checks whether a table is a new table created from a transformation."""
         if dict_obj['table_name'] != dict_obj['origin_table'] :
             return False
         else:
             return False
+
+        if show_all is False:
+            query = ("SELECT * FROM system.dataset_history WHERE setid = %s AND (table_name = %s OR origin_table = %s)"
+                     " LIMIT %s OFFSET %s")
+            dict_cur.execute(sql.SQL(query), [self.setid, table_name, table_name, nr_rows, offset])
+        else:
+            query = "SELECT * FROM system.dataset_history WHERE setid = %s LIMIT %s OFFSET %s"
+            dict_cur.execute(sql.SQL(query), [self.setid, nr_rows, offset])
+
+        all_rows = dict_cur.fetchall()
+        df = self.__rows_to_dataframe(all_rows)
+        json_string = data_frame.to_json()
+        return json_string
 
     def __get_new_table_string(self, dict_obj):
         """Get a string that explains what new table the transformation resulted in."""
