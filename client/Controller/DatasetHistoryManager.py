@@ -189,7 +189,7 @@ class DatasetHistoryManager:
             return True
 
 
-    def render_history_json(self, page_nr, nr_rows, show_all=True, table_name=""):
+    def render_history_json(self, page_nr, nr_rows, reverse_order=False, show_all=True, table_name=""):
         offset = (page_nr - 1) * nr_rows
         cur = self.db_connection.cursor()
         if show_all is False:
