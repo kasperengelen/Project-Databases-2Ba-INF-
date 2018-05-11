@@ -77,9 +77,6 @@ class QueryExecutor:
             return self.__execute_visual(internal_query, used_tables)
         else:
             return self.__execute_simple(internal_query, used_tables, query)
-        
-            
-
 
     def __execute_simple(self, query, tables, original_query):
         """Method used for simple execution of queries. This method is used for queries
@@ -91,7 +88,7 @@ class QueryExecutor:
             
         except psycopg2.ProgrammingError as e:
             error_msg = self.__get_clean_exception(str(e), True)
-            raise ValueError(error_msg) from e
+            raise self.SyntaxError(error_msg) from e
 
         self.db_conn.commit()
         modified_table = self.__get_modified_table(original_query, tables)
@@ -109,7 +106,7 @@ class QueryExecutor:
             data_frame = pd.read_sql(query, self.engine)
             
         except sqlalchemy.exc.ProgrammingError as e:
-            raise ValueError(e.__context__) from e
+            raise self.SyntaxError(e.__context__) from e
 
         data_frame = data_frame.replace([None] * len(tables), [np.nan] * len(tables))
         html_table = data_frame.to_html(None, None, None, True, False, na_rep = 'NULL')
