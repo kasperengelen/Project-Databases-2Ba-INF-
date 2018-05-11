@@ -24,71 +24,66 @@
 		</div>
 	</div>    		
 
-	<div class="row">
-		<div class="col-sm-3">
-			
+
+
+	<div class="text-center">
+		<style>
+			table {
+       			border-collapse: collapse;
+        		float:left;
+				padding:3px;
+				border-radius: 3px;
+			}
+
+	        td, th {
+	         	font-size: 15px;
+	            text-align: left;
+	            padding: 8px;
+	        }
+
+	        table thead {
+	        	background-color: lightgrey;
+	        }
+
+	        table tbody tr:nth-child(even) {
+	        	background-color: #eaeaea;
+	        }
+
+	        .dataTables_filter {
+	        	display: none;
+	        }
+
+		</style>
+
+		<!-- TABLE -->
+
+		<div>
+			<table id="mytable">
+				<thead>
+					<tr>
+						{% for col in table_columns %}
+							<th>
+								{{ col }}
+							</th>
+						{% endfor %}
+					</tr>
+				</thead>
+			</table>
 		</div>
-		<div class="col-sm-9">
-			<div class="text-center">
-				<style>
-					table {
-		       			border-collapse: collapse;
-		        		float:left;
-						padding:3px;
-						border-radius: 3px;
-					}
 
-			        td, th {
-			         	font-size: 15px;
-			            text-align: left;
-			            padding: 8px;
-			        }
-
-			        table thead {
-			        	background-color: lightgrey;
-			        }
-
-			        table tbody tr:nth-child(even) {
-			        	background-color: #eaeaea;
-			        }
-
-			        .dataTables_filter {
-			        	display: none;
-			        }
-
-				</style>
-
-				<!-- TABLE -->
-
-				<div>
-					<table id="mytable">
-						<thead>
-							<tr>
-								{% for col in table_columns %}
-									<th>
-										{{ col }}
-									</th>
-								{% endfor %}
-							</tr>
-						</thead>
-					</table>
-				</div>
-
-				<!-- TABLE -->
-				<script>
-					$(document).ready( function () {
-		    			var table = $('#mytable').DataTable( {
-		    				scrollX: true,
-		    				scrollY: true,
-		    				processing: true,
-		    				serverSide: true,
-		    				order: [[1, 'asc']], 
-		    				ajax: '{{ url_for("dataset_pages._get_table", dataset_id=dataset_info.setid, tablename=table_name, original = original) }}'
-		    			} );
-		    		} );
-				</script>
-			</div>
-		</div>
+		<!-- TABLE -->
+		<script>
+			$(document).ready( function () {
+    			var table = $('#mytable').DataTable( {
+    				scrollX: true,
+    				scrollY: true,
+    				processing: true,
+    				serverSide: true,
+    				order: [[1, 'asc']], 
+    				ajax: '{{ url_for("dataset_pages._get_table", dataset_id=dataset_info.setid, tablename=table_name, original = original) }}'
+    			} );
+    		} );
+		</script>
 	</div>
 
 	<script>
