@@ -89,10 +89,22 @@ class DatasetHistoryManager:
     def __backup_table(self, t_id):
         pass
 
-    def __get_latest_backup(self, t_id):
-        pass
+    def __get_recent_transformations(self, tablename):
+        """Method that returns the recent operations performed on a table."""
+        dict_cur = self.db_connection.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        query = ("SELECT * FROM system.dataset_history WHERE setid = %s AND table_name = %s LIMIT 10")
+        dict_cur.execute(query, (self.setid, tablename))
+        return dict_cur.fetchall()
 
-    def __get_edit_distance_table(self, t_id):
+    def __get_latest_backup(self, tablename):
+        recent_tx = self.__get_recent_transformations(tablename)
+        distance = 0
+        for d in recent_tx:
+            distance += self.__get_edit_distance(d['transformation_type'])
+            if distance >= 3.0:
+                return d['transformation_id']
+
+    def __get_edit_distance(self, t_id):
         """Method that calculates the edit distance defined by us to determine how dissimilar two tables are.
         This is done by looking at various transformations and rating how hard a transformation changed the
         data and how expensive that transformation was.
@@ -195,10 +207,10 @@ class DatasetHistoryManager:
         if show_all is False:
             query = ("SELECT * FROM system.dataset_history WHERE setid = %s AND (table_name = %s OR origin_table = %s)"
                      " LIMIT %s OFFSET %s")
-            dict_cur.execute(sql.SQL(query), [self.setid, table_name, table_name, nr_rows, offset])
+            cur.execute(sql.SQL(query), [self.setid, table_name, table_name, nr_rows, offset])
         else:
             query = "SELECT * FROM system.dataset_history WHERE setid = %s LIMIT %s OFFSET %s"
-            dict_cur.execute(sql.SQL(query), [self.setid, nr_rows, offset])
+            cur.execute(sql.SQL(query), [self.setid, nr_rows, offset])
 
         all_rows = dict_cur.fetchall()
         df = self.__rows_to_dataframe(all_rows)
