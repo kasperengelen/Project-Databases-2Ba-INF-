@@ -7,19 +7,12 @@ import pandas as pd
 import numpy as np
 import psycopg2
 from psycopg2 import sql
-
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import mpld3
 
-
 from Model.SQLTypeHandler import SQLTypeHandler
-
-
-
-
-
 
 class TableViewer:
     """Class that extracts table information for viewing purposes.
@@ -57,7 +50,7 @@ class TableViewer:
         data_frame = pd.read_sql(SQL_query, self.engine)
         return data_frame.columns.values.tolist()
 
-    def get_row_count(self):
+    def get_rowcount(self):
         """Simple method to get the number of rows the table viewed by TableViewer has."""
         return self.maxrows
         
