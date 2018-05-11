@@ -108,9 +108,9 @@ class QueryExecutor:
         except sqlalchemy.exc.ProgrammingError as e:
             raise self.SyntaxError(e.__context__) from e
 
-        data_frame = data_frame.replace([None] * len(tables), [np.nan] * len(tables))
-        html_table = data_frame.to_html(None, None, None, True, False, na_rep = 'NULL')
-        return html_table
+        data_frame  = data_frame.replace([None] * len(tables), [np.nan] * len(tables))
+        json_string = data_frame.to_json()
+        return json_string
 
 
     def __assert_permitted_statement(self, statement_obj):
