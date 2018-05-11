@@ -158,7 +158,7 @@ def table(dataset_id, tablename, page_nr):
             "attr_name": attr_name
         })
 
-    return render_template('dataset_pages.table.html', 
+    return render_template('dataset_pages.table_test.html', 
                                                 table_name            = tablename,
                                                 dataset_info          = dataset_info,
                                                 page_indices          = page_indices,# TODO remove
@@ -179,7 +179,6 @@ def table(dataset_id, tablename, page_nr):
                                                 perm_type             = perm_type,
                                                 current_page          = page_nr,# TODO remove
                                                 colstats              = colstats,
-                                                attributes            = attributes,
                                                 attr_form             = attr_form,
                                                 entrycount_form       = entrycount_form,# TODO remove
                                                 extract_form          = extract_form,
@@ -188,6 +187,7 @@ def table(dataset_id, tablename, page_nr):
                                                 predicatethree_form   = predicatethree_form,
                                                 downloadform          = DownloadForm(),
                                                 original              = False,
+                                                row_count             = row_count,
                                                 table_columns         = ['First', 'Second', 'Third'])
 # ENDFUNCTION
 
@@ -965,8 +965,8 @@ def _get_table(dataset_id, tablename, original):
     start_nr  = int(request.args["start"])
     row_count = int(request.args["length"])
 
-    col_nr     = int(request.args["order[column]"])
-    sort_order = request.args["order[order]"]
+    col_nr     = int(request.args["order[0][column]"])
+    sort_order = request.args["order[0][dir]"]
 
     # set current session row_count to the specified count
     session['rowcount'] = row_count

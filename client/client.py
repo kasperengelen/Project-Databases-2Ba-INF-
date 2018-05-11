@@ -35,7 +35,7 @@ def before_request():
     if not 'rowcount' in session:
         session['rowcount'] = 10
 
-    if not session['rowcount'] in [10,20,50,100,500]:
+    if not session['rowcount'] in [10,25,50,100,500]:
         session['rowcount'] = 10
 
     # make sure that user information is up to date

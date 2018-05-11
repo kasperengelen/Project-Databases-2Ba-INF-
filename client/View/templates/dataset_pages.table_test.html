@@ -76,10 +76,13 @@
 			$(document).ready( function () {
     			var table = $('#mytable').DataTable( {
     				scrollX: true,
-    				scrollY: true,
+    				scrollY: 500,
+    				scrollCollapse: true,
     				processing: true,
     				serverSide: true,
-    				order: [[1, 'asc']], 
+    				lengthMenu: [[10, 25, 50, 100, 500],[10, 25, 50, 100, 500]],
+    				pageLength: '{{ row_count }}',
+    				pagingType: "full_numbers",
     				ajax: '{{ url_for("dataset_pages._get_table", dataset_id=dataset_info.setid, tablename=table_name, original = original) }}'
     			} );
     		} );
