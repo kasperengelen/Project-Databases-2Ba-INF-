@@ -22,10 +22,11 @@ class DatasetHistoryManager:
         self.track = track
         self.entry_count = self.__initialize_entrycount()
         self.choice_dict = None
+        self.distance_dict = None
 
 
     def __initialize_entrycount(self):
-            cur = 
+            cur = self.db_connection.cursor()
             query = "SELECT COUNT(*) FROM system.dataset_history WHERE setid = %s"
             cur.execute(sql.SQL(query), [self.setid])
             return cur.fetchone()[0]
@@ -90,6 +91,12 @@ class DatasetHistoryManager:
 
     def __backup_table(self, t_id):
         pass
+
+    def __get_edit_distance_table(self, t_id):
+        """Method that calculates the edit distance defined by us to determine how dissimilar two tables are.
+        This is done by looking at various transformations and rating how hard a transformation changed the
+        data and how expensive that transformation was.
+        """
         
     #DEPRECATED
     def get_page_indices(self, display_nr, page_nr=1):
@@ -178,6 +185,11 @@ class DatasetHistoryManager:
             return True
 
 
+    def render_history_json(self, page_nr, nr_rows, show_all=True, table_name=""):
+        offset = (page_nr - 1) * nr_rows
+        cur = self.db_connection.cursor()
+
+
     def __generate_choice_dict(self):
         """Generate the dictionary used to write away history table entries."""
         if self.choice_dict is not None:
@@ -188,6 +200,34 @@ class DatasetHistoryManager:
             1  : self.__rowstring_generator1,
             2  : self.__rowstring_generator2,
             3  : self.__rowstring_generator3,
+            4  : self.__rowstring_generator4,
+            5  : self.__rowstring_generator5,
+            6  : self.__rowstring_generator6,
+            7  : self.__rowstring_generator7,
+            8  : self.__rowstring_generator8,
+            9  : self.__rowstring_generator9,
+            10 : self.__rowstring_generator10,
+            11 : self.__rowstring_generator11,
+            12 : self.__rowstring_generator12,
+            13 : self.__rowstring_generator13,
+            14 : self.__rowstring_generator14,
+            15 : self.__rowstring_generator15,
+            16 : self.__rowstring_generator16
+            }
+        
+        self.choice_dict =  choice_dict
+
+
+    def __generate_distance_dict(self):
+        """Generate the dictionary used to write away history table entries."""
+        if self.choice_dict is not None:
+            return
+        
+        choice_dict = {
+            0  : 1.0,
+            1  : 0.3,
+            2  : 0.3,
+            3  : 0.5,
             4  : self.__rowstring_generator4,
             5  : self.__rowstring_generator5,
             6  : self.__rowstring_generator6,
@@ -260,9 +300,6 @@ class DatasetHistoryManager:
         html_string = re.sub(' mytable', '" id="mytable', df.to_html(None, None, None, True, False, classes="mytable"))
         return html_string
 
-    def render_history_json(self, page_nr, nr_rows, show_all=True, table_name):
-        offset = (page_nr - 1) * nr_rows
-        cur = self.db_connection.cursor()
         
     def __is_new_table(self, dict_obj):
         """Method that checks whether a table is a new table created from a transformation."""
