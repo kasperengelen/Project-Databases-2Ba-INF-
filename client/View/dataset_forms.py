@@ -101,17 +101,3 @@ class HistoryForm(FlaskForm):
         self.options.choices.insert(0, ("__dataset", "Entire Dataset"))
     # ENDMETHOD
 # ENDCLASS
-
-class EntryCountForm(FlaskForm):
-    """Form to select how many entries need to be displayed."""
-
-    entry_count = SelectField("   ", choices = [(10, '10'), (20, '20'), (50, '50'), (100, '100'), (500, '500')], id="entry_count", coerce = lambda x : int(x))
-    cur_dataset = HiddenField('cur_dataset')
-    cur_tablename = HiddenField('cur_tablename')
-
-    def fillForm(self, dataset_id, tablename):
-        self.cur_dataset.data = dataset_id
-        self.cur_tablename.data = tablename
-    # ENDMETHOD
-
-# ENDCLASS
