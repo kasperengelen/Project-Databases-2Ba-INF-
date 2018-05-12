@@ -12,7 +12,7 @@ from Controller.DataLoader import DataLoader, FileException as DLFileExcept
 from View.dataset_forms import DatasetForm, AddUserForm, RemoveUserForm, LeaveForm, TableUploadForm, EntryCountForm, DownloadForm, TableJoinForm, AttributeForm, HistoryForm, AddUserForm, RemoveUserForm
 from View.transf_forms import FindReplaceForm, DataTypeTransform, NormalizeZScore, OneHotEncoding, RegexFindReplace, DiscretizeEqualWidth, ExtractDateTimeForm
 from View.transf_forms import DiscretizeEqualFreq, DiscretizeCustomRange, DeleteOutlier, FillNullsMean, FillNullsMedian, FillNullsCustomValue
-from View.transf_forms import PredicateFormOne, PredicateFormTwo, PredicateFormThree, DeleteAttrForm
+from View.transf_forms import PredicateFormOne, PredicateFormTwo, PredicateFormThree
 from View.form_utils import flash_errors
 
 from werkzeug.utils import secure_filename
@@ -95,7 +95,6 @@ def table(dataset_id, tablename, page_nr):
 
     # FORMS
     findrepl_form         = FindReplaceForm()
-    delete_form           = DeleteAttrForm()
     typeconversion_form   = DataTypeTransform()
     onehotencodingform    = OneHotEncoding()
     zscoreform            = NormalizeZScore()
