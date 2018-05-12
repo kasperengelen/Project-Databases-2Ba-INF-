@@ -131,7 +131,7 @@ def table(dataset_id, tablename):
     if session['userdata']['admin']:
         perm_type = 'admin'
 
-    return render_template('dataset_pages.table_test.html', 
+    return render_template('dataset_pages.table.html', 
                                                 table_name            = tablename,
                                                 dataset_info          = dataset_info,
                                                 findrepl_form         = findrepl_form,
@@ -178,6 +178,7 @@ def table_original(dataset_id, tablename):
     # get tableviewer
     tv = dataset.getTableViewer(tablename, original = True)
 
+<<<<<<< afaf7929826b4e3a0bc8751e496b97a5a9d23fb5
 <<<<<<< d9975c1fd202d41100a54e4511202bcaedfe67f5
     # CHECK IN RANGE
     if not tv.is_in_range(page_nr, row_count):# TODO remove
@@ -198,6 +199,9 @@ def table_original(dataset_id, tablename):
 =======
     return render_template('dataset_pages.table.html',
 >>>>>>> updated dataset_pages for datatables and history restruc
+=======
+    return render_template('dataset_pages.table.html',
+>>>>>>> Changed table to table_test
                                                 table_name      = tablename,
                                                 dataset_info    = dataset_info,
                                                 original        = True,
