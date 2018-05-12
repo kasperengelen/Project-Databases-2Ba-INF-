@@ -9,7 +9,7 @@
 				</br>
 				</br>
 				</br>
-				
+
 				<div>
 					<button type="button" class="btn btn-primary" data-toggle="collapse" onclick="return divClick();" data-target="#sidenav">
 		                <span class="glyphicon glyphicon-menu-hamburger"></span>
@@ -37,8 +37,14 @@
 			</div>
 			<div class="col-sm-3 text-right">
 				<div>
-					<a id="file" href="#" class="btn btn-primary" data-toggle="modal" data-target="#downloadFormModal_{{ table }}">Download</a>
+					<a id="file" href="#" class="btn btn-primary" data-toggle="modal" data-target="#downloadFormModal_{{ table }}">
+						<span class="glyphicon glyphicon-download-alt"></span></a>
 					{% include "includes/modals/_download_modal.html" %}
+					</br>
+					</br>
+					</br>
+					<a id="file" href="#" class="btn btn-primary">
+						<span class="glyphicon glyphicon-stats"></span></a>
 				</div>
 			</div>
 		</div>
@@ -105,7 +111,11 @@
 							<tr>
 								{% for col in table_columns %}
 									<th>
-										{{ col }}<a href="{{ url_for('transf_callbacks.transform_deleteattr', dataset_id=dataset_info.setid, tablename=col) }}"><span style="float: right; padding-right: 1em; color: black; " class="glyphicon glyphicon-trash"></span></a>
+										{{ col }}
+				                        <form method="post" action="{{ url_for('transf_callbacks.transform_deleteattr', dataset_id=dataset_info.setid, tablename=table_name, attrname=col) }}">
+				                        <button style="float:left;border: none; background-color: transparent;" type="submit">
+				                        	<span class="glyphicon glyphicon-trash"></span></button>
+				                        </form>
 									</th>
 								{% endfor %}
 							</tr>
