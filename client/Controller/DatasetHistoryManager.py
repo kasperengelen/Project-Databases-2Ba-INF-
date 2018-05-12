@@ -225,12 +225,13 @@ class DatasetHistoryManager:
 
 
     def render_history_json(self, offset, limit, reverse_order=False, show_all=True, table_name=""):
-        offset = (page_nr - 1) * nr_rows
+        rel_offset = offset - 1
+        rel_limit = limit - rel_offset
         cur = self.db_connection.cursor()
         if show_all is False:
             query = ("SELECT * FROM system.dataset_history WHERE setid = %s AND (table_name = %s OR origin_table = %s)"
                      " LIMIT %s OFFSET %s")
-            cur.execute(sql.SQL(query), [self.setid, table_name, table_name, nr_rows, offset])
+            cur.execute(sql.SQL(query), [self.setid, table_name, table_name, rel_limit, rel_offset])
         else:
             query = "SELECT * FROM system.dataset_history WHERE setid = %s LIMIT %s OFFSET %s"
             cur.execute(sql.SQL(query), [self.setid, nr_rows, offset])
