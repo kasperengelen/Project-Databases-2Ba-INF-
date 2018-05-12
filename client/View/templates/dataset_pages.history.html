@@ -61,30 +61,31 @@
 	        }
 
 		</style>
-		{% if table_data != None %}
+		
 			<div class="text-left">
-				{{ table_data|safe }}
+				<table id="mytable">
+					<thead>
+						<tr>
+							<th>
+								Desc
+							</th>
+							<th>
+								Date
+							</th>
+						</tr>
+					</thead>
+				</table>
 			</div>
-		{% else %}
-		<div class="text-center">
-			<h5>No history to be shown</h5>
-		</div>
-		{% endif %}
+
 		<script>
-			var table = $('#mytable').DataTable( {
-				scrollX: true,
-				scrollY: true,
-				paging: false,
-				lengthChange: false,
-				bInfo: false,
-				autoWidth: false,
-				columnDefs: [
-					{
-						targets: 1,
-						visible: true
-					}
-				]
-			});
+    			var table = $('#mytable').DataTable( {
+    				scrollX: true,
+    				scrollY: true,
+    				processing: true,
+    				serverSide: true,
+    				pageLength: {{ row_count }},
+    				ajax: '{{ url_for("dataset_pages._get_history_table", dataset_id=dataset_info.setid, tablename=table_name) }}'
+    			} );
 
     		$('#mytable tbody').on('click', 'tr td', function() {
 				var idx = table.cell(this, 1).data();

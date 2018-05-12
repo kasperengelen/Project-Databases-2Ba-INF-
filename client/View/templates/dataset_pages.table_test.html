@@ -226,7 +226,7 @@
 				<table id="mytable">
 					<thead>
 						<tr>
-							{% for attr in table_columns %}
+							{% for attr in attribute_list %}
 								<th>
 									{{ attr }}
 			                        <form method="post" id="deleteform_{{ attr }}" action="{{ url_for('transf_callbacks.transform_deleteattr', dataset_id=dataset_info.setid, tablename=table_name, attrname=attr) }}">
@@ -256,6 +256,7 @@
     				serverSide: true,
     				autoWidth: false,
     				fixedColumns: false,
+    				pageLength: {{ row_count }},
     				order: [[1, 'asc']], 
     				ajax: '{{ url_for("dataset_pages._get_table", dataset_id=dataset_info.setid, tablename=table_name, original = original) }}'
     			} );
