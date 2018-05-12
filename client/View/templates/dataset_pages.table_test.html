@@ -226,16 +226,16 @@
 				<table id="mytable">
 					<thead>
 						<tr>
-							{% for col in table_columns %}
+							{% for attr in attribute_list %}
 								<th>
-									{{ col }}
-			                        <form method="post" id="deleteform_{{ col }}" action="{{ url_for('transf_callbacks.transform_deleteattr', dataset_id=dataset_info.setid, tablename=table_name, attrname=col) }}">
+									{{ attr }}
+			                        <form method="post" id="deleteform_{{ attr }}" action="{{ url_for('transf_callbacks.transform_deleteattr', dataset_id=dataset_info.setid, tablename=table_name, attrname=attr) }}">
 			                        <a style="border: none; background-color: transparent;" onclick="submitDelete()">
 			                        	<span class="glyphicon glyphicon-trash"></span></a>
 			                        </form>
 			                        <script>
 			                        	function submitDelete() {
-			                        		document.getElementById('deleteform_{{ col }}').submit();
+			                        		document.getElementById('deleteform_{{ attr }}').submit();
 			                        	}
 			                        </script>
 								</th>
