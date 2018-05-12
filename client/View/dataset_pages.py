@@ -147,7 +147,6 @@ def table(dataset_id, tablename):
                                                 fillnullmedian_form   = fillnullmedian_form,
                                                 fillnullcustom_form   = fillnullcustom_form,
                                                 perm_type             = perm_type,
-                                                colstats              = colstats,
                                                 attr_form             = attr_form,
                                                 extract_form          = extract_form,
                                                 predicateone_form     = predicateone_form,
@@ -178,7 +177,7 @@ def table_original(dataset_id, tablename):
     # get tableviewer
     tv = dataset.getTableViewer(tablename, original = True)
 
-    return render_template('dataset_pages.table.html',
+    return render_template('dataset_pages.table_test.html',
                                                 table_name      = tablename,
                                                 dataset_info    = dataset_info,
                                                 original        = True,
@@ -831,7 +830,7 @@ def _get_table(dataset_id, tablename, original):
     start_nr   = request.args.get('start', type=int)
     row_count  = request.args.get('length', type=int)
     col_nr     = request.args.get('order[0][column]', type=int)
-    sort_order = request.args.get('order[0][dir]' type=str)
+    sort_order = request.args.get('order[0][dir]', type=str)
 
     # set current session row_count to the specified count
     session['rowcount'] = row_count
@@ -853,7 +852,7 @@ def _get_history_data(dataset_id, tablename):
     start_nr   = request.args.get('start', type=int)
     row_count  = request.args.get('length', type=int)
     col_nr     = request.args.get('order[0][column]', type=int)
-    sort_order = request.args.get('order[0][dir]' type=str)
+    sort_order = request.args.get('order[0][dir]', type=str)
 
     session['rowcount'] = row_count
 
