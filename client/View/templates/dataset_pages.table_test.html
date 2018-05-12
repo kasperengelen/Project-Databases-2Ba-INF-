@@ -103,7 +103,7 @@
 							}
 						</style>
 						
-						<ul class="nav navbar-nav sidebar collapse out" id="sidenav">
+						<ul class="nav navbar-nav sidebar collapse" id="sidenav">
 				            <li><a href="#" data-toggle="modal" data-target="#tcmodal" onclick="$('#typeconversion_newtable').hide()">
 				            	Attribute Type Conversion</a></li>
 
@@ -226,7 +226,7 @@
 				<table id="mytable">
 					<thead>
 						<tr>
-							{% for attr in attribute_list %}
+							{% for attr in table_columns %}
 								<th>
 									{{ attr }}
 			                        <form method="post" id="deleteform_{{ attr }}" action="{{ url_for('transf_callbacks.transform_deleteattr', dataset_id=dataset_info.setid, tablename=table_name, attrname=attr) }}">
