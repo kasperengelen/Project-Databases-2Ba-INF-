@@ -114,14 +114,17 @@ class DatasetHistoryManager:
         # is the original table.
         return None
 
-    def __get_transformation_list(self, start_id):
+    def __get_transformation_list(self, tablename, start_id):
         """Return a list of transformations and their arguments that need to be performed to go back
         N-1th transformation and basically emulating an undo of the Nth transformation.
         """
         cur = self.db_connection.cursor()
-        query = ('SELECT transformation_id,  FROM system.dataset_history WHERE setid = %s AND table_name = %s'
+        query = ('SELECT transformation_id, parameters  FROM system.dataset_history WHERE setid = %s AND table_name = %s'
                  'AND origin_table = %s AND transformation_id > %s')
-        #cur.execute
+        cur.execute(query, (self.setid, tablename, tablename, start_id ))
+        all_tx = cur.fetchall()
+        return all_tx
+        
         
 
     def __get_edit_distance(self, t_id):
@@ -221,7 +224,7 @@ class DatasetHistoryManager:
             return True
 
 
-    def render_history_json(self, page_nr, nr_rows, reverse_order=False, show_all=True, table_name=""):
+    def render_history_json(self, offset, limit, reverse_order=False, show_all=True, table_name=""):
         offset = (page_nr - 1) * nr_rows
         cur = self.db_connection.cursor()
         if show_all is False:

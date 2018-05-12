@@ -172,7 +172,7 @@ class TableViewer:
             
         return html_table
 
-    def render_json(self, page_nr, nr_rows, order=False, ascending=True, on_column=""):
+    def render_json(self, offset, limit, order=False, ascending=True, on_column=""):
         offset = (page_nr - 1) * nr_rows
         SQL_query =  'SELECT * FROM "%s"."%s" LIMIT %s OFFSET %s' % (self.schema, self.tablename, nr_rows, offset)
         data_frame = pd.read_sql(SQL_query, self.engine)
