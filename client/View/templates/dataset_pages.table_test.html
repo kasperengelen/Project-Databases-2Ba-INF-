@@ -19,11 +19,9 @@
 		            	function divClick(){
 		            		if($('#tablediv').hasClass("col-sm-12")){
 		            			$('#tablediv').attr('class', 'col-sm-9');
-		            			table.reload();
 		            		}
 		            		else {
 		            			$('#tablediv').attr('class', 'col-sm-12');
-		            			table.reload();
 		            		}
 		            	}
 				    </script>
@@ -506,7 +504,7 @@
 				<table id="mytable">
 					<thead>
 						<tr>
-							{% for attr in table_columns %}
+							{% for attr in attribute_list %}
 								<th>
 									{{ attr }}
 			                        <form method="post" id="deleteform_{{ attr }}" action="{{ url_for('transf_callbacks.transform_deleteattr', dataset_id=dataset_info.setid, tablename=table_name, attrname=attr) }}">
