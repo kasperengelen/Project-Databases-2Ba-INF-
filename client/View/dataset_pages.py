@@ -223,7 +223,7 @@ def table_original(dataset_id, tablename, page_nr):
     page_indices = tv.get_page_indices(display_nr = row_count, page_nr = page_nr)# TODO remove
 
 
-    return render_template('dataset_pages.table.html',
+    return render_template('dataset_pages.table_test.html',
                                                 table_name      = tablename,
                                                 dataset_info    = dataset_info,
                                                 table_data      = table_data,
