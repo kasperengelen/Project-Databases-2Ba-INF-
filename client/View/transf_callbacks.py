@@ -1,7 +1,7 @@
 from flask import Blueprint, url_for, redirect, flash, abort, request
 from View.transf_forms import DataTypeTransform, NormalizeZScore, OneHotEncoding, RegexFindReplace, DiscretizeEqualWidth, ExtractDateTimeForm
 from View.transf_forms import DiscretizeEqualFreq, DiscretizeCustomRange, DeleteOutlier, FillNullsMean, FillNullsMedian, FillNullsCustomValue
-from View.transf_forms import PredicateFormOne, PredicateFormTwo, PredicateFormThree, FindReplaceForm, DeleteAttrForm
+from View.transf_forms import PredicateFormOne, PredicateFormTwo, PredicateFormThree, FindReplaceForm
 from Controller.TableTransformer import TableTransformer
 from Controller.AccessController import require_login, require_admin
 from Controller.AccessController import require_adminperm, require_writeperm, require_readperm
@@ -105,10 +105,10 @@ def transform_extractdatetime(dataset_id, tablename):
     return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 # ENDFUNCTION
 
-@transf_callbacks.route('/dataset/<int:dataset_id>/<string:tablename>/transform/deleteattr', methods=['POST'])
+@transf_callbacks.route('/dataset/<int:dataset_id>/<string:tablename>/transform/deleteattr/<string:attrname>/', methods=['POST'])
 @require_login
 @require_writeperm
-def transform_deleteattr(dataset_id, tablename):
+def transform_deleteattr(dataset_id, tablename, attrname):
     """Callback for delete attribute transformation."""
 
     if not DatasetManager.existsID(dataset_id):
@@ -118,19 +118,16 @@ def transform_deleteattr(dataset_id, tablename):
 
     if tablename not in dataset.getTableNames():
         abort(404)
-
+    
     tv = dataset.getTableViewer(tablename)
 
-    form = DeleteAttrForm(request.form)
-    form.fillForm(tv.get_attributes())
-
-    if not form.validate():
-        flash_errors(form)
+    if not attrname in tv.get_attributes():
+        flash(message="Invalid attribute.", category="error")
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
 
     tt = dataset.getTableTransformer(tablename)
 
-    tt.delete_attribute(tablename, form.select_attr.data)
+    tt.delete_attribute(tablename, attrname)
     flash(message="Attribute deleted.", category="success")
 
     return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename, page_nr=1))

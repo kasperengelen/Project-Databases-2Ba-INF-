@@ -39,15 +39,6 @@ class RegexFindReplace(TransformationFormBase):
     # ENDMETHOD
 # ENDCLASS
 
-class DeleteAttrForm(TransformationFormBase):
-    """Form for the delete attribute/column transformation."""
-    select_attr = SelectField('Attribute', choices=[])
-
-    def fillForm(self, attrs):
-        self.select_attr.choices = [(attrname, attrname) for attrname in attrs]
-    # ENDMETHOD
-# ENDCLASS
-
 class ExtractDateTimeForm(TransformationFormBase):
     """Form for the delete attribute/column transformation."""
     select_attr = SelectField('Attribute', choices=[])
