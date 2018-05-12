@@ -131,7 +131,7 @@ def table(dataset_id, tablename):
     if session['userdata']['admin']:
         perm_type = 'admin'
 
-    return render_template('dataset_pages.table_test.html', 
+    return render_template('dataset_pages.table.html', 
                                                 table_name            = tablename,
                                                 dataset_info          = dataset_info,
                                                 findrepl_form         = findrepl_form,
@@ -177,7 +177,7 @@ def table_original(dataset_id, tablename):
     # get tableviewer
     tv = dataset.getTableViewer(tablename, original = True)
 
-    return render_template('dataset_pages.table_test.html',
+    return render_template('dataset_pages.table.html',
                                                 table_name      = tablename,
                                                 dataset_info    = dataset_info,
                                                 original        = True,
