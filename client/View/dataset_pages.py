@@ -221,14 +221,8 @@ def history(dataset_id, tablename, page_nr):
     if tablename is not None and tablename not in dataset.getTableNames():
         abort(404)
 
-    ## retrieve data from dhm
-    show_all = (tablename is None)
-
-    dhm = dataset.getHistoryManager()
-
     ## render the template with the needed variables
     return render_template('dataset_pages.history.html',
-                                            table_data      = table_data,
                                             table_name      = tablename,
                                             dataset_info    = dataset_info,
                                             history_form    = form)
@@ -851,17 +845,25 @@ def _get_table(dataset_id, tablename, original):
     return jsonify(retval)
 # ENDFUNCTION
 
-@dataset_pages.route('/dataset/<int:dataset_id>/history/dataset/_get_table')
+@dataset_pages.route('/dataset/<int:dataset_id>/history/dataset/_get_table', defaults = {'tablename': None})
 @dataset_pages.route('/dataset/<int:dataset_id>/history/table/<string:tablename>/_get_table')
 def _get_history_data(dataset_id, tablename):
     """Callback to retrieve the history table in JSON format."""
-    
+
     start_nr   = request.args.get('start', type=int)
     row_count  = request.args.get('length', type=int)
     col_nr     = request.args.get('order[0][column]', type=int)
     sort_order = request.args.get('order[0][dir]' type=str)
 
     session['rowcount'] = row_count
+
+    if tablename is None:
+        # entire dataset
+        pass
+    else:
+        # only tablename
+        pass
+
 
     retval = {
         'recordsTotal': 20,
