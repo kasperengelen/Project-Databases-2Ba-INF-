@@ -11,19 +11,23 @@
 				</br>
 				{% if original != True %}
 				<div>
-					<button type="button" class="btn btn-primary" data-hover="tooltip" title="Transformations" data-toggle="collapse" onclick="return divClick();" data-target="#sidenav">
+					<button id="transbutton" type="button" class="btn btn-primary" data-hover="tooltip" title="Transformations" data-toggle="collapse"
+						onclick="return divClick();" data-target="#sidenav">
 		                <span class="glyphicon glyphicon-menu-hamburger"></span>
 		            </button>
 		            <script>
 		            	function divClick(){
-		            		if($('#mytable').hasClass("col-sm-12")){
-		            			$('#mytable').attr('class', 'col-sm-9');
+		            		if($('#tablediv').hasClass("col-sm-12")){
+		            			$('#tablediv').attr('class', 'col-sm-9');
+		            			table.reload();
 		            		}
 		            		else {
-		            			$('#mytable').attr('class', 'col-sm-12');
+		            			$('#tablediv').attr('class', 'col-sm-12');
+		            			table.reload();
 		            		}
 		            	}
-		            </script>
+				    </script>
+		            
 				</div>
 				{% endif %}
 			</div>
@@ -188,57 +192,59 @@
 			{% endif %}
 		
 		
+			<div id="tablediv" class="col-sm-12">
+				<style>
+					table {
+		       			border-collapse: collapse;
+		        		float:left;
+						padding:3px;
+						border-radius: 3px;
+					}
 
-		<style>
-			table {
-       			border-collapse: collapse;
-        		float:left;
-				padding:3px;
-				border-radius: 3px;
-			}
+			        td, th {
+			         	font-size: 15px;
+			            text-align: left;
+			            padding: 8px;
+			        }
 
-	        td, th {
-	         	font-size: 15px;
-	            text-align: left;
-	            padding: 8px;
-	        }
+			        table thead {
+			        	background-color: lightgrey;
+			        }
 
-	        table thead {
-	        	background-color: lightgrey;
-	        }
+			        table tbody tr:nth-child(even) {
+			        	background-color: #eaeaea;
+			        }
 
-	        table tbody tr:nth-child(even) {
-	        	background-color: #eaeaea;
-	        }
+			        .dataTables_filter {
+			        	display: none;
+			        }
 
-	        .dataTables_filter {
-	        	display: none;
-	        }
+				</style>
 
-		</style>
+				<!-- TABLE -->
 
-		<!-- TABLE -->
-
-		<table id="mytable" class="col-sm-12">
-			<thead id="mytablehead">
-				<tr>
-					{% for col in table_columns %}
-						<th>
-							{{ col }}
-	                        <form method="post" id="deleteform_{{ col }}" action="{{ url_for('transf_callbacks.transform_deleteattr', dataset_id=dataset_info.setid, tablename=table_name, attrname=col) }}">
-	                        <a style="float:left;border: none; background-color: transparent;" onclick="submitDelete()">
-	                        	<span class="glyphicon glyphicon-trash"></span></a>
-	                        </form>
-	                        <script>
-	                        	function submitDelete() {
-	                        		document.getElementById('deleteform_{{ col }}').submit();
-	                        	}
-	                        </script>
-						</th>
-					{% endfor %}
-				</tr>
-			</thead>
-		</table>
+				<table id="mytable">
+					<thead>
+						<tr>
+							{% for col in table_columns %}
+								<th>
+									{{ col }}
+			                        <form method="post" id="deleteform_{{ col }}" action="{{ url_for('transf_callbacks.transform_deleteattr', dataset_id=dataset_info.setid, tablename=table_name, attrname=col) }}">
+			                        <a style="border: none; background-color: transparent;" onclick="submitDelete()">
+			                        	<span class="glyphicon glyphicon-trash"></span></a>
+			                        </form>
+			                        <script>
+			                        	function submitDelete() {
+			                        		document.getElementById('deleteform_{{ col }}').submit();
+			                        	}
+			                        </script>
+								</th>
+							{% endfor %}
+						</tr>
+					</thead>
+				</table>
+			</div>
+		</div>
 
 		<!-- TABLE -->
 		<script>
@@ -249,9 +255,14 @@
     				processing: true,
     				serverSide: true,
     				autoWidth: false,
+    				fixedColumns: false,
     				order: [[1, 'asc']], 
     				ajax: '{{ url_for("dataset_pages._get_table", dataset_id=dataset_info.setid, tablename=table_name, original = original) }}'
     			} );
+
+    			$('#transbutton').click(function(){
+    				table.ajax.reload();
+    			});
     	
     		} );
 		</script>
