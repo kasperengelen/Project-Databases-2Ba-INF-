@@ -27,6 +27,12 @@
 		</div>
 	</div>
 
+	<script>
+		$('#history_options').change(function() {
+			$('#history').submit();
+		});
+	</script>
+
 	<div class="text-center">
 		<style>
 			table {
@@ -57,12 +63,12 @@
 		</style>
 		{% if table_data != None %}
 			<div class="text-left">
-				
+				{{ table_data|safe }}
 			</div>
 		{% else %}
-			<div class="text-center">
-				<h5>No history to be shown</h5>
-			</div>
+		<div class="text-center">
+			<h5>No history to be shown</h5>
+		</div>
 		{% endif %}
 		<script>
 			var table = $('#mytable').DataTable( {
