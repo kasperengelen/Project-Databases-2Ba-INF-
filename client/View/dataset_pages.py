@@ -62,11 +62,10 @@ def home(dataset_id):
                                                       perm_type           = perm_type)
 # ENDFUNCTION
 
-@dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>', defaults = {'page_nr': 1})
-@dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>/<int:page_nr>')# TODO remove
+@dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>')
 @require_login
 @require_readperm
-def table(dataset_id, tablename, page_nr):
+def table(dataset_id, tablename):
 
     row_count = session['rowcount']
 
@@ -84,11 +83,6 @@ def table(dataset_id, tablename, page_nr):
     # get info
     dataset_info = dataset.toDict()
 
-    # TODO remove
-    # CHECK IN RANGE
-    if not tv.is_in_range(page_nr, row_count):
-        flash(message="Page out of range.", category="error")
-        return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename = tablename, page_nr = 1))
 
     # RETRIEVE ATTRIBUTES
     attrs = tv.get_attributes()
@@ -112,9 +106,6 @@ def table(dataset_id, tablename, page_nr):
     predicatethree_form   = PredicateFormThree()
     extract_form          = ExtractDateTimeForm()
 
-    entrycount_form       = EntryCountForm(entry_count = session['rowcount'])# TODO remove
-    entrycount_form.fillForm(dataset_id, tablename)# TODO remove
-
     # fill forms with data
     findrepl_form.fillForm(attrs)
     onehotencodingform.fillForm(attrs)
@@ -134,33 +125,15 @@ def table(dataset_id, tablename, page_nr):
     predicatetwo_form.fillForm(attrs)
     predicatethree_form.fillForm(attrs)
 
-    # render table
-    table_data = tv.render_table(page_nr, row_count, show_types = True)
-
-    # get indices
-    page_indices = tv.get_page_indices(display_nr = row_count, page_nr = page_nr)# TODO remove
-
     # RETRIEVE USER PERMISSION
     perm_type = DatasetPermissionsManager.getPermForUserID(dataset_id, session['userdata']['userid'])
 
     if session['userdata']['admin']:
         perm_type = 'admin'
 
-    attributes = tv.get_attributes()
-
-    # RETRIEVE COLUMN STATISTICS
-    colstats = []
-
-    for attr_name in tv.get_attributes():
-        colstats.append({
-            "attr_name": attr_name
-        })
-
     return render_template('dataset_pages.table_test.html', 
                                                 table_name            = tablename,
                                                 dataset_info          = dataset_info,
-                                                page_indices          = page_indices,# TODO remove
-                                                table_data            = table_data,
                                                 findrepl_form         = findrepl_form,
                                                 typeconversion_form   = typeconversion_form,
                                                 onehotencodingform    = onehotencodingform,
@@ -174,10 +147,8 @@ def table(dataset_id, tablename, page_nr):
                                                 fillnullmedian_form   = fillnullmedian_form,
                                                 fillnullcustom_form   = fillnullcustom_form,
                                                 perm_type             = perm_type,
-                                                current_page          = page_nr,# TODO remove
                                                 colstats              = colstats,
                                                 attr_form             = attr_form,
-                                                entrycount_form       = entrycount_form,# TODO remove
                                                 extract_form          = extract_form,
                                                 predicateone_form     = predicateone_form,
                                                 predicatetwo_form     = predicatetwo_form,
@@ -185,14 +156,13 @@ def table(dataset_id, tablename, page_nr):
                                                 downloadform          = DownloadForm(),
                                                 original              = False,
                                                 row_count             = row_count,
-                                                table_columns         = ['First', 'Second', 'Third'])
+                                                attribute_list        = tv.get_attributes())
 # ENDFUNCTION
 
-@dataset_pages.route('/dataset/<int:dataset_id>/original_table/<string:tablename>', defaults = {'page_nr': 1})
-@dataset_pages.route('/dataset/<int:dataset_id>/original_table/<string:tablename>/<int:page_nr>')# TODO remove
+@dataset_pages.route('/dataset/<int:dataset_id>/original_table/<string:tablename>')
 @require_login
 @require_readperm
-def table_original(dataset_id, tablename, page_nr):
+def table_original(dataset_id, tablename):
 
     row_count = session['rowcount']
 
@@ -208,36 +178,16 @@ def table_original(dataset_id, tablename, page_nr):
     # get tableviewer
     tv = dataset.getTableViewer(tablename, original = True)
 
-    # CHECK IN RANGE
-    if not tv.is_in_range(page_nr, row_count):# TODO remove
-        flash(message="Page out of range.", category="error")
-        return redirect(url_for('dataset_pages.table_original', dataset_id=dataset_id, tablename = tablename, page_nr = 1))
-
-    # render table
-    table_data = tv.render_table(page_nr, row_count, show_types = True)
-
-    entrycount_form = EntryCountForm(entry_count = session['rowcount'])
-    entrycount_form.fillForm(dataset_id, tablename)
-
-    # get indices
-    page_indices = tv.get_page_indices(display_nr = row_count, page_nr = page_nr)# TODO remove
-
-
     return render_template('dataset_pages.table.html',
                                                 table_name      = tablename,
                                                 dataset_info    = dataset_info,
-                                                table_data      = table_data,
-                                                entrycount_form = entrycount_form,# TODO remove
-                                                page_indices    = page_indices,# TODO remove
-                                                current_page    = page_nr,# TODO remove
                                                 original        = True,
                                                 downloadform    = DownloadForm())
 # ENDFUNCTION
 
-@dataset_pages.route('/dataset/<int:dataset_id>/history', defaults = {'page_nr': 1, 'tablename': None}, methods=["GET", "POST"])
-@dataset_pages.route('/dataset/<int:dataset_id>/history/<int:page_nr>', defaults = {'tablename': None}, methods=["GET", "POST"])# TODO remove
-@dataset_pages.route('/dataset/<int:dataset_id>/history/<string:tablename>', defaults = {'page_nr': 1}, methods=["GET", "POST"])
-@dataset_pages.route('/dataset/<int:dataset_id>/history/<string:tablename>/<int:page_nr>', methods=["GET", "POST"])# TODO remove
+# TODO check if this works
+@dataset_pages.route('/dataset/<int:dataset_id>/history/dataset', defaults = {'tablename': None}, methods=["GET", "POST"])
+@dataset_pages.route('/dataset/<int:dataset_id>/history/table/<string:tablename>', methods=["GET", "POST"])
 @require_login
 @require_readperm
 def history(dataset_id, tablename, page_nr):
@@ -276,87 +226,18 @@ def history(dataset_id, tablename, page_nr):
 
     dhm = dataset.getHistoryManager()
 
-    ## check if the page nr is in range
-    if not dhm.is_in_range(page_nr = page_nr, nr_rows = rowcount, show_all = show_all, table_name = tablename):# TODO remove
-        flash(message="Page out of range.", category="error")
-        return redirect(url_for("dataset_pages.history", dataset_id = dataset_id, tablename = tablename, page_nr = 1))
-
-    ## retrieve render code
-    table_data = dhm.render_history_table(page_nr = page_nr, nr_rows = rowcount, show_all = show_all, table_name = tablename)
-
-    ## retrieve page indices
-    page_indices = dhm.get_page_indices(display_nr = rowcount, page_nr = page_nr)# TODO remove
-
-    ## entry count
-    entrycount_form = EntryCountForm(entry_count = session['rowcount'])# TODO remove
-    entrycount_form.fillForm(dataset_id, tablename)# TODO remove
-
     ## render the template with the needed variables
     return render_template('dataset_pages.history.html',
                                             table_data      = table_data,
                                             table_name      = tablename,
                                             dataset_info    = dataset_info,
-                                            page_indices    = page_indices,# TODO remove
-                                            history_form    = form,
-                                            current_page    = page_nr,# TODO remove
-                                            entrycount_form = entrycount_form)# TODO remove
-# ENDFUNCTION
-
-# TODO remove page
-@dataset_pages.route('/dataset/set_session_rowcount/<string:redirect_type>', methods = ['POST'])
-@require_login
-def set_session_rowcount(redirect_type):
-    """Callback to set the session rowcount."""
-
-    if not redirect_type in ['CURRENT', 'ORIGINAL', 'HISTORY']:
-        abort(404)
-
-    form = EntryCountForm(request.form)
-
-    # retrieve raw data
-    dataset_id = int(form.cur_dataset.data)
-    tablename = form.cur_tablename.data
-
-    # replace empty tablename with None
-    if tablename == '':
-        tablename = None
-
-    if not DatasetManager.existsID(dataset_id):
-        abort(404)
-
-    dataset = DatasetManager.getDataset(dataset_id)
-
-    # check if dataset exists
-    if tablename is not None:
-        if redirect_type == "ORIGINAL" and not tablename in dataset.getOriginalTableNames():
-            abort(404)
-        elif redirect_type == "CURRENT" and not tablename in dataset.getTableNames():
-            abort(404)
-    # ENDIF
-
-    form.fillForm(tablename, dataset_id)
-
-    if not form.validate():
-        flash_errors(form)
-        abort(500)
-
-    if tablename is None and redirect_type != 'HISTORY':
-        abort(404)
-
-    session['rowcount'] = int(form.entry_count.data)
-
-    if redirect_type == 'CURRENT':
-        return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
-    elif redirect_type == 'ORIGINAL':
-        return redirect(url_for('dataset_pages.table_original', dataset_id = dataset_id, tablename = tablename, page_nr = 1))
-    elif redirect_type == 'HISTORY':
-        return redirect(url_for('dataset_pages.history', dataset_id = dataset_id, tablename = tablename, page_nr = 1))
+                                            history_form    = form)
 # ENDFUNCTION
 
 @dataset_pages.route('/dataset/<int:dataset_id>/jointables', methods=['POST'])
 @require_login
 @require_writeperm
-def transform_join_tables(dataset_id):
+def join_tables(dataset_id):
     """Callback for joining tables"""
 
     if not DatasetManager.existsID(dataset_id):
@@ -952,18 +833,11 @@ def _get_attr2_options(dataset_id):
 @dataset_pages.route('/dataset/<int:dataset_id>/original_table/<string:tablename>/_get_table', defaults = {'original': True})
 def _get_table(dataset_id, tablename, original):
     """Callback to retrieve the dataset in JSON format."""
-    # TODO page_nr, entry count
 
-    keys = [key for key in request.args]
-    keys.sort()
-    for key in keys:
-        print(key,":",request.args[key])
-
-    start_nr  = int(request.args["start"])
-    row_count = int(request.args["length"])
-
-    col_nr     = int(request.args["order[0][column]"])
-    sort_order = request.args["order[0][dir]"]
+    start_nr   = request.args.get('start', type=int)
+    row_count  = request.args.get('length', type=int)
+    col_nr     = request.args.get('order[0][column]', type=int)
+    sort_order = request.args.get('order[0][dir]' type=str)
 
     # set current session row_count to the specified count
     session['rowcount'] = row_count
@@ -977,7 +851,22 @@ def _get_table(dataset_id, tablename, original):
     return jsonify(retval)
 # ENDFUNCTION
 
-# @dataset_pages.route('/dataset/<int:dataset_id>/history/dataset/_get_table')
-# @dataset_pages.route('/dataset/<int:dataset_id>/history/table/<string:tablename>/_get_table')
-# def _get_history_data(dataset_id, tablename):
-#     pass
+@dataset_pages.route('/dataset/<int:dataset_id>/history/dataset/_get_table')
+@dataset_pages.route('/dataset/<int:dataset_id>/history/table/<string:tablename>/_get_table')
+def _get_history_data(dataset_id, tablename):
+    """Callback to retrieve the history table in JSON format."""
+    
+    start_nr   = request.args.get('start', type=int)
+    row_count  = request.args.get('length', type=int)
+    col_nr     = request.args.get('order[0][column]', type=int)
+    sort_order = request.args.get('order[0][dir]' type=str)
+
+    session['rowcount'] = row_count
+
+    retval = {
+        'recordsTotal': 20,
+        'recordsFiltered': 20,
+        'data': [ [str(i), str(i+1), str(i+2)] for i in range(0, int(request.args["length"]))]
+    }
+
+    return jsonify(retval)
