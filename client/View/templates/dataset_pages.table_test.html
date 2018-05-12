@@ -4,8 +4,28 @@
 	<div class="jumbotron" style="padding: 1%;">
 		<div class="row">
 			<div class="col-sm-3 text-left">
-				<a href="{{ url_for('dataset_pages.home', dataset_id=dataset_info.setid) }}"
-				class="btn btn-primary">Tables</a>
+				<a href="{{ url_for('dataset_pages.home', dataset_id=dataset_info.setid) }}" class="btn btn-primary">
+					<span class="glyphicon glyphicon-share-alt" style="-webkit-transform: scaleX(-1); transform: scaleX(-1);"></span></a>
+				</br>
+				</br>
+				</br>
+				
+				<div>
+					<button type="button" class="btn btn-primary" data-toggle="collapse" onclick="return divClick();" data-target="#sidenav">
+		                <span class="glyphicon glyphicon-menu-hamburger"></span>
+		            </button>
+		            <script>
+		            	function divClick(){
+		            		if($('#tablediv').hasClass("col-sm-12")){
+		            			$('#tablediv').attr('class', 'col-sm-9');
+
+		            		}
+		            		else {
+		            			$('#tablediv').attr('class', 'col-sm-12');
+		            		}
+		            	}
+		            </script>
+				</div>
 			</div>
 			<div class="col-sm-6 text-center">
 				<h2>{{ dataset_info.name }}</h2>
@@ -85,7 +105,7 @@
 							<tr>
 								{% for col in table_columns %}
 									<th>
-										{{ col }}
+										{{ col }}<a href="{{ url_for('transf_callbacks.transform_deleteattr', dataset_id=dataset_info.setid, tablename=col) }}"><span style="float: right; padding-right: 1em; color: black; " class="glyphicon glyphicon-trash"></span></a>
 									</th>
 								{% endfor %}
 							</tr>
@@ -104,8 +124,7 @@
 		    				order: [[1, 'asc']], 
 		    				ajax: '{{ url_for("dataset_pages._get_table", dataset_id=dataset_info.setid, tablename=table_name, original = original) }}'
 		    			} );
-
-		    			
+		    	
 		    		} );
 				</script>
 			</div>
@@ -122,32 +141,16 @@
 							padding-right: 6em; padding-left: 2em;
 						}
 					</style>
-					<ul class="nav navbar-nav sidebar">
+					
+					<ul class="nav navbar-nav sidebar collapse out" id="sidenav">
 			            <li><a href="#" data-toggle="modal" data-target="#tcmodal" onclick="$('#typeconversion_newtable').hide()">
 			            	Attribute Type Conversion</a></li>
 
-			            <li><a style="padding-right: 6em;" data-toggle="collapse" data-target="#navbar-collapse-1">
-			            	Find and Replace&nbsp;&nbsp;<span class="glyphicon glyphicon-plus"></span></a>
+			            <li><a href="#" data-toggle="modal" data-target="#predicatemodal" onclick="$('#predicate_newtable').hide()">
+			            	Delete Rows using Predicate</a></li>
 
-							<ul class="nav navbar-nav collapse sidebar" id="navbar-collapse-1">
-								<li><a style="padding-right: 6em; padding-left: 2em;" href="#"
-									data-toggle="modal" data-target="#findreplacemodal" onclick="$('#findandreplace_newtable').hide()">
-									<span class="glyphicon glyphicon-chevron-right">&nbsp;</span>Regular</a></li>
-
-								<li><a style="padding-right: 6em; padding-left: 2em;" href="#"
-									data-toggle="modal" data-target="#findreplaceregexmodal" onclick="$('#findandreplaceregex_newtable').hide()">
-									<span class="glyphicon glyphicon-chevron-right">&nbsp;</span>With Regex</a></li>
-							</ul>
-
-						</li>
-
-			            <li><a href="#" data-toggle="modal" data-target="#deleteoutliersmodal" onclick="$('#deleteoutliers_newtable').hide()">
+			             <li><a href="#" data-toggle="modal" data-target="#deleteoutliersmodal" onclick="$('#deleteoutliers_newtable').hide()">
 			            	Delete Outliers</a></li>
-
-			            <li><a href="#" data-toggle="modal" data-target="#onehotencodemodal" onclick="$('#onehotencode_newtable').hide()">
-			            	One Hot Encoding</a></li>
-
-			            <li><a href="#" data-toggle="modal" data-target="#normalizemodal" onclick="$('#normalize_newtable').hide()">Normalize By Z-Score</a></li>
 
 			            <li><a style="padding-right: 6em;" data-toggle="collapse" data-target="#navbar-collapse">
 			            	Discretize&nbsp;&nbsp;<span class="glyphicon glyphicon-plus"></span></a>
@@ -166,6 +169,10 @@
 									<span class="glyphicon glyphicon-chevron-right">&nbsp;</span>Custom Range</a></li>
 							</ul>
 						</li>
+
+						<li><a href="#" data-toggle="modal" data-target="#extractmodal" onclick="$('#extractdate_newtable').hide()">
+			            	Extract Part of Date</a></li>
+
 						<li><a style="padding-right: 6em;" data-toggle="collapse" data-target="#navbar-collapse-2">
 			            	Fill Nulls&nbsp;&nbsp;<span class="glyphicon glyphicon-plus"></span></a>
 
@@ -185,11 +192,24 @@
 							</ul>
 						</li>
 
-			            <li><a href="#" data-toggle="modal" data-target="#extractmodal" onclick="$('#extractdate_newtable').hide()">
-			            	Extract Part of Date</a></li>
+			            <li><a style="padding-right: 6em;" data-toggle="collapse" data-target="#navbar-collapse-1">
+			            	Find and Replace&nbsp;&nbsp;<span class="glyphicon glyphicon-plus"></span></a>
 
-			            <li><a href="#" data-toggle="modal" data-target="#predicatemodal" onclick="$('#predicate_newtable').hide()">
-			            	Delete Rows using Predicate</a></li>
+							<ul class="nav navbar-nav collapse sidebar" id="navbar-collapse-1">
+								<li><a style="padding-right: 6em; padding-left: 2em;" href="#"
+									data-toggle="modal" data-target="#findreplacemodal" onclick="$('#findandreplace_newtable').hide()">
+									<span class="glyphicon glyphicon-chevron-right">&nbsp;</span>Regular</a></li>
+
+								<li><a style="padding-right: 6em; padding-left: 2em;" href="#"
+									data-toggle="modal" data-target="#findreplaceregexmodal" onclick="$('#findandreplaceregex_newtable').hide()">
+									<span class="glyphicon glyphicon-chevron-right">&nbsp;</span>With Regex</a></li>
+							</ul>
+						</li>
+
+			           <li><a href="#" data-toggle="modal" data-target="#normalizemodal" onclick="$('#normalize_newtable').hide()">Normalize By Z-Score</a></li>
+
+			            <li><a href="#" data-toggle="modal" data-target="#onehotencodemodal" onclick="$('#onehotencode_newtable').hide()">
+			            	One Hot Encoding</a></li>
 			        </ul>
 				</div>
 			</nav>
@@ -208,7 +228,7 @@
 		{% include "includes/modals/_predicate_modal.html" %}
 		{% include "includes/modals/_extract_date_modal.html" %}
 		{% include "includes/modals/_normalize_modal.html" %}
-		<div class="col-sm-9">
+		<div id="tablediv" class="col-sm-12">
 			<div class="text-center">
 				<style>
 					table {
