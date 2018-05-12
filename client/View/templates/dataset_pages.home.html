@@ -186,7 +186,10 @@
 	                paging: false,
 	                info: false,
 	                lengthChange: false,
-	                autoWidth: false
+	                autoWidth: false,
+	                columnDefs: [
+	                	{"targets": 1, "orderable": false}
+	                ]
 	            } );
 	        } );
 	    </script>
@@ -196,6 +199,7 @@
 	                scrollX: true,
 	                scrollY: true,
 	                paging: false,
+	                lengthChange: false,
 	                info: false,
 	                autoWidth: false
 	            } );
