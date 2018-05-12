@@ -117,7 +117,6 @@ def table(dataset_id, tablename, page_nr):
 
     # fill forms with data
     findrepl_form.fillForm(attrs)
-    delete_form.fillForm(attrs)
     onehotencodingform.fillForm(attrs)
     zscoreform.fillForm(attrs)
     regexfindreplace_form.fillForm(attrs)
@@ -163,7 +162,6 @@ def table(dataset_id, tablename, page_nr):
                                                 page_indices          = page_indices,# TODO remove
                                                 table_data            = table_data,
                                                 findrepl_form         = findrepl_form,
-                                                delete_form           = delete_form, 
                                                 typeconversion_form   = typeconversion_form,
                                                 onehotencodingform    = onehotencodingform,
                                                 zscoreform            = zscoreform,

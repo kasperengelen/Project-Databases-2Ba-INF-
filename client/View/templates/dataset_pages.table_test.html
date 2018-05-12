@@ -4,14 +4,14 @@
 	<div class="jumbotron" style="padding: 1%;">
 		<div class="row">
 			<div class="col-sm-3 text-left">
-				<a href="{{ url_for('dataset_pages.home', dataset_id=dataset_info.setid) }}" class="btn btn-primary">
+				<a data-hover="tooltip" title="Statistics" href="{{ url_for('dataset_pages.home', dataset_id=dataset_info.setid) }}" class="btn btn-primary">
 					<span class="glyphicon glyphicon-share-alt" style="-webkit-transform: scaleX(-1); transform: scaleX(-1);"></span></a>
 				</br>
 				</br>
 				</br>
-				
+
 				<div>
-					<button type="button" class="btn btn-primary" data-toggle="collapse" onclick="return divClick();" data-target="#sidenav">
+					<button type="button" class="btn btn-primary" data-hover="tooltip" title="Transformations" data-toggle="collapse" onclick="return divClick();" data-target="#sidenav">
 		                <span class="glyphicon glyphicon-menu-hamburger"></span>
 		            </button>
 		            <script>
@@ -37,12 +37,49 @@
 			</div>
 			<div class="col-sm-3 text-right">
 				<div>
-					<a id="file" href="#" class="btn btn-primary" data-toggle="modal" data-target="#downloadFormModal_{{ table }}">Download</a>
+					<a id="file" href="#" class="btn btn-primary" data-toggle="modal" data-hover="tooltip" title="Download" data-target="#downloadFormModal_{{ table }}">
+						<span class="glyphicon glyphicon-download-alt"></span></a>
 					{% include "includes/modals/_download_modal.html" %}
+					</br>
+					</br>
+					</br>
+					<a id="file" class="btn btn-primary" data-toggle="collapse" data-hover="tooltip" title="Statistics" data-parent="#accordion" href="#view">
+						<span class="glyphicon glyphicon-stats"></span></a>
 				</div>
 			</div>
 		</div>
-	</div>    		
+	</div>  
+
+	<div class="panel-group" id="accordion">
+		      	<div id="view" class="panel-collapse collapse">
+		        	<div class="panel-body">
+		        		<div>
+			        		<div>
+			        			{% from "includes/_formhelpers.html" import render_field %}
+			        			<form name="select_attr">
+			        				{{ attr_form.hidden_tag() }}
+					        		<div class="form-group" style="width: 20%;">
+					        			{{render_field(attr_form.view_attr, class_="form-control")}}
+					        		</div>
+					        	</form>
+				        	</div>
+				       	    <div style="float: right;" id="col_stats"></div>
+				        	</br>
+				        	</br>
+				        	</br>
+				        	</br>
+				        	</br>
+				        	</br>
+				        	<div>
+					        	<div class="text-center" style="display: inline-block;" id="chart_freq"></div>
+					        	<div class="text-center" style="display: inline-block;" id="hist_num"></div>
+					        </div>
+
+					    </div>
+		        	</div>
+		      	</div>
+	
+	  	</div>	  		
 
 
 	<div class="row">
@@ -179,7 +216,11 @@
 							<tr>
 								{% for col in table_columns %}
 									<th>
-										{{ col }}<a href="{{ url_for('transf_callbacks.transform_deleteattr', dataset_id=dataset_info.setid, tablename=col) }}"><span style="float: right; padding-right: 1em; color: black; " class="glyphicon glyphicon-trash"></span></a>
+										{{ col }}
+				                        <form method="post" action="{{ url_for('transf_callbacks.transform_deleteattr', dataset_id=dataset_info.setid, tablename=table_name, attrname=col) }}">
+				                        <button style="float:left;border: none; background-color: transparent;" type="submit">
+				                        	<span class="glyphicon glyphicon-trash"></span></button>
+				                        </form>
 									</th>
 								{% endfor %}
 							</tr>
