@@ -201,7 +201,9 @@ def table_original(dataset_id, tablename):
                                                 table_name      = tablename,
                                                 dataset_info    = dataset_info,
                                                 original        = True,
-                                                downloadform    = DownloadForm())
+                                                row_count       = row_count,
+                                                downloadform    = DownloadForm(),
+                                                attribute_list  = tv.get_attributes())
 # ENDFUNCTION
 
 # TODO check if this works
@@ -209,7 +211,7 @@ def table_original(dataset_id, tablename):
 @dataset_pages.route('/dataset/<int:dataset_id>/history/table/<string:tablename>', methods=["GET", "POST"])
 @require_login
 @require_readperm
-def history(dataset_id, tablename, page_nr):
+def history(dataset_id, tablename):
     
     rowcount = session['rowcount']
 
@@ -226,12 +228,12 @@ def history(dataset_id, tablename, page_nr):
 
         if not form.validate():
             flash_errors(form)
-            return redirect(url_for("dataset_pages.history", dataset_id = dataset_id, tablename = tablename, page_nr = 1))
+            return redirect(url_for("dataset_pages.history", dataset_id = dataset_id, tablename = tablename))
         else:
             tablename = form.options.data
             if tablename == '__dataset':
                 tablename = None
-            return redirect(url_for("dataset_pages.history", dataset_id = dataset_id, tablename = tablename, page_nr = 1))
+            return redirect(url_for("dataset_pages.history", dataset_id = dataset_id, tablename = tablename))
     else:
         form = HistoryForm(options = tablename)
         form.fillForm(dataset.getTableNames())
@@ -242,9 +244,10 @@ def history(dataset_id, tablename, page_nr):
 
     ## render the template with the needed variables
     return render_template('dataset_pages.history.html',
-                                            table_name      = tablename,
-                                            dataset_info    = dataset_info,
-                                            history_form    = form)
+                                            table_name   = tablename,
+                                            dataset_info = dataset_info,
+                                            row_count    = rowcount,
+                                            history_form = form)
 # ENDFUNCTION
 
 @dataset_pages.route('/dataset/<int:dataset_id>/jointables', methods=['POST'])
@@ -866,7 +869,7 @@ def _get_table(dataset_id, tablename, original):
 
 @dataset_pages.route('/dataset/<int:dataset_id>/history/dataset/_get_table', defaults = {'tablename': None})
 @dataset_pages.route('/dataset/<int:dataset_id>/history/table/<string:tablename>/_get_table')
-def _get_history_data(dataset_id, tablename):
+def _get_history_table(dataset_id, tablename):
     """Callback to retrieve the history table in JSON format."""
 
     start_nr   = request.args.get('start', type=int)
@@ -878,16 +881,16 @@ def _get_history_data(dataset_id, tablename):
 
     if tablename is None:
         # entire dataset
-        pass
+        range_spec = range(int(request.args["length"]), 0, -1)
     else:
         # only tablename
-        pass
+        range_spec = range(0, int(request.args["length"]))
 
 
     retval = {
         'recordsTotal': 20,
         'recordsFiltered': 20,
-        'data': [ [str(i), str(i+1), str(i+2)] for i in range(0, int(request.args["length"]))]
+        'data': [ [str(i), str(i+1), str(i+2)] for i in range_spec]
     }
 
     return jsonify(retval)

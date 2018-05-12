@@ -534,6 +534,7 @@
     				serverSide: true,
     				autoWidth: false,
     				fixedColumns: false,
+    				pageLength: {{ row_count }},
     				order: [[1, 'asc']], 
     				ajax: '{{ url_for("dataset_pages._get_table", dataset_id=dataset_info.setid, tablename=table_name, original = original) }}'
     			} );
