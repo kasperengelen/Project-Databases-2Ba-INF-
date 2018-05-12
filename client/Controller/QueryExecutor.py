@@ -109,7 +109,7 @@ class QueryExecutor:
             raise self.SyntaxError(e.__context__) from e
 
         data_frame  = data_frame.replace([None] * len(tables), [np.nan] * len(tables))
-        json_string = data_frame.to_json()
+        json_string = data_frame.to_json(orient='records')
         return json_string
 
 

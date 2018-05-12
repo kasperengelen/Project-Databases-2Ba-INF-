@@ -238,7 +238,7 @@ class DatasetHistoryManager:
 
         all_rows = dict_cur.fetchall()
         df = self.__rows_to_dataframe(all_rows)
-        json_string = data_frame.to_json()
+        json_string = data_frame.to_json(orient='records')
         return json_string
 
 

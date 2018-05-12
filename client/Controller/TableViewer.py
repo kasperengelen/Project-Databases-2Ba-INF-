@@ -177,7 +177,7 @@ class TableViewer:
         rel_limit = limit - rel_offset
         SQL_query =  'SELECT * FROM "%s"."%s" LIMIT %s OFFSET %s' % (self.schema, self.tablename, rel_limit, rel_offset)
         data_frame = pd.read_sql(SQL_query, self.engine)
-        json_string = data_frame.to_json()
+        json_string = data_frame.to_json(orient='records')
         return json_string
 
     def get_numerical_histogram(self, columnname, bar_nr=10):
