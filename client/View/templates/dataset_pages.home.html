@@ -169,12 +169,44 @@
 						<tr>
 							<td><a href="{{ url_for('dataset_pages.table_original', dataset_id=dataset_info.setid, tablename=table) }}">
 							{{ table }}</a></td>
+<<<<<<< 1d748d02e4e56c107ad2f0e907bbba77a012b9ec
 						</tr>
 						{% endfor %}
 					{% endif %}
 					</tbody>
 				</table>
 				</div>
+=======
+						<td><input type="hidden" id="input" value="delete this table?">
+							<form method="post" action="{{ url_for('dataset_pages.delete_table', dataset_id=dataset_info.setid, tablename=table) }}"
+										name="delete{{ table }}" onsubmit="return check()">
+									<label for="delete{{ table }}" class="glyphicon glyphicon-remove"></label>
+									<input href="" id="delete{{ table }}" style="visibility: hidden;" type="submit"></form></td>
+					</tr>
+					{% endfor %}
+				{% endif %}
+				</tbody>
+			</table>
+			</div>
+			<div class="tab-pane" id="originalTables">
+			<table id="originaltable">
+				<thead>
+					<tr>
+						<th>Tables</th>
+					</tr>
+				</thead>
+				<tbody>
+				{% if original_table_list %}
+					{% for table in table_list %}
+					<tr>
+						<td><a href="{{ url_for('dataset_pages.table_original', dataset_id=dataset_info.setid, tablename=table) }}">
+						{{ table }}</a></td>
+					</tr>
+					{% endfor %}
+				{% endif %}
+				</tbody>
+			</table>
+>>>>>>> ?
 			</div>
 		</div>
 		<script>
@@ -185,18 +217,23 @@
 	                paging: false,
 	                info: false,
 	                lengthChange: false,
-	                autoWidth: false
+	                autoWidth: true
 	            } );
 	        } );
 	    </script>
 	    <script>
 	        $(document).ready( function () {
-	            $('#originalstable').DataTable( {
+	            $('#originaltable').DataTable( {
 	                scrollX: true,
 	                scrollY: true,
 	                paging: false,
 	                info: false,
+<<<<<<< 1d748d02e4e56c107ad2f0e907bbba77a012b9ec
 	                autoWidth: false
+=======
+	                lengthChange: false,
+	                autoWidth: true
+>>>>>>> ?
 	            } );
 	        } );
 	    </script>
