@@ -87,7 +87,13 @@ class DatasetHistoryManager:
         return param_array
 
     def __backup_table(self, t_id):
-        pass
+        cur = self.db_connection.cursor()
+        cur.execute("SELECT table_name FROM system.dataset_history WHERE transformation_id = %s", (t_id,))
+        tablename = cur.fetchone()[0]
+
+        backup = 'backup."{}"'.format(str(t_id))
+        backup_query = 'CREATE TABLE {} AS SELECT * FROM "{}"."{}"'.format(backup, str(self.setid), tablename)
+        cur.execute(backup_query)
 
     def __get_recent_transformations(self, tablename):
         """Method that returns the recent operations performed on a table."""
@@ -103,6 +109,20 @@ class DatasetHistoryManager:
             distance += self.__get_edit_distance(d['transformation_type'])
             if distance >= 3.0:
                 return d['transformation_id']
+
+        # If all the transformations haven't reached a distance of 3.0, that means the only backup
+        # is the original table.
+        return None
+
+    def __get_transformation_list(self, start_id):
+        """Return a list of transformations and their arguments that need to be performed to go back
+        N-1th transformation and basically emulating an undo of the Nth transformation.
+        """
+        cur = self.db_connection.cursor()
+        query = ('SELECT transformation_id,  FROM system.dataset_history WHERE setid = %s AND table_name = %s'
+                 'AND origin_table = %s AND transformation_id > %s')
+        #cur.execute
+        
 
     def __get_edit_distance(self, t_id):
         """Method that calculates the edit distance defined by us to determine how dissimilar two tables are.
