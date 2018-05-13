@@ -225,18 +225,18 @@ class DatasetHistoryManager:
 
 
     def render_history_json(self, offset, limit, reverse_order=False, show_all=True, table_name=""):
-        cur = self.db_connection.cursor()
+        dict_cur = self.db_connection.cursor(cursor_factory=psycopg2.extras.DictCursor)
         if show_all is False:
             query = ("SELECT * FROM system.dataset_history WHERE setid = %s AND (table_name = %s OR origin_table = %s)"
                      " LIMIT %s OFFSET %s")
-            cur.execute(sql.SQL(query), [self.setid, table_name, table_name, limit, offset])
+            dict_cur.execute(sql.SQL(query), [self.setid, table_name, table_name, limit, offset])
         else:
             query = "SELECT * FROM system.dataset_history WHERE setid = %s LIMIT %s OFFSET %s"
-            cur.execute(sql.SQL(query), [self.setid, limit, offset])
+            dict_cur.execute(sql.SQL(query), [self.setid, limit, offset])
 
         all_rows = dict_cur.fetchall()
         df = self.__rows_to_dataframe(all_rows)
-        json_string = data_frame.to_json(orient='values')
+        json_string = df.to_json(orient='values')
         return json_string
 
 
