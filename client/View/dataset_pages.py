@@ -689,8 +689,6 @@ def _get_datetype(dataset_id, tablename):
     tt = dataset.getTableTransformer(tablename)
     tv = dataset.getTableViewer(tablename)
 
-    print(type)
-
     datetypes = [(datetype, datetype) for datetype in tt.get_datetime_formats(type)]
     return jsonify(datetypes)
 
@@ -897,8 +895,6 @@ def _get_history_table(dataset_id, tablename):
         total_rowcount = dhm.get_rowcount(tablename = tablename)
         data = dhm.render_history_json(offset = start_nr, limit = row_count, show_all = False, table_name = tablename, reverse_order = (sort_order == "asc"))
     # ENDIF
-
-    print(total_rowcount)
 
     retval = {
         'recordsTotal': total_rowcount,
