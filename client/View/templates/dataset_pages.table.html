@@ -101,7 +101,7 @@
 							}
 						</style>
 						
-						<ul class="nav navbar-nav sidebar collapse" id="sidenav">
+						<ul class="nav navbar-nav sidebar collapse out" id="sidenav">
 				            <li><a href="#" data-toggle="modal" data-target="#tcmodal" onclick="$('#typeconversion_newtable').hide()">
 				            	Attribute Type Conversion</a></li>
 
@@ -172,6 +172,11 @@
 				        </ul>
 					</div>
 				</nav>
+			</div>
+			{% endif %}
+
+			{% if original != True %}
+
 				{% include "includes/modals/_type_conversion_modal.html" %}
 				{% include "includes/modals/_find_replace_modal.html" %}
 				{% include "includes/modals/_find_replace_regex_modal.html" %}
@@ -186,7 +191,7 @@
 				{% include "includes/modals/_predicate_modal.html" %}
 				{% include "includes/modals/_extract_date_modal.html" %}
 				{% include "includes/modals/_normalize_modal.html" %}
-			</div>
+
 			{% endif %}
 		
 		
