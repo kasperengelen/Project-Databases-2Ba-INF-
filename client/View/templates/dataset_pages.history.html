@@ -84,6 +84,10 @@
     				processing: true,
     				serverSide: true,
     				pageLength: {{ row_count }},
+    				order: [[0, 'desc']],
+    				columnDefs: [
+	                	{"targets": 1, "orderable": false}
+	                ],
     				ajax: '{{ url_for("dataset_pages._get_history_table", dataset_id=dataset_info.setid, tablename=table_name) }}'
     			} );
 

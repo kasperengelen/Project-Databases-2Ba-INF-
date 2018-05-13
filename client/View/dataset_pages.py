@@ -870,6 +870,11 @@ def _get_history_table(dataset_id, tablename):
 
     start_nr   = request.args.get('start', type=int)
     row_count  = request.args.get('length', type=int)
+    col_nr     = request.args.get('order[0][column]', type=int)
+    sort_order = request.args.get('order[0][dir]', type=str)
+
+    if col_nr != 0:
+        abort(500)
 
     session['rowcount'] = row_count
 
@@ -883,14 +888,14 @@ def _get_history_table(dataset_id, tablename):
         # entire dataset
 
         total_rowcount = dhm.get_rowcount()
-        data = dhm.render_history_json(offset = start_nr, limit = row_count, show_all = True)
+        data = dhm.render_history_json(offset = start_nr, limit = row_count, show_all = True, reverse_order = (sort_order == "asc"))
     else:
         # only tablename
         if not tablename in dataset.getTableNames():
             abort(404)
 
         total_rowcount = dhm.get_rowcount(tablename = tablename)
-        data = dhm.render_history_json(offset = start_nr, limit = row_count, show_all = False, table_name = tablename)
+        data = dhm.render_history_json(offset = start_nr, limit = row_count, show_all = False, table_name = tablename, reverse_order = (sort_order == "asc"))
     # ENDIF
 
     print(total_rowcount)
