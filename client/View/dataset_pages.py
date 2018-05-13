@@ -889,7 +889,7 @@ def _get_history_table(dataset_id, tablename):
         if not tablename in dataset.getTableNames():
             abort(404)
 
-        total_rowcount = dhm.get_rowcount(tablename = tablename)
+        total_rowcount = dhm.get_rowcount(table_name = tablename)
         data = dhm.render_history_json(offset = start_nr, limit = row_count, show_all = False, table_name = tablename)
     # ENDIF
 
