@@ -32,7 +32,7 @@ class DatasetHistoryManager:
 
 
     def get_rowcount(self, tablename=None):
-        """Quick methdo to get the number of rows in the dataset history table."""
+        """Quick method to get the number of rows in the dataset history table."""
         if tablename is None: #If we're viewing history of all the tables.
             return self.entry_count
 
@@ -40,7 +40,8 @@ class DatasetHistoryManager:
             cur = self.db_connection.cursor()
             query = "SELECT COUNT(*) FROM system.dataset_history WHERE setid = %s AND (table_name = %s OR origin_table = %s)"
             cur.execute(sql.SQL(query), [self.setid, tablename, tablename])
-            cur.fetchone()[0]
+            return int(cur.fetchone()[0])
+            
             
               
     def write_to_history(self, table_name, origin_table, attribute, parameters, transformation_type):
