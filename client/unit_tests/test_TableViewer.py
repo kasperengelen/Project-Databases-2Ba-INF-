@@ -89,7 +89,7 @@ class TestTableViewer(unittest.TestCase):
         self.assertEqual(all_attributes[1] in result, True)
         self.assertEqual(all_attributes[2] in result, True)
 
-    def test_is_in_range(self):
+    def depr_is_in_range(self):
         #There are 70 rows in the table
         #Check if page one with 50 rows per page is in range
         self.assertEqual(self.test_object.is_in_range(1, 50), True)

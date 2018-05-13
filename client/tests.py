@@ -12,7 +12,7 @@ from unit_tests.test_TableLoader import TestTableLoader
 
 
 if __name__ == "__main__":
-    tests = [TestDatasetPermissionsManager, TestTableLoader, TestTableTransformer, TestTransformerCopy, TestTableViewer, TestUserManager, TestDatasetManager]
+    tests = [TestTableLoader, TestTableTransformer, TestTransformerCopy, TestTableViewer]
     tester = ProjectTester(tests)
     try:
         #Let's try to establish a connection to the testing database
