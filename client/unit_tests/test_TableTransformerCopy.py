@@ -392,18 +392,18 @@ class TestTransformerCopy(unittest.TestCase):
 
 
 
-    def test_delete_outliers(self):
+    def depr_test_delete_outliers(self):
         """Test the method of TableTransformer to delete outliers. This will result in a new table."""
         #Test outliers larger than presented value
         cur = self.db_connection.cursor()
-        self.test_object.delete_outlier('test_table', 'number', True, 40, 'new_table22')
+        self.test_object.delete_outliers('test_table', 'number', True, 40, 'new_table22')
         result = self.__test_table_exists('new_table22')
         self.assertTrue(result)
         cur.execute('SELECT * FROM "0".new_table22 WHERE number > 40')
         result = cur.fetchone()
         self.assertIsNone(result)
 
-        self.test_object.delete_outlier('test_table', 'number', True, 20, 'new_table23')
+        self.test_object.delete_outliers('test_table', 'number', True, 20, 'new_table23')
         result = self.__test_table_exists('new_table23')
         self.assertTrue(result)
         cur.execute('SELECT * FROM "0".new_table23 WHERE number > 20')
@@ -411,14 +411,14 @@ class TestTransformerCopy(unittest.TestCase):
         self.assertIsNone(result)
 
         #Test outliers smaller than presented value
-        self.test_object.delete_outlier('test_table', 'number', False, -15, 'new_table24')
+        self.test_object.delete_outliers('test_table', 'number', False, -15, 'new_table24')
         result = self.__test_table_exists('new_table24')
         self.assertTrue(result)
         cur.execute('SELECT * FROM "0".new_table24 WHERE number < -15')
         result = cur.fetchone()
         self.assertIsNone(result)
 
-        self.test_object.delete_outlier('test_table', 'number', False, 0, 'new_table25')
+        self.test_object.delete_outliers('test_table', 'number', False, 0, 'new_table25')
         result = self.__test_table_exists('new_table25')
         self.assertTrue(result)
         cur.execute('SELECT * FROM "0".new_table25 WHERE number < 0')

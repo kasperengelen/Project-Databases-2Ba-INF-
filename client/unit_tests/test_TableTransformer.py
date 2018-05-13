@@ -502,27 +502,27 @@ class TestTableTransformer(unittest.TestCase):
         self.db_connection.commit()
 
 
-    def test_delete_outliers(self):
+    def depr_test_delete_outliers(self):
         """Test the method of TableTransformer to delete outliers."""
         #Test outliers larger than presented value
         cur = self.db_connection.cursor()
-        self.test_object.delete_outlier('test_table5', 'number', True, 40)
+        self.test_object.delete_outliers('test_table5', 'number', True, 40)
         cur.execute('SELECT * FROM "0".test_table5 WHERE number > 40')
         result = cur.fetchone()
         self.assertIsNone(result)
 
-        self.test_object.delete_outlier('test_table5', 'number', True, 20)
+        self.test_object.delete_outliers('test_table5', 'number', True, 20)
         cur.execute('SELECT * FROM "0".test_table5 WHERE number > 20')
         result = cur.fetchone()
         self.assertIsNone(result)
 
         #Test outliers smaller than presented value
-        self.test_object.delete_outlier('test_table5', 'number', False, -15)
+        self.test_object.delete_outliers('test_table5', 'number', False, -15)
         cur.execute('SELECT * FROM "0".test_table5 WHERE number < -15')
         result = cur.fetchone()
         self.assertIsNone(result)
 
-        self.test_object.delete_outlier('test_table5', 'number', False, 0)
+        self.test_object.delete_outliers('test_table5', 'number', False, 0)
         cur.execute('SELECT * FROM "0".test_table5 WHERE number < 0')
         result = cur.fetchone()
         self.assertIsNone(result)

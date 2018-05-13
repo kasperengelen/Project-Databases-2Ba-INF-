@@ -20,7 +20,6 @@ class TestTableViewer(unittest.TestCase):
         #Make all the connections and objects needed
         cls.db_connection = TestConnection().get_db()
         cls.engine = TestConnection().get_engine()
-
         cur = cls.db_connection.cursor()
         cur.execute('CREATE SCHEMA IF NOT EXISTS "0"')
         cls.db_connection.commit()
@@ -49,8 +48,6 @@ class TestTableViewer(unittest.TestCase):
             cur.execute(creation_query2)
             cls.db_connection.commit()
             
-        cls.test_object = tv.TableViewer(0, 'test_table', cls.engine, cls.db_connection)
-        cls.test_object2 = tv.TableViewer(0, 'stat_table', cls.engine, cls.db_connection)
             
             
         values = [('C-Corp', 1, '08/08/1997'), ('Apple', 10, '01/04/1976'), ('Microsoft', 8, '04/04/1975') , ('Nokia', 3000, '12/05/1865') , ('Samsung', 7, '01/03/1938'),
@@ -65,9 +62,11 @@ class TestTableViewer(unittest.TestCase):
 
         for v in values2:
             cur.execute('INSERT INTO "0".stat_table VALUES(%s, %s, %s)', v)
-
-        
         cls.db_connection.commit()
+
+        #Make the objects after the tables actually exist and contain data.
+        cls.test_object = tv.TableViewer(0, 'test_table', cls.engine, cls.db_connection)
+        cls.test_object2 = tv.TableViewer(0, 'stat_table', cls.engine, cls.db_connection)
 
 
     @classmethod
