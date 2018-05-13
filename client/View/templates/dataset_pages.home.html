@@ -135,7 +135,7 @@
 		    <!-- TAB PANES -->
 		    <div class="tab-content">
 				<div class="tab-pane active" id="activeTables">
-					<table id="tabletable">
+					<table id="table_tables">
 						<thead>
 							<tr>
 								<th>Tables</th>
@@ -163,7 +163,7 @@
 					</table>
 				</div>
 				<div class="tab-pane" id="originalTables">
-					<table id="originaltable" style="width: 100%;">
+					<table id="table_originaltables" style="width: 100%;">
 						<thead>
 							<tr style="width: 100%;">
 								<th>Tables</th>
@@ -186,25 +186,28 @@
 		</div>
 		<script>
 	        $(document).ready( function () {
-	            $('#tabletable').DataTable( {
+	            $('#table_tables').DataTable( {
 	                scrollX: true,
 	                scrollY: true,
 	                paging: false,
 	                info: false,
 	                lengthChange: false,
-	                autoWidth: true
+	                autoWidth: false,
+	                columnDefs: [
+	                	{"targets": 1, "orderable": false}
+	                ]
 	            } );
 	        } );
 	    </script>
 	    <script>
 	        $(document).ready( function () {
-	            $('#originaltable').DataTable( {
+	            $('#table_originaltables').DataTable( {
 	                scrollX: true,
 	                scrollY: true,
 	                paging: false,
-	                info: false,
 	                lengthChange: false,
-	                autoWidth: true
+	                info: false,
+	                autoWidth: false
 	            } );
 	        } );
 	    </script>
