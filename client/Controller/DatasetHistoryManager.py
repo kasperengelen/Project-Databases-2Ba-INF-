@@ -31,9 +31,9 @@ class DatasetHistoryManager:
             return cur.fetchone()[0]
 
 
-    def get_rowcount(self, tablename=None):
+    def get_rowcount(self, table_name=None):
         """Quick methdo to get the number of rows in the dataset history table."""
-        if tablename is None: #If we're viewing history of all the tables.
+        if table_name is None: #If we're viewing history of all the tables.
             return self.entry_count
 
         else:
