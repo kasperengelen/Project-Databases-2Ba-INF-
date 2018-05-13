@@ -893,11 +893,11 @@ def _get_history_table(dataset_id, tablename):
         data = dhm.render_history_json(offset = start_nr, limit = row_count, show_all = False, table_name = tablename)
     # ENDIF
 
-
+    print(total_rowcount)
 
     retval = {
-        'recordsTotal': 20,
-        'recordsFiltered': 20,
+        'recordsTotal': total_rowcount,
+        'recordsFiltered': total_rowcount,
         'data': json.loads(data)
     }
 
