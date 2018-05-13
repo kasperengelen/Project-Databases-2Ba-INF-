@@ -6,7 +6,7 @@ from Controller.TableViewer import TableViewer
 from Controller.TableTransformer import TableTransformer
 from Model.TableLoader import TableLoader
 from Controller.DatasetHistoryManager import DatasetHistoryManager
-from Model.DataDownloader import DataDownloader
+from Model.TableDownloader import TableDownloader
 
 class DatasetInfo:
     """Class that represents a dataset."""

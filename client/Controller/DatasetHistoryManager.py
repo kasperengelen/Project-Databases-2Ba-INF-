@@ -225,20 +225,18 @@ class DatasetHistoryManager:
 
 
     def render_history_json(self, offset, limit, reverse_order=False, show_all=True, table_name=""):
-        rel_offset = offset - 1
-        rel_limit = limit - rel_offset
         cur = self.db_connection.cursor()
         if show_all is False:
             query = ("SELECT * FROM system.dataset_history WHERE setid = %s AND (table_name = %s OR origin_table = %s)"
                      " LIMIT %s OFFSET %s")
-            cur.execute(sql.SQL(query), [self.setid, table_name, table_name, rel_limit, rel_offset])
+            cur.execute(sql.SQL(query), [self.setid, table_name, table_name, limit, offset])
         else:
             query = "SELECT * FROM system.dataset_history WHERE setid = %s LIMIT %s OFFSET %s"
-            cur.execute(sql.SQL(query), [self.setid, nr_rows, offset])
+            cur.execute(sql.SQL(query), [self.setid, limit, offset])
 
         all_rows = dict_cur.fetchall()
         df = self.__rows_to_dataframe(all_rows)
-        json_string = data_frame.to_json(orient='records')
+        json_string = data_frame.to_json(orient='values')
         return json_string
 
 

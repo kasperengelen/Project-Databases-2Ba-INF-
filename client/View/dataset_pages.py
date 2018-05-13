@@ -20,6 +20,8 @@ import os
 import shutil
 from utils import get_db
 
+import json
+
 dataset_pages = Blueprint('dataset_pages', __name__)
 
 @dataset_pages.route('/dataset/<int:dataset_id>/')
@@ -825,6 +827,8 @@ def _get_attr2_options(dataset_id):
 
 @dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>/_get_table', defaults = {'original': False})
 @dataset_pages.route('/dataset/<int:dataset_id>/original_table/<string:tablename>/_get_table', defaults = {'original': True})
+@require_login
+@require_readperm
 def _get_table(dataset_id, tablename, original):
     """Callback to retrieve the dataset in JSON format."""
 
@@ -836,10 +840,22 @@ def _get_table(dataset_id, tablename, original):
     # set current session row_count to the specified count
     session['rowcount'] = row_count
 
+    if not DatasetManager.existsID(dataset_id):
+        abort(404)
+
+    dataset = DatasetManager.getDataset(dataset_id)
+
+    if not tablename in dataset.getTableNames():
+        abort(404)
+
+    tv = dataset.getTableViewer(tablename, original = original)
+
+    data = tv.render_json(offset = start_nr, limit = row_count, order = True, ascending = (sort_order == 'asc'), on_column=col_nr)
+
     retval = {
-        'recordsTotal': 200,
-        'recordsFiltered': 200,
-        'data': [ [str(i), str(i+1), str(i+2)] for i in range(0, int(request.args["length"]))]
+        'recordsTotal':    int(tv.get_rowcount()),
+        'recordsFiltered': int(tv.get_rowcount()),
+        'data':            json.loads(data)
     }
 
     return jsonify(retval)
@@ -847,28 +863,42 @@ def _get_table(dataset_id, tablename, original):
 
 @dataset_pages.route('/dataset/<int:dataset_id>/history/dataset/_get_table', defaults = {'tablename': None})
 @dataset_pages.route('/dataset/<int:dataset_id>/history/table/<string:tablename>/_get_table')
+@require_login
+@require_readperm
 def _get_history_table(dataset_id, tablename):
     """Callback to retrieve the history table in JSON format."""
 
     start_nr   = request.args.get('start', type=int)
     row_count  = request.args.get('length', type=int)
-    col_nr     = request.args.get('order[0][column]', type=int)
-    sort_order = request.args.get('order[0][dir]', type=str)
 
     session['rowcount'] = row_count
 
+    if not DatasetManager.existsID(dataset_id):
+        abort(404)
+
+    dataset = DatasetManager.getDataset(dataset_id)
+    dhm = dataset.getHistoryManager()
+
     if tablename is None:
         # entire dataset
-        range_spec = range(int(request.args["length"]), 0, -1)
+
+        total_rowcount = dhm.get_rowcount()
+        data = dhm.render_history_json(offset = start_nr, limit = row_count, show_all = True)
     else:
         # only tablename
-        range_spec = range(0, int(request.args["length"]))
+        if not tablename in dataset.getTableNames():
+            abort(404)
+
+        total_rowcount = dhm.get_rowcount(tablename = tablename)
+        data = dhm.render_history_json(offset = start_nr, limit = row_count, show_all = False, table_name = tablename)
+    # ENDIF
+
 
 
     retval = {
         'recordsTotal': 20,
         'recordsFiltered': 20,
-        'data': [ [str(i), str(i+1), str(i+2)] for i in range_spec]
+        'data': json.loads(data)
     }
 
     return jsonify(retval)
