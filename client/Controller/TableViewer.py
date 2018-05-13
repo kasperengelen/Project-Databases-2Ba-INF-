@@ -41,7 +41,7 @@ class TableViewer:
         count_query  = 'SELECT COUNT(*) FROM "%s"."%s"' % (self.schema, self.tablename)
         query_result = pd.read_sql(count_query, self.engine)
         rowcount = query_result.iat[0, 0]
-        return rowcount
+        return int(rowcount)
         
 
     def get_attributes(self):
