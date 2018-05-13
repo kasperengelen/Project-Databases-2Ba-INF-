@@ -39,7 +39,7 @@ class DatasetHistoryManager:
         else:
             cur = self.db_connection.cursor()
             query = "SELECT COUNT(*) FROM system.dataset_history WHERE setid = %s AND (table_name = %s OR origin_table = %s)"
-            cur.execute(sql.SQL(query), [self.setid, table_name, table_name])
+            cur.execute(sql.SQL(query), [self.setid, tablename, tablename])
             cur.fetchone()[0]
             
               
@@ -236,7 +236,7 @@ class DatasetHistoryManager:
 
         all_rows = dict_cur.fetchall()
         df = self.__rows_to_dataframe(all_rows)
-        json_string = df.to_json(orient='values')
+        json_string = df.to_json(orient='values', date_format='iso')
         return json_string
 
 
