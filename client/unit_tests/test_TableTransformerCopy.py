@@ -1,5 +1,5 @@
 import unittest
-from Model.DatabaseConfiguration import TestConnection
+from Model.DatabaseConfiguration import DatabaseConfiguration
 import psycopg2
 import Controller.TableTransformer as transformer
 
@@ -13,8 +13,9 @@ class TestTransformerCopy(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.db_connection = TestConnection().get_db()
-        cls.engine = TestConnection().get_engine()
+        connection_string = "dbname='{}' user='{}' host='{}' password='{}'".format(*(DatabaseConfiguration().get_packed_values()))
+        cls.db_connection = psycopg2.connect(connection_string)
+        cls.engine = DatabaseConfiguration().get_engine()
         cls.test_object = transformer.TableTransformer('TEST', cls.db_connection, cls.engine, False, False)
         cur = cls.db_connection.cursor()
         cur.execute("CREATE SCHEMA IF NOT EXISTS \"TEST\"")

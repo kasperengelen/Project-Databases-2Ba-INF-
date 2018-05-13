@@ -2,7 +2,7 @@ import unittest
 import psycopg2
 from sqlalchemy import create_engine
 import Controller.TableViewer as tv
-from Model.DatabaseConfiguration import TestConnection
+from Model.DatabaseConfiguration import DatabaseConfiguration
 import math
 
 
@@ -18,8 +18,8 @@ class TestTableViewer(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         #Make all the connections and objects needed
-        cls.db_connection = TestConnection().get_db()
-        cls.engine = TestConnection().get_engine()
+        cls.db_connection = DatabaseConfiguration().get_db()
+        cls.engine = DatabaseConfiguration().get_engine()
         cls.test_object = tv.TableViewer('TEST', 'test_table', cls.engine, cls.db_connection)
         cls.test_object2 = tv.TableViewer('TEST', 'stat_table', cls.engine, cls.db_connection)
 
