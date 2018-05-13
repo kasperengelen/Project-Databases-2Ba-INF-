@@ -16,12 +16,12 @@ class TestTableTransformer(unittest.TestCase):
     def setUpClass(cls):
         cls.db_connection = TestConnection().get_db()
         cls.engine = TestConnection().get_engine()
-        cls.test_object = transformer.TableTransformer('TEST', cls.db_connection, cls.engine, True, False)
+        cls.test_object = transformer.TableTransformer('0', cls.db_connection, cls.engine, True, False)
         cur = cls.db_connection.cursor()
-        cur.execute("CREATE SCHEMA IF NOT EXISTS \"TEST\"")
+        cur.execute('CREATE SCHEMA IF NOT EXISTS "0"')
         cls.db_connection.commit()
         creation_query ="""
-        CREATE TABLE "TEST".test_table (
+        CREATE TABLE "0".test_table (
         string VARCHAR(255) NOT NULL,
         number INTEGER NOT NULL,
         date_string VARCHAR(255) NOT NULL,
@@ -30,15 +30,15 @@ class TestTableTransformer(unittest.TestCase):
         raw_time TIME,
         date_time TIMESTAMP);
         """
-        creation_query1 = 'CREATE TABLE "TEST".test_table1 AS TABLE "TEST".test_table'
-        creation_query2 = 'CREATE TABLE "TEST".test_table2 AS TABLE "TEST".test_table'
-        creation_query3 = 'CREATE TABLE "TEST".test_table3 AS TABLE "TEST".test_table'
-        creation_query4 = 'CREATE TABLE "TEST".test_table4 AS TABLE "TEST".test_table'
-        creation_query5 = 'CREATE TABLE "TEST".test_table5 AS TABLE "TEST".test_table'
-        creation_query6 = 'CREATE TABLE "TEST".test_table6 AS TABLE "TEST".test_table'
-        creation_query7 = 'CREATE TABLE "TEST".test_table7 AS TABLE "TEST".test_table'
-        creation_query8 = 'CREATE TABLE "TEST".test_table8 AS TABLE "TEST".test_table'
-        creation_query9 = 'CREATE TABLE "TEST".test_table9 AS TABLE "TEST".test_table'
+        creation_query1 = 'CREATE TABLE "0".test_table1 AS TABLE "0".test_table'
+        creation_query2 = 'CREATE TABLE "0".test_table2 AS TABLE "0".test_table'
+        creation_query3 = 'CREATE TABLE "0".test_table3 AS TABLE "0".test_table'
+        creation_query4 = 'CREATE TABLE "0".test_table4 AS TABLE "0".test_table'
+        creation_query5 = 'CREATE TABLE "0".test_table5 AS TABLE "0".test_table'
+        creation_query6 = 'CREATE TABLE "0".test_table6 AS TABLE "0".test_table'
+        creation_query7 = 'CREATE TABLE "0".test_table7 AS TABLE "0".test_table'
+        creation_query8 = 'CREATE TABLE "0".test_table8 AS TABLE "0".test_table'
+        creation_query9 = 'CREATE TABLE "0".test_table9 AS TABLE "0".test_table'
         #In some cases the test fails in a way that tearDownClass is not called and the table still exists
         #Sadly we can't confirm if the table is still correct, because of transformations performed on it
         try:
@@ -48,8 +48,8 @@ class TestTableTransformer(unittest.TestCase):
         except psycopg2.ProgrammingError:
             #If it was still present in the database we better drop the schema and rebuild it
             cls.db_connection.rollback()
-            cur.execute("DROP SCHEMA \"TEST\" CASCADE")
-            cur.execute("CREATE SCHEMA \"TEST\"")
+            cur.execute('DROP SCHEMA "0" CASCADE')
+            cur.execute('CREATE SCHEMA "0"')
             cls.db_connection.commit()
             cur.execute(creation_query)
             cls.db_connection.commit()
@@ -64,7 +64,7 @@ class TestTableTransformer(unittest.TestCase):
         
 
         for v in values:
-            cur.execute("INSERT INTO \"TEST\".test_table VALUES(%s, %s, %s)", v)
+            cur.execute('INSERT INTO "0".test_table VALUES(%s, %s, %s)', v)
 
         cur.execute(creation_query1)
         cur.execute(creation_query2)
@@ -81,7 +81,7 @@ class TestTableTransformer(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        cls.db_connection.cursor().execute("DROP SCHEMA \"TEST\" CASCADE")
+        cls.db_connection.cursor().execute('DROP SCHEMA "0" CASCADE')
         cls.db_connection.commit()
         #Close database connection
         cls.db_connection.close()
@@ -120,7 +120,7 @@ class TestTableTransformer(unittest.TestCase):
         self.test_object.delete_attribute('test_table', 'garbage') #Delete attribute "garbage"
         #Now the only attributes should be "string", "number", "date_time", ...
         cur = self.db_connection.cursor()
-        cur.execute("""SELECT column_name FROM information_schema.columns WHERE table_schema = 'TEST'
+        cur.execute("""SELECT column_name FROM information_schema.columns WHERE table_schema = '0'
                                               AND table_name   = 'test_table'""")
         self.db_connection.commit()
         #Fetched a list of tuples containing the tablenames
@@ -133,14 +133,14 @@ class TestTableTransformer(unittest.TestCase):
         #Assert if it is in fact not found amongst remaining tablenames
         self.assertEqual(found, False)
         #Add the column again to not interfere with other tests.
-        cur.execute('ALTER TABLE "TEST".test_table ADD COLUMN garbage CHAR(255)')
+        cur.execute('ALTER TABLE "0".test_table ADD COLUMN garbage CHAR(255)')
         self.db_connection.commit()
 
     def test_find_and_replace(self):
         """A test for the find and replace method."""
         self.test_object.find_and_replace('test_table','string', 'C-Corp', 'Replacement')
         cur = self.db_connection.cursor()
-        cur.execute("SELECT * FROM \"TEST\".test_table WHERE string = 'Replacement'")
+        cur.execute("SELECT * FROM \"0\".test_table WHERE string = 'Replacement'")
         result = cur.fetchone()
         self.assertEqual(result[1], 1)
         self.assertEqual(result[2], '08/08/1997')
@@ -153,7 +153,7 @@ class TestTableTransformer(unittest.TestCase):
         #Find a word with substring Sam and replace the whole word with Foobar
         self.test_object.find_and_replace('test_table', 'string', 'Sam', 'Foobar', False, True)
         cur = self.db_connection.cursor()
-        cur.execute("SELECT * FROM \"TEST\".test_table WHERE string = 'Foobar'")
+        cur.execute("SELECT * FROM \"0\".test_table WHERE string = 'Foobar'")
         result = cur.fetchone()
         self.assertEqual(result[1], 7)
         self.assertEqual(result[2], '01/03/1938')
@@ -161,7 +161,7 @@ class TestTableTransformer(unittest.TestCase):
         #Find a word with substring To and replace the substring only with Waka
         self.test_object.find_and_replace('test_table', 'string', 'To', 'Waka', False, False)
         cur = self.db_connection.cursor()
-        cur.execute("SELECT * FROM \"TEST\".test_table WHERE string = 'Wakashiba'")
+        cur.execute("SELECT * FROM \"0\".test_table WHERE string = 'Wakashiba'")
         result = cur.fetchone()
         #We found Toshiba but replaced To with Waka to get Wakashiba
         self.assertEqual(result[1], 8)
@@ -173,7 +173,7 @@ class TestTableTransformer(unittest.TestCase):
         #Use a regular expression to find Nintendo and replace it with SEGA
         self.test_object.regex_find_and_replace('test_table4', 'string', 'Nin.*', 'SEGA', False)
         cur = self.db_connection.cursor()
-        cur.execute("SELECT * FROM \"TEST\".test_table4 WHERE string = 'SEGA'")
+        cur.execute("SELECT * FROM \"0\".test_table4 WHERE string = 'SEGA'")
         result = cur.fetchone()
         self.assertEqual(result[1], 21)
         self.assertEqual(result[2], '23/09/1989')
@@ -181,7 +181,7 @@ class TestTableTransformer(unittest.TestCase):
         #Use the regex to find a word without case sensitivity
         self.test_object.regex_find_and_replace('test_table4', 'string', 'sega', 'SEGA', False)
         cur = self.db_connection.cursor()
-        cur.execute("SELECT * FROM \"TEST\".test_table4 WHERE string = 'SEGA'")
+        cur.execute("SELECT * FROM \"0\".test_table4 WHERE string = 'SEGA'")
         result = cur.fetchone()
         self.assertEqual(result[1], 21)
         self.assertEqual(result[2], '23/09/1989')
@@ -189,7 +189,7 @@ class TestTableTransformer(unittest.TestCase):
         #Use the regex to find a word with case sensitivity
         self.test_object.regex_find_and_replace('test_table4', 'string', 'sega', 'Ethereal', True)
         cur = self.db_connection.cursor()
-        cur.execute("SELECT * FROM \"TEST\".test_table4 WHERE string = 'Ethereal'")
+        cur.execute("SELECT * FROM \"0\".test_table4 WHERE string = 'Ethereal'")
         result = cur.fetchone()
         self.assertIsNone(result) #Shouldn't be able to find out due the difference in case
 
@@ -225,22 +225,22 @@ class TestTableTransformer(unittest.TestCase):
         #From integer to float
         self.test_object.change_attribute_type('test_table', 'number', 'FLOAT')
         cur = self.db_connection.cursor()
-        cur.execute("SELECT pg_typeof(number) FROM \"TEST\".test_table")
+        cur.execute("SELECT pg_typeof(number) FROM \"0\".test_table")
         result = cur.fetchone()[0]
         self.assertEqual(result, 'double precision')
         #From float to integer
         self.test_object.change_attribute_type('test_table', 'number', 'INTEGER')
-        cur.execute("SELECT pg_typeof(number) FROM \"TEST\".test_table")
+        cur.execute("SELECT pg_typeof(number) FROM \"0\".test_table")
         result = cur.fetchone()[0]
         self.assertEqual(result, 'integer')
         #From integer to VARCHAR(255)
         self.test_object.change_attribute_type('test_table', 'number', 'VARCHAR(255)')
-        cur.execute("SELECT pg_typeof(number) FROM \"TEST\".test_table")
+        cur.execute("SELECT pg_typeof(number) FROM \"0\".test_table")
         result = cur.fetchone()[0]
         self.assertEqual(result, 'character varying')
         #Leave database in valid testing state by returning the column to integer
         self.test_object.change_attribute_type('test_table', 'number', 'INTEGER')
-        cur.execute("SELECT pg_typeof(number) FROM \"TEST\".test_table")
+        cur.execute("SELECT pg_typeof(number) FROM \"0\".test_table")
         result = cur.fetchone()[0]
         self.assertEqual(result, 'integer')
         self.db_connection.commit()
@@ -252,34 +252,34 @@ class TestTableTransformer(unittest.TestCase):
         #Make it into a varchar for testing purposes
         self.test_object.change_attribute_type('test_table', 'number', 'VARCHAR(255)')
         self.test_object.change_attribute_type('test_table', 'number', 'INTEGER')
-        cur.execute("SELECT pg_typeof(number) FROM \"TEST\".test_table")
+        cur.execute("SELECT pg_typeof(number) FROM \"0\".test_table")
         result = cur.fetchone()[0]
         self.assertEqual(result, 'integer')
         #Reset to varchar
         self.test_object.change_attribute_type('test_table', 'number', 'VARCHAR(255)')
         self.test_object.change_attribute_type('test_table', 'number', 'FLOAT')
-        cur.execute("SELECT pg_typeof(number) FROM \"TEST\".test_table")
+        cur.execute("SELECT pg_typeof(number) FROM \"0\".test_table")
         result = cur.fetchone()[0]
         self.assertEqual(result, 'double precision')
         #Reset to varchar
         self.test_object.change_attribute_type('test_table', 'number', 'VARCHAR(255)')
         self.test_object.change_attribute_type('test_table', 'number', 'CHAR(n)', "", '255')
-        cur.execute("SELECT pg_typeof(number) FROM \"TEST\".test_table")
+        cur.execute("SELECT pg_typeof(number) FROM \"0\".test_table")
         result = cur.fetchone()[0]
         self.assertEqual(result, 'character')
         #Reset to integer
         self.test_object.change_attribute_type('test_table', 'number', 'INTEGER')
-        cur.execute("SELECT pg_typeof(number) FROM \"TEST\".test_table")
+        cur.execute("SELECT pg_typeof(number) FROM \"0\".test_table")
         result = cur.fetchone()[0]
         self.assertEqual(result, 'integer')
         #Change to varchar(30)
         self.test_object.change_attribute_type('test_table', 'number', 'VARCHAR(n)', "", '30')
-        cur.execute("SELECT pg_typeof(number) FROM \"TEST\".test_table")
+        cur.execute("SELECT pg_typeof(number) FROM \"0\".test_table")
         result = cur.fetchone()[0]
         self.assertEqual(result, 'character varying')
 
         self.test_object.change_attribute_type('test_table', 'number', 'INTEGER')
-        cur.execute("SELECT pg_typeof(number) FROM \"TEST\".test_table")
+        cur.execute("SELECT pg_typeof(number) FROM \"0\".test_table")
         result = cur.fetchone()[0]
         self.assertEqual(result, 'integer')
         self.db_connection.commit()
@@ -289,21 +289,21 @@ class TestTableTransformer(unittest.TestCase):
         cur = self.db_connection.cursor()
         #Convert date_string column to actual DATE type
         self.test_object.change_attribute_type('test_table2', 'date_string', 'DATE', 'DD/MM/YYYY')
-        cur.execute('SELECT pg_typeof(date_string) FROM "TEST".test_table2')
+        cur.execute('SELECT pg_typeof(date_string) FROM "0".test_table2')
         result = cur.fetchone()[0]
         self.assertEqual(result, 'date')
         self.db_connection.commit()
         #Convert the same column to a timestamp
         self.test_object.change_attribute_type('test_table3', 'date_string', 'TIMESTAMP', 'DD/MM/YYYY TIME')
-        cur.execute('SELECT pg_typeof(date_string) FROM "TEST".test_table3')
+        cur.execute('SELECT pg_typeof(date_string) FROM "0".test_table3')
         result = cur.fetchone()[0]
         self.assertEqual(result, 'timestamp without time zone')
         self.db_connection.commit()
         #Set date_string of another to a time string and try to convert it
-        query_1 = 'UPDATE "TEST".test_table5 SET date_string = \'08:42 PM\' WHERE date_string is NOT NULL'
+        query_1 = 'UPDATE "0".test_table5 SET date_string = \'08:42 PM\' WHERE date_string is NOT NULL'
         cur.execute(query_1)
         self.test_object.change_attribute_type('test_table5', 'date_string', 'TIME', 'HH12:MI AM/PM')
-        cur.execute('SELECT pg_typeof(date_string) FROM "TEST".test_table5')
+        cur.execute('SELECT pg_typeof(date_string) FROM "0".test_table5')
         result = cur.fetchone()[0]
         self.assertEqual(result, 'time without time zone')
         self.db_connection.commit()
@@ -313,11 +313,11 @@ class TestTableTransformer(unittest.TestCase):
     def test_datetime_extraction(self):
         """This one is for testing the extraction of parts of the date/time done by TableTransformer"""
         cur = self.db_connection.cursor()
-        cur.execute('ALTER TABLE "TEST".test_table8 ALTER COLUMN date_string TYPE DATE USING to_date(date_string , \'DD/MM/YYYY\')')
+        cur.execute('ALTER TABLE "0".test_table8 ALTER COLUMN date_string TYPE DATE USING to_date(date_string , \'DD/MM/YYYY\')')
         self.test_object.extract_part_of_date('test_table8', 'date_string', 'MONTH')
         #Get all the column names for the table
         query = ("SELECT column_name FROM information_schema.columns "
-               "WHERE table_schema = 'TEST' AND table_name =  'test_table8'")
+               "WHERE table_schema = '0' AND table_name =  'test_table8'")
         cur.execute(query)
         all_columns = cur.fetchall()
         result = False
@@ -328,7 +328,7 @@ class TestTableTransformer(unittest.TestCase):
 
         self.assertTrue(result)
 
-        query = "SELECT * FROM \"TEST\".test_table8 WHERE number = 21 AND date_string_part = 'September'"
+        query = "SELECT * FROM \"0\".test_table8 WHERE number = 21 AND date_string_part = 'September'"
         cur.execute(query)
         result = cur.fetchone()
         self.assertIsNotNone(result)
@@ -343,7 +343,7 @@ class TestTableTransformer(unittest.TestCase):
         self.test_object.one_hot_encode('test_table1', 'string')
         #Query to get all columns from the encoded table
         query = ("SELECT column_name FROM information_schema.columns "
-                 "WHERE table_schema = 'TEST' AND table_name =  'test_table1'")
+                 "WHERE table_schema = '0' AND table_name =  'test_table1'")
         cur.execute(query)
         all_columns  = cur.fetchall()
         #This should be all the columns
@@ -377,7 +377,7 @@ class TestTableTransformer(unittest.TestCase):
         """Test the method that normalizes the values of a column by using the z-score."""
         cur = self.db_connection.cursor()
         self.test_object.normalize_using_zscore('test_table', 'number')
-        query = 'SELECT number FROM "TEST".test_table'
+        query = 'SELECT number FROM "0".test_table'
         cur.execute(query)
         self.db_connection.commit()
         all_values = cur.fetchall()
@@ -399,7 +399,7 @@ class TestTableTransformer(unittest.TestCase):
         """Test the equidistant discretization method."""
         cur = self.db_connection.cursor()
         self.test_object.discretize_using_equal_width('test_table2', 'number', 4)
-        cur.execute('SELECT DISTINCT number_categorical FROM "TEST".test_table2')
+        cur.execute('SELECT DISTINCT number_categorical FROM "0".test_table2')
         self.db_connection.commit()
         all_values = cur.fetchall()
         all_values = [x[0] for x in all_values]
@@ -409,15 +409,15 @@ class TestTableTransformer(unittest.TestCase):
         expected_values = ['[-17 , -2[', '[-2 , 13[', '[13 , 28[', '[28 , 43[']
         self.assertEqual(all_values, expected_values)
         #Let's check if the values are actually being put in the correct buckets
-        cur.execute('SELECT * FROM "TEST".test_table2 WHERE number < -2 AND number > -17 '
+        cur.execute('SELECT * FROM "0".test_table2 WHERE number < -2 AND number > -17 '
                     'AND number_categorical <> \'[-17 , -2[\'')
         result = cur.fetchone()
         self.assertIsNone(result)
-        cur.execute('SELECT * FROM "TEST".test_table2 WHERE number < 13 AND number > -2 '
+        cur.execute('SELECT * FROM "0".test_table2 WHERE number < 13 AND number > -2 '
                     'AND number_categorical <> \'[-2 , 13[\'')
         result = cur.fetchone()
         self.assertIsNone(result)
-        cur.execute('SELECT * FROM "TEST".test_table2 WHERE number < 43 AND number > 28 '
+        cur.execute('SELECT * FROM "0".test_table2 WHERE number < 43 AND number > 28 '
                     'AND number_categorical <> \'[28 , 43[\'')
         result = cur.fetchone()
         self.assertIsNone(result)
@@ -428,7 +428,7 @@ class TestTableTransformer(unittest.TestCase):
         """Test the equifrequent discretization method."""
         cur = self.db_connection.cursor()
         self.test_object.discretize_using_equal_frequency('test_table3', 'number')
-        cur.execute('SELECT DISTINCT number_categorical FROM "TEST".test_table3')
+        cur.execute('SELECT DISTINCT number_categorical FROM "0".test_table3')
         self.db_connection.commit()
         all_values = cur.fetchall()
         all_values = [x[0] for x in all_values]
@@ -438,15 +438,15 @@ class TestTableTransformer(unittest.TestCase):
         self.assertEqual(len(all_values), 4)
         self.assertEqual(all_values, expected_values)
         #Let's check if the values are actually being put in the correct buckets
-        cur.execute('SELECT * FROM "TEST".test_table3 WHERE number < -4 AND number > -17 '
+        cur.execute('SELECT * FROM "0".test_table3 WHERE number < -4 AND number > -17 '
                     'AND number_categorical <> \'[-17 , -4[\'')
         result = cur.fetchone()
         self.assertIsNone(result)
-        cur.execute('SELECT * FROM "TEST".test_table3 WHERE number < 9 AND number > 4 '
+        cur.execute('SELECT * FROM "0".test_table3 WHERE number < 9 AND number > 4 '
                     'AND number_categorical <> \'[4 , 9[\'')
         result = cur.fetchone()
         self.assertIsNone(result)
-        cur.execute('SELECT * FROM "TEST".test_table3 WHERE number < 42 AND number > 15 '
+        cur.execute('SELECT * FROM "0".test_table3 WHERE number < 42 AND number > 15 '
                     'AND number_categorical <> \'[15 , 42[\'')
         result = cur.fetchone()
         self.assertIsNone(result)
@@ -459,7 +459,7 @@ class TestTableTransformer(unittest.TestCase):
         cur = self.db_connection.cursor()
         ranges = [-17, -2, 13, 28, 43]
         self.test_object.discretize_using_custom_ranges('test_table4', 'number', ranges)
-        cur.execute('SELECT DISTINCT number_categorical FROM "TEST".test_table4')
+        cur.execute('SELECT DISTINCT number_categorical FROM "0".test_table4')
         self.db_connection.commit()
         all_values = cur.fetchall()
         all_values = [x[0] for x in all_values]
@@ -469,11 +469,11 @@ class TestTableTransformer(unittest.TestCase):
         self.assertEqual(len(all_values), 4)
         self.assertEqual(all_values, expected_values)
         #Let's check if the values are actually being put in the correct buckets
-        cur.execute('SELECT * FROM "TEST".test_table4 WHERE number < -2 AND number > -17 '
+        cur.execute('SELECT * FROM "0".test_table4 WHERE number < -2 AND number > -17 '
                     'AND number_categorical <> \'[-17 , -2[\'')
         result = cur.fetchone()
         self.assertIsNone(result)
-        cur.execute('SELECT * FROM "TEST".test_table4 WHERE number < 43 AND number > 28 '
+        cur.execute('SELECT * FROM "0".test_table4 WHERE number < 43 AND number > 28 '
                     'AND number_categorical <> \'[28 , 43[\'')
         result = cur.fetchone()
         self.assertIsNone(result)
@@ -482,7 +482,7 @@ class TestTableTransformer(unittest.TestCase):
         #Let's simulate equifrequent discretization with our custom bins.
         ranges = [-17, 4, 9, 15, 42]
         self.test_object.discretize_using_custom_ranges('test_table4', 'number', ranges)
-        cur.execute('SELECT DISTINCT number_categorical_1 FROM "TEST".test_table4')
+        cur.execute('SELECT DISTINCT number_categorical_1 FROM "0".test_table4')
         self.db_connection.commit()
         all_values = cur.fetchall()
         all_values = [x[0] for x in all_values]
@@ -491,11 +491,11 @@ class TestTableTransformer(unittest.TestCase):
         #There should be 4 buckets
         self.assertEqual(len(all_values), 4)
         self.assertEqual(all_values, expected_values)
-        cur.execute('SELECT * FROM "TEST".test_table4 WHERE number < -4 AND number > -17 '
+        cur.execute('SELECT * FROM "0".test_table4 WHERE number < -4 AND number > -17 '
                     'AND number_categorical_1 <> \'[-17 , -4[\'')
         result = cur.fetchone()
         self.assertIsNone(result)
-        cur.execute('SELECT * FROM "TEST".test_table4 WHERE number < 42 AND number > 15 '
+        cur.execute('SELECT * FROM "0".test_table4 WHERE number < 42 AND number > 15 '
                     'AND number_categorical_1 <> \'[15 , 42[\'')
         result = cur.fetchone()
         self.assertIsNone(result)
@@ -507,23 +507,23 @@ class TestTableTransformer(unittest.TestCase):
         #Test outliers larger than presented value
         cur = self.db_connection.cursor()
         self.test_object.delete_outlier('test_table5', 'number', True, 40)
-        cur.execute('SELECT * FROM "TEST".test_table5 WHERE number > 40')
+        cur.execute('SELECT * FROM "0".test_table5 WHERE number > 40')
         result = cur.fetchone()
         self.assertIsNone(result)
 
         self.test_object.delete_outlier('test_table5', 'number', True, 20)
-        cur.execute('SELECT * FROM "TEST".test_table5 WHERE number > 20')
+        cur.execute('SELECT * FROM "0".test_table5 WHERE number > 20')
         result = cur.fetchone()
         self.assertIsNone(result)
 
         #Test outliers smaller than presented value
         self.test_object.delete_outlier('test_table5', 'number', False, -15)
-        cur.execute('SELECT * FROM "TEST".test_table5 WHERE number < -15')
+        cur.execute('SELECT * FROM "0".test_table5 WHERE number < -15')
         result = cur.fetchone()
         self.assertIsNone(result)
 
         self.test_object.delete_outlier('test_table5', 'number', False, 0)
-        cur.execute('SELECT * FROM "TEST".test_table5 WHERE number < 0')
+        cur.execute('SELECT * FROM "0".test_table5 WHERE number < 0')
         result = cur.fetchone()
         self.assertIsNone(result)
         self.db_connection.commit()
@@ -533,18 +533,18 @@ class TestTableTransformer(unittest.TestCase):
         """Test the method of TableTransformer that fills null values with the mean."""
         cur = self.db_connection.cursor()
         #Set a value to null
-        cur.execute('UPDATE "TEST".test_table6 SET number = null  WHERE number > 40')
+        cur.execute('UPDATE "0".test_table6 SET number = null  WHERE number > 40')
         self.test_object.fill_nulls_with_mean('test_table6', 'number')
         #Test if it's really set to null
-        cur.execute('SELECT * FROM "TEST".test_table6 WHERE number > 40')
+        cur.execute('SELECT * FROM "0".test_table6 WHERE number > 40')
         result = cur.fetchone()
         self.assertIsNone(result)
         #Test whether any nulls are left open
-        cur.execute('SELECT * FROM "TEST".test_table6 WHERE number is null')
+        cur.execute('SELECT * FROM "0".test_table6 WHERE number is null')
         result = cur.fetchone()
         self.assertIsNone(result)
         #The mean by excluding values > 40 is 10 (cast to int), let's check if the value is here
-        cur.execute('SELECT * FROM "TEST".test_table6 WHERE number = 10 AND string = \'Elevate ltd\'')
+        cur.execute('SELECT * FROM "0".test_table6 WHERE number = 10 AND string = \'Elevate ltd\'')
         result = cur.fetchall()
         self.assertIsNotNone(result)
         self.assertEqual(1,1)
@@ -553,18 +553,18 @@ class TestTableTransformer(unittest.TestCase):
         """Test the method of TableTransformer that fills null values with the median."""
         cur = self.db_connection.cursor()
         #Set a value to null
-        cur.execute('UPDATE "TEST".test_table7 SET number = null  WHERE number > 40')
+        cur.execute('UPDATE "0".test_table7 SET number = null  WHERE number > 40')
         self.test_object.fill_nulls_with_median('test_table7', 'number')
         #Test if it's really set to null
-        cur.execute('SELECT * FROM "TEST".test_table7 WHERE number > 40')
+        cur.execute('SELECT * FROM "0".test_table7 WHERE number > 40')
         result = cur.fetchone()
         self.assertIsNone(result)
         #Test whether any nulls are left open
-        cur.execute('SELECT * FROM "TEST".test_table6 WHERE number is null')
+        cur.execute('SELECT * FROM "0".test_table6 WHERE number is null')
         result = cur.fetchone()
         self.assertIsNone(result)
         #The median by excluding values > 40 is 9, let's check if the value is here
-        cur.execute('SELECT * FROM "TEST".test_table7 WHERE number = 9 AND string = \'Elevate ltd\'')
+        cur.execute('SELECT * FROM "0".test_table7 WHERE number = 9 AND string = \'Elevate ltd\'')
         result = cur.fetchall()
         self.assertIsNotNone(result)
 
@@ -573,10 +573,10 @@ class TestTableTransformer(unittest.TestCase):
         """Test the method of TableTransformer that fills null values with a custom value."""
         cur = self.db_connection.cursor()
         #Set a value to null
-        cur.execute('UPDATE "TEST".test_table7 SET number = null  WHERE number < -16')
+        cur.execute('UPDATE "0".test_table7 SET number = null  WHERE number < -16')
         self.test_object.fill_nulls_with_custom_value('test_table7', 'number', 10000)
         #The value we used should correspond to the row with string = 'Dummy'
-        cur.execute('SELECT * FROM "TEST".test_table7 WHERE number = 10000 AND string = \'Dummy\'')
+        cur.execute('SELECT * FROM "0".test_table7 WHERE number = 10000 AND string = \'Dummy\'')
         result = cur.fetchall()
         self.assertIsNotNone(result)
 
@@ -586,14 +586,14 @@ class TestTableTransformer(unittest.TestCase):
         cur = self.db_connection.cursor()
         predicate1 = ['string', '=', 'C-Corp']
         self.test_object.delete_rows_using_predicate_logic('test_table9', predicate1)
-        query = "SELECT * FROM \"TEST\".test_table9 WHERE string = 'C-Corp'"
+        query = "SELECT * FROM \"0\".test_table9 WHERE string = 'C-Corp'"
         cur.execute(query)
         result = cur.fetchone()
         self.assertIsNone(result)
 
         predicate2 = ['string', '=', 'Nokia', 'AND', 'number', '=', '18', 'AND', 'date_string', '!=', '01/01/2001']
         self.test_object.delete_rows_using_predicate_logic('test_table9', predicate2)
-        query = "SELECT * FROM \"TEST\".test_table9 WHERE string = 'Nokia' AND number = 18"
+        query = "SELECT * FROM \"0\".test_table9 WHERE string = 'Nokia' AND number = 18"
         cur.execute(query)
         result = cur.fetchone()
         self.assertIsNone(result)

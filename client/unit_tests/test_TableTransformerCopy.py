@@ -15,17 +15,17 @@ class TestTransformerCopy(unittest.TestCase):
     def setUpClass(cls):
         cls.db_connection = TestConnection().get_db()
         cls.engine = TestConnection().get_engine()
-        cls.test_object = transformer.TableTransformer('TEST', cls.db_connection, cls.engine, False, False)
+        cls.test_object = transformer.TableTransformer(0, cls.db_connection, cls.engine, False, False)
         cur = cls.db_connection.cursor()
-        cur.execute("CREATE SCHEMA IF NOT EXISTS \"TEST\"")
+        cur.execute('CREATE SCHEMA IF NOT EXISTS "0"')
         cls.db_connection.commit()
-        creation_query = """CREATE TABLE "TEST".test_table (
+        creation_query = """CREATE TABLE "0".test_table (
         string VARCHAR(255) NOT NULL,
         number INTEGER NOT NULL,
         date_time VARCHAR(255) NOT NULL,
         garbage VARCHAR(255));"""
-        creation_query1 = 'CREATE TABLE "TEST".test_table1 AS TABLE "TEST".test_table'
-        creation_query2 = 'CREATE TABLE "TEST".test_table2 AS TABLE "TEST".test_table'
+        creation_query1 = 'CREATE TABLE "0".test_table1 AS TABLE "0".test_table'
+        creation_query2 = 'CREATE TABLE "0".test_table2 AS TABLE "0".test_table'
         #In some cases the test fails in a way that tearDownClass is not called and the table still exists
         #Sadly we can't confirm if the table is still correct, because of transformations performed on it
         try:
@@ -34,8 +34,8 @@ class TestTransformerCopy(unittest.TestCase):
         except psycopg2.ProgrammingError:
             #If it was still present in the database we better drop the schema and rebuild it
             cls.db_connection.rollback()
-            cur.execute("DROP SCHEMA \"TEST\" CASCADE")
-            cur.execute("CREATE SCHEMA \"TEST\"")
+            cur.execute('DROP SCHEMA "0" CASCADE')
+            cur.execute('CREATE SCHEMA "0"')
             cls.db_connection.commit()
             cur.execute(creation_query)
             cls.db_connection.commit()
@@ -48,27 +48,27 @@ class TestTransformerCopy(unittest.TestCase):
                   ('Nintendo', 21, '23/09/1989'), ('Elevate ltd', 41, '08/08/1997'), ('Dummy', -17, '01/07/1975')]
 
         for v in values:
-            cur.execute("INSERT INTO \"TEST\".test_table VALUES(%s, %s, %s)", v)
+            cur.execute('INSERT INTO "0".test_table VALUES(%s, %s, %s)', v)
 
         cur.execute(creation_query1)
         cur.execute(creation_query2)
-        cur.execute('UPDATE "TEST".test_table1 SET number = null  WHERE number > 40')
+        cur.execute('UPDATE "0".test_table1 SET number = null  WHERE number > 40')
 
         
         cls.db_connection.commit()
 
     @classmethod
     def tearDownClass(cls):
-        cls.db_connection.cursor().execute("DROP SCHEMA \"TEST\" CASCADE")
+        cls.db_connection.cursor().execute('DROP SCHEMA "0" CASCADE')
         cls.db_connection.commit()
         #Close database connection
         cls.db_connection.close()
 
 
     def __test_table_exists(self, tablename):
-        """Test whether a table exists in the TEST schema after performing a operation that should create new table in the schema."""
+        """Test whether a table exists in the test schema after performing a operation that should create new table in the schema."""
         cur = self.db_connection.cursor()
-        cur.execute('SELECT table_name FROM information_schema.columns WHERE table_schema = %s AND table_name = %s ', ['TEST', tablename])
+        cur.execute('SELECT table_name FROM information_schema.columns WHERE table_schema = %s AND table_name = %s ', ['0', tablename])
         result = cur.fetchone()
         if result is None:
             return False
@@ -84,7 +84,7 @@ class TestTransformerCopy(unittest.TestCase):
         result = self.__test_table_exists('new_table1')
         self.assertTrue(result)
         #Let's see if we can find the deleted attribute
-        cur.execute("""SELECT column_name FROM information_schema.columns WHERE table_schema = 'TEST'
+        cur.execute("""SELECT column_name FROM information_schema.columns WHERE table_schema = '0'
                         AND table_name   = 'new_table1'""")
         tablenames = cur.fetchall()
         found = False
@@ -103,7 +103,7 @@ class TestTransformerCopy(unittest.TestCase):
         result = self.__test_table_exists('new_table2')
         self.assertTrue(result)
         cur = self.db_connection.cursor()
-        cur.execute("SELECT * FROM \"TEST\".new_table2 WHERE string = 'Replacement'")
+        cur.execute("SELECT * FROM \"0\".new_table2 WHERE string = 'Replacement'")
         result = cur.fetchone()
         self.assertEqual(result[1], 1)
         self.assertEqual(result[2], '08/08/1997')
@@ -117,7 +117,7 @@ class TestTransformerCopy(unittest.TestCase):
         result = self.__test_table_exists('new_table3')
         self.assertTrue(result)
         cur = self.db_connection.cursor()
-        cur.execute("SELECT * FROM \"TEST\".new_table3 WHERE string = 'Foobar'")
+        cur.execute("SELECT * FROM \"0\".new_table3 WHERE string = 'Foobar'")
         result = cur.fetchone()
         self.assertEqual(result[1], 7)
         self.assertEqual(result[2], '01/03/1938')
@@ -127,7 +127,7 @@ class TestTransformerCopy(unittest.TestCase):
         result = self.__test_table_exists('new_table1')
         self.assertTrue(result)
         cur = self.db_connection.cursor()
-        cur.execute("SELECT * FROM \"TEST\".new_table4 WHERE string = 'Wakashiba'")
+        cur.execute("SELECT * FROM \"0\".new_table4 WHERE string = 'Wakashiba'")
         result = cur.fetchone()
         #We found Toshiba but replaced To with Waka to get Wakashiba
         self.assertEqual(result[1], 8)
@@ -142,7 +142,7 @@ class TestTransformerCopy(unittest.TestCase):
         result = self.__test_table_exists('new_table5')
         self.assertTrue(result)
         cur = self.db_connection.cursor()
-        cur.execute("SELECT * FROM \"TEST\".new_table5 WHERE string = 'SEGA'")
+        cur.execute("SELECT * FROM \"0\".new_table5 WHERE string = 'SEGA'")
         result = cur.fetchone()
         self.assertEqual(result[1], 21)
         self.assertEqual(result[2], '23/09/1989')
@@ -152,7 +152,7 @@ class TestTransformerCopy(unittest.TestCase):
         result = self.__test_table_exists('new_table6')
         self.assertTrue(result)
         cur = self.db_connection.cursor()
-        cur.execute("SELECT * FROM \"TEST\".new_table6 WHERE string = 'SEGA'")
+        cur.execute("SELECT * FROM \"0\".new_table6 WHERE string = 'SEGA'")
         result = cur.fetchone()
         self.assertEqual(result[1], 21)
         self.assertEqual(result[2], '23/09/1989')
@@ -162,7 +162,7 @@ class TestTransformerCopy(unittest.TestCase):
         result = self.__test_table_exists('new_table7')
         self.assertTrue(result)
         cur = self.db_connection.cursor()
-        cur.execute("SELECT * FROM \"TEST\".new_table7 WHERE string = 'Ethereal'")
+        cur.execute("SELECT * FROM \"0\".new_table7 WHERE string = 'Ethereal'")
         result = cur.fetchone()
         self.assertIsNone(result) #Shouldn't be able to find out due the difference in case"""
 
@@ -174,21 +174,21 @@ class TestTransformerCopy(unittest.TestCase):
         result = self.__test_table_exists('new_table8')
         self.assertTrue(result)
         cur = self.db_connection.cursor()
-        cur.execute("SELECT pg_typeof(number) FROM \"TEST\".new_table8")
+        cur.execute("SELECT pg_typeof(number) FROM \"0\".new_table8")
         result = cur.fetchone()[0]
         self.assertEqual(result, 'double precision')
         #From float to integer
         self.test_object.change_attribute_type('new_table8', 'number', 'INTEGER', new_name='new_table9')
         result = self.__test_table_exists('new_table9')
         self.assertTrue(result)
-        cur.execute("SELECT pg_typeof(number) FROM \"TEST\".new_table9")
+        cur.execute("SELECT pg_typeof(number) FROM \"0\".new_table9")
         result = cur.fetchone()[0]
         self.assertEqual(result, 'integer')
         #From integer to VARCHAR(255)
         self.test_object.change_attribute_type('test_table', 'number', 'VARCHAR(255)', new_name='new_table10')
         result = self.__test_table_exists('new_table10')
         self.assertTrue(result)
-        cur.execute("SELECT pg_typeof(number) FROM \"TEST\".new_table10")
+        cur.execute("SELECT pg_typeof(number) FROM \"0\".new_table10")
         result = cur.fetchone()[0]
         self.assertEqual(result, 'character varying')
 
@@ -200,14 +200,14 @@ class TestTransformerCopy(unittest.TestCase):
         self.test_object.change_attribute_type('test_table', 'number', 'VARCHAR(255)', new_name='new_table11')
         result = self.__test_table_exists('new_table11')
         self.assertTrue(result)
-        cur.execute("SELECT pg_typeof(number) FROM \"TEST\".new_table11")
+        cur.execute("SELECT pg_typeof(number) FROM \"0\".new_table11")
         result = cur.fetchone()[0]
         self.assertEqual(result,'character varying')
 
         self.test_object.change_attribute_type('new_table11', 'number', 'FLOAT', new_name='new_table12')
         result = self.__test_table_exists('new_table12')
         self.assertTrue(result)
-        cur.execute("SELECT pg_typeof(number) FROM \"TEST\".new_table12")
+        cur.execute("SELECT pg_typeof(number) FROM \"0\".new_table12")
         result = cur.fetchone()[0]
         self.assertEqual(result, 'double precision')
         
@@ -215,7 +215,7 @@ class TestTransformerCopy(unittest.TestCase):
         self.test_object.change_attribute_type('new_table12', 'number', 'VARCHAR(n)', "", '30', new_name='new_table13')
         result = self.__test_table_exists('new_table13')
         self.assertTrue(result)
-        cur.execute("SELECT pg_typeof(number) FROM \"TEST\".new_table13")
+        cur.execute("SELECT pg_typeof(number) FROM \"0\".new_table13")
         result = cur.fetchone()[0]
         self.assertEqual(result, 'character varying')
 
@@ -227,7 +227,7 @@ class TestTransformerCopy(unittest.TestCase):
         self.test_object.change_attribute_type('test_table', 'date_time', 'DATE', 'DD/MM/YYYY', new_name='new_table14')
         result = self.__test_table_exists('new_table14')
         self.assertTrue(result)
-        cur.execute('SELECT pg_typeof(date_time) FROM "TEST".new_table14')
+        cur.execute('SELECT pg_typeof(date_time) FROM "0".new_table14')
         result = cur.fetchone()[0]
         self.assertEqual(result, 'date')
         self.db_connection.commit()
@@ -235,17 +235,17 @@ class TestTransformerCopy(unittest.TestCase):
         self.test_object.change_attribute_type('test_table', 'date_time', 'TIMESTAMP', 'DD/MM/YYYY TIME', new_name='new_table15')
         result = self.__test_table_exists('new_table15')
         self.assertTrue(result)
-        cur.execute('SELECT pg_typeof(date_time) FROM "TEST".new_table15')
+        cur.execute('SELECT pg_typeof(date_time) FROM "0".new_table15')
         result = cur.fetchone()[0]
         self.assertEqual(result, 'timestamp without time zone')
         self.db_connection.commit()
         #Set date_string of another to a time string and try to convert it
-        query_1 = 'UPDATE "TEST".test_table SET garbage = \'08:42 PM\' WHERE garbage is NULL'
+        query_1 = 'UPDATE "0".test_table SET garbage = \'08:42 PM\' WHERE garbage is NULL'
         cur.execute(query_1)
         self.test_object.change_attribute_type('test_table', 'garbage', 'TIME', 'HH12:MI AM/PM', new_name='new_table16')
         result = self.__test_table_exists('new_table16')
         self.assertTrue(result)
-        cur.execute('SELECT pg_typeof(garbage) FROM "TEST".new_table16')
+        cur.execute('SELECT pg_typeof(garbage) FROM "0".new_table16')
         result = cur.fetchone()[0]
         self.assertEqual(result, 'time without time zone')
         self.db_connection.commit()
@@ -259,7 +259,7 @@ class TestTransformerCopy(unittest.TestCase):
         self.assertTrue(result)
         #Query to get all columns from the encoded table
         query = ("SELECT column_name FROM information_schema.columns "
-               "WHERE table_schema = 'TEST' AND table_name =  'new_table17'")
+               "WHERE table_schema = '0' AND table_name =  'new_table17'")
         cur.execute(query)
         all_columns  = cur.fetchall()
         #This should be all the columns
@@ -281,7 +281,7 @@ class TestTransformerCopy(unittest.TestCase):
         self.test_object.discretize_using_equal_width('test_table', 'number', 4, 'new_table18')
         result = self.__test_table_exists('new_table18')
         self.assertTrue(result)
-        cur.execute('SELECT DISTINCT number_categorical FROM "TEST".new_table18')
+        cur.execute('SELECT DISTINCT number_categorical FROM "0".new_table18')
         self.db_connection.commit()
         all_values = cur.fetchall()
         all_values = [x[0] for x in all_values]
@@ -291,15 +291,15 @@ class TestTransformerCopy(unittest.TestCase):
         expected_values = ['[-17 , -2[', '[-2 , 13[', '[13 , 28[', '[28 , 43[']
         self.assertEqual(all_values, expected_values)
         #Let's check if the values are actually being put in the correct buckets
-        cur.execute('SELECT * FROM "TEST".new_table18 WHERE number < -2 AND number > -17 '
+        cur.execute('SELECT * FROM "0".new_table18 WHERE number < -2 AND number > -17 '
                     'AND number_categorical <> \'[-17 , -2[\'')
         result = cur.fetchone()
         self.assertIsNone(result)
-        cur.execute('SELECT * FROM "TEST".new_table18 WHERE number < 13 AND number > -2 '
+        cur.execute('SELECT * FROM "0".new_table18 WHERE number < 13 AND number > -2 '
                     'AND number_categorical <> \'[-2 , 13[\'')
         result = cur.fetchone()
         self.assertIsNone(result)
-        cur.execute('SELECT * FROM "TEST".new_table18 WHERE number < 43 AND number > 28 '
+        cur.execute('SELECT * FROM "0".new_table18 WHERE number < 43 AND number > 28 '
                     'AND number_categorical <> \'[28 , 43[\'')
         result = cur.fetchone()
         self.assertIsNone(result)
@@ -312,7 +312,7 @@ class TestTransformerCopy(unittest.TestCase):
         self.test_object.discretize_using_equal_frequency('test_table', 'number', 'new_table19')
         result = self.__test_table_exists('new_table19')
         self.assertTrue(result)
-        cur.execute('SELECT DISTINCT number_categorical FROM "TEST".new_table19')
+        cur.execute('SELECT DISTINCT number_categorical FROM "0".new_table19')
         self.db_connection.commit()
         all_values = cur.fetchall()
         all_values = [x[0] for x in all_values]
@@ -322,15 +322,15 @@ class TestTransformerCopy(unittest.TestCase):
         self.assertEqual(len(all_values), 4)
         self.assertEqual(all_values, expected_values)
         #Let's check if the values are actually being put in the correct buckets
-        cur.execute('SELECT * FROM "TEST".new_table19 WHERE number < -4 AND number > -17 '
+        cur.execute('SELECT * FROM "0".new_table19 WHERE number < -4 AND number > -17 '
                     'AND number_categorical <> \'[-17 , -4[\'')
         result = cur.fetchone()
         self.assertIsNone(result)
-        cur.execute('SELECT * FROM "TEST".new_table19 WHERE number < 9 AND number > 4 '
+        cur.execute('SELECT * FROM "0".new_table19 WHERE number < 9 AND number > 4 '
                     'AND number_categorical <> \'[4 , 9[\'')
         result = cur.fetchone()
         self.assertIsNone(result)
-        cur.execute('SELECT * FROM "TEST".new_table19 WHERE number < 42 AND number > 15 '
+        cur.execute('SELECT * FROM "0".new_table19 WHERE number < 42 AND number > 15 '
                     'AND number_categorical <> \'[15 , 42[\'')
         result = cur.fetchone()
         self.assertIsNone(result)
@@ -346,7 +346,7 @@ class TestTransformerCopy(unittest.TestCase):
         self.test_object.discretize_using_custom_ranges('test_table', 'number', ranges, True, 'new_table20')
         result = self.__test_table_exists('new_table20')
         self.assertTrue(result)
-        cur.execute('SELECT DISTINCT number_categorical FROM "TEST".new_table20')
+        cur.execute('SELECT DISTINCT number_categorical FROM "0".new_table20')
         self.db_connection.commit()
         all_values = cur.fetchall()
         all_values = [x[0] for x in all_values]
@@ -356,11 +356,11 @@ class TestTransformerCopy(unittest.TestCase):
         self.assertEqual(len(all_values), 4)
         self.assertEqual(all_values, expected_values)
         #Let's check if the values are actually being put in the correct buckets
-        cur.execute('SELECT * FROM "TEST".new_table20 WHERE number < -2 AND number > -17 '
+        cur.execute('SELECT * FROM "0".new_table20 WHERE number < -2 AND number > -17 '
                     'AND number_categorical <> \'[-17 , -2[\'')
         result = cur.fetchone()
         self.assertIsNone(result)
-        cur.execute('SELECT * FROM "TEST".new_table20 WHERE number < 43 AND number > 28 '
+        cur.execute('SELECT * FROM "0".new_table20 WHERE number < 43 AND number > 28 '
                     'AND number_categorical <> \'[28 , 43[\'')
         result = cur.fetchone()
         self.assertIsNone(result)
@@ -371,7 +371,7 @@ class TestTransformerCopy(unittest.TestCase):
         self.test_object.discretize_using_custom_ranges('test_table', 'number', ranges, True, 'new_table21')
         result = self.__test_table_exists('new_table21')
         self.assertTrue(result)
-        cur.execute('SELECT DISTINCT number_categorical FROM "TEST".new_table21')
+        cur.execute('SELECT DISTINCT number_categorical FROM "0".new_table21')
         self.db_connection.commit()
         all_values = cur.fetchall()
         all_values = [x[0] for x in all_values]
@@ -380,11 +380,11 @@ class TestTransformerCopy(unittest.TestCase):
         #There should be 4 buckets
         self.assertEqual(len(all_values), 4)
         self.assertEqual(all_values, expected_values)
-        cur.execute('SELECT * FROM "TEST".new_table21 WHERE number < -4 AND number > -17 '
+        cur.execute('SELECT * FROM "0".new_table21 WHERE number < -4 AND number > -17 '
                     'AND number_categorical <> \'[-17 , -4[\'')
         result = cur.fetchone()
         self.assertIsNone(result)
-        cur.execute('SELECT * FROM "TEST".new_table21 WHERE number < 42 AND number > 15 '
+        cur.execute('SELECT * FROM "0".new_table21 WHERE number < 42 AND number > 15 '
                     'AND number_categorical <> \'[15 , 42[\'')
         result = cur.fetchone()
         self.assertIsNone(result)
@@ -399,14 +399,14 @@ class TestTransformerCopy(unittest.TestCase):
         self.test_object.delete_outlier('test_table', 'number', True, 40, 'new_table22')
         result = self.__test_table_exists('new_table22')
         self.assertTrue(result)
-        cur.execute('SELECT * FROM "TEST".new_table22 WHERE number > 40')
+        cur.execute('SELECT * FROM "0".new_table22 WHERE number > 40')
         result = cur.fetchone()
         self.assertIsNone(result)
 
         self.test_object.delete_outlier('test_table', 'number', True, 20, 'new_table23')
         result = self.__test_table_exists('new_table23')
         self.assertTrue(result)
-        cur.execute('SELECT * FROM "TEST".new_table23 WHERE number > 20')
+        cur.execute('SELECT * FROM "0".new_table23 WHERE number > 20')
         result = cur.fetchone()
         self.assertIsNone(result)
 
@@ -414,14 +414,14 @@ class TestTransformerCopy(unittest.TestCase):
         self.test_object.delete_outlier('test_table', 'number', False, -15, 'new_table24')
         result = self.__test_table_exists('new_table24')
         self.assertTrue(result)
-        cur.execute('SELECT * FROM "TEST".new_table24 WHERE number < -15')
+        cur.execute('SELECT * FROM "0".new_table24 WHERE number < -15')
         result = cur.fetchone()
         self.assertIsNone(result)
 
         self.test_object.delete_outlier('test_table', 'number', False, 0, 'new_table25')
         result = self.__test_table_exists('new_table25')
         self.assertTrue(result)
-        cur.execute('SELECT * FROM "TEST".new_table25 WHERE number < 0')
+        cur.execute('SELECT * FROM "0".new_table25 WHERE number < 0')
         result = cur.fetchone()
         self.assertIsNone(result)
         self.db_connection.commit()
@@ -434,15 +434,15 @@ class TestTransformerCopy(unittest.TestCase):
         result = self.__test_table_exists('new_table26')
         self.assertTrue(result)
         #Test if it's really set to null
-        cur.execute('SELECT * FROM "TEST".new_table26 WHERE number > 40')
+        cur.execute('SELECT * FROM "0".new_table26 WHERE number > 40')
         result = cur.fetchone()
         self.assertIsNone(result)
         #Test whether any nulls are left open
-        cur.execute('SELECT * FROM "TEST".new_table26 WHERE number is null')
+        cur.execute('SELECT * FROM "0".new_table26 WHERE number is null')
         result = cur.fetchone()
         self.assertIsNone(result)
         #The mean by excluding values > 40 is 10 (cast to int), let's check if the value is here
-        cur.execute('SELECT * FROM "TEST".new_table26 WHERE number = 10 AND string = \'Elevate ltd\'')
+        cur.execute('SELECT * FROM "0".new_table26 WHERE number = 10 AND string = \'Elevate ltd\'')
         result = cur.fetchall()
         self.assertIsNotNone(result)
         self.assertEqual(1,1)
@@ -455,15 +455,15 @@ class TestTransformerCopy(unittest.TestCase):
         result = self.__test_table_exists('new_table27')
         self.assertTrue(result)
         #Test if it's really set to null
-        cur.execute('SELECT * FROM "TEST".new_table27 WHERE number > 40')
+        cur.execute('SELECT * FROM "0".new_table27 WHERE number > 40')
         result = cur.fetchone()
         self.assertIsNone(result)
         #Test whether any nulls are left open
-        cur.execute('SELECT * FROM "TEST".new_table27 WHERE number is null')
+        cur.execute('SELECT * FROM "0".new_table27 WHERE number is null')
         result = cur.fetchone()
         self.assertIsNone(result)
         #The median by excluding values > 40 is 9, let's check if the value is here
-        cur.execute('SELECT * FROM "TEST".new_table27 WHERE number = 9 AND string = \'Elevate ltd\'')
+        cur.execute('SELECT * FROM "0".new_table27 WHERE number = 9 AND string = \'Elevate ltd\'')
         result = cur.fetchall()
         self.assertIsNotNone(result)
 
@@ -475,7 +475,7 @@ class TestTransformerCopy(unittest.TestCase):
         result = self.__test_table_exists('new_table28')
         self.assertTrue(result)
         #The value we used should correspond to the row with string = 'Dummy'
-        cur.execute('SELECT * FROM "TEST".new_table28 WHERE number = 10000 AND string = \'Elevate ltd\'')
+        cur.execute('SELECT * FROM "0".new_table28 WHERE number = 10000 AND string = \'Elevate ltd\'')
         result = cur.fetchall()
         self.assertIsNotNone(result)
 
@@ -487,7 +487,7 @@ class TestTransformerCopy(unittest.TestCase):
         self.test_object.delete_rows_using_predicate_logic('test_table', predicate1, 'new_table29')
         result = self.__test_table_exists('new_table29')
         self.assertTrue(result)
-        query = "SELECT * FROM \"TEST\".new_table29 WHERE string = 'C-Corp'"
+        query = "SELECT * FROM \"0\".new_table29 WHERE string = 'C-Corp'"
         cur.execute(query)
         result = cur.fetchone()
         self.assertIsNone(result)
@@ -496,7 +496,7 @@ class TestTransformerCopy(unittest.TestCase):
         self.test_object.delete_rows_using_predicate_logic('test_table', predicate2, 'new_table30')
         result = self.__test_table_exists('new_table30')
         self.assertTrue(result)
-        query = "SELECT * FROM \"TEST\".new_table30 WHERE string = 'Nokia' AND number = 18"
+        query = "SELECT * FROM \"0\".new_table30 WHERE string = 'Nokia' AND number = 18"
         cur.execute(query)
         result = cur.fetchone()
         self.assertIsNone(result)
@@ -506,13 +506,13 @@ class TestTransformerCopy(unittest.TestCase):
     def test_datetime_extraction(self):
         """This one is for testing the extraction of parts of the date/time done by TableTransformer. This will result in a new table."""
         cur = self.db_connection.cursor()
-        cur.execute('ALTER TABLE "TEST".test_table2 ALTER COLUMN date_time TYPE DATE USING to_date(date_time , \'DD/MM/YYYY\')')
+        cur.execute('ALTER TABLE "0".test_table2 ALTER COLUMN date_time TYPE DATE USING to_date(date_time , \'DD/MM/YYYY\')')
         self.test_object.extract_part_of_date('test_table2', 'date_time', 'MONTH', 'new_table31')
         result = self.__test_table_exists('new_table31')
         self.assertTrue(result)
         #Get all the column names for the table
         query = ("SELECT column_name FROM information_schema.columns "
-               "WHERE table_schema = 'TEST' AND table_name =  'new_table31'")
+               "WHERE table_schema = '0' AND table_name =  'new_table31'")
         cur.execute(query)
         all_columns = cur.fetchall()
         result = False
@@ -523,7 +523,7 @@ class TestTransformerCopy(unittest.TestCase):
 
         self.assertTrue(result)
 
-        query = "SELECT * FROM \"TEST\".new_table31 WHERE number = 21 AND date_time_part = 'September'"
+        query = "SELECT * FROM \"0\".new_table31 WHERE number = 21 AND date_time_part = 'September'"
         cur.execute(query)
         result = cur.fetchone()
         self.assertIsNotNone(result)

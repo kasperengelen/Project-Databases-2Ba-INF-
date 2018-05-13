@@ -20,13 +20,11 @@ class TestTableViewer(unittest.TestCase):
         #Make all the connections and objects needed
         cls.db_connection = TestConnection().get_db()
         cls.engine = TestConnection().get_engine()
-        cls.test_object = tv.TableViewer('TEST', 'test_table', cls.engine, cls.db_connection)
-        cls.test_object2 = tv.TableViewer('TEST', 'stat_table', cls.engine, cls.db_connection)
 
         cur = cls.db_connection.cursor()
-        cur.execute("CREATE SCHEMA IF NOT EXISTS \"TEST\"")
+        cur.execute('CREATE SCHEMA IF NOT EXISTS "0"')
         cls.db_connection.commit()
-        creation_query = """CREATE TABLE "TEST".test_table (
+        creation_query = """CREATE TABLE "0".test_table (
         string VARCHAR(255),
         number INTEGER,
         date_time VARCHAR(255));"""
@@ -44,12 +42,15 @@ class TestTableViewer(unittest.TestCase):
         except psycopg2.ProgrammingError:
             #If it was still present in the database we better drop the schema and rebuild it
             cls.db_connection.rollback()
-            cur.execute("DROP SCHEMA \"TEST\" CASCADE")
-            cur.execute("CREATE SCHEMA \"TEST\"")
+            cur.execute('DROP SCHEMA "0" CASCADE')
+            cur.execute('CREATE SCHEMA "0"')
             cls.db_connection.commit()
             cur.execute(creation_query)
             cur.execute(creation_query2)
             cls.db_connection.commit()
+            
+        cls.test_object = tv.TableViewer(0, 'test_table', cls.engine, cls.db_connection)
+        cls.test_object2 = tv.TableViewer(0, 'stat_table', cls.engine, cls.db_connection)
             
             
         values = [('C-Corp', 1, '08/08/1997'), ('Apple', 10, '01/04/1976'), ('Microsoft', 8, '04/04/1975') , ('Nokia', 3000, '12/05/1865') , ('Samsung', 7, '01/03/1938'),
@@ -60,10 +61,10 @@ class TestTableViewer(unittest.TestCase):
 
         for i in range(10):
             for v in values:
-                cur.execute("INSERT INTO \"TEST\".test_table VALUES(%s, %s, %s)", v)
+                cur.execute('INSERT INTO "0".test_table VALUES(%s, %s, %s)', v)
 
         for v in values2:
-            cur.execute("INSERT INTO \"TEST\".stat_table VALUES(%s, %s, %s)", v)
+            cur.execute('INSERT INTO "0".stat_table VALUES(%s, %s, %s)', v)
 
         
         cls.db_connection.commit()
@@ -71,7 +72,7 @@ class TestTableViewer(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        cls.db_connection.cursor().execute("DROP SCHEMA \"TEST\" CASCADE")
+        cls.db_connection.cursor().execute('DROP SCHEMA "0" CASCADE')
         cls.db_connection.commit()
         #Close database connection
         cls.db_connection.close()
