@@ -147,7 +147,6 @@ def table(dataset_id, tablename):
                                                 fillnullmedian_form   = fillnullmedian_form,
                                                 fillnullcustom_form   = fillnullcustom_form,
                                                 perm_type             = perm_type,
-                                                colstats              = colstats,
                                                 attr_form             = attr_form,
                                                 extract_form          = extract_form,
                                                 predicateone_form     = predicateone_form,
@@ -178,30 +177,7 @@ def table_original(dataset_id, tablename):
     # get tableviewer
     tv = dataset.getTableViewer(tablename, original = True)
 
-<<<<<<< afaf7929826b4e3a0bc8751e496b97a5a9d23fb5
-<<<<<<< d9975c1fd202d41100a54e4511202bcaedfe67f5
-    # CHECK IN RANGE
-    if not tv.is_in_range(page_nr, row_count):# TODO remove
-        flash(message="Page out of range.", category="error")
-        return redirect(url_for('dataset_pages.table_original', dataset_id=dataset_id, tablename = tablename, page_nr = 1))
-
-    # render table
-    table_data = tv.render_table(page_nr, row_count, show_types = True)
-
-    entrycount_form = EntryCountForm(entry_count = session['rowcount'])
-    entrycount_form.fillForm(dataset_id, tablename)
-
-    # get indices
-    page_indices = tv.get_page_indices(display_nr = row_count, page_nr = page_nr)# TODO remove
-
-
-    return render_template('dataset_pages.table_test.html',
-=======
     return render_template('dataset_pages.table.html',
->>>>>>> updated dataset_pages for datatables and history restruc
-=======
-    return render_template('dataset_pages.table.html',
->>>>>>> Changed table to table_test
                                                 table_name      = tablename,
                                                 dataset_info    = dataset_info,
                                                 original        = True,
@@ -857,7 +833,7 @@ def _get_table(dataset_id, tablename, original):
     start_nr   = request.args.get('start', type=int)
     row_count  = request.args.get('length', type=int)
     col_nr     = request.args.get('order[0][column]', type=int)
-    sort_order = request.args.get('order[0][dir]' type=str)
+    sort_order = request.args.get('order[0][dir]', type=str)
 
     # set current session row_count to the specified count
     session['rowcount'] = row_count
@@ -879,7 +855,7 @@ def _get_history_table(dataset_id, tablename):
     start_nr   = request.args.get('start', type=int)
     row_count  = request.args.get('length', type=int)
     col_nr     = request.args.get('order[0][column]', type=int)
-    sort_order = request.args.get('order[0][dir]' type=str)
+    sort_order = request.args.get('order[0][dir]', type=str)
 
     session['rowcount'] = row_count
 

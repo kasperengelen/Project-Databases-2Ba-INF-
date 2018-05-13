@@ -67,7 +67,7 @@
 			        	<div class="panel-body">	
 			        		<!-- JOIN FORM -->
 			        		{% from "includes/_formhelpers.html" import render_field %}
-		                    <form action="{{ url_for('dataset_pages.transform_join_tables', dataset_id=dataset_info.setid, tablename=table)}}" method="post" 
+		                    <form action="{{ url_for('dataset_pages.join_tables', dataset_id=dataset_info.setid, tablename=table)}}" method="post" 
 		                    	id="join">
 		                        {{ join_form.hidden_tag() }}
 		                    	<div class="form-group" style="width: 20%; display: inline-block;">
@@ -135,81 +135,53 @@
 		    <!-- TAB PANES -->
 		    <div class="tab-content">
 				<div class="tab-pane active" id="activeTables">
-				<table id="tabletable">
-					<thead>
-						<tr>
-							<th>Tables</th>
-							<th>Delete</th>
-						</tr>
-					</thead>
-					<tbody>
-					{% if table_list %}
-						{% for table in table_list %}
-						<tr>
-							<td><a href="{{ url_for('dataset_pages.table', dataset_id=dataset_info.setid, tablename=table) }}">
-								{{ table }}</a></td>
-							<td><input type="hidden" id="input" value="delete this table?">
-								<form method="post" action="{{ url_for('dataset_pages.delete_table', dataset_id=dataset_info.setid, tablename=table) }}"
-											name="delete{{ table }}" onsubmit="return check()">
-										<label for="delete{{ table }}" class="glyphicon glyphicon-remove"></label>
-										<input href="" id="delete{{ table }}" style="visibility: hidden;" type="submit"></form></td>
-						</tr>
-						{% endfor %}
-					{% endif %}
-					</tbody>
-				</table>
+					<table id="tabletable">
+						<thead>
+							<tr>
+								<th>Tables</th>
+								<th>Delete</th>
+							</tr>
+						</thead>
+						<tbody>
+						{% if table_list %}
+							{% for table in table_list %}
+								<tr>
+									<td>
+										<a href="{{ url_for('dataset_pages.table', dataset_id=dataset_info.setid, tablename=table) }}"> {{ table }}</a>
+									</td>
+									<td>
+										<input type="hidden" id="input" value="delete this table?">
+										<form method="post" action="{{ url_for('dataset_pages.delete_table', dataset_id=dataset_info.setid, tablename=table) }}"
+													name="delete{{ table }}" onsubmit="return check()">
+												<label for="delete{{ table }}" class="glyphicon glyphicon-remove"></label>
+												<input href="" id="delete{{ table }}" style="visibility: hidden;" type="submit"></form>
+									</td>
+								</tr>
+							{% endfor %}
+						{% endif %}
+						</tbody>
+					</table>
 				</div>
 				<div class="tab-pane" id="originalTables">
-				<table id="originalstable" style="width: 100%;">
-					<thead>
-						<tr style="width: 100%;">
-							<th>Tables</th>
-						</tr>
-					</thead>
-					<tbody>
-					{% if original_table_list %}
-						{% for table in original_table_list %}
-						<tr>
-							<td><a href="{{ url_for('dataset_pages.table_original', dataset_id=dataset_info.setid, tablename=table) }}">
-							{{ table }}</a></td>
-<<<<<<< 1d748d02e4e56c107ad2f0e907bbba77a012b9ec
-						</tr>
-						{% endfor %}
-					{% endif %}
-					</tbody>
-				</table>
+					<table id="originaltable" style="width: 100%;">
+						<thead>
+							<tr style="width: 100%;">
+								<th>Tables</th>
+							</tr>
+						</thead>
+						<tbody>
+						{% if original_table_list %}
+							{% for table in original_table_list %}
+								<tr>
+									<td>
+										<a href="{{ url_for('dataset_pages.table_original', dataset_id=dataset_info.setid, tablename=table) }}"> {{ table }}</a>
+									</td>
+								</tr>
+							{% endfor %}
+						{% endif %}
+						</tbody>
+					</table>
 				</div>
-=======
-						<td><input type="hidden" id="input" value="delete this table?">
-							<form method="post" action="{{ url_for('dataset_pages.delete_table', dataset_id=dataset_info.setid, tablename=table) }}"
-										name="delete{{ table }}" onsubmit="return check()">
-									<label for="delete{{ table }}" class="glyphicon glyphicon-remove"></label>
-									<input href="" id="delete{{ table }}" style="visibility: hidden;" type="submit"></form></td>
-					</tr>
-					{% endfor %}
-				{% endif %}
-				</tbody>
-			</table>
-			</div>
-			<div class="tab-pane" id="originalTables">
-			<table id="originaltable">
-				<thead>
-					<tr>
-						<th>Tables</th>
-					</tr>
-				</thead>
-				<tbody>
-				{% if original_table_list %}
-					{% for table in table_list %}
-					<tr>
-						<td><a href="{{ url_for('dataset_pages.table_original', dataset_id=dataset_info.setid, tablename=table) }}">
-						{{ table }}</a></td>
-					</tr>
-					{% endfor %}
-				{% endif %}
-				</tbody>
-			</table>
->>>>>>> ?
 			</div>
 		</div>
 		<script>
@@ -231,12 +203,8 @@
 	                scrollY: true,
 	                paging: false,
 	                info: false,
-<<<<<<< 1d748d02e4e56c107ad2f0e907bbba77a012b9ec
-	                autoWidth: false
-=======
 	                lengthChange: false,
 	                autoWidth: true
->>>>>>> ?
 	            } );
 	        } );
 	    </script>
