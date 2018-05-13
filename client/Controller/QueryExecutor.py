@@ -1,9 +1,12 @@
 import re
+
 import psqlparse
 import psycopg2
-from psycopg2 import sql
 import sqlalchemy
+import numpy as np
+import pandas as pd
 
+from Controller.DatasetHistoryManager import DatasetHistoryManager
 
 
 class QueryExecutor:
@@ -22,6 +25,24 @@ class QueryExecutor:
         self.db_conn = db_conn
         self.engine = engine
         self.write_perm = write_perm
+        self.history_manager = DatasetHistoryManager(setid, db_conn, True)
+
+    class SyntaxError(Exception):
+        """
+        This exception is raised whenever the user provides a query with a syntax error.
+        """
+
+    class PermissionError(Exception):
+        """
+        This exception is raised whenever an user attempts to execute a statement in a query, but
+        the user does not have the permission to do so.
+        """
+
+    class ProgrammingError(Exception):
+        """
+        This exception is raised whenever a quey with the correct syntax still contains elements
+        that make it fail (e.g., referencing tables / columns that don't exist in the dataset).
+        """
 
 
     def execute_query(self, query):
@@ -30,19 +51,19 @@ class QueryExecutor:
             statement = psqlparse.parse(query)[0]
 
         except psqlparse.exceptions.PSqlParseError as e:
-            raise ValueError(str(e))
+            raise self.SyntaxError(str(e))
 
         #Check if the statement is permitted
         if self.__assert_permitted_statement(statement) is False:
-            raise ValueError('Permission denied, users are only allowed to execute ...')
+            raise self.PermissionError('Unable to execute query: permission denied to this user.')
 
         #Check if the query doesn't contain bogus tables
         valid_tables = self.__get_valid_tables()
         used_tables = statement.tables()
         for table in used_tables:
             if table not in valid_tables:
-                error_msg = 'Error, table "' + table + '" does not exist in this dataset. Please verify.'
-                raise ValueError(error_msg)
+                error_msg = 'Error, table "' + table + '" does not exist in this dataset. Please verify the spelling is correct.'
+                raise self.ProgrammingError(error_msg)
 
         #Modify the query by mapping the tables to the correct internal tables.
         internal_query = query
@@ -53,14 +74,11 @@ class QueryExecutor:
             internal_query = re.sub(cur_regex, internal_table, internal_query)
 
         if type(statement) == psqlparse.nodes.SelectStmt:
-            self.__execute_show(internal_query)
+            return self.__execute_visual(internal_query, used_tables)
         else:
-            self.__execute_simple(internal_query)
-        
-            
+            return self.__execute_simple(internal_query, used_tables, query)
 
-
-    def __execute_simple(self, query):
+    def __execute_simple(self, query, tables, original_query):
         """Method used for simple execution of queries. This method is used for queries
         without result that needs to be visualized (INSERT INTO, UPDATE, DELETE statements).
         """
@@ -68,26 +86,31 @@ class QueryExecutor:
         try:
             cur.execute(query)
             
-        except e:
-            raise ValueError(e)
+        except psycopg2.ProgrammingError as e:
+            error_msg = self.__get_clean_exception(str(e), True)
+            raise self.SyntaxError(error_msg) from e
 
         self.db_conn.commit()
-        print(query)
+        modified_table = self.__get_modified_table(original_query, tables)
+        parameter = '"{}"'.format(original_query)
+        self.history_manager.write_to_history(modified_table, modified_table, '', [parameter], 16)
+        return None
             
 
-    def __execute_show(self, query):
+    def __execute_visual(self, query, tables):
         """Method that needs to visualize the result of the query. This is the
         case for SELECT statements that obviously need to be visualized.
         """
-        cur = self.db_conn.cursor()
         try:
-            cur.execute(query)
+            pd.set_option('display.max_colwidth', -1)
+            data_frame = pd.read_sql(query, self.engine)
             
-        except e:
-            raise ValueError(e)
+        except sqlalchemy.exc.ProgrammingError as e:
+            raise self.SyntaxError(e.__context__) from e
 
-        self.db_conn.commit()
-        print(query)
+        data_frame  = data_frame.replace([None] * len(tables), [np.nan] * len(tables))
+        json_string = data_frame.to_json(orient='records')
+        return json_string
 
 
     def __assert_permitted_statement(self, statement_obj):
@@ -95,7 +118,7 @@ class QueryExecutor:
         to use. Only INSERT INTO, UPDATE, DELETE and SELECT statements are allowed.
         """
 
-        if self.write_perm is False:
+        if self.write_perm is False: # Without write permissions, you can only use SELECT statmements.
             if type(statement_obj) != psqlparse.nodes.SelectStmt:
                 return False
                 
@@ -114,19 +137,24 @@ class QueryExecutor:
         result = cur.fetchall()
         tablenames = [t[0] for t in result]
         return tablenames
-        
 
+    def __get_modified_table(self, query, tables):
+        """Method that returns which table has been modified after a INSERT / UPDATE / DELETE statement.
+        This is usually the first table occurence in the query.
+        """
+        words = query.split()
+        for w in words:
+            if w in tables:
+                return w
+        raise ValueError()
 
+    def __get_clean_exception(self, exception_msg, adjust_error_pointer):
+        """Method that returns a clean exception message without including internal system schemas etc."""
+        schema_prefix = '"{}".'.format(self.schema)
+        clean_exception = exception_msg.replace(schema_prefix, '')
+        if adjust_error_pointer is True:
+            error_pointer = ' ' * len(schema_prefix) + '^'
+            clean_exception = clean_exception.replace(error_pointer, '^')
+        return clean_exception
+    
 
-        
-
-
-
-
-
-if __name__ == '__main__':
-    #qe = QueryExecutor(1, None, None)
-    #qe.execute_query('SELECT * FROM mytable; DROP DATABASE pingu')
-    strong = 'SELECT mytable_col FROM mytable,mytable'
-    ap = re.sub('(?<!([^\s,]))mytable(?!([^\s,]))', 'pom', strong)
-    print(ap)

@@ -1,15 +1,18 @@
-import pandas as pd
-import matplotlib
-from Model.SQLTypeHandler import SQLTypeHandler
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
 import math
 import re
 import os
 import csv
+
+import pandas as pd
+import numpy as np
 import psycopg2
 from psycopg2 import sql
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 import mpld3
+
+from Model.SQLTypeHandler import SQLTypeHandler
 
 class TableViewer:
     """Class that extracts table information for viewing purposes.
@@ -31,15 +34,27 @@ class TableViewer:
             self.schema = 'original_' + str(setid)
         else:
             self.schema = str(setid)
-        self.maxrows = None
+        self.maxrows = self.__initialize_rowcount()
+
+
+    def __initialize_rowcount(self):
+        count_query  = 'SELECT COUNT(*) FROM "%s"."%s"' % (self.schema, self.tablename)
+        query_result = pd.read_sql(count_query, self.engine)
+        rowcount = query_result.iat[0, 0]
+        return rowcount
+        
 
     def get_attributes(self):
         """Method that returns a list of all attributes of the table."""
         SQL_query = "SELECT * FROM \"%s\".\"%s\" LIMIT 1" % (self.schema, self.tablename)
         data_frame = pd.read_sql(SQL_query, self.engine)
         return data_frame.columns.values.tolist()
+
+    def get_rowcount(self):
+        """Simple method to get the number of rows the table viewed by TableViewer has."""
+        return self.maxrows
         
-    
+    #DEPRECATED
     def get_page_indices(self, display_nr, page_nr=1):
         """Method that returns the relevant indices for a table that's being viewed.
 
@@ -102,15 +117,10 @@ class TableViewer:
         Parameters:
             page_nr: Integer indicating which page we're trying to view
             nr_rows: The number of rows that are being showed per page. 
-        """
-        count_query  = "SELECT COUNT(*) FROM \"%s\".\"%s\"" % (self.schema, self.tablename)
-        query_result = pd.read_sql(count_query, self.engine)
-        table_size = query_result.iat[0, 0]
-        self.maxrows = table_size
-            
+        """ 
         if((page_nr - 1) * nr_rows >= self.maxrows):
             #In case it's an empty table, the first page should still be in range
-            if (table_size == 0) and (page_nr == 1):
+            if (self.maxrows == 0) and (page_nr == 1):
                 return True
             else:
                 return False
@@ -136,7 +146,7 @@ class TableViewer:
 
         return type_list
 
-
+    #DEPRECATED
     def render_table(self, page_nr, nr_rows, show_types=False):
         """This method returns a html table representing the page of the SQL table.
 
@@ -149,10 +159,11 @@ class TableViewer:
         offset = (page_nr - 1) * nr_rows
         SQL_query = "SELECT * FROM \"%s\".\"%s\" LIMIT %s OFFSET %s" % (self.schema, self.tablename, nr_rows, offset)
         data_frame = pd.read_sql(SQL_query, self.engine)
+        attributes = self.get_attributes()
+        data_frame = data_frame.replace([None] * len(attributes), [np.nan] * len(attributes))
         html_table = re.sub(' mytable', '" id="mytable', data_frame.to_html(None, None, None, True, False, na_rep = 'NULL', classes='mytable'))
         if show_types is False:
             return html_table
-        attributes = self.get_attributes()
         type_list = self.__render_types(attributes)
         for i in range(len(attributes)): #Let's add the types to the tablenames
             string = attributes[i]
@@ -161,34 +172,13 @@ class TableViewer:
             
         return html_table
 
-
-    
-
-    def to_csv(self, foldername, delimiter=',', quotechar='"', null="NULL"):
-        """Convert a table from the dataset to a CSV file. The csv file will be stored
-        in the specified folder. The filename will be the tablename followed by '.csv'."""
-
-        filename = os.path.join(foldername, self.tablename + ".csv")
-
-        with open(filename, 'w', encoding="utf-8") as outfile:
-            outcsv = csv.writer(outfile, delimiter=delimiter, quotechar=quotechar)
-
-            self.cur.execute("SELECT column_name FROM information_schema.columns WHERE table_schema = '{}' AND table_name = '{}'".format(self.schema, self.tablename))
-
-            # write header
-            outcsv.writerow([x[0] for x in self.cur.fetchall()])
-
-            self.cur.execute(sql.SQL("SELECT * FROM {}.{}").format(sql.Identifier(self.schema), sql.Identifier(self.tablename)))
-            rows = self.cur.fetchall()
-
-            # replace NULL values with parameter 'null'
-            for i in range(len(rows)):
-                rows[i] = list(rows[i])
-                for j in range(len(rows[i])):
-                    if rows[i][j] is None: rows[i][j] = null
-
-            # write rows
-            outcsv.writerows(rows)
+    def render_json(self, offset, limit, order=False, ascending=True, on_column=""):
+        rel_offset = offset - 1
+        rel_limit = limit - rel_offset
+        SQL_query =  'SELECT * FROM "%s"."%s" LIMIT %s OFFSET %s' % (self.schema, self.tablename, rel_limit, rel_offset)
+        data_frame = pd.read_sql(SQL_query, self.engine)
+        json_string = data_frame.to_json(orient='records')
+        return json_string
 
     def get_numerical_histogram(self, columnname, bar_nr=10):
         # first check if the attribute type is numerical

@@ -1,4 +1,5 @@
 CREATE SCHEMA SYSTEM;
+CREATE SCHEMA BACKUP;
 
 -- Table for keeping track of users.
 CREATE TABLE SYSTEM.user_accounts (
@@ -42,7 +43,7 @@ CREATE TABLE SYSTEM.DATASET_HISTORY(
 	table_name VARCHAR(255) NOT NULL,
 	attribute VARCHAR(255) NOT NULL,
 	transformation_type INTEGER NOT NULL,
-	parameters VARCHAR(255) ARRAY NOT NULL,
+	parameters VARCHAR ARRAY NOT NULL,
 	origin_table VARCHAR(255) NOT NULL,
 	transformation_id SERIAL UNIQUE,
 	transformation_date TIMESTAMP DEFAULT NOW(),

@@ -4,7 +4,7 @@ from utils import get_db
 from utils import get_sqla_eng
 from Controller.TableViewer import TableViewer
 from Controller.TableTransformer import TableTransformer
-from Controller.DataLoader import DataLoader
+from Model.TableLoader import TableLoader
 from Controller.DatasetHistoryManager import DatasetHistoryManager
 from Model.DataDownloader import DataDownloader
 
@@ -98,7 +98,7 @@ class DatasetInfo:
 
     def getDataLoader(self):
         """Retrieve the dataloader for this dataset."""
-        return DataLoader(self.setid, self.db_conn)
+        return TableLoader(self.setid, self.db_conn)
 
     def getHistoryManager(self):
         """Retrieve the history manager for this dataset."""
