@@ -246,7 +246,6 @@ def transform_typeconversion(dataset_id, tablename):
     do_force = form.do_force.data
     force_mode = form.force_mode.data
 
-
     if do_force:
         try:
             tt.force_attribute_type(tablename=tablename, 
@@ -257,18 +256,15 @@ def transform_typeconversion(dataset_id, tablename):
         except Exception as e:
             flash(message="An error occurred. Details: " + str(e), category="error")
     else:
-        if not form.new_datatype.data in tt.get_conversion_options(tablename, form.select_attr.data):
-            flash(message="Selected datatype not compatible with the selected attribute.", category="error")
-        else:
-            try:
-                tt.change_attribute_type(tablename=tablename, 
-                                         attribute=form.select_attr.data, 
-                                         to_type=form.new_datatype.data, 
-                                         data_format=form.date_type.data, 
-                                         length=form.char_amount.data)
-                flash(message="Attribute type changed.", category="success")
-            except Exception as e:
-                flash(message="An error occurred. Details: " + str(e), category="error")
+        try:
+            tt.change_attribute_type(tablename=tablename, 
+                                     attribute=form.select_attr.data, 
+                                     to_type=form.new_datatype.data, 
+                                     data_format=form.date_type.data, 
+                                     length=form.char_amount.data)
+            flash(message="Attribute type changed.", category="success")
+        except Exception as e:
+            flash(message="An error occurred. Details: " + str(e), category="error")
 
     return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
 # ENDFUNCTION
