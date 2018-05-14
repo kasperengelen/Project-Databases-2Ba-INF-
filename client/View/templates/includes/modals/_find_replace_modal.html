@@ -1,0 +1,59 @@
+<div id="findreplacemodal" class="modal fade text-left" role="dialog">
+    <div class="modal-dialog">
+    
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Find and Replace</h4>
+            </div>
+            <div class="modal-body" id="findreplacediv">
+                <!-- Find & Replace -->
+                <div style="overflow-x: auto;">
+                    {% from "includes/_formhelpers.html" import render_field %}
+                    <form method="post" action="{{ url_for('transf_callbacks.transform_findreplace', dataset_id=dataset_info.setid, tablename=table_name) }}"
+                        name="findreplace">
+                    {{ findrepl_form.csrf_token }}
+                    <div class="form-group" style="width: 30%; display: inline-block;">
+                        {{render_field(findrepl_form.select_attr, class_="form-control")}}
+                    </div>
+                    <div class="form-group" style="width: 30%; display: inline-block;">
+                        {{render_field(findrepl_form.search, class_="form-control", placeholder="Searchterm")}}
+                    </div>
+                    <div class="form-group" style="width: 30%; display: inline-block;">
+                        {{render_field(findrepl_form.replacement, class_="form-control", placeholder="Replacement")}}  
+                    </div>
+                    
+                    <div class="form-group" style="width: 30%; display: inline-block;">
+                        {{render_field(findrepl_form.exactmatch, class_="checkbox-inline", placeholder="True")}}
+                    </div>
+                    <div class="form-group" style="width: 30%; display: inline-block;">
+                        {{render_field(findrepl_form.replace_full_match, class_="checkbox-inline", placeholder="True")}}
+                    </div>  
+                    <div class="text-right">
+                        <a href="#" class="btn btn-primary" id="findandreplace" onclick="$('#findandreplace_newtable').show();
+                            $('#findreplacediv').hide();">Find and Replace</a> 
+                    </div>
+                </div>
+                <!-- Find & Replace  -->
+            </div>
+            <div class="modal-body" id="findandreplace_newtable">
+            	{% from "includes/_formhelpers.html" import render_field %}
+            	<div class="form-group">
+            		{{ render_field(findrepl_form.make_new_table, class_="checkbox", id="frc") }}
+            	</div>
+            	<div class="form-group" id="frdiv" style="width: 70%">
+            		{{ render_field(findrepl_form.new_table_name, class_="form-control") }}
+            	</div>
+                <div class="text-right">
+                    <button class="btn btn-primary" type="submit">Submit</button>
+        		</div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="findreplace" onclick="$('#findreplacediv').show();" class="btn btn-default" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+        <!-- Modal content -->
+    </div>
+</div>

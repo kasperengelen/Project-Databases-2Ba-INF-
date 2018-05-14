@@ -1,0 +1,48 @@
+<div id="discretizefreqmodal" class="modal fade text-left" role="dialog">
+    <div class="modal-dialog">
+    
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Discretize - Equal Frequency</h4>
+            </div>
+            <div class="modal-body" id="discretizefreq_div">
+                <!-- Discretize Equal Frequency -->
+                <div style="overflow-x: auto;">
+                    {% from "includes/_formhelpers.html" import render_field %}
+                    <form method="post"
+                        action="{{ url_for('transf_callbacks.transform_discretizeEqualFreq', dataset_id=dataset_info.setid, tablename=table_name) }}"
+                        name="discretizefreq">
+                    {{ discretizeFreq_form.csrf_token }}
+                    <div class="form-group" style="width: 35%; display: inline-block;">
+                        {{render_field(discretizeFreq_form.select_attr, class_="form-control")}}
+                    </div>
+                    <div class="text-right">
+                        <a href="#" class="btn btn-primary" id="discretizeequalfreq" onclick="$('#discretizefreq_newtable').show();$('#discretizefreq_div').hide();">Discretize</a> 
+                    </div>
+                </div>
+                <!-- Discretize Equal Frequency  -->
+            </div>
+
+
+            <div class="modal-body" id="discretizefreq_newtable">
+            	{% from "includes/_formhelpers.html" import render_field %}
+            	<div class="form-group">
+            		{{ render_field(discretizeFreq_form.make_new_table, class_="checkbox", id="defc") }}
+            	</div>
+            	<div class="form-group" id="defdiv" style="width: 70%">
+            		{{ render_field(discretizeFreq_form.new_table_name, class_="form-control") }}
+            	</div>
+                <div class="text-right">
+                    <button class="btn btn-primary" type="submit">Submit</button>
+                </div>
+        		</form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="discretizefreq" onclick="$('#discretizefreq_div').show();" class="btn btn-default" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+        <!-- Modal content -->
+    </div>
+</div>

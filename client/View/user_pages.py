@@ -72,19 +72,25 @@ def register():
 @require_login
 def profile(user_id):
     """Returns a page that contains information about a user."""
-    
+
     if user_id is None:
         user_id = session['userdata']['userid']
 
     if not UserManager.existsID(user_id):
         abort(404)
 
+    view_self = False
+
+    if user_id == session['userdata']['userid']:
+        view_self = True
+
     userinfo = UserManager.getUserFromID(user_id)
     editform = UserEditInfoForm()
     editform.fillForm(userinfo)
 
     return render_template('user_pages.profile.html', 
-                                userinfo = userinfo.toDict(), 
+                                userinfo = userinfo.toDict(),
+                                view_self = view_self,
                                 editform = editform,
                                 editpassform = UserEditPasswordForm())
 # ENDFUNCTION
@@ -139,7 +145,6 @@ def edit_pass():
     form = UserEditPasswordForm(request.form)
 
     if not form.validate():
-        flash(message="Invalid form.", category="error")
         flash_errors(form)
     else:
         current_user = UserManager.getUserFromID(userid)

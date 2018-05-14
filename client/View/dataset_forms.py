@@ -29,8 +29,10 @@ class AddUserForm(FlaskForm):
 class RemoveUserForm(FlaskForm):
     """Form to revoke a user's permission to alter the dataset."""
     userid = IntegerField('UserID', widget = HiddenInput())
-    email = HiddenField('Email', [Email()])
-    permission_type = HiddenField('Permission Type', [EnumCheck(message="Invalid permission type.", choices=['read', 'write', 'admin'])])
+
+    def fillForm(self, user):
+        self.userid.data = user.userid
+    # ENDMETHOD
 # ENDCLASS
 
 class LeaveForm(FlaskForm):
@@ -52,9 +54,9 @@ class TableUploadForm(FlaskForm):
 class DownloadForm(FlaskForm):
     """Form to specify CSV properties for download."""
 
-    delimiter = StringField('Delimiter', [InputRequired('Input is required.'), Length(min=1, max=1)], default=",")
-    quotechar = StringField('Qoute character', [InputRequired('Input is required.'), Length(min=1, max=1)], default='"')
-    nullrep = StringField('NULL representation', [InputRequired('Input is required.'), Length(min=1, max=10)], default="NULL")
+    delimiter = StringField('Delimiter', [InputRequired('Delimiter is required.'), Length(min=1, max=1)], default=",")
+    quotechar = StringField('Qoute character', [InputRequired('Qoute character is required.'), Length(min=1, max=1)], default='"')
+    nullrep = StringField('NULL representation', [InputRequired('NULL representation is required.'), Length(min=1, max=10)], default="NULL")
 
 # ENDCLASS
 
@@ -64,7 +66,7 @@ class TableJoinForm(FlaskForm):
     attribute1 = SelectField('First Table Attribute', choices=[], id='attribute1')
     tablename2 = SelectField('Second Table', choices=[], id='tablename2')
     attribute2 = SelectField('Second Table Attribute', choices=[], id='attribute2')
-    newname = StringField('New Table Name', [InputRequired(message="Input is required."), Regexp('^[A-Za-z0-9][A-Za-z0-9]+$')])
+    newname = StringField('New Table Name', [InputRequired(message="New table name is required."), Regexp('^[A-Za-z0-9][A-Za-z0-9]+$')])
 
     def fillForm(self, tables):
         self.tablename1.choices = [(table, table) for table in tables]
@@ -92,24 +94,10 @@ class AttributeForm(FlaskForm):
 # ENDCLASS
 
 class HistoryForm(FlaskForm):
-    options = SelectField('Attribute', choices=[], id="history_options")
+    options = SelectField('Table', choices=[], id="history_options")
 
     def fillForm(self, tables):
         self.options.choices = [(table, table) for table in tables]
         self.options.choices.insert(0, ("__dataset", "Entire Dataset"))
     # ENDMETHOD
-# ENDCLASS
-
-class EntryCountForm(FlaskForm):
-    """Form to select how many entries need to be displayed."""
-
-    entry_count = SelectField("   ", choices = [(10, '10'), (20, '20'), (50, '50'), (100, '100'), (500, '500')], id="entry_count", coerce = lambda x : int(x))
-    cur_dataset = HiddenField('cur_dataset')
-    cur_tablename = HiddenField('cur_tablename')
-
-    def fillForm(self, dataset_id, tablename):
-        self.cur_dataset.data = dataset_id
-        self.cur_tablename.data = tablename
-    # ENDMETHOD
-
 # ENDCLASS

@@ -7,19 +7,23 @@ from Controller.DatasetManager import DatasetManager
 from Controller.UserManager import UserManager
 from Controller.DatasetPermissionsManager import DatasetPermissionsManager
 from Controller.TableViewer import TableViewer
-from Controller.DataLoader import DataLoader, FileException as DLFileExcept
+from Model.TableLoader import TableLoader, FileException as DLFileExcept
+from Model.TableUploader import TableUploader, FileException as DLFileExcept
 
-from View.dataset_forms import DatasetForm, AddUserForm, RemoveUserForm, LeaveForm, TableUploadForm, EntryCountForm, DownloadForm, TableJoinForm, AttributeForm, HistoryForm, AddUserForm, RemoveUserForm
+from View.dataset_forms import DatasetForm, AddUserForm, RemoveUserForm, LeaveForm, TableUploadForm, DownloadForm, TableJoinForm, AttributeForm, HistoryForm, AddUserForm, RemoveUserForm
 from View.transf_forms import FindReplaceForm, DataTypeTransform, NormalizeZScore, OneHotEncoding, RegexFindReplace, DiscretizeEqualWidth, ExtractDateTimeForm
 from View.transf_forms import DiscretizeEqualFreq, DiscretizeCustomRange, DeleteOutlier, FillNullsMean, FillNullsMedian, FillNullsCustomValue
-from View.transf_forms import PredicateFormOne, PredicateFormTwo, PredicateFormThree, DeleteAttrForm
+from View.transf_forms import PredicateFormOne, PredicateFormTwo, PredicateFormThree
 from View.form_utils import flash_errors
 
 from werkzeug.utils import secure_filename
 import os
+
 from Model.TableUploader import TableUploader, FileException as DLFileExcept
 import shutil
 from utils import get_db
+
+import json
 
 dataset_pages = Blueprint('dataset_pages', __name__)
 
@@ -37,6 +41,7 @@ def home(dataset_id):
 
     dataset_info = dataset.toDict()
     table_list = dataset.getTableNames()
+    original_table_list = dataset.getOriginalTableNames()
 
     upload_form = TableUploadForm()
     join_form = TableJoinForm()
@@ -48,19 +53,22 @@ def home(dataset_id):
 
     perm_type = DatasetPermissionsManager.getPermForUserID(dataset_id, session['userdata']['userid'])
 
-    return render_template('dataset_pages.home.html', dataset_info = dataset_info, 
-                                                      table_list = table_list,
-                                                      uploadform = upload_form,
-                                                      join_form = join_form,
-                                                      editform = editform,
-                                                      perm_type=perm_type)
+    if session['userdata']['admin']:
+        perm_type = 'admin'
+
+    return render_template('dataset_pages.home.html', dataset_info        = dataset_info, 
+                                                      table_list          = table_list,
+                                                      original_table_list = original_table_list,
+                                                      uploadform          = upload_form,
+                                                      join_form           = join_form,
+                                                      editform            = editform,
+                                                      perm_type           = perm_type)
 # ENDFUNCTION
 
-@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>', defaults = {'page_nr': 1})
-@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/<int:page_nr>')
+@dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>')
 @require_login
 @require_readperm
-def table(dataset_id, tablename, page_nr):
+def table(dataset_id, tablename):
 
     row_count = session['rowcount']
 
@@ -78,17 +86,12 @@ def table(dataset_id, tablename, page_nr):
     # get info
     dataset_info = dataset.toDict()
 
-    # CHECK IN RANGE
-    if not tv.is_in_range(page_nr, row_count):
-        flash(message="Page out of range.", category="error")
-        return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename = tablename, page_nr = 1))
 
     # RETRIEVE ATTRIBUTES
     attrs = tv.get_attributes()
 
     # FORMS
     findrepl_form         = FindReplaceForm()
-    delete_form           = DeleteAttrForm()
     typeconversion_form   = DataTypeTransform()
     onehotencodingform    = OneHotEncoding()
     zscoreform            = NormalizeZScore()
@@ -106,12 +109,8 @@ def table(dataset_id, tablename, page_nr):
     predicatethree_form   = PredicateFormThree()
     extract_form          = ExtractDateTimeForm()
 
-    entrycount_form       = EntryCountForm(entry_count = session['rowcount'])
-    entrycount_form.fillForm(dataset_id, tablename)
-
     # fill forms with data
     findrepl_form.fillForm(attrs)
-    delete_form.fillForm(attrs)
     onehotencodingform.fillForm(attrs)
     zscoreform.fillForm(attrs)
     regexfindreplace_form.fillForm(attrs)
@@ -129,33 +128,16 @@ def table(dataset_id, tablename, page_nr):
     predicatetwo_form.fillForm(attrs)
     predicatethree_form.fillForm(attrs)
 
-
-    # render table
-    table_data = tv.render_table(page_nr, row_count, show_types = True)
-
-    # get indices
-    page_indices = tv.get_page_indices(display_nr = row_count, page_nr = page_nr)
-
     # RETRIEVE USER PERMISSION
     perm_type = DatasetPermissionsManager.getPermForUserID(dataset_id, session['userdata']['userid'])
 
-    attributes = tv.get_attributes()
-
-    # RETRIEVE COLUMN STATISTICS
-    colstats = []
-
-    for attr_name in tv.get_attributes():
-        colstats.append({
-            "attr_name": attr_name
-        })
+    if session['userdata']['admin']:
+        perm_type = 'admin'
 
     return render_template('dataset_pages.table.html', 
                                                 table_name            = tablename,
                                                 dataset_info          = dataset_info,
-                                                page_indices          = page_indices,
-                                                table_data            = table_data,
                                                 findrepl_form         = findrepl_form,
-                                                delete_form           = delete_form, 
                                                 typeconversion_form   = typeconversion_form,
                                                 onehotencodingform    = onehotencodingform,
                                                 zscoreform            = zscoreform,
@@ -168,24 +150,21 @@ def table(dataset_id, tablename, page_nr):
                                                 fillnullmedian_form   = fillnullmedian_form,
                                                 fillnullcustom_form   = fillnullcustom_form,
                                                 perm_type             = perm_type,
-                                                current_page          = page_nr,
-                                                colstats              = colstats,
-                                                attributes            = attributes,
                                                 attr_form             = attr_form,
-                                                entrycount_form       = entrycount_form,
                                                 extract_form          = extract_form,
                                                 predicateone_form     = predicateone_form,
                                                 predicatetwo_form     = predicatetwo_form,
                                                 predicatethree_form   = predicatethree_form,
                                                 downloadform          = DownloadForm(),
-                                                original              = False)
+                                                original              = False,
+                                                row_count             = row_count,
+                                                attribute_list        = tv.get_attributes())
 # ENDFUNCTION
 
-@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/original', defaults = {'page_nr': 1})
-@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/original/<int:page_nr>')
+@dataset_pages.route('/dataset/<int:dataset_id>/original_table/<string:tablename>')
 @require_login
 @require_readperm
-def table_original(dataset_id, tablename, page_nr):
+def table_original(dataset_id, tablename):
 
     row_count = session['rowcount']
 
@@ -195,45 +174,27 @@ def table_original(dataset_id, tablename, page_nr):
     dataset = DatasetManager.getDataset(dataset_id)
     dataset_info = dataset.toDict()
 
-    if tablename not in dataset.getTableNames():
+    if tablename not in dataset.getOriginalTableNames():
         abort(404)
 
     # get tableviewer
     tv = dataset.getTableViewer(tablename, original = True)
 
-    # CHECK IN RANGE
-    if not tv.is_in_range(page_nr, row_count):
-        flash(message="Page out of range.", category="error")
-        return redirect(url_for('dataset_pages.table_original', dataset_id=dataset_id, tablename = tablename, page_nr = 1))
-
-    # render table
-    table_data = tv.render_table(page_nr, row_count, show_types = True)
-
-    entrycount_form = EntryCountForm(entry_count = session['rowcount'])
-    entrycount_form.fillForm(dataset_id, tablename)
-
-    # get indices
-    page_indices = tv.get_page_indices(display_nr = row_count, page_nr = page_nr)
-
-
     return render_template('dataset_pages.table.html',
                                                 table_name      = tablename,
                                                 dataset_info    = dataset_info,
-                                                table_data      = table_data,
-                                                entrycount_form = entrycount_form,
-                                                page_indices    = page_indices,
-                                                current_page    = page_nr,
                                                 original        = True,
-                                                downloadform    = DownloadForm())
+                                                row_count       = row_count,
+                                                downloadform    = DownloadForm(),
+                                                attribute_list  = tv.get_attributes())
 # ENDFUNCTION
 
-@dataset_pages.route('/dataset/<int:dataset_id>/history', defaults = {'page_nr': 1, 'tablename': None}, methods=["GET", "POST"])
-@dataset_pages.route('/dataset/<int:dataset_id>/history/<int:page_nr>', defaults = {'tablename': None}, methods=["GET", "POST"])
-@dataset_pages.route('/dataset/<int:dataset_id>/history/<string:tablename>', defaults = {'page_nr': 1}, methods=["GET", "POST"])
-@dataset_pages.route('/dataset/<int:dataset_id>/history/<string:tablename>/<int:page_nr>', methods=["GET", "POST"])
+# TODO check if this works
+@dataset_pages.route('/dataset/<int:dataset_id>/history/dataset', defaults = {'tablename': None}, methods=["GET", "POST"])
+@dataset_pages.route('/dataset/<int:dataset_id>/history/table/<string:tablename>', methods=["GET", "POST"])
 @require_login
 @require_readperm
-def history(dataset_id, tablename, page_nr):
+def history(dataset_id, tablename):
     
     rowcount = session['rowcount']
 
@@ -249,13 +210,13 @@ def history(dataset_id, tablename, page_nr):
         form.fillForm(dataset.getTableNames())
 
         if not form.validate():
-            flash(message="Invalid form.", category="error")
-            return redirect(url_for("dataset_pages.history", dataset_id = dataset_id, tablename = tablename, page_nr = 1))
+            flash_errors(form)
+            return redirect(url_for("dataset_pages.history", dataset_id = dataset_id, tablename = tablename))
         else:
             tablename = form.options.data
             if tablename == '__dataset':
                 tablename = None
-            return redirect(url_for("dataset_pages.history", dataset_id = dataset_id, tablename = tablename, page_nr = 1))
+            return redirect(url_for("dataset_pages.history", dataset_id = dataset_id, tablename = tablename))
     else:
         form = HistoryForm(options = tablename)
         form.fillForm(dataset.getTableNames())
@@ -264,85 +225,18 @@ def history(dataset_id, tablename, page_nr):
     if tablename is not None and tablename not in dataset.getTableNames():
         abort(404)
 
-    ## retrieve data from dhm
-    show_all = (tablename is None)
-
-    dhm = dataset.getHistoryManager()
-
-    ## check if the page nr is in range
-    if not dhm.is_in_range(page_nr = page_nr, nr_rows = rowcount, show_all = show_all, table_name = tablename):
-        flash(message="Page out of range.", category="error")
-        return redirect(url_for("dataset_pages.history", dataset_id = dataset_id, tablename = tablename, page_nr = 1))
-
-    ## retrieve render code
-    table_data = dhm.render_history_table(page_nr = page_nr, nr_rows = rowcount, show_all = show_all, table_name = tablename)
-
-    ## retrieve page indices
-    page_indices = dhm.get_page_indices(display_nr = rowcount, page_nr = page_nr)
-
-    ## entry count
-    entrycount_form = EntryCountForm(entry_count = session['rowcount'])
-    entrycount_form.fillForm(dataset_id, tablename)
-
     ## render the template with the needed variables
     return render_template('dataset_pages.history.html',
-                                            table_data      = table_data,
-                                            table_name      = tablename,
-                                            dataset_info    = dataset_info,
-                                            page_indices    = page_indices,
-                                            history_form    = form,
-                                            current_page    = page_nr,
-                                            entrycount_form = entrycount_form)
-# ENDFUNCTION
-
-@dataset_pages.route('/dataset/set_session_rowcount/<string:redirect_type>', methods = ['POST'])
-@require_login
-def set_session_rowcount(redirect_type):
-    """Callback to set the session rowcount."""
-    form = EntryCountForm(request.form)
-
-    # retrieve raw data
-    dataset_id = int(form.cur_dataset.data)
-    tablename = form.cur_tablename.data
-
-    # replace empty tablename with None
-    if tablename == '':
-        tablename = None
-
-    if not DatasetManager.existsID(dataset_id):
-        abort(404)
-
-    dataset = DatasetManager.getDataset(dataset_id)
-
-    if tablename not in dataset.getTableNames() and tablename is not None:
-        abort(404)
-
-    form.fillForm(tablename, dataset_id)
-
-    if not form.validate():
-        flash(message="Invalid form.", category="error")
-        abort(404)
-
-    if not redirect_type in ['CURRENT', 'ORIGINAL', 'HISTORY']:
-        abort(404)
-
-    if tablename is None and redirect_type != 'HISTORY':
-        abort(404)
-
-    session['rowcount'] = int(form.entry_count.data)
-
-    if redirect_type == 'CURRENT':
-        return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename, page_nr=1))
-    elif redirect_type == 'ORIGINAL':
-        return redirect(url_for('dataset_pages.table_original', dataset_id = dataset_id, tablename = tablename, page_nr = 1))
-    elif redirect_type == 'HISTORY':
-        return redirect(url_for('dataset_pages.history', dataset_id = dataset_id, tablename = tablename, page_nr = 1))
+                                            table_name   = tablename,
+                                            dataset_info = dataset_info,
+                                            row_count    = rowcount,
+                                            history_form = form)
 # ENDFUNCTION
 
 @dataset_pages.route('/dataset/<int:dataset_id>/jointables', methods=['POST'])
 @require_login
 @require_writeperm
-def transform_join_tables(dataset_id):
+def join_tables(dataset_id):
     """Callback for joining tables"""
 
     if not DatasetManager.existsID(dataset_id):
@@ -360,7 +254,7 @@ def transform_join_tables(dataset_id):
 
     # check if tables exist.
     if not (table1_name in dataset.getTableNames() and table2_name in dataset.getTableNames()):
-        flash("Invalid table names.")
+        flash(message="Invalid table names.", category="error")
         return redirect(url_for('dataset_pages.home', dataset_id=dataset_id))
 
     table1_info = dataset.getTableViewer(table1_name)
@@ -370,7 +264,7 @@ def transform_join_tables(dataset_id):
     form.fillTable2(table2_info.get_attributes())
 
     if not form.validate():
-        flash(message="Invalid form.", category="error")
+        flash_errors(form)
         return redirect(url_for('dataset_pages.home', dataset_id=dataset_id))
 
     tt = dataset.getTableTransformer(table2_name)
@@ -466,74 +360,47 @@ def edit_info(dataset_id):
 @dataset_pages.route('/dataset/<int:dataset_id>/permissions')
 @require_login
 @require_adminperm
-def edit_perms_dataset(dataset_id):
+def permissions(dataset_id):
 
     if not DatasetManager.existsID(dataset_id):
         abort(404)
 
-    ## RETRIEVE ADMIN FORMS
-    admin_form_list = []
-    admins = DatasetPermissionsManager.getAdminPerms(dataset_id)
-    admins.remove(session['userdata']['userid']) # ADMIN CANNOT REMOVE ITSELF FROM DATASET.
+    members = []
 
-    for admin_id in admins:
-        admin_user = UserManager.getUserFromID(admin_id)
+    member_ids = DatasetPermissionsManager.getAdminPerms(dataset_id)
+    member_ids.extend(DatasetPermissionsManager.getWritePerms(dataset_id))
+    member_ids.extend(DatasetPermissionsManager.getReadPerms(dataset_id))
 
-        form = RemoveUserForm()
+    for userid in member_ids:
+        user = UserManager.getUserFromID(userid)
 
-        form.userid.data = admin_user.userid
-        form.email.data = admin_user.email
-        form.permission_type.data = 'admin'
+        perm_type = DatasetPermissionsManager.getPermForUserID(dataset_id, userid)
 
-        admin_form_list.append(form)
-    # ENDFOR
+        removeform = RemoveUserForm()
+        removeform.fillForm(user)
 
+        # user cannot remove itself
+        if userid == session['userdata']['userid']:
+            removeform = None
 
-    ## RETRIEVE WRITER FORMS
-    write_form_list = []
-    writers = DatasetPermissionsManager.getWritePerms(dataset_id)
-    for writer_id in writers:
-        write_user = UserManager.getUserFromID(writer_id)
-
-        form = RemoveUserForm()
-
-        form.userid.data = write_user.userid
-        form.email.data = write_user.email
-        form.permission_type.data = 'write'
-
-        write_form_list.append(form)
-    # ENDFOR
-
-
-    ## RETRIEVE READER FORMS
-    read_form_list = []
-    readers = DatasetPermissionsManager.getReadPerms(dataset_id)
-    for reader_id in readers:
-        read_user = UserManager.getUserFromID(reader_id)
-
-        form = RemoveUserForm()
-
-        form.userid.data = read_user.userid
-        form.email.data = read_user.email
-        form.permission_type.data = 'read'
-
-        read_form_list.append(form)
-    # ENDFOR
+        members.append({
+            'userinfo': user.toDict(),
+            'perm_type': perm_type,
+            'removeform': removeform
+        })
 
     add_user_form = AddUserForm()
 
-    return render_template('dataset_pages.edit_perms.html', 
+    return render_template('dataset_pages.permissions.html', 
                                             dataset_id = dataset_id, 
                                             add_user_form = add_user_form, 
-                                            admin_form_list = admin_form_list,
-                                            write_form_list = write_form_list,
-                                            read_form_list = read_form_list)
+                                            members = members)
 # ENDFUNCTION
 
 @dataset_pages.route('/dataset/<int:dataset_id>/add_user', methods=['POST'])
 @require_login
 @require_adminperm
-def add_user_dataset(dataset_id):
+def add_user(dataset_id):
     """Callback for form to add user access to dataset."""
 
     if not DatasetManager.existsID(dataset_id):
@@ -542,25 +409,31 @@ def add_user_dataset(dataset_id):
     form = AddUserForm(request.form)
 
     if not form.validate():
-        flash(message="Invalid form, please check email and permission type.", category="error")
-        return redirect(url_for('dataset_pages.edit_perms_dataset', dataset_id=dataset_id))
+        flash_errors(form)
+        return redirect(url_for('dataset_pages.permissions', dataset_id=dataset_id))
 
-    try:
-        dataset = DatasetManager.getDataset(dataset_id)
+    
+    dataset = DatasetManager.getDataset(dataset_id)
 
-        userid = UserManager.getUserFromEmail(form.email.data).userid
+    if not UserManager.existsEmail(form.email.data):
+        flash(message="There is no user with the specified email address.", category="error")
+        return redirect(url_for('dataset_pages.permissions', dataset_id=dataset_id))
 
-        DatasetPermissionsManager.addPerm(dataset_id, userid, form.permission_type.data)
-    except RuntimeError as e:
-        flash(message="Cannot add user to dataset.", category="error")
+    userid = UserManager.getUserFromEmail(form.email.data).userid
 
-    return redirect(url_for('dataset_pages.edit_perms_dataset', dataset_id=dataset_id))
+    if DatasetPermissionsManager.getPermForUserID(dataset_id, userid):
+        flash(message="User already has access to the dataset.", category="error")
+        return redirect(url_for('dataset_pages.permissions', dataset_id=dataset_id))
+
+    DatasetPermissionsManager.addPerm(dataset_id, userid, form.permission_type.data)
+    
+    return redirect(url_for('dataset_pages.permissions', dataset_id=dataset_id))
 # ENDFUNCTION
 
 @dataset_pages.route('/dataset/<int:dataset_id>/remove_user', methods=['POST'])
 @require_login
 @require_adminperm
-def remove_user_dataset(dataset_id):
+def remove_user(dataset_id):
     """Callback for form to remove user access from dataset."""
 
     if not DatasetManager.existsID(dataset_id):
@@ -569,20 +442,19 @@ def remove_user_dataset(dataset_id):
     form = RemoveUserForm(request.form)
 
     if not form.validate():
-        return redirect(url_for('dataset_pages.edit_perms_dataset', dataset_id=dataset_id))
+        return redirect(url_for('dataset_pages.permissions', dataset_id=dataset_id))
 
+    dataset = DatasetManager.getDataset(dataset_id)
+
+    if int(form.userid.data) == session['userdata']['userid']:
+        flash(message="User cannot remove itself from dataset.", category="error")
+        return redirect(url_for('dataset_pages.permissions', dataset_id=dataset_id))
     try:
-        dataset = DatasetManager.getDataset(dataset_id)
-
-        if int(form.userid.data) == session['userdata']['userid']:
-            flash(message="User cannot remove itself from dataset.", category="error")
-            return redirect(url_for('dataset_pages.edit_perms_dataset', dataset_id=dataset_id))
-
         DatasetPermissionsManager.removePerm(dataset_id, int(form.userid.data))
     except RuntimeError as e:
         flash(message="Cannot remove user from dataset.", category="error")
 
-    return redirect(url_for('dataset_pages.edit_perms_dataset', dataset_id=dataset_id))
+    return redirect(url_for('dataset_pages.permissions', dataset_id=dataset_id))
 # ENDFUNCTION
 
 @dataset_pages.route('/dataset/<int:dataset_id>/delete', methods=['POST'])
@@ -600,7 +472,7 @@ def delete(dataset_id):
     return redirect(url_for('dataset_pages.list'))
 # ENDFUNCTION
 
-@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/delete', methods=['POST'])
+@dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>/delete', methods=['POST'])
 @require_login
 @require_adminperm
 def delete_table(dataset_id, tablename):
@@ -666,6 +538,7 @@ def upload(dataset_id):
                 dl.read_file(real_filename, columnnames_included)
             except DLFileExcept as e: # DLFileExcept = FileException
                 flash(message=str(e), category="error")
+                # TODO print error message
                 # delete file + folder
                 shutil.rmtree(real_upload_folder, ignore_errors=True)
                 return redirect(url_for('dataset_pages.home', dataset_id=dataset_id))
@@ -684,29 +557,51 @@ def upload(dataset_id):
     return redirect(url_for('dataset_pages.home', dataset_id=dataset_id))
 # ENDFUNCTION
 
-@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/download/', defaults = {'original': False})
-@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/original/download', defaults = {'original': True})
+@dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>/download/', defaults = {'original': False})
+@dataset_pages.route('/dataset/<int:dataset_id>/original_table/<string:tablename>/download', defaults = {'original': True})
 @require_login
 @require_readperm
-def download(dataset_id, tablename, original):
+def download_table(dataset_id, tablename, original):
     """Callback to download the specified table from the specified dataset."""
 
+    if original:
+        mode = "ORIGINAL"
+    else:
+        mode = "TABLE"
+
+    return __download_helper(dataset_id=dataset_id, mode=mode, tablename=tablename)
+# ENDFUNCTION
+
+@dataset_pages.route('/dataset/<int:dataset_id>/download/')
+@require_login
+@require_readperm
+def download_dataset(dataset_id):
+    """Callback to download all the tables from the specified dataset."""
+    return __download_helper(dataset_id, mode="DATASET")
+# ENDFUNCTION
+
+def __download_helper(dataset_id, mode, tablename = None):
     if not DatasetManager.existsID(dataset_id):
         abort(404)
 
     dataset = DatasetManager.getDataset(dataset_id)
 
-    if tablename not in dataset.getTableNames():
-        abort(404)
-
     # get form
     form = DownloadForm(request.args)
 
     if not form.validate():
-        flash(message="Invalid parameters.", category="error")
+        flash_errors(form)
         return redirect(url_for('dataset_pages.home', dataset_id=dataset_id))
 
-    tv = dataset.getTableViewer(tablename, original = original)
+    if not mode in ["TABLE", "ORIGINAL", "DATASET"]:
+        raise RuntimeError("Invalid download mode")
+
+    if mode == "TABLE":
+        if not tablename in dataset.getTableNames():
+            abort(404)
+    elif mode == "ORIGINAL":
+        if not tablename in dataset.getOriginalTableNames():
+            abort(404)
 
     real_download_dir = None
 
@@ -719,6 +614,7 @@ def download(dataset_id, tablename, original):
             os.makedirs(temp_dir)
             real_download_dir = temp_dir
             break
+    # ENDFOR
 
     if real_download_dir is None:
         abort(500)
@@ -729,9 +625,16 @@ def download(dataset_id, tablename, original):
     quotechar = str(form.quotechar.data)
 
     # PREPARE FILE FOR DOWNLOAD
-    tv.to_csv(foldername=real_download_dir, delimiter=delimiter, null=nullrep, quotechar=quotechar)
+    dd = dataset.getDownloader()
+    if mode == "DATASET":
+        dd.get_csv_zip(foldername=real_download_dir, delimiter=delimiter, null=nullrep, quotechar=quotechar)
+    elif mode == "TABLE":
+        dd.to_csv(tablename=tablename, foldername=real_download_dir, delimiter=delimiter, null=nullrep, quotechar=quotechar, original = False)
+    elif mode == "ORIGINAL":
+        dd.to_csv(tablename=tablename, foldername=real_download_dir, delimiter=delimiter, null=nullrep, quotechar=quotechar, original = True)
 
-    filename = tablename + ".csv"
+    # determine the filename of the zip
+    filename = str(dataset_id) + ".zip"
 
     # SEND TO USER
     send_file = send_from_directory(real_download_dir, filename, mimetype="text/csv", attachment_filename=filename, as_attachment = True)
@@ -744,7 +647,7 @@ def download(dataset_id, tablename, original):
 
 ############################################################# DYNAMIC CALLBACKS #############################################################
 
-@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/_get_options')
+@dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>/_get_options')
 @require_login
 @require_writeperm
 def _get_options(dataset_id, tablename):
@@ -770,7 +673,7 @@ def _get_options(dataset_id, tablename):
 
 # ENDFUNCTION
 
-@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/_get_datetype')
+@dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>/_get_datetype')
 @require_login
 @require_writeperm
 def _get_datetype(dataset_id, tablename):
@@ -789,14 +692,12 @@ def _get_datetype(dataset_id, tablename):
     tt = dataset.getTableTransformer(tablename)
     tv = dataset.getTableViewer(tablename)
 
-    print(type)
-
     datetypes = [(datetype, datetype) for datetype in tt.get_datetime_formats(type)]
     return jsonify(datetypes)
 
 # ENDFUNCTION
 
-@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/_get_hist_num')
+@dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>/_get_hist_num')
 @require_login
 @require_readperm
 def _get_hist_num(dataset_id, tablename):
@@ -821,7 +722,7 @@ def _get_hist_num(dataset_id, tablename):
     return hist_num
 # ENDFUNCTION
 
-@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/_get_chart_freq')
+@dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>/_get_chart_freq')
 @require_login
 @require_readperm
 def _get_chart_freq(dataset_id, tablename):
@@ -846,7 +747,7 @@ def _get_chart_freq(dataset_id, tablename):
     return chart_freq
 # ENDFUNCTION
 
-@dataset_pages.route('/dataset/<int:dataset_id>/<string:tablename>/_get_colstats')
+@dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>/_get_colstats')
 @require_login
 @require_readperm
 def _get_colstats(dataset_id, tablename):
@@ -923,4 +824,86 @@ def _get_attr2_options(dataset_id):
     options = [(option, option) for option in tv.get_attributes()]
 
     return jsonify(options)
+# ENDFUNCTION
+
+@dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>/_get_table', defaults = {'original': False})
+@dataset_pages.route('/dataset/<int:dataset_id>/original_table/<string:tablename>/_get_table', defaults = {'original': True})
+@require_login
+@require_readperm
+def _get_table(dataset_id, tablename, original):
+    """Callback to retrieve the dataset in JSON format."""
+
+    start_nr   = request.args.get('start', type=int)
+    row_count  = request.args.get('length', type=int)
+    col_nr     = request.args.get('order[0][column]', type=int)
+    sort_order = request.args.get('order[0][dir]', type=str)
+
+    # set current session row_count to the specified count
+    session['rowcount'] = row_count
+
+    if not DatasetManager.existsID(dataset_id):
+        abort(404)
+
+    dataset = DatasetManager.getDataset(dataset_id)
+
+    if not tablename in dataset.getTableNames():
+        abort(404)
+
+    tv = dataset.getTableViewer(tablename, original = original)
+
+    data = tv.render_json(offset = start_nr, limit = row_count, order = True, ascending = (sort_order == 'asc'), on_column=col_nr)
+
+    retval = {
+        'recordsTotal':    int(tv.get_rowcount()),
+        'recordsFiltered': int(tv.get_rowcount()),
+        'data':            json.loads(data)
+    }
+
+    return jsonify(retval)
+# ENDFUNCTION
+
+@dataset_pages.route('/dataset/<int:dataset_id>/history/dataset/_get_table', defaults = {'tablename': None})
+@dataset_pages.route('/dataset/<int:dataset_id>/history/table/<string:tablename>/_get_table')
+@require_login
+@require_readperm
+def _get_history_table(dataset_id, tablename):
+    """Callback to retrieve the history table in JSON format."""
+
+    start_nr   = request.args.get('start', type=int)
+    row_count  = request.args.get('length', type=int)
+    col_nr     = request.args.get('order[0][column]', type=int)
+    sort_order = request.args.get('order[0][dir]', type=str)
+
+    if col_nr != 0:
+        abort(500)
+
+    session['rowcount'] = row_count
+
+    if not DatasetManager.existsID(dataset_id):
+        abort(404)
+
+    dataset = DatasetManager.getDataset(dataset_id)
+    dhm = dataset.getHistoryManager()
+
+    if tablename is None:
+        # entire dataset
+
+        total_rowcount = dhm.get_rowcount()
+        data = dhm.render_history_json(offset = start_nr, limit = row_count, show_all = True, reverse_order = (sort_order == "asc"))
+    else:
+        # only tablename
+        if not tablename in dataset.getTableNames():
+            abort(404)
+
+        total_rowcount = dhm.get_rowcount(tablename = tablename)
+        data = dhm.render_history_json(offset = start_nr, limit = row_count, show_all = False, table_name = tablename, reverse_order = (sort_order == "asc"))
+    # ENDIF
+
+    retval = {
+        'recordsTotal': total_rowcount,
+        'recordsFiltered': total_rowcount,
+        'data': json.loads(data)
+    }
+
+    return jsonify(retval)
 # ENDFUNCTION

@@ -6,6 +6,7 @@ from Controller.TableViewer import TableViewer
 from Controller.TableTransformer import TableTransformer
 from Model.TableUploader import TableUploader
 from Controller.DatasetHistoryManager import DatasetHistoryManager
+from Model.TableDownloader import TableDownloader
 
 class DatasetInfo:
     """Class that represents a dataset."""
@@ -55,32 +56,44 @@ class DatasetInfo:
         return tablenames
     # ENDMETHOD
 
-    def getTableViewer(self, tablename, engine = None, original = False):
+    def getOriginalTableNames(self):
+        """Retrieve the names of the original tables that are part of the dataset."""
+
+        cur = self.db_conn.cursor()
+        cur.execute("SELECT table_name FROM information_schema.tables WHERE table_schema = %s;", ["original_" + str(self.setid)])
+        result = cur.fetchall()
+
+        tablenames = [t[0] for t in result]
+
+        return tablenames
+    # ENDMETHOD
+
+    def getTableViewer(self, tablename, original = False):
         """Retrieves a TableViewer object associated with the specified set and table."""
         
-        if engine is None:
-            engine = get_sqla_eng()
-
         if not tablename in self.getTableNames():
             raise RuntimeError("Invalid tablename.")
 
         return TableViewer(setid = self.setid, 
                             tablename = tablename, 
-                            engine = engine, 
+                            engine = get_sqla_eng(), 
                             db_connection = self.db_conn, 
                             is_original = original)
     # ENDMETHOD
 
-    def getTableTransformer(self, tablename, engine = None):
+    def getTableTransformer(self, tablename):
         """Retrieves a TableTransformer object associated with the specified set and table."""
-
-        if engine is None:
-            engine = get_sqla_eng()
 
         if not tablename in self.getTableNames():
             raise RuntimeError("Invalid tablename.")
 
-        return TableTransformer(self.setid, self.db_conn, engine)
+        return TableTransformer(self.setid, self.db_conn, get_sqla_eng())
+    # ENDMETHOD
+
+    def getDownloader(self):
+        """Retrieves a DataDownloader object associated with the dataset."""
+
+        return DataDownloader(setid=self.setid, db_connection=self.db_conn)
     # ENDMETHOD
 
     def getDataLoader(self):

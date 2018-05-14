@@ -1,0 +1,57 @@
+<div id="findreplaceregexmodal" class="modal fade text-left" role="dialog">
+    <div class="modal-dialog">
+    
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Find and Replace - Regex</h4>
+            </div>
+            <div class="modal-body" id="findreplaceregex_div">
+                {% from "includes/_formhelpers.html" import render_field %}
+                <!-- Regex Find & Replace -->
+                <div style="overflow-x: auto;">
+                </br>
+                    <form method="post" action="{{ url_for('transf_callbacks.transform_findreplaceregex', dataset_id=dataset_info.setid, tablename=table_name) }}"
+                        name="findreplaceregex">
+                    {{ findrepl_form.csrf_token }}
+                    <div class="form-group" style="width: 30%; display: inline-block;">
+                        {{render_field(regexfindreplace_form.select_attr, class_="form-control")}}
+                    </div>
+                    <div class="form-group" style="width: 30%; display: inline-block;">
+                        {{render_field(regexfindreplace_form.regex, class_="form-control", placeholder="Search Regex")}}
+                    </div>
+                    <div class="form-group" style="width: 30%; display: inline-block;">
+                        {{render_field(regexfindreplace_form.replacement, class_="form-control", placeholder="Replacement")}}  
+                    </div>
+                    <div class="form-group" style="width: 30%; display: inline-block;">
+                        {{render_field(regexfindreplace_form.case_sens, class_="checkbox-inline", placeholder="True")}}
+                    </div>
+                    <div class="text-right">
+                        <a href="#" class="btn btn-primary" id="findandreplaceregex" onclick="$('#findandreplaceregex_newtable').show();$('#findreplaceregex_div').hide();">Find and Replace</a> 
+                    </div>
+                </div>
+                <!-- Regex Find & Replace  -->
+                </div>
+            <div class="modal-body" id="findandreplaceregex_newtable">
+            	<!-- Download form -->
+            	{% from "includes/_formhelpers.html" import render_field %}
+            	<div class="form-group">
+            		{{ render_field(findrepl_form.make_new_table, class_="checkbox", id="frrc") }}
+            	</div>
+            	<div class="form-group" id="frrdiv" style="width: 70%">
+            		{{ render_field(findrepl_form.new_table_name, class_="form-control") }}
+            	</div>
+                <div class="text-right">
+                    <button class="btn btn-primary" type="submit">Submit</button>
+        		</div>
+                </form>
+                <!-- Download form -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="findreplaceregex" onclick="$('#findreplaceregex_div').show();" class="btn btn-default" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+        <!-- Modal content -->
+    </div>
+</div>

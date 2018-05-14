@@ -4,8 +4,30 @@
 	<div class="jumbotron" style="padding: 1%;">
 		<div class="row">
 			<div class="col-sm-3 text-left">
-				<a href="{{ url_for('dataset_pages.view_dataset_home', dataset_id=dataset_info.setid) }}"
-				class="btn btn-primary">Tables</a>
+				<a data-hover="tooltip" title="Previous" href="{{ url_for('dataset_pages.home', dataset_id=dataset_info.setid) }}" class="btn btn-primary">
+					<span class="glyphicon glyphicon-share-alt" style="-webkit-transform: scaleX(-1); transform: scaleX(-1);"></span></a>
+				</br>
+				</br>
+				</br>
+				{% if original != True %}
+				<div>
+					<button id="transbutton" type="button" class="btn btn-primary" data-hover="tooltip" title="Transformations" data-toggle="collapse"
+						onclick="return divClick();" data-target="#sidenav">
+		                <span class="glyphicon glyphicon-menu-hamburger"></span>
+		            </button>
+		            <script>
+		            	function divClick(){
+		            		if($('#tablediv').hasClass("col-sm-12")){
+		            			$('#tablediv').attr('class', 'col-sm-9');
+		            		}
+		            		else {
+		            			$('#tablediv').attr('class', 'col-sm-12');
+		            		}
+		            	}
+				    </script>
+		            
+				</div>
+				{% endif %}
 			</div>
 			<div class="col-sm-6 text-center">
 				<h2>{{ dataset_info.name }}</h2>
@@ -16,452 +38,238 @@
 				{% endif %}
 			</div>
 			<div class="col-sm-3 text-right">
+				
 				<div>
-					<a id="file" href="#" class="btn btn-primary" data-toggle="modal" data-target="#downloadFormModal_{{ table }}">Download</a>
+					<a id="file" href="#" class="btn btn-primary" data-toggle="modal" data-hover="tooltip" title="Download" data-target="#downloadFormModal_{{ table }}">
+						<span class="glyphicon glyphicon-download-alt"></span></a>
 					{% include "includes/modals/_download_modal.html" %}
+					</br>
+					</br>
+					</br>
+					{% if original != True %}
+					<a id="file" class="btn btn-primary" data-toggle="collapse" data-hover="tooltip" title="Statistics" data-parent="#accordion" href="#view">
+						<span class="glyphicon glyphicon-stats"></span></a>
+					{% endif %}
 				</div>
 			</div>
 		</div>
-	</div>    		
-  
-  	{% if original != True %}
-	  	<div class="panel-group" id="accordion">
-		    <div class="panel panel-default">
-		      	<div class="panel-heading">
-		        	<h4 class="panel-title">
-		          		<a data-toggle="collapse" data-parent="#accordion" href="#view">View</a>
-		        	</h4>
-		      	</div>
-		      	<div id="view" class="panel-collapse collapse">
-		        	<div class="panel-body">
+	</div>  
+
+	{% if original !=  True %}
+		<div class="panel-group" id="accordion">
+	      	<div id="view" class="panel-collapse collapse">
+	        	<div class="panel-body">
+	        		<div>
 		        		<div>
-			        		<div>
-			        			{% from "includes/_formhelpers.html" import render_field %}
-			        			<form name="select_attr">
-			        				{{ attr_form.hidden_tag() }}
-					        		<div class="form-group" style="width: 20%;">
-					        			{{render_field(attr_form.view_attr, class_="form-control")}}
-					        		</div>
-					        	</form>
-				        	</div>
-				       	    <div style="float: right;" id="col_stats"></div>
-				        	</br>
-				        	</br>
-				        	</br>
-				        	</br>
-				        	</br>
-				        	</br>
-				        	<div>
-					        	<div class="text-center" style="display: inline-block;" id="chart_freq"></div>
-					        	<div class="text-center" style="display: inline-block;" id="hist_num"></div>
-					        </div>
-
-					    </div>
-		        	</div>
-		      	</div>
-		    </div>
-		    {% if (perm_type == 'admin' or perm_type == 'write') %}
-			    <div class="panel panel-default">
-			      	<div class="panel-heading">
-			        	<h4 class="panel-title">
-			         		<a data-toggle="collapse" data-parent="#accordion" href="#transform">Transform</a>
-			        	</h4>
-			      	</div>
-			      	<div id="transform" class="panel-collapse collapse">
-			      		<div class="panel-body">
-			      			<div class="panel-group" id="accordion2">
-						        {% include "includes/_transformations.html" %}
-							</div>    			
+		        			{% from "includes/_formhelpers.html" import render_field %}
+		        			<form name="select_attr">
+		        				{{ attr_form.hidden_tag() }}
+				        		<div class="form-group" style="width: 20%;">
+				        			{{render_field(attr_form.view_attr, class_="form-control")}}
+				        		</div>
+				        	</form>
+			        	</div>
+			       	    <div style="float: right;" id="col_stats"></div>
+			        	</br>
+			        	</br>
+			        	</br>
+			        	</br>
+			        	</br>
+			        	</br>
+			        	<div>
+				        	<div class="text-center" style="display: inline-block;" id="chart_freq"></div>
+				        	<div class="text-center" style="display: inline-block;" id="hist_num"></div>
 				        </div>
-		     		</div>
-		    	</div>
-		    {% endif %}
-	  	</div>	
+
+				    </div>
+	        	</div>
+	      	</div>
+	    </div>
 	{% endif %}
+		
+		  			  		
 
-  	<div class="xs-center">
-    	<div class="row">
-	    	<div class="col-sm-3 text-left">
-	    		<input type="text" id="input" placeholder="Search Page No" style="border-style: solid; border-width: 1px; border-radius: 3px;"/>
-	    		{% if original != True %}
-					<button onclick="page_search()"><i class="glyphicon glyphicon-arrow-right"></i></button>
-	    		{% else %}
-	    			<button onclick="page_search_original()"><i class="glyphicon glyphicon-arrow-right"></i></button>
-	    		{% endif %}
 
-				<script type="text/javascript">
-				function page_search(){
-					if(document.getElementById('input').value != "") {
-				    	if(!isNaN(document.getElementById('input').value))
-				    		window.location.href = '/dataset/{{ dataset_info.setid }}/{{ table_name }}/' + document.getElementById('input').value;
-					}
-				 }
-				function page_search_original(){
-					if(document.getElementById('input').value != "") {
-				    	if(!isNaN(document.getElementById('input').value))
-				    		window.location.href = '/dataset/{{ dataset_info.setid }}/{{ table_name }}/original/' + document.getElementById('input').value;
-					}
-				 }
+	  <div class="row">
+	  		{% if original != True %}
+			<div class="col-sm-3" style="position: sticky; top: 65px;">
+				<nav class="navbar-default sidebar" style="border-radius: 5px; background-color: #e5e5e5;">
+					<div class="container-fluid">
+						<style>
+							ul .nav .navbar-nav .sidebar li ul nav navbar-nav .collapse .sidebar li a .padding {
+								padding-right: 6em; padding-left: 2em;
+							}
+						</style>
+						
+						<ul class="nav navbar-nav sidebar collapse out" id="sidenav">
+				            <li><a href="#" data-toggle="modal" data-target="#tcmodal" onclick="$('#typeconversion_newtable').hide()">
+				            	Attribute Type Conversion</a></li>
 
-				</script>
+				            <li><a href="#" data-toggle="modal" data-target="#predicatemodal" onclick="$('#predicate_newtable').hide()">
+				            	Delete Rows using Predicate</a></li>
+
+				             <li><a href="#" data-toggle="modal" data-target="#deleteoutliersmodal" onclick="$('#deleteoutliers_newtable').hide()">
+				            	Delete Outliers</a></li>
+
+				            <li><a href="javascript: return void(0);" style="padding-right: 6em;" data-toggle="collapse" data-target="#navbar-collapse">
+				            	Discretize&nbsp;&nbsp;<span class="glyphicon glyphicon-plus"></span></a>
+
+								<ul class="nav navbar-nav collapse sidebar" id="navbar-collapse">
+									<li><a href="#" style="padding-right: 6em; padding-left: 2em;" href="#"
+										data-toggle="modal" data-target="#discretizewidthmodal" onclick="$('#discretizewidth_newtable').hide()">
+										<span class="glyphicon glyphicon-chevron-right">&nbsp;</span>Equal Width</a></li>
+
+									<li><a href="#" style="padding-right: 6em; padding-left: 2em;" href="#"
+										data-toggle="modal" data-target="#discretizefreqmodal" onclick="$('#discretizefreq_newtable').hide()">
+										<span class="glyphicon glyphicon-chevron-right">&nbsp;</span>Equal Frequency</a></li>
+
+									<li><a href="#" style="padding-right: 6em; padding-left: 2em;" href="#"
+										data-toggle="modal" data-target="#discretizecustommodal" onclick="$('#discretizecustom_newtable').hide()">
+										<span class="glyphicon glyphicon-chevron-right">&nbsp;</span>Custom Range</a></li>
+								</ul>
+							</li>
+
+							<li><a href="#" data-toggle="modal" data-target="#extractmodal" onclick="$('#extractdate_newtable').hide()">
+				            	Extract Part of Date</a></li>
+
+							<li><a href="javascript: void(0);" style="padding-right: 6em;" data-toggle="collapse" data-target="#navbar-collapse-2">
+				            	Fill Nulls&nbsp;&nbsp;<span class="glyphicon glyphicon-plus"></span></a>
+
+								<ul class="nav navbar-nav collapse sidebar" id="navbar-collapse-2">
+
+									<li><a href="#" style="padding-right: 6em; padding-left: 2em;" href="#"
+										data-toggle="modal" data-target="#fillnullsmeanmodal" onclick="$('#fillnullsmean_newtable').hide()">
+										<span class="glyphicon glyphicon-chevron-right">&nbsp;</span>Mean</a></li>
+
+									<li><a href="#" style="padding-right: 6em; padding-left: 2em;" href="#"
+										data-toggle="modal" data-target="#fillnullsmedianmodal" onclick="$('#fillnullsmedian_newtable').hide()">
+										<span class="glyphicon glyphicon-chevron-right">&nbsp;</span>Median</a></li>
+
+									<li><a href="#" style="padding-right: 6em; padding-left: 2em;" href="#"
+										data-toggle="modal" data-target="#fillnullscustommodal" onclick="$('#fillnullscustom_newtable').hide()">
+										<span class="glyphicon glyphicon-chevron-right">&nbsp;</span>Custom Value</a></li>
+								</ul>
+							</li>
+
+				            <li><a href="javascript: void(0);"  style="padding-right: 6em;" data-toggle="collapse" data-target="#navbar-collapse-1">
+				            	Find and Replace&nbsp;&nbsp;<span class="glyphicon glyphicon-plus"></span></a>
+
+								<ul class="nav navbar-nav collapse sidebar" id="navbar-collapse-1">
+									<li><a style="padding-right: 6em; padding-left: 2em;" href="#"
+										data-toggle="modal" data-target="#findreplacemodal" onclick="$('#findandreplace_newtable').hide()">
+										<span class="glyphicon glyphicon-chevron-right">&nbsp;</span>Regular</a></li>
+
+									<li><a style="padding-right: 6em; padding-left: 2em;" href="#"
+										data-toggle="modal" data-target="#findreplaceregexmodal" onclick="$('#findandreplaceregex_newtable').hide()">
+										<span class="glyphicon glyphicon-chevron-right">&nbsp;</span>With Regex</a></li>
+								</ul>
+							</li>
+
+				           <li><a href="#" data-toggle="modal" data-target="#normalizemodal" onclick="$('#normalize_newtable').hide()">Normalize By Z-Score</a></li>
+
+				            <li><a href="#" data-toggle="modal" data-target="#onehotencodemodal" onclick="$('#onehotencode_newtable').hide()">
+				            	One Hot Encoding</a></li>
+				        </ul>
+					</div>
+				</nav>
 			</div>
+			{% endif %}
 
-			<div class="col-sm-6"></div>
-
-		    <div class="col-sm-3 text-right">
-		    	<input type="text" id="searchInput" placeholder="Search Entry" style="border-style: solid; border-width: 1px; border-radius: 3px;" />
-		    </div>
-		</div>
-	</div>
-
-	<div class="xs-center">
-		<!--ENTRYCOUNT-->
-		<div class="col-sm-3 text-left">
-		</br>
-			{% from "includes/_formhelpers.html" import render_field %}
 			{% if original != True %}
-				<form id="entrycount_form" method="post" action="{{ url_for('dataset_pages.set_session_rowcount', redirect_type='CURRENT') }}">
-			{% else %}
-				<form id="entrycount_form" method="post" action="{{ url_for('dataset_pages.set_session_rowcount', redirect_type='ORIGINAL') }}">
-			{% endif %}	
-				{{ entrycount_form.hidden_tag() }}
-				<div class="form-group" style="width: 30%;">
-					{{render_field(entrycount_form.entry_count, class_="form-control")}}
-			    </div>
-			</form>
+
+				{% include "includes/modals/_type_conversion_modal.html" %}
+				{% include "includes/modals/_find_replace_modal.html" %}
+				{% include "includes/modals/_find_replace_regex_modal.html" %}
+				{% include "includes/modals/_discretize_width_modal.html" %}
+				{% include "includes/modals/_discretize_freq_modal.html" %}
+				{% include "includes/modals/_discretize_custom_modal.html" %}
+				{% include "includes/modals/_delete_outliers_modal.html" %}
+				{% include "includes/modals/_one_hot_encode_modal.html" %}
+				{% include "includes/modals/_fill_nulls_mean_modal.html" %}
+				{% include "includes/modals/_fill_nulls_median_modal.html" %}
+				{% include "includes/modals/_fill_nulls_custom_modal.html" %}
+				{% include "includes/modals/_predicate_modal.html" %}
+				{% include "includes/modals/_extract_date_modal.html" %}
+				{% include "includes/modals/_normalize_modal.html" %}
+
+			{% endif %}
+		
+		
+			<div id="tablediv" class="col-sm-12">
+				<style>
+					table {
+		       			border-collapse: collapse;
+		        		float:left;
+						padding:3px;
+						border-radius: 3px;
+					}
+
+			        td, th {
+			         	font-size: 15px;
+			            text-align: left;
+			            padding: 8px;
+			        }
+
+			        table thead {
+			        	background-color: lightgrey;
+			        }
+
+			        table tbody tr:nth-child(even) {
+			        	background-color: #eaeaea;
+			        }
+
+			        .dataTables_filter {
+			        	display: none;
+			        }
+
+				</style>
+
+				<!-- TABLE -->
+
+				<table id="mytable">
+					<thead>
+						<tr>
+							{% for attr in attribute_list %}
+								<th>
+									{{ attr }}
+			                        <form method="post" id="deleteform_{{ attr }}" action="{{ url_for('transf_callbacks.transform_deleteattr', dataset_id=dataset_info.setid, tablename=table_name, attrname=attr) }}" id="deleteform_{{ attr }}">
+			                       <button style="border: none; background-color: transparent;" type="submit" id="delete_{{ attr }}" ><span class="glyphicon glyphicon-trash"></span></button>
+			                        </form>
+								</th>
+							{% endfor %}
+						</tr>
+					</thead>
+				</table>
+			</div>
 		</div>
-		<!--ENTRYCOUNT-->
-		{% if original != True %}
-			<div class="col-sm-6 text-center" style="overflow-x: auto;">
-		   		<ul class="pagination">
-		   			{% if page_indices|length > 1 %}
-		    			{% for index in page_indices %}
-		    				{% if index == "..." %}
-		    					<li class="page-item hidden-xs"><a class="page-link" style="color: black;">...</a></li>
-		    				{% else %}
-		    					{% if index|int == current_page %}
-		    						<style>
-		    							.active {
-		    								color: red !important;
-		    							}
-		    						</style>
-			    					<li class="page-item active"><a class="page-link" href="{{ url_for('dataset_pages.view_dataset_table', dataset_id=dataset_info.setid, tablename=table_name, page_nr=index) }}" style="color: black;"">
-			    						{{ index }}</a></li>
-			    				{% else %}
-			    					<li class="page-item"><a class="page-link" href="{{ url_for('dataset_pages.view_dataset_table', dataset_id=dataset_info.setid, tablename=table_name, page_nr=index) }}" style="color: black;"">
-			    						{{ index }}</a></li>
-		    					{% endif %}
-		    				{% endif %}
-		    			{% endfor %}
-		    		{% else %}
-			    			<li class="page-item active"><a class="page-link" style="color: black;"">
-				    						{{ page_indices[0] }}</a></li>
-			    	{% endif %}
 
-	    		</ul>	
-	    	</div>
-	    {% else %}
-	    	<div class="col-sm-6 text-center" style="overflow-x: auto;">
-		   		<ul class="pagination">
-		   			{% if page_indices|length > 1 %}
-		    			{% for index in page_indices %}
-		    				{% if index == "..." %}
-		    					<li class="page-item hidden-xs"><a class="page-link" style="color: black;">...</a></li>
-		    				{% else %}
-		    					{% if index|int == current_page %}
-		    						<style>
-		    							.active {
-		    								color: red !important;
-		    							}
-		    						</style>
-			    					<li class="page-item active"><a class="page-link" href="{{ url_for('dataset_pages.view_dataset_table_original', dataset_id=dataset_info.setid, tablename=table_name, page_nr=index) }}" style="color: black;"">
-			    						{{ index }}</a></li>
-			    				{% else %}
-			    					<li class="page-item"><a class="page-link" href="{{ url_for('dataset_pages.view_dataset_table_original', dataset_id=dataset_info.setid, tablename=table_name, page_nr=index) }}" style="color: black;"">
-			    						{{ index }}</a></li>
-		    					{% endif %}
-		    				{% endif %}
-		    			{% endfor %}
-		    		{% else %}
-			    			<li class="page-item active"><a class="page-link" style="color: black;"">
-				    						{{ page_indices[0] }}</a></li>
-			    	{% endif %}
-
-	    		</ul>	
-	    	</div>
-	    {% endif %}
-	</div>
-
-	<div class="text-center">
-		<style>
-			table {
-       			border-collapse: collapse;
-        		float:left;
-				padding:3px;
-				border-radius: 3px;
-			}
-
-	        td, th {
-	         	font-size: 15px;
-	            text-align: left;
-	            padding: 8px;
-	        }
-
-	        table thead {
-	        	background-color: lightgrey;
-	        }
-
-	        table tbody tr:nth-child(even) {
-	        	background-color: #eaeaea;
-	        }
-
-	        .dataTables_filter {
-	        	display: none;
-	        }
-
-		</style>
-		<div>
-			{{ table_data|safe }}
-		</div>
+		<!-- TABLE -->
 		<script>
 			$(document).ready( function () {
     			var table = $('#mytable').DataTable( {
     				scrollX: true,
     				scrollY: true,
-    				paging: false,
-    				lengthChange: false,
-    				bInfo: false,
+    				processing: true,
+    				serverSide: true,
     				autoWidth: false,
-    				ordering: false
+    				fixedColumns: false,
+    				order: [[1, 'asc']], 
+    				ajax: '{{ url_for("dataset_pages._get_table", dataset_id=dataset_info.setid, tablename=table_name, original = original) }}'
     			} );
+
+    			$('#transbutton').click(function(){
+    				table.ajax.reload();
+    			});
+    	
     		} );
-
-    		var $rows = $('#mytable tbody tr');
-			$('#searchInput').keyup(function() {
-			    var val = $.trim($(this).val()).replace(/ +/g, ' ').toLowerCase();
-			    
-			    $rows.show().filter(function() {
-			        var text = $(this).text().replace(/\s+/g, ' ').toLowerCase();
-			        return !~text.indexOf(val);
-			    }).hide();
-
-			});
-
-			$('#mytable thead').on('click', 'tr th', function() {
-				var cell = $(this).text();
-				alert(cell);
-			});
 		</script>
 	</div>
 
-	<script>
-		
-		$('#entry_count').change(function() {
-			$('#entrycount_form').submit();
-		});
 
-	</script>
+	{% include "includes/scripts/_new_table_form_script.html" %}
+	{% include "includes/scripts/_type_conversion_script.html" %}
+	{% include "includes/scripts/_graph_script.html" %}
+	{% include "includes/scripts/_predicate_script.html" %}
 
-	<script>	
-		$('#view_attr').ready(function() {
-			var input = {
-				view_attr: $('#view_attr option:selected').text()
-			}
-			$.get("{{ url_for('dataset_pages._get_hist_num', dataset_id=dataset_info.setid, tablename=table_name, attr_name=input) }}", input, function(response) {
-					if(response != "N/A") {
-						$('#hist_num').append("<h5>Numerical Histogram</h5>");
-						$('#hist_num').append(response);
-					}
-				})
-			$.get("{{ url_for('dataset_pages._get_chart_freq', dataset_id=dataset_info.setid, tablename=table_name, attr_name=input) }}", input, function(response) {
-				if(response != "N/A") {
-					$('#chart_freq').append("<h5>Frequency Pie Chart</h5>");
-					$('#chart_freq').append(response);
-				}
-			})
-
-			$.get("{{ url_for('dataset_pages._get_colstats', dataset_id=dataset_info.setid, tablename=table_name, attr_name=input) }}", input, function(response) {
-				if(response != "") {	
-					$('#col_stats').append(response);
-				}
-			})
-		});
-
-		$('#view_attr').change(function() {
-			$('#hist_num').empty();
-			$('#chart_freq').empty();
-			$('#col_stats').empty();
-
-			var input = {
-				view_attr: $('#view_attr option:selected').text()
-			}
-			$.get("{{ url_for('dataset_pages._get_hist_num', dataset_id=dataset_info.setid, tablename=table_name, attr_name=input) }}", input, function(response) {
-				if(response != "N/A") {
-						$('#hist_num').append("<h5>Numerical Histogram</h5>");
-						$('#hist_num').append(response);
-				}
-			});
-			$.get("{{ url_for('dataset_pages._get_chart_freq', dataset_id=dataset_info.setid, tablename=table_name, attr_name=input) }}", input, function(response) {
-			if(response != "N/A") {
-					$('#chart_freq').append("<h5>Frequency Pie Chart</h5>");
-					$('#chart_freq').append(response);
-			}
-			});
-			$.get("{{ url_for('dataset_pages._get_colstats', dataset_id=dataset_info.setid, tablename=table_name, attr_name=input) }}", input, function(response) {
-				if(response != "") {	
-					$('#col_stats').append(response);
-				}
-			})
-		});
-	</script>
-
-	<script>
-		$(function() {
-			$('#pred_2_attr').hide()
-			$('#pred_2_op').hide()
-			$('#pred_2_input').hide()
-			$('#pred_2_select').hide()
-			$('#pred_3_attr').hide()
-			$('#pred_3_op').hide()
-			$('#pred_3_input').hide()
-
-			$('#select1').change(function() {
-				if($('#select1 option:selected').text() == "AND" || $('#select1 option:selected').text() == "OR"){
-					$('#pred_2_attr').show()
-					$('#pred_2_op').show()
-					$('#pred_2_input').show()
-					$('#pred_2_select').show()
-				}
-				else {
-					$('#pred_2_attr').hide()
-					$('#pred_2_op').hide()
-					$('#pred_2_input').hide()
-					$('#pred_2_select').hide()
-					$('#pred_3_attr').hide()
-					$('#pred_3_op').hide()
-					$('#pred_3_input').hide()
-					$('#select2').prop('selectedIndex', 0)
-				}
-			});
-
-			$('#select2').change(function() {
-				if($('#select2 option:selected').text() == "AND" || $('#select2 option:selected').text() == "OR"){
-					$('#pred_3_attr').show()
-					$('#pred_3_op').show()
-					$('#pred_3_input').show()
-				}
-				else {
-					$('#pred_3_attr').hide()
-					$('#pred_3_op').hide()
-					$('#pred_3_input').hide()
-				}
-			});
-		});
-	</script>
-	
-
-	<script>
-
-		$(function() {
-
-			var dropdown = {
-				attribute: $('#attribute'),
-				options: $('#typeOptions'),
-				char_amount: $('#char_amount'),
-				date_type: $('#date_type')
-			};
-
-			updateOptions();
-
-			function updateOptions() {
-				
-				$('#char_div').hide();
-				$('#date_div').hide();
-
-				var send = {
-					attribute: dropdown.attribute.val()
-				};
-				dropdown.options.attr('disabled', 'disabled');
-				dropdown.options.empty();
-				$.getJSON("{{ url_for('dataset_pages._get_options', dataset_id=dataset_info.setid, tablename=table_name, attr=send) }}", send, function(data) {
-					data.forEach(function(item) {
-						dropdown.options.append (
-							$('<option>', {
-								value: item[0],
-								text: item[1]
-							})
-						);
-					});
-					dropdown.options.removeAttr('disabled');
-				});	
-			}
-
-			$('#attribute').change(function() {
-				updateOptions();
-			});
-
-			$('#typeOptions').change(function() {
-				if($('#typeOptions option:selected').text() == "CHAR(n)" || $('#typeOptions option:selected').text() == "VARCHAR(n)"){
-					$('#char_div').show();
-				}
-				else {
-					$('#char_div').hide();
-				}			
-			});
-		});
-
-	</script>
-
-	<script>
-
-		$(function() {
-
-			var dropdown = {
-				attribute: $('#attribute'),
-				options: $('#typeOptions'),
-				char_amount: $('#char_amount'),
-				date_type: $('#date_type')
-			};
-
-			updateDateTime();
-
-			function updateDateTime() {
-				$('#date_div').hide();
-
-				var type = {
-					options: dropdown.options.val()
-				}
-
-				if (type.options == "") {
-					type.options = "VARCHAR(255)";
-				}
-
-				dropdown.date_type.attr('disabled', 'disabled');
-				dropdown.date_type.empty();
-				$.getJSON("{{ url_for('dataset_pages._get_datetype', dataset_id=dataset_info.setid, tablename=table_name, attr=type) }}", type, function(data) {
-					data.forEach(function(item) {
-						dropdown.date_type.append (
-							$('<option>', {
-								value: item[0],
-								text: item[1]
-							})
-						);
-					});
-					dropdown.date_type.removeAttr('disabled');
-				});
-
-			}
-			$('#typeOptions').change(function() {
-				updateDateTime();
-				if($('#typeOptions option:selected').text() == "DATE" || $('#typeOptions option:selected').text() == "TIME" || $('#typeOptions option:selected').text() == "TIMESTAMP"){
-					$('#date_div').show();
-				}
-				else {
-					$('#date_div').hide();
-				}			
-			});
-		});
-
-	</script>
 
 {% endblock %}

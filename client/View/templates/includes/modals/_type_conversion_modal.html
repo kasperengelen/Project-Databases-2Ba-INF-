@@ -1,0 +1,60 @@
+<div id="tcmodal" class="modal fade text-left" role="dialog">
+    <div class="modal-dialog">
+    
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Attribute Type Conversion</h4>
+            </div>
+            <form method="post" action="{{ url_for('transf_callbacks.transform_typeconversion', dataset_id=dataset_info.setid, tablename=table_name) }}"
+                        name="typeconversion">
+            <div id="typeconversiondiv" class="modal-body">
+                {% from "includes/_formhelpers.html" import render_field %}
+                <!-- Type Conversion -->
+                    {{ typeconversion_form.csrf_token }}
+                    <div class="form-group" style="width: 45%; display: inline-block;">
+                        {{render_field(typeconversion_form.select_attr, class_="form-control") }}
+                    </div>
+                    <div class="form-group" style="width: 45%; display: inline-block;">
+                        {{render_field(typeconversion_form.new_datatype, class_="form-control") }}
+                    </div>
+                    <div class="form-group" style="width: 45%; display: inline-block;" id="char_div">
+                        {{render_field(typeconversion_form.char_amount, class_="form-control", placeholder="Character Amount") }}
+                    </div>
+                    <div class="form-group" style="width: 45%; display: inline-block;" id="date_div">
+                        {{render_field(typeconversion_form.date_type, class_="form-control") }}
+                    </div>
+                    </br>
+                    <div class="form-group" style="width: 25%; display: inline-block;">
+                        {{render_field(typeconversion_form.do_force, class_="checkbox-inline", id="force_check") }}
+                    </div>
+                    <div class="form-group" style="width: 45%; display: inline-block;" id="force_div">
+                        {{render_field(typeconversion_form.force_mode, class_="form-control") }}
+                    </div>
+                    <div class="text-right">
+                        <a href="#" class="btn btn-primary" id="typeconversion" onclick="$('#typeconversion_newtable').show();$('#typeconversiondiv').hide();">Convert</a>
+                    </div>
+                <!-- Type Conversion -->
+            </div>
+            <div class="modal-body" id="typeconversion_newtable">
+                {% from "includes/_formhelpers.html" import render_field %}
+                <div class="form-group">
+                    {{ render_field(typeconversion_form.make_new_table, class_="checkbox", id="tcc") }}
+                </div>
+                <div class="form-group" id="tcdiv" style="width: 70%">
+                    {{ render_field(typeconversion_form.new_table_name, class_="form-control") }}
+                </div>
+                <div class="text-right">
+                    <button class="btn btn-primary" id="typeconversion" type="submit">Submit</button>
+                </div>
+                
+            </div>
+            </form>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" onclick="$('#typeconversiondiv').show();" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+        <!-- Modal content -->
+    </div>
+</div>

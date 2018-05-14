@@ -1,0 +1,52 @@
+<script>	
+		$('#view_attr').ready(function() {
+			var input = {
+				view_attr: $('#view_attr option:selected').text()
+			}
+			$.get("{{ url_for('dataset_pages._get_hist_num', dataset_id=dataset_info.setid, tablename=table_name, attr_name=input) }}", input, function(response) {
+					if(response != "N/A") {
+						$('#hist_num').append("<h5>Numerical Histogram</h5>");
+						$('#hist_num').append(response);
+					}
+				})
+			$.get("{{ url_for('dataset_pages._get_chart_freq', dataset_id=dataset_info.setid, tablename=table_name, attr_name=input) }}", input, function(response) {
+				if(response != "N/A") {
+					$('#chart_freq').append("<h5>Frequency Pie Chart</h5>");
+					$('#chart_freq').append(response);
+				}
+			})
+
+			$.get("{{ url_for('dataset_pages._get_colstats', dataset_id=dataset_info.setid, tablename=table_name, attr_name=input) }}", input, function(response) {
+				if(response != "") {	
+					$('#col_stats').append(response);
+				}
+			})
+		});
+
+		$('#view_attr').change(function() {
+			$('#hist_num').empty();
+			$('#chart_freq').empty();
+			$('#col_stats').empty();
+
+			var input = {
+				view_attr: $('#view_attr option:selected').text()
+			}
+			$.get("{{ url_for('dataset_pages._get_hist_num', dataset_id=dataset_info.setid, tablename=table_name, attr_name=input) }}", input, function(response) {
+				if(response != "N/A") {
+						$('#hist_num').append("<h5>Numerical Histogram</h5>");
+						$('#hist_num').append(response);
+				}
+			});
+			$.get("{{ url_for('dataset_pages._get_chart_freq', dataset_id=dataset_info.setid, tablename=table_name, attr_name=input) }}", input, function(response) {
+			if(response != "N/A") {
+					$('#chart_freq').append("<h5>Frequency Pie Chart</h5>");
+					$('#chart_freq').append(response);
+			}
+			});
+			$.get("{{ url_for('dataset_pages._get_colstats', dataset_id=dataset_info.setid, tablename=table_name, attr_name=input) }}", input, function(response) {
+				if(response != "") {	
+					$('#col_stats').append(response);
+				}
+			})
+		});
+	</script>

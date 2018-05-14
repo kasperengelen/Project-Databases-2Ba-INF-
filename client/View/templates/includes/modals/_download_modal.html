@@ -11,7 +11,7 @@
             <div class="modal-body">
             	<!-- Download form -->
             	{% from "includes/_formhelpers.html" import render_field %}
-                <form action="{{ url_for('dataset_pages.download', dataset_id=dataset_info.setid, tablename=table_name, original=original)}}"
+                <form action="{{ url_for('dataset_pages.download_table', dataset_id=dataset_info.setid, tablename=table_name, original=original)}}"
                 method="get" id="downloadForm_{{ table }}">
                     {{ downloadform.hidden_tag() }}
                 	<div class="form-group">
@@ -23,7 +23,9 @@
                 	<div class="form-group">
                 		{{ render_field(downloadform.nullrep, class_="form-control") }}
                 	</div>
-            		<input id="downloadForm_{{ table }}" class="btn btn-primary" type="submit" value="Download">
+                    <div class="text-right">
+            		    <input id="downloadForm_{{ table }}" class="btn btn-primary" type="submit" value="Download">
+                    </div>
                 </form>
                 <!-- Download form -->
             </div>

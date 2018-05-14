@@ -1,0 +1,43 @@
+<script>
+		$(function() {
+			$('#pred_2_attr').hide()
+			$('#pred_2_op').hide()
+			$('#pred_2_input').hide()
+			$('#pred_2_select').hide()
+			$('#pred_3_attr').hide()
+			$('#pred_3_op').hide()
+			$('#pred_3_input').hide()
+
+			$('#select1').change(function() {
+				if($('#select1 option:selected').text() == "AND" || $('#select1 option:selected').text() == "OR"){
+					$('#pred_2_attr').show()
+					$('#pred_2_op').show()
+					$('#pred_2_input').show()
+					$('#pred_2_select').show()
+				}
+				else {
+					$('#pred_2_attr').hide()
+					$('#pred_2_op').hide()
+					$('#pred_2_input').hide()
+					$('#pred_2_select').hide()
+					$('#pred_3_attr').hide()
+					$('#pred_3_op').hide()
+					$('#pred_3_input').hide()
+					$('#select2').prop('selectedIndex', 0)
+				}
+			});
+
+			$('#select2').change(function() {
+				if($('#select2 option:selected').text() == "AND" || $('#select2 option:selected').text() == "OR"){
+					$('#pred_3_attr').show()
+					$('#pred_3_op').show()
+					$('#pred_3_input').show()
+				}
+				else {
+					$('#pred_3_attr').hide()
+					$('#pred_3_op').hide()
+					$('#pred_3_input').hide()
+				}
+			});
+		});
+	</script>
