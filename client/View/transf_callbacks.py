@@ -217,6 +217,7 @@ def transform_typeconversion(dataset_id, tablename):
         abort(404)
 
     tt = dataset.getTableTransformer(tablename)
+    tv = dataset.getTableViewer(tablename)
 
     form = DataTypeTransform(request.form)
 
