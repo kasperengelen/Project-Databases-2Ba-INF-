@@ -8,6 +8,7 @@ from Controller.UserManager import UserManager
 from Controller.DatasetPermissionsManager import DatasetPermissionsManager
 from Controller.TableViewer import TableViewer
 from Model.TableLoader import TableLoader, FileException as DLFileExcept
+from Model.TableUploader import TableUploader, FileException as DLFileExcept
 
 from View.dataset_forms import DatasetForm, AddUserForm, RemoveUserForm, LeaveForm, TableUploadForm, DownloadForm, TableJoinForm, AttributeForm, HistoryForm, AddUserForm, RemoveUserForm
 from View.transf_forms import FindReplaceForm, DataTypeTransform, NormalizeZScore, OneHotEncoding, RegexFindReplace, DiscretizeEqualWidth, ExtractDateTimeForm
@@ -17,6 +18,7 @@ from View.form_utils import flash_errors
 
 from werkzeug.utils import secure_filename
 import os
+
 import shutil
 from utils import get_db
 
@@ -529,7 +531,7 @@ def upload(dataset_id):
             file.save(real_filename)
 
             # HANDLE FILE WITH DATALOADER
-            dl = TableLoader(dataset_id, get_db())
+            dl = TableUploader(dataset_id, get_db())
             
             try:
                 dl.read_file(real_filename, columnnames_included)
