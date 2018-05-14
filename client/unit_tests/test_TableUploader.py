@@ -3,11 +3,11 @@ import sys, os
 sys.path.append(os.path.join(sys.path[0],'..', 'Controller'))
 sys.path.append(os.path.join(sys.path[0],'..', 'Model'))
 import psycopg2
-import Controller.DataLoader as dl
+import Model.TableUploader as tl
 from Model.DatabaseConfiguration import DatabaseConfiguration
 
 
-class TestDataLoader(unittest.TestCase):
+class TestTableUploader(unittest.TestCase):
     db_connection = None
     engine = None
     test_object = None
@@ -15,7 +15,7 @@ class TestDataLoader(unittest.TestCase):
 
     def setUp(self):
         self.db_connection = DatabaseConfiguration().get_db()
-        self.test_object = dl.DataLoader(0, self.db_connection)
+        self.test_object = tl.TableUploader(0, self.db_connection)
         self.cur = self.db_connection.cursor()
         
         self.cur.execute("CREATE SCHEMA IF NOT EXISTS \"0\"")

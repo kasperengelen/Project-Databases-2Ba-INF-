@@ -2,7 +2,7 @@ import unittest
 import psycopg2
 from sqlalchemy import create_engine
 import Controller.TableViewer as tv
-from Model.DatabaseConfiguration import DatabaseConfiguration
+from Model.DatabaseConfiguration import TestConnection
 import math
 
 
@@ -18,15 +18,12 @@ class TestTableViewer(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         #Make all the connections and objects needed
-        cls.db_connection = DatabaseConfiguration().get_db()
-        cls.engine = DatabaseConfiguration().get_engine()
-        cls.test_object = tv.TableViewer('TEST', 'test_table', cls.engine, cls.db_connection)
-        cls.test_object2 = tv.TableViewer('TEST', 'stat_table', cls.engine, cls.db_connection)
-
+        cls.db_connection = TestConnection().get_db()
+        cls.engine = TestConnection().get_engine()
         cur = cls.db_connection.cursor()
-        cur.execute("CREATE SCHEMA IF NOT EXISTS \"TEST\"")
+        cur.execute('CREATE SCHEMA IF NOT EXISTS "0"')
         cls.db_connection.commit()
-        creation_query = """CREATE TABLE "TEST".test_table (
+        creation_query = """CREATE TABLE "0".test_table (
         string VARCHAR(255),
         number INTEGER,
         date_time VARCHAR(255));"""
@@ -44,12 +41,13 @@ class TestTableViewer(unittest.TestCase):
         except psycopg2.ProgrammingError:
             #If it was still present in the database we better drop the schema and rebuild it
             cls.db_connection.rollback()
-            cur.execute("DROP SCHEMA \"TEST\" CASCADE")
-            cur.execute("CREATE SCHEMA \"TEST\"")
+            cur.execute('DROP SCHEMA "0" CASCADE')
+            cur.execute('CREATE SCHEMA "0"')
             cls.db_connection.commit()
             cur.execute(creation_query)
             cur.execute(creation_query2)
             cls.db_connection.commit()
+            
             
             
         values = [('C-Corp', 1, '08/08/1997'), ('Apple', 10, '01/04/1976'), ('Microsoft', 8, '04/04/1975') , ('Nokia', 3000, '12/05/1865') , ('Samsung', 7, '01/03/1938'),
@@ -60,18 +58,20 @@ class TestTableViewer(unittest.TestCase):
 
         for i in range(10):
             for v in values:
-                cur.execute("INSERT INTO \"TEST\".test_table VALUES(%s, %s, %s)", v)
+                cur.execute('INSERT INTO "0".test_table VALUES(%s, %s, %s)', v)
 
         for v in values2:
-            cur.execute("INSERT INTO \"TEST\".stat_table VALUES(%s, %s, %s)", v)
-
-        
+            cur.execute('INSERT INTO "0".stat_table VALUES(%s, %s, %s)', v)
         cls.db_connection.commit()
+
+        #Make the objects after the tables actually exist and contain data.
+        cls.test_object = tv.TableViewer(0, 'test_table', cls.engine, cls.db_connection)
+        cls.test_object2 = tv.TableViewer(0, 'stat_table', cls.engine, cls.db_connection)
 
 
     @classmethod
     def tearDownClass(cls):
-        cls.db_connection.cursor().execute("DROP SCHEMA \"TEST\" CASCADE")
+        cls.db_connection.cursor().execute('DROP SCHEMA "0" CASCADE')
         cls.db_connection.commit()
         #Close database connection
         cls.db_connection.close()
@@ -89,7 +89,7 @@ class TestTableViewer(unittest.TestCase):
         self.assertEqual(all_attributes[1] in result, True)
         self.assertEqual(all_attributes[2] in result, True)
 
-    def test_is_in_range(self):
+    def depr_is_in_range(self):
         #There are 70 rows in the table
         #Check if page one with 50 rows per page is in range
         self.assertEqual(self.test_object.is_in_range(1, 50), True)

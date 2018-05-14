@@ -1,9 +1,12 @@
-import pandas as pd
+import sys
+import os
 import math
+
 import psycopg2
 from psycopg2 import sql
 import sqlalchemy
-import sys, os
+import pandas as pd
+
 from Controller.DatasetHistoryManager import DatasetHistoryManager
 from Model.SQLTypeHandler import SQLTypeHandler
 
@@ -784,13 +787,14 @@ class TableTransformer:
 
         self.history_manager.write_to_history(eventual_table, tablename, attribute, [ranges, exclude_right], 4)
         
-    def delete_outlier(self, tablename, attribute, larger, value, new_name=""):
+    def delete_outliers(self, tablename, attribute, larger, value, replacement, new_name=""):
         """Method that gets rid of outliers of an attribute by setting them to null.
 
         Parameters:
             larger: A boolean indicating if we need to delete values larger or smaller than the provided value
                     True deletes all the values larger, False deletes all the values smaller.
             value: The value used to determine whether an element is an outlier.
+            replacement: The value that will be used instead of the outliers
         """
         internal_ref = self.get_internal_reference(tablename)
         if self.replace is False:
@@ -800,27 +804,17 @@ class TableTransformer:
         attr_type = self.get_attribute_type(tablename, attribute)[0]
         if SQLTypeHandler().is_numerical(attr_type) is False:
             raise self.AttrTypeError("Deleting outliers failed due attribute not being of numeric type (neither integer or float)")
-
-        nullable = False
-
-        if self.is_nullable(tablename, attribute) is True:
-            nullable is True
             
         if larger is True:
             comparator = '>'
         else:
             comparator = '<'
         #Create query for larger/smaller deletion of outlier
-        if nullable is True:
-            sql_query = "UPDATE {0}.{1} SET {2} = null  WHERE {2} %s %s"
-        else:
-            sql_query = "DELETE FROM {0}.{1} WHERE {2} %s %s"
-
-        sql_query = sql_query % (comparator, '%s')
+        sql_query = "UPDATE {0}.{1} SET {2} = %s  WHERE {2} cmp %s".replace('cmp', comparator)
         self.db_connection.cursor().execute(sql.SQL(sql_query).format(sql.Identifier(internal_ref[0]), sql.Identifier(internal_ref[1]),
-                                                                                    sql.Identifier(attribute)), (value,))
+                                                                                    sql.Identifier(attribute)), (value, replacement))
         self.db_connection.commit()
-        self.history_manager.write_to_history(internal_ref[1], tablename, attribute, [larger, value], 3)
+        self.history_manager.write_to_history(internal_ref[1], tablename, attribute, [larger, value, replacement], 3)
         
 
     def __fill_nulls_with_x(self, attribute, internal_ref,  x):

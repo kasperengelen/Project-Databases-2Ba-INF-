@@ -1,12 +1,10 @@
+import re
 import math
+
 import psycopg2
 import psycopg2.extras
 from psycopg2 import sql
 import pandas as pd
-import re
-
-
-
 
 class DatasetHistoryManager:
     """Class that manages the transformation history ofimport reimport re a dataset.
@@ -22,11 +20,29 @@ class DatasetHistoryManager:
         self.setid = setid
         self.db_connection = db_connection
         self.track = track
-        self.entry_count = None
+        self.entry_count = self.__initialize_entrycount()
         self.choice_dict = None
-        
 
 
+    def __initialize_entrycount(self):
+            cur = self.db_connection.cursor()
+            query = "SELECT COUNT(*) FROM system.dataset_history WHERE setid = %s"
+            cur.execute(sql.SQL(query), [self.setid])
+            return cur.fetchone()[0]
+
+
+    def get_rowcount(self, tablename=None):
+        """Quick methdo to get the number of rows in the dataset history table."""
+        if tablename is None: #If we're viewing history of all the tables.
+            return self.entry_count
+
+        else:
+            cur = self.db_connection.cursor()
+            query = "SELECT COUNT(*) FROM system.dataset_history WHERE setid = %s AND (table_name = %s OR origin_table = %s)"
+            cur.execute(sql.SQL(query), [self.setid, table_name, table_name])
+            cur.fetchone()[0]
+            
+              
     def write_to_history(self, table_name, origin_table, attribute, parameters, transformation_type):
         """Method thar writes an entry to the dataset history table for a performed transformation.
 
@@ -48,7 +64,6 @@ class DatasetHistoryManager:
         self.db_connection.commit()
 
 
-
     def __python_list_to_postgres_array(self, py_list, transformation_type):
         """Method that represents a python list as a postgres array for inserting into a PostreSQL database."""
         param_array = ""
@@ -57,7 +72,7 @@ class DatasetHistoryManager:
         if nr_elements == 0: #Return an empty postgres array string
             return "{}"
 
-        if transformation_type == 15: #The predicate is already quoted and only element in the list
+        if transformation_type > 14: #Arguments for transformation 15 and 16 are already quoted
             param_array = "{" + py_list[0] + "}"
             return param_array
             
@@ -71,6 +86,60 @@ class DatasetHistoryManager:
 
         return param_array
 
+    def __backup_table(self, t_id):
+        cur = self.db_connection.cursor()
+        cur.execute("SELECT table_name FROM system.dataset_history WHERE transformation_id = %s", (t_id,))
+        tablename = cur.fetchone()[0]
+
+        backup = 'backup."{}"'.format(str(t_id))
+        backup_query = 'CREATE TABLE {} AS SELECT * FROM "{}"."{}"'.format(backup, str(self.setid), tablename)
+        cur.execute(backup_query)
+
+    def __get_recent_transformations(self, tablename):
+        """Method that returns the recent operations performed on a table."""
+        dict_cur = self.db_connection.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        query = ("SELECT * FROM system.dataset_history WHERE setid = %s AND table_name = %s LIMIT 10")
+        dict_cur.execute(query, (self.setid, tablename))
+        return dict_cur.fetchall()
+
+    def __get_latest_backup(self, tablename):
+        recent_tx = self.__get_recent_transformations(tablename)
+        distance = 0
+        for d in recent_tx:
+            distance += self.__get_edit_distance(d['transformation_type'])
+            if distance >= 3.0:
+                return d['transformation_id']
+
+        # If all the transformations haven't reached a distance of 3.0, that means the only backup
+        # is the original table.
+        return None
+
+    def __get_transformation_list(self, tablename, start_id):
+        """Return a list of transformations and their arguments that need to be performed to go back
+        N-1th transformation and basically emulating an undo of the Nth transformation.
+        """
+        cur = self.db_connection.cursor()
+        query = ('SELECT transformation_id, parameters  FROM system.dataset_history WHERE setid = %s AND table_name = %s'
+                 'AND origin_table = %s AND transformation_id > %s')
+        cur.execute(query, (self.setid, tablename, tablename, start_id ))
+        all_tx = cur.fetchall()
+        return all_tx
+        
+        
+
+    def __get_edit_distance(self, t_id):
+        """Method that calculates the edit distance defined by us to determine how dissimilar two tables are.
+        This is done by looking at various transformations and rating how hard a transformation changed the
+        data and how expensive that transformation was.
+        """
+        #These are the expensive operations, so performing these will warrant creating a backup sooner.
+        if t_id in [4, 5, 6, 13, 14, 16]:
+            return 1.0
+        #These are light transformations and only should make a backup after several operations.
+        else:
+            return 0.3
+        
+    #DEPRECATED
     def get_page_indices(self, display_nr, page_nr=1):
         """Method that returns the relevant indices for the history table that's being viewed.
 
@@ -94,8 +163,6 @@ class DatasetHistoryManager:
             else:
                 indices = []
                 start = 1
-
-                
 
             end = start + 3 #Show 3 indices including current page
             if(start == 1):
@@ -157,12 +224,31 @@ class DatasetHistoryManager:
             return True
 
 
+    def render_history_json(self, offset, limit, reverse_order=False, show_all=True, table_name=""):
+        rel_offset = offset - 1
+        rel_limit = limit - rel_offset
+        cur = self.db_connection.cursor()
+        if show_all is False:
+            query = ("SELECT * FROM system.dataset_history WHERE setid = %s AND (table_name = %s OR origin_table = %s)"
+                     " LIMIT %s OFFSET %s")
+            cur.execute(sql.SQL(query), [self.setid, table_name, table_name, rel_limit, rel_offset])
+        else:
+            query = "SELECT * FROM system.dataset_history WHERE setid = %s LIMIT %s OFFSET %s"
+            cur.execute(sql.SQL(query), [self.setid, nr_rows, offset])
+
+        all_rows = dict_cur.fetchall()
+        df = self.__rows_to_dataframe(all_rows)
+        json_string = data_frame.to_json(orient='records')
+        return json_string
+
+
     def __generate_choice_dict(self):
         """Generate the dictionary used to write away history table entries."""
         if self.choice_dict is not None:
             return
         
         choice_dict = {
+            0  : self.__rowstring_generator0,
             1  : self.__rowstring_generator1,
             2  : self.__rowstring_generator2,
             3  : self.__rowstring_generator3,
@@ -177,7 +263,8 @@ class DatasetHistoryManager:
             12 : self.__rowstring_generator12,
             13 : self.__rowstring_generator13,
             14 : self.__rowstring_generator14,
-            15 : self.__rowstring_generator15
+            15 : self.__rowstring_generator15,
+            16 : self.__rowstring_generator16
             }
         
         self.choice_dict =  choice_dict
@@ -191,6 +278,8 @@ class DatasetHistoryManager:
         for elem in row_list:
             tr_type = int(elem['transformation_type'])
             field1 = self.choice_dict[tr_type](elem)
+            if self.__is_new_table(elem):
+                field1 += self.__get_new_table_string(elem)
             field2 = elem['transformation_date']
             list_a.append(field1)
             list_b.append(field2)
@@ -235,6 +324,23 @@ class DatasetHistoryManager:
         html_string = re.sub(' mytable', '" id="mytable', df.to_html(None, None, None, True, False, classes="mytable"))
         return html_string
 
+        
+    def __is_new_table(self, dict_obj):
+        """Method that checks whether a table is a new table created from a transformation."""
+        if dict_obj['table_name'] != dict_obj['origin_table'] :
+            return False
+        else:
+            return False
+
+    def __get_new_table_string(self, dict_obj):
+        """Get a string that explains what new table the transformation resulted in."""
+        string = 'This transformation resulted in a new table "{}".'.format(dict_obj['table_name'])
+        return string
+
+    def __rowstring_generator0(self, dict_obj):
+        rowstring = 'Renamed ...'
+        return rowstring
+
 
     def __rowstring_generator1(self, dict_obj):
         param = dict_obj['parameters']
@@ -253,8 +359,11 @@ class DatasetHistoryManager:
         else:
             operand = 'smaller'
 
-        rowstring = 'Deleted outliers {} than {} from attribute "{}" of table "{}".'
-        rowstring = rowstring.format(operand, self.__unquote_string(param[1]), dict_obj['attribute'], dict_obj['origin_table'])
+        value = self.__unquote_string(param[1])
+        replacement = self.__unquote_string(param[2])
+
+        rowstring = 'Deleted outliers {} than {} from attribute "{}" of table "{}" by replacing them with the value {}.'
+        rowstring = rowstring.format(operand, value, dict_obj['attribute'], dict_obj['origin_table'], replacement)
         return rowstring
 
     def __rowstring_generator4(self, dict_obj):
@@ -337,12 +446,13 @@ class DatasetHistoryManager:
         rowstring = rowstring.format(dict_obj['origin_table'], param[0])
         return rowstring
 
+    def __rowstring_generator16(self, dict_obj):
+        param = dict_obj['parameters']
+        rowstring = 'Executed user-generated query on table "{}". Used query: {}'
+        rowstring = rowstring.format(dict_obj['origin_table'], param[0])
+        return rowstring
+        
 
-if __name__ == '__main__':
-    connection = psycopg2.connect("dbname='projectdb18' user='postgres' host='localhost' password='Sch00l2k17'")
-    obj = DatasetHistoryManager(5, connection, True)
-    obj.is_in_range(1, 50)
-    print(obj.render_history_table(1, 50))
 
 
 
