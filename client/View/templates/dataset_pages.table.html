@@ -4,7 +4,7 @@
 	<div class="jumbotron" style="padding: 1%;">
 		<div class="row">
 			<div class="col-sm-3 text-left">
-				<a data-hover="tooltip" title="Statistics" href="{{ url_for('dataset_pages.home', dataset_id=dataset_info.setid) }}" class="btn btn-primary">
+				<a data-hover="tooltip" title="Previous" href="{{ url_for('dataset_pages.home', dataset_id=dataset_info.setid) }}" class="btn btn-primary">
 					<span class="glyphicon glyphicon-share-alt" style="-webkit-transform: scaleX(-1); transform: scaleX(-1);"></span></a>
 				</br>
 				</br>
@@ -111,7 +111,7 @@
 				             <li><a href="#" data-toggle="modal" data-target="#deleteoutliersmodal" onclick="$('#deleteoutliers_newtable').hide()">
 				            	Delete Outliers</a></li>
 
-				            <li><a style="padding-right: 6em;" data-toggle="collapse" data-target="#navbar-collapse">
+				            <li><a href="javascript: return void(0);" style="padding-right: 6em;" data-toggle="collapse" data-target="#navbar-collapse">
 				            	Discretize&nbsp;&nbsp;<span class="glyphicon glyphicon-plus"></span></a>
 
 								<ul class="nav navbar-nav collapse sidebar" id="navbar-collapse">
@@ -132,7 +132,7 @@
 							<li><a href="#" data-toggle="modal" data-target="#extractmodal" onclick="$('#extractdate_newtable').hide()">
 				            	Extract Part of Date</a></li>
 
-							<li><a style="padding-right: 6em;" data-toggle="collapse" data-target="#navbar-collapse-2">
+							<li><a href="javascript: void(0);" style="padding-right: 6em;" data-toggle="collapse" data-target="#navbar-collapse-2">
 				            	Fill Nulls&nbsp;&nbsp;<span class="glyphicon glyphicon-plus"></span></a>
 
 								<ul class="nav navbar-nav collapse sidebar" id="navbar-collapse-2">
@@ -151,7 +151,7 @@
 								</ul>
 							</li>
 
-				            <li><a style="padding-right: 6em;" data-toggle="collapse" data-target="#navbar-collapse-1">
+				            <li><a href="javascript: void(0);"  style="padding-right: 6em;" data-toggle="collapse" data-target="#navbar-collapse-1">
 				            	Find and Replace&nbsp;&nbsp;<span class="glyphicon glyphicon-plus"></span></a>
 
 								<ul class="nav navbar-nav collapse sidebar" id="navbar-collapse-1">
@@ -267,224 +267,9 @@
 
 
 	{% include "includes/scripts/_new_table_form_script.html" %}
+	{% include "includes/scripts/_type_conversion_script.html" %}
+	{% include "includes/scripts/_graph_script.html" %}
+	{% include "includes/scripts/_predicate_script.html" %}
 
-	<script>
-		
-		$('#entry_count').change(function() {
-			$('#entrycount_form').submit();
-		});
-
-		$('#tcc').change(function() {
-			if($('#tcc').is(':checked')){
-				$('#tcdiv').show();
-			}
-			else {
-				$('#tcdiv').hide();
-			}
-		});
-
-	</script>
-
-	<script>	
-		$('#view_attr').ready(function() {
-			var input = {
-				view_attr: $('#view_attr option:selected').text()
-			}
-			$.get("{{ url_for('dataset_pages._get_hist_num', dataset_id=dataset_info.setid, tablename=table_name, attr_name=input) }}", input, function(response) {
-					if(response != "N/A") {
-						$('#hist_num').append("<h5>Numerical Histogram</h5>");
-						$('#hist_num').append(response);
-					}
-				})
-			$.get("{{ url_for('dataset_pages._get_chart_freq', dataset_id=dataset_info.setid, tablename=table_name, attr_name=input) }}", input, function(response) {
-				if(response != "N/A") {
-					$('#chart_freq').append("<h5>Frequency Pie Chart</h5>");
-					$('#chart_freq').append(response);
-				}
-			})
-
-			$.get("{{ url_for('dataset_pages._get_colstats', dataset_id=dataset_info.setid, tablename=table_name, attr_name=input) }}", input, function(response) {
-				if(response != "") {	
-					$('#col_stats').append(response);
-				}
-			})
-		});
-
-		$('#view_attr').change(function() {
-			$('#hist_num').empty();
-			$('#chart_freq').empty();
-			$('#col_stats').empty();
-
-			var input = {
-				view_attr: $('#view_attr option:selected').text()
-			}
-			$.get("{{ url_for('dataset_pages._get_hist_num', dataset_id=dataset_info.setid, tablename=table_name, attr_name=input) }}", input, function(response) {
-				if(response != "N/A") {
-						$('#hist_num').append("<h5>Numerical Histogram</h5>");
-						$('#hist_num').append(response);
-				}
-			});
-			$.get("{{ url_for('dataset_pages._get_chart_freq', dataset_id=dataset_info.setid, tablename=table_name, attr_name=input) }}", input, function(response) {
-			if(response != "N/A") {
-					$('#chart_freq').append("<h5>Frequency Pie Chart</h5>");
-					$('#chart_freq').append(response);
-			}
-			});
-			$.get("{{ url_for('dataset_pages._get_colstats', dataset_id=dataset_info.setid, tablename=table_name, attr_name=input) }}", input, function(response) {
-				if(response != "") {	
-					$('#col_stats').append(response);
-				}
-			})
-		});
-	</script>
-
-	<script>
-		$(function() {
-			$('#pred_2_attr').hide()
-			$('#pred_2_op').hide()
-			$('#pred_2_input').hide()
-			$('#pred_2_select').hide()
-			$('#pred_3_attr').hide()
-			$('#pred_3_op').hide()
-			$('#pred_3_input').hide()
-
-			$('#select1').change(function() {
-				if($('#select1 option:selected').text() == "AND" || $('#select1 option:selected').text() == "OR"){
-					$('#pred_2_attr').show()
-					$('#pred_2_op').show()
-					$('#pred_2_input').show()
-					$('#pred_2_select').show()
-				}
-				else {
-					$('#pred_2_attr').hide()
-					$('#pred_2_op').hide()
-					$('#pred_2_input').hide()
-					$('#pred_2_select').hide()
-					$('#pred_3_attr').hide()
-					$('#pred_3_op').hide()
-					$('#pred_3_input').hide()
-					$('#select2').prop('selectedIndex', 0)
-				}
-			});
-
-			$('#select2').change(function() {
-				if($('#select2 option:selected').text() == "AND" || $('#select2 option:selected').text() == "OR"){
-					$('#pred_3_attr').show()
-					$('#pred_3_op').show()
-					$('#pred_3_input').show()
-				}
-				else {
-					$('#pred_3_attr').hide()
-					$('#pred_3_op').hide()
-					$('#pred_3_input').hide()
-				}
-			});
-		});
-	</script>
-	
-
-	<script>
-
-		$(function() {
-
-			var dropdown = {
-				attribute: $('#attribute'),
-				options: $('#typeOptions'),
-				char_amount: $('#char_amount'),
-				date_type: $('#date_type')
-			};
-
-			updateOptions();
-
-			function updateOptions() {
-				
-				$('#char_div').hide();
-				$('#date_div').hide();
-
-				var send = {
-					attribute: dropdown.attribute.val()
-				};
-				dropdown.options.attr('disabled', 'disabled');
-				dropdown.options.empty();
-				$.getJSON("{{ url_for('dataset_pages._get_options', dataset_id=dataset_info.setid, tablename=table_name, attr=send) }}", send, function(data) {
-					data.forEach(function(item) {
-						dropdown.options.append (
-							$('<option>', {
-								value: item[0],
-								text: item[1]
-							})
-						);
-					});
-					dropdown.options.removeAttr('disabled');
-				});	
-			}
-
-			$('#attribute').change(function() {
-				updateOptions();
-			});
-
-			$('#typeOptions').change(function() {
-				if($('#typeOptions option:selected').text() == "CHAR(n)" || $('#typeOptions option:selected').text() == "VARCHAR(n)"){
-					$('#char_div').show();
-				}
-				else {
-					$('#char_div').hide();
-				}			
-			});
-		});
-
-	</script>
-
-	<script>
-
-		$(function() {
-
-			var dropdown = {
-				attribute: $('#attribute'),
-				options: $('#typeOptions'),
-				char_amount: $('#char_amount'),
-				date_type: $('#date_type')
-			};
-
-			updateDateTime();
-
-			function updateDateTime() {
-				$('#date_div').hide();
-
-				var type = {
-					options: dropdown.options.val()
-				}
-
-				if (type.options == "") {
-					type.options = "VARCHAR(255)";
-				}
-
-				dropdown.date_type.attr('disabled', 'disabled');
-				dropdown.date_type.empty();
-				$.getJSON("{{ url_for('dataset_pages._get_datetype', dataset_id=dataset_info.setid, tablename=table_name, attr=type) }}", type, function(data) {
-					data.forEach(function(item) {
-						dropdown.date_type.append (
-							$('<option>', {
-								value: item[0],
-								text: item[1]
-							})
-						);
-					});
-					dropdown.date_type.removeAttr('disabled');
-				});
-
-			}
-			$('#typeOptions').change(function() {
-				updateDateTime();
-				if($('#typeOptions option:selected').text() == "DATE" || $('#typeOptions option:selected').text() == "TIME" || $('#typeOptions option:selected').text() == "TIMESTAMP"){
-					$('#date_div').show();
-				}
-				else {
-					$('#date_div').hide();
-				}			
-			});
-		});
-
-	</script>
 
 {% endblock %}

@@ -10,14 +10,17 @@
             <div class="modal-body" id="onehotencode_div">
                 {% from "includes/_formhelpers.html" import render_field %}
                 <!-- One Hot Encoding -->
-                <div class="col-sm-6" style="overflow-x: auto;">
+                <div style="overflow-x: auto;">
                     <form method="post" action="{{ url_for('transf_callbacks.transform_onehotencoding', dataset_id=dataset_info.setid,
                     tablename=table_name) }}" name="onehotencode">
                     {{ onehotencodingform.csrf_token }}
-                    <div class="form-group" style="width: 30%; display: inline-block;">
+                    <div class="form-group" style="width: 35%; display: inline-block;">
                         {{render_field(onehotencodingform.select_attr, class_="form-control")}}
                     </div>
-                     <a href="#" class="btn btn-primary" id="onehotencode" onclick="$('#onehotencode_newtable').show();$('#onehotencode_div').hide();">One Hot Encode</a>
+                    <div class="text-right">
+                        <a href="#" class="btn btn-primary" id="onehotencode" onclick="$('#onehotencode_newtable').show();$('#onehotencode_div').hide();">
+                            One Hot Encode</a>
+                    </div>
                 </div>
                 <!-- One Hot Encoding -->
             </div>
@@ -28,15 +31,17 @@
             	<div class="form-group">
             		{{ render_field(onehotencodingform.make_new_table, class_="checkbox", id="ohec") }}
             	</div>
-            	<div class="form-group" id="ohediv">
+            	<div class="form-group" id="ohediv" style="width: 70%">
             		{{ render_field(onehotencodingform.new_table_name, class_="form-control") }}
             	</div>
-                <button class="btn btn-primary" type="submit">Submit</button>
+                <div class="text-right">
+                    <button class="btn btn-primary" type="submit">Submit</button>
+                </div>
                 </form>
                 <!-- Download form -->
             </div>
             <div class="modal-footer">
-                <button type="button" id="onehotencode" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                <button type="button" id="onehotencode" onclick="$('#onehotencode_div').show();" class="btn btn-default" data-dismiss="modal">Cancel</button>
             </div>
         </div>
         <!-- Modal content -->

@@ -9,21 +9,23 @@
             </div>
             <div class="modal-body" id="discretizecustom_div">
                 <!-- Discretize Equal Width -->
-                <div class="col-sm-12" style="overflow-x: auto;">
+                <div style="overflow-x: auto;">
                     {% from "includes/_formhelpers.html" import render_field %}
                     <form method="post" action="{{ url_for('transf_callbacks.transform_discretizeCustomRange', dataset_id=dataset_info.setid, tablename=table_name) }}"     name="discretizecustom">
                     {{ discretizeCustom_form.csrf_token }}
-                    <div class="form-group" style="width: 20%; display: inline-block;">
+                    <div class="form-group" style="width: 35%; display: inline-block;">
                         {{render_field(discretizeCustom_form.select_attr, class_="form-control")}}
                     </div>
-                    <div class="form-group" style="width: 20%; display: inline-block;">
+                    <div class="form-group" style="width: 35%; display: inline-block;">
                         {{render_field(discretizeCustom_form.ranges, class_="form-control")}}
                     </div>
-                    <div class="form-group" style="width: 15%; display: inline-block;">
+                    <div class="form-group" style="width: 20%; display: inline-block;">
                         {{render_field(discretizeCustom_form.interval_spec, class_="form-control")}}
                     </div>
-                    <a href="#" class="btn btn-primary" id="discretizecustom" onclick="$('#discretizecustom_newtable').show();$('#discretizecustom_div').hide();">
-                    Discretize</a> 
+                    <div class="text-right">
+                        <a href="#" class="btn btn-primary" id="discretizecustom"
+                        onclick="$('#discretizecustom_newtable').show();$('#discretizecustom_div').hide();">Discretize</a> 
+                    </div>
                     
                 </div>
                 <!-- Discretize Equal Width  -->
@@ -34,14 +36,16 @@
             	<div class="form-group">
             		{{ render_field(discretizeCustom_form.make_new_table, class_="checkbox", id="decc") }}
             	</div>
-            	<div class="form-group" id="decdiv">
+            	<div class="form-group" id="decdiv" style="width: 70%;">
             		{{ render_field(discretizeCustom_form.new_table_name, class_="form-control") }}
             	</div>
-                <button class="btn btn-primary" type="submit">Submit</button>
-        		</form>
+                <div class="text-right">
+                    <button class="btn btn-primary" type="submit">Submit</button>
+        		</div>
+                </form>
             </div>
             <div class="modal-footer">
-                <button type="button" id="discretizecustom" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                <button type="button" id="discretizecustom" onclick="$('#discretizecustom_div').show();" class="btn btn-default" data-dismiss="modal">Cancel</button>
             </div>
         </div>
         <!-- Modal content -->

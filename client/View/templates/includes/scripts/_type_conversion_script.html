@@ -101,3 +101,18 @@
 	});
 
 </script>
+
+<script>
+
+	$('#force_div').hide();
+
+	$('#force_check').change(function() {
+		if($('#force_check').is(':checked')){
+			$('#force_div').show();
+		}
+		else {
+			$('#force_div').hide();
+		}
+	});
+
+</script>
