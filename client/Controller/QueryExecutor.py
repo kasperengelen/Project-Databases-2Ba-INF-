@@ -26,6 +26,7 @@ class QueryExecutor:
         self.engine = engine
         self.write_perm = write_perm
         self.history_manager = DatasetHistoryManager(setid, db_conn, True)
+        self.altered_data = {}
 
     class SyntaxError(Exception):
         """
@@ -44,8 +45,30 @@ class QueryExecutor:
         that make it fail (e.g., referencing tables / columns that don't exist in the dataset).
         """
 
+    def execute_transaction(self, query):
+        """Method that executes SQL statements (transaction) if they are correct.
+        Even just one SQL statement counts as a valid transaction for this method.
+        This method can be called for one or more statements without problem.
+        """
+        statements = filter(None, query.split(';'))
+        try:
+            for statement in statements:
+                result = self.__execute_statement(statement)
 
-    def execute_query(self, query):
+        #Catch whatever went wrong and rollback all the changes before re-raising the exception
+        except:
+            self.db_conn.rollback()
+            raise
+
+        #If nothing failed and every statement has been succesfully executed commit
+        self.db_conn.commit()
+        #If some table has been altered due one or more queries in this transaction
+        if len(self.altered_data) > 0:
+            for key, value in self.altered_data.items():
+                self.history_manager.write_to_history(key, key, '', [value], 16)
+        return result
+        
+    def __execute_statement(self, query):
         """Execute user-generated query."""
         try: #Let's try parsing the query purely on syntax.
             statement = psqlparse.parse(query)[0]
@@ -87,13 +110,12 @@ class QueryExecutor:
             cur.execute(query)
             
         except psycopg2.ProgrammingError as e:
-            error_msg = self.__get_clean_exception(str(e), True)
+            error_msg = self.__get_clean_exception(str(e), Falses)
             raise self.SyntaxError(error_msg) from e
 
-        self.db_conn.commit()
         modified_table = self.__get_modified_table(original_query, tables)
-        parameter = '"{}"'.format(original_query)
-        self.history_manager.write_to_history(modified_table, modified_table, '', [parameter], 16)
+        parameter = '"{}"'.format(original_query + ';')
+        self.altered_data[modified_table] += parameter
         return None
             
 
@@ -108,8 +130,7 @@ class QueryExecutor:
         except sqlalchemy.exc.ProgrammingError as e:
             raise self.SyntaxError(e.__context__) from e
 
-        data_frame  = data_frame.replace([None] * len(tables), [np.nan] * len(tables))
-        json_string = data_frame.to_json(orient='records')
+        json_string = data_frame.to_json(orient='values')
         return json_string
 
 
