@@ -810,9 +810,10 @@ class TableTransformer:
         else:
             comparator = '<'
         #Create query for larger/smaller deletion of outlier
-        sql_query = "UPDATE {0}.{1} SET {2} = %s  WHERE {2} %s %s" 
+        sql_query = "UPDATE {0}.{1} SET {2} = %s  WHERE {2} cmp %s".replace('cmp', comparator)
+        print(sql_query)
         self.db_connection.cursor().execute(sql.SQL(sql_query).format(sql.Identifier(internal_ref[0]), sql.Identifier(internal_ref[1]),
-                                                                                    sql.Identifier(attribute)), (value, comparator, replacement))
+                                                                                    sql.Identifier(attribute)), (value, replacement))
         self.db_connection.commit()
         self.history_manager.write_to_history(internal_ref[1], tablename, attribute, [larger, value, replacement], 3)
         
