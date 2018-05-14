@@ -3,6 +3,8 @@
     
         <!-- Modal content-->
         <div class="modal-content">
+            <form method="post" action="{{ url_for('transf_callbacks.transform_deleteOutlier', dataset_id=dataset_info.setid,
+                    tablename=table_name) }}" name="deleteoutliers">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal">&times;</button>
                 <h4 class="modal-title">Delete Outliers</h4>
@@ -10,20 +12,20 @@
             <div class="modal-body" id="deleteoutliers_div">
                 {% from "includes/_formhelpers.html" import render_field %}
             <!-- Delete Outliers -->
-            <div class="col-sm-12" style="overflow-x: auto;">
-                <form method="post" action="{{ url_for('transf_callbacks.transform_deleteOutlier', dataset_id=dataset_info.setid,
-                    tablename=table_name) }}" name="deleteoutliers">
+            <div style="overflow-x: auto;">
                 {{ deleteoutlier_form.csrf_token }}
-                <div class="form-group" style="width: 30%; display: inline-block;">
+                <div class="form-group" style="width: 35%; display: inline-block;">
                     {{render_field(deleteoutlier_form.select_attr, class_="form-control")}}
                 </div>
                 <div class="form-group" style="width: 20%; display: inline-block;">
                     {{render_field(deleteoutlier_form.select_comparison, class_="form-control")}}
                 </div>
-                <div class="form-group" style="width: 30%; display: inline-block;">
+                <div class="form-group" style="width: 35%; display: inline-block;">
                     {{render_field(deleteoutlier_form.value, class_="form-control", placeholder="Value")}}
                 </div>
-                <a href="#" class="btn btn-primary" id="discretizecustom" onclick="$('#deleteoutliers_newtable').show();$('#deleteoutliers_div').hide();">Delete Outliers</a>
+                <div class="text-right">
+                    <a href="#" class="btn btn-primary" id="discretizecustom" onclick="$('#deleteoutliers_newtable').show();$('#deleteoutliers_div').hide();">Delete Outliers</a>
+                </div>
             </div>
             <!-- Delete Outliers -->
             </div>
@@ -33,14 +35,16 @@
             	<div class="form-group">
             		{{ render_field(deleteoutlier_form.make_new_table, class_="checkbox", id="doc") }}
             	</div>
-            	<div class="form-group" id="dodiv">
+            	<div class="form-group" id="dodiv" style="width: 70%">
             		{{ render_field(deleteoutlier_form.new_table_name, class_="form-control") }}
             	</div>
-                <button class="btn btn-primary" id="deleteoutliers" type="submit">Submit</button>
-        		</form>
+                <div class="text-right">
+                    <button class="btn btn-primary" id="deleteoutliers" type="submit">Submit</button>
+        		</div>
             </div>
+            </form>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-default" onclick="$('#deleteoutliers_div').show();" data-dismiss="modal">Cancel</button>
             </div>
         </div>
         <!-- Modal content -->

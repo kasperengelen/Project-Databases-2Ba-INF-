@@ -34,14 +34,14 @@ def transform_predicate(dataset_id, tablename):
     predicatethree.fillForm(tv.get_attributes())
 
     if not predicateone.validate():
-        flash_errors(form)
+        flash_errors(predicateone)
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
 
     predicate_list = [predicateone.attr1.data, predicateone.op1.data, predicateone.input1.data]
 
     if(predicateone.select1.data != "END"):
         if not predicatetwo.validate():
-            flash_errors(form)
+            flash_errors(predicatetwo)
             return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))    
 
         predicate_list.append(predicateone.select1.data)
@@ -51,7 +51,7 @@ def transform_predicate(dataset_id, tablename):
 
     if(predicatetwo.select2.data != "END"):
         if not predicatethree.validate():
-            flash_errors(form)
+            flash_errors(predicatethree)
             return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
 
         predicate_list.append(predicatetwo.select2.data)

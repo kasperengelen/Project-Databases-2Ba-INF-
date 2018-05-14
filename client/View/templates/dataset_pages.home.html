@@ -4,12 +4,13 @@
 	<div class="jumbotron" style="padding: 1%;">
 		<div class="row">
 			<div class="col-sm-3 text-left">
-				<a href="{{ url_for('dataset_pages.list') }}" class="btn btn-primary">
+				<a data-hover="tooltip" title="Previous" href="{{ url_for('dataset_pages.list') }}" class="btn btn-primary">
 					<span class="glyphicon glyphicon-share-alt" style="-webkit-transform: scaleX(-1); transform: scaleX(-1);"></span></a>
 				</br>
 				</br>
 				</br>
-				<a href="{{ url_for('dataset_pages.history', dataset_id=dataset_info.setid) }}" class="btn btn-primary">History</a>
+				<a href="{{ url_for('dataset_pages.history', dataset_id=dataset_info.setid) }}" data-hover="tooltip" title="History"
+					class="btn btn-primary"><span class="glyphicon glyphicon-time"></span></a>
 			</div>
 			<div class="col-sm-6 text-center">
 				<h2>{{ dataset_info.name }}</h2>
@@ -23,7 +24,7 @@
 						</br>
 						</br>
 						<a href="{{ url_for('dataset_pages.permissions', dataset_id=dataset_info.setid) }}" 
-							class="btn btn-primary">Permissions</a>
+							class="btn btn-primary"><span class="glyphicon glyphicon-wrench"></a>
 					</div>
 				</div>
 			{% endif %}

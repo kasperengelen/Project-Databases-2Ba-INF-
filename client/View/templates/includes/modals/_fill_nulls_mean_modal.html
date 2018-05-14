@@ -9,16 +9,18 @@
             </div>
             <div class="modal-body" id="fillnullsmean_div">
                 <!-- Fill Nulls Mean -->
-                <div class="col-sm-6" style="overflow-x: auto;">
+                <div style="overflow-x: auto;">
                     <form method="post" action="{{ url_for('transf_callbacks.transform_fillNullsMean', dataset_id=dataset_info.setid,
                         tablename=table_name) }}" name="fillnullsmean">
                     {% from "includes/_formhelpers.html" import render_field %}
                     {{ fillnullmean_form.csrf_token }}
-                    <div class="form-group" style="width: 30%; display: inline-block;">
+                    <div class="form-group" style="width: 35%; display: inline-block;">
                         {{render_field(fillnullmean_form.select_attr, class_="form-control")}}
                     </div>
-                    <a href="#" class="btn btn-primary" id="fillnullsmean" onclick="$('#fillnullsmean_newtable').show();
-                        $('#fillnullsmean_div').hide();">Fill Nulls</a>                    
+                    <div class="text-right">
+                        <a href="#" class="btn btn-primary" id="fillnullsmean" onclick="$('#fillnullsmean_newtable').show();
+                            $('#fillnullsmean_div').hide();">Fill Nulls</a>      
+                    </div>              
                 </div>
                 <!-- Fill Nulls Mean -->
             </div>
@@ -28,15 +30,17 @@
             	<div class="form-group">
             		{{ render_field(fillnullmean_form.make_new_table, class_="checkbox", id="fnmeanc") }}
             	</div>
-            	<div class="form-group" id="fnmeandiv">
+            	<div class="form-group" id="fnmeandiv" style="width: 70%;">
             		{{ render_field(fillnullmean_form.new_table_name, class_="form-control") }}
             	</div>
-                <button class="btn btn-primary" type="submit">Submit</button>
+                <div class="text-right">
+                    <button class="btn btn-primary" type="submit">Submit</button>
+                </div>
         		</form>
                 <!-- Download form -->
             </div>
             <div class="modal-footer">
-                <button type="button" id="fillnullsmean" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                <button type="button" id="fillnullsmean" onclick="$('#fillnullsmean_div').show();" class="btn btn-default" data-dismiss="modal">Cancel</button>
             </div>
         </div>
         <!-- Modal content -->
