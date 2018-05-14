@@ -173,11 +173,9 @@ class TableViewer:
         return html_table
 
     def render_json(self, offset, limit, order=False, ascending=True, on_column=""):
-        rel_offset = offset - 1
-        rel_limit = limit - rel_offset
-        SQL_query =  'SELECT * FROM "%s"."%s" LIMIT %s OFFSET %s' % (self.schema, self.tablename, rel_limit, rel_offset)
+        SQL_query =  'SELECT * FROM "%s"."%s" LIMIT %s OFFSET %s' % (self.schema, self.tablename, limit, offset)
         data_frame = pd.read_sql(SQL_query, self.engine)
-        json_string = data_frame.to_json(orient='records', date_format='iso')
+        json_string = data_frame.to_json(orient='values', date_format='iso')
         return json_string
 
     def get_numerical_histogram(self, columnname, bar_nr=10):
