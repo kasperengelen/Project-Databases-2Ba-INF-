@@ -6,7 +6,7 @@ from Controller.TableViewer import TableViewer
 from Controller.TableTransformer import TableTransformer
 from Model.TableUploader import TableUploader
 from Controller.DatasetHistoryManager import DatasetHistoryManager
-from Model.TableDownloader import TableDownloader
+from Model.DatasetDownloader import DatasetDownloader
 
 class DatasetInfo:
     """Class that represents a dataset."""
@@ -91,13 +91,13 @@ class DatasetInfo:
     # ENDMETHOD
 
     def getDownloader(self):
-        """Retrieves a DataDownloader object associated with the dataset."""
+        """Retrieves a DatasetDownloader object associated with the dataset."""
 
-        return DataDownloader(setid=self.setid, db_connection=self.db_conn)
+        return DatasetDownloader(setid=self.setid, db_connection=self.db_conn)
     # ENDMETHOD
 
-    def getDataLoader(self):
-        """Retrieve the dataloader for this dataset."""
+    def getUploader(self):
+        """Retrieve the TableUploader for this dataset."""
         return TableUploader(self.setid, self.db_conn)
 
     def getHistoryManager(self):
