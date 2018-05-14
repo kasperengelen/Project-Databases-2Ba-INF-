@@ -811,7 +811,6 @@ class TableTransformer:
             comparator = '<'
         #Create query for larger/smaller deletion of outlier
         sql_query = "UPDATE {0}.{1} SET {2} = %s  WHERE {2} cmp %s".replace('cmp', comparator)
-        print(sql_query)
         self.db_connection.cursor().execute(sql.SQL(sql_query).format(sql.Identifier(internal_ref[0]), sql.Identifier(internal_ref[1]),
                                                                                     sql.Identifier(attribute)), (value, replacement))
         self.db_connection.commit()
