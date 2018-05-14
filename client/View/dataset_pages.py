@@ -13,7 +13,7 @@ from View.dataset_forms import PredicateFormOne, PredicateFormTwo, PredicateForm
 from Controller.TableViewer import TableViewer
 from werkzeug.utils import secure_filename
 import os
-from Model.TableLoader import TableLoader, FileException as DLFileExcept
+from Model.TableUploader import TableUploader, FileException as DLFileExcept
 import shutil
 import webbrowser
 from utils import get_db
@@ -1231,7 +1231,7 @@ def upload(dataset_id):
             file.save(real_filename)
 
             # HANDLE FILE WITH DATALOADER
-            dl = TableLoader(dataset_id, get_db())
+            dl = TableUploader(dataset_id, get_db())
             
             try:
                 dl.read_file(real_filename, columnnames_included)

@@ -13,28 +13,6 @@ class Deduplicator:
         self.db_connection = db_connection
         self.cur = self.db_connection.cursor()
 
-    def test2(self):
-        query = "SELECT * FROM \"{}\".\"records\";".format(self.schema)
-        test = pd.read_sql(query, self.engine)
-        indexer = rl.BlockIndex(on=["Country", "Item_Type", "Order_Priority"])
-        pairs = indexer.index(test)
-        print(len(pairs))
-
-        compare = rl.Compare()
-        compare.exact('Sales_Channel', 'Sales_Channel', label='Sales_Channel')
-        features = compare.compute(pairs, test)
-        print(features.sum(axis=1).value_counts().sort_index(ascending=False))
-        matches = features[features.sum(axis=1) == 1]
-
-        kmeans = rl.KMeansClassifier()
-        result_kmeans = kmeans.learn(matches)
-        cm_kmeans = rl.confusion_matrix(matches.index, result_kmeans, len(matches))
-        print(rl.fscore(cm_kmeans))
-
-        # krebs_data, krebs_match = load_krebsregister(missing_values=0)
-        # print(krebs_data.head(10))
-        # print(krebs_match)
-
     def test(self, exact_match, ignore):
         table_name = "dataset1"
         query = "SELECT * FROM \"{}\".\"{}\";".format(self.schema, table_name)
@@ -55,28 +33,25 @@ class Deduplicator:
         indexer = rl.SortedNeighbourhoodIndex(on=exact_match, window=3)
         pairs = indexer.index(og_df)
 
+        num_cols = list()
+
         compare = rl.Compare()
         for i in range(len(col_names)):
             column = col_names[i]
             if column in ignore:
                 continue
 
-            if np.issubdtype(og_df[column].dtype, np.number):
-                mean = og_df[column].mean()
-                std = og_df[column].std()
-                print(column + ": " + str(mean) + ", " + str(std))
-                compare.numeric(column, column, label=column, method="linear", origin=mean, offset=std, scale=std)
-            elif types_dict[column] == "date":
+            if types_dict[column] == "date":
                 og_df[column] = pd.to_datetime(og_df[column])
                 compare.date(column, column, label=column)
-            else:
-                compare.string(column, column, label=column, method="damerau_levenshtein")
+                continue
 
-            # if types_dict[column] == "date":
-            #     og_df[column] = pd.to_datetime(og_df[column])
-            #     compare.date(column, column, label=column)
-            # else:
-            #     compare.string(column, column, label=column, method="damerau_levenshtein")
+            if np.issubdtype(og_df[column].dtype, np.number):
+                og_df[column] = og_df[column].astype(str)
+                num_cols.append(column)
+                print(og_df.head(10))
+
+            compare.string(column, column, label=column, method="damerau_levenshtein")
 
         potential_pairs = compare.compute(pairs, og_df)
 
@@ -116,11 +91,7 @@ class Deduplicator:
             paired_table = pd.DataFrame([row1, row2])
             uncertain_paired_rows.append(paired_table)
 
-        # print(certain_paired_rows[309])
-        # print(uncertain_paired_rows[0])
-        # print(len(paired_rows))
-        # print(similarity_df.ix[6, 150])
-        # print(certain_paired_rows)
+        return certain_paired_rows, uncertain_paired_rows
 
 
 if __name__ == "__main__":

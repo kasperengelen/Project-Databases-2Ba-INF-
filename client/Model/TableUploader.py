@@ -41,7 +41,7 @@ class EODException(FileException):
         super().__init__("End of dump reached without create table statements")
 
 
-class TableLoader:
+class TableUploader:
 
     def __init__(self, setid, db_connection=None):
         self.db_conn = db_connection
