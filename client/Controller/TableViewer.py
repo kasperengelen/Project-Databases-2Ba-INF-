@@ -35,15 +35,13 @@ class TableViewer:
         else:
             self.schema = str(setid)
         self.maxrows = self.__initialize_rowcount()
-
-
+        
     def __initialize_rowcount(self):
         count_query  = 'SELECT COUNT(*) FROM "%s"."%s"' % (self.schema, self.tablename)
         query_result = pd.read_sql(count_query, self.engine)
         rowcount = query_result.iat[0, 0]
         return int(rowcount)
         
-
     def get_attributes(self):
         """Method that returns a list of all attributes of the table."""
         SQL_query = "SELECT * FROM \"%s\".\"%s\" LIMIT 1" % (self.schema, self.tablename)
@@ -53,80 +51,13 @@ class TableViewer:
     def get_rowcount(self):
         """Simple method to get the number of rows the table viewed by TableViewer has."""
         return self.maxrows
+
+    def render_json(self, offset, limit, order=False, ascending=True, on_column=""):
+        SQL_query =  'SELECT * FROM "%s"."%s" LIMIT %s OFFSET %s' % (self.schema, self.tablename, limit, offset)
+        data_frame = pd.read_sql(SQL_query, self.engine)
+        json_string = data_frame.to_json(orient='values', date_format='iso')
+        return json_string
         
-    #DEPRECATED
-    def get_page_indices(self, display_nr, page_nr=1):
-        """Method that returns the relevant indices for a table that's being viewed.
-
-        Parameters:
-            display_nr: Integer specifying how much rows of a table have to be shown per page.
-            page_nr: Integer indicating which page we're viewing to extract the right rows.
-        """
-        if self.maxrows is None:
-            #This method will set the maxrows
-            self.is_in_range(1, 1)
-    
-        table_size = self.maxrows
-        max_index = math.ceil(table_size / display_nr)
-        if max_index == 0:
-            return [1]
-        #At this point the table is too large to just show all the indices, we have to minimize clutter
-        if(max_index > 5):
-            if page_nr > 4:
-                indices = ['1', '...', ]
-                start = page_nr - 1 #Get index before current
-            else:
-                indices = []
-                start = 1
-
-                
-
-            end = start + 3 #Show 3 indices including current page
-            if(start == 1):
-                end += 1
-                if(page_nr == 4): #At this point only index = 2 will be '...', we only want to skip 2 or more values.
-                    end += 1
-
-            elif(page_nr == (max_index - 3)): #At this point the last 4 indices should always be shown
-               start = page_nr - 1
-               end = max_index + 1
-               
-            
-            elif (end >= max_index):
-                start = max_index -3 #Keep last pages from being isolated
-                end = max_index + 1 
-
-        else:
-            indices = []
-            start = 1
-            end = max_index + 1
-            
-        for i in range(start, end):
-            indices.append(str(i))
-
-        if(end < max_index):
-            indices.append('...')
-            indices.append(str(max_index))
-
-        return indices
-
-
-    def is_in_range(self, page_nr, nr_rows):
-        """Method that returns True if a page index is in range and False if it's not in range.
-
-        Parameters:
-            page_nr: Integer indicating which page we're trying to view
-            nr_rows: The number of rows that are being showed per page. 
-        """ 
-        if((page_nr - 1) * nr_rows >= self.maxrows):
-            #In case it's an empty table, the first page should still be in range
-            if (self.maxrows == 0) and (page_nr == 1):
-                return True
-            else:
-                return False
-        else:
-            return True
-
     def __render_types(self, attr_list):
         """Method that generates all the types of the table attributes."""
         cur = self.db_connection.cursor()
@@ -145,38 +76,6 @@ class TableViewer:
             type_list.append(type_name)
 
         return type_list
-
-    #DEPRECATED
-    def render_table(self, page_nr, nr_rows, show_types=False):
-        """This method returns a html table representing the page of the SQL table.
-
-        Parameters:
-            page_nr: Integer indicating which page we're viewing.
-            nr_rows: The number of rows that are being showed per page.
-            show_types: Boolean indicating whether data types should be included in the column header.
-        """
-        offset = 0
-        offset = (page_nr - 1) * nr_rows
-        SQL_query = "SELECT * FROM \"%s\".\"%s\" LIMIT %s OFFSET %s" % (self.schema, self.tablename, nr_rows, offset)
-        data_frame = pd.read_sql(SQL_query, self.engine)
-        attributes = self.get_attributes()
-        data_frame = data_frame.replace([None] * len(attributes), [np.nan] * len(attributes))
-        html_table = re.sub(' mytable', '" id="mytable', data_frame.to_html(None, None, None, True, False, na_rep = 'NULL', classes='mytable'))
-        if show_types is False:
-            return html_table
-        type_list = self.__render_types(attributes)
-        for i in range(len(attributes)): #Let's add the types to the tablenames
-            string = attributes[i]
-            new_string = string + "<br>(" + type_list[i] + ")"
-            html_table = html_table.replace(string, new_string, 1)
-            
-        return html_table
-
-    def render_json(self, offset, limit, order=False, ascending=True, on_column=""):
-        SQL_query =  'SELECT * FROM "%s"."%s" LIMIT %s OFFSET %s' % (self.schema, self.tablename, limit, offset)
-        data_frame = pd.read_sql(SQL_query, self.engine)
-        json_string = data_frame.to_json(orient='values', date_format='iso')
-        return json_string
 
     def get_numerical_histogram(self, columnname, bar_nr=10):
         # first check if the attribute type is numerical
@@ -302,4 +201,3 @@ class TableViewer:
     def get_avg(self, columnname):
         """Return average value of the column"""
         return self.__aggregate_function(columnname, "AVG")
-
