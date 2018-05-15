@@ -6,7 +6,7 @@
 			<div class="col-sm-3 text-left">
 				<a data-hover="tooltip" title="Previous" href="{{ url_for('dataset_pages.list') }}" class="btn btn-primary">
 					<span class="glyphicon glyphicon-share-alt" style="-webkit-transform: scaleX(-1); transform: scaleX(-1);"></span></a>
-				<div style="padding-top: 3em;"></div>
+				<div style="padding-top: 4.5em;"></div>
 				<a href="{{ url_for('dataset_pages.history', dataset_id=dataset_info.setid) }}" data-hover="tooltip" title="History"
 					class="btn btn-primary"><span class="glyphicon glyphicon-time"></span></a>
 			</div>
@@ -17,7 +17,11 @@
 			{% if perm_type == 'admin' %}
 				<div class="col-sm-3 text-right">
 					{% include "includes/modals/_edit_dataset_modal.html" %}
-					<div style="padding-top: 3em;"></div>
+					<div style="padding-top: 1em;"></div>
+					<a id="edit" href="#" class="btn btn-primary" data-toggle="modal" data-hover="tooltip" title="Download"
+    					data-target="#downloadDatasetModal_{{ dataset_info.setid  }}"><span class="glyphicon glyphicon-download-alt"></span></a>
+    					{% include "includes/modals/_dataset_download_modal.html" %}
+    				<div style="padding-top: 1em;"></div>
 					<a data-hover="tooltip" title="Permissions" href="{{ url_for('dataset_pages.permissions', dataset_id=dataset_info.setid) }}" 
 						class="btn btn-primary"><span class="glyphicon glyphicon-eye-open"></span></a>
 				</div>
@@ -91,7 +95,7 @@
 	{% endif %}
 
 
-	<div style="overflow-x: auto;">
+	<div style="overflow-x: none;">
 		<style>
 	        table {
 	            border-collapse: collapse;
@@ -119,7 +123,8 @@
 	            display: none;
 	        }
 	    </style>
-	    <div class="col-sm-6 col-sm-offset-3">
+	    <div class="col-sm-3"></div>
+	    <div class="col-sm-6">
 			<!-- TABLE LIST -->
 		    <!-- NAV TABS -->
 		    <ul class="nav nav-tabs" role="tablist">
@@ -187,7 +192,7 @@
 	                paging: false,
 	                info: false,
 	                lengthChange: false,
-	                autoWidth: false,
+	                autoWidth: true,
 	                order: [[0, 'asc']],
 	                columnDefs: [
 	                	{"targets": 1, "orderable": false},

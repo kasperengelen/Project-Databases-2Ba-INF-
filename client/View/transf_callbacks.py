@@ -359,7 +359,7 @@ def transform_discretizeEqualWidth(dataset_id, tablename):
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
 
     try:
-        tt.discretize_using_equal_width(tablename, form.select_attr.data)
+        tt.discretize_using_equal_width(tablename, form.select_attr.data, form.nr_of_bins.data)
         flash(message="Discretization complete.", category="success")
     except Exception as e:
         flash(message="An error occurred. Details: " + str(e), category="error")

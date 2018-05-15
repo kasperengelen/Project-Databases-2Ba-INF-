@@ -10,7 +10,8 @@ from Controller.TableViewer import TableViewer
 
 from Model.TableUploader import FileException as DLFileExcept
 
-from View.dataset_forms import DatasetForm, AddUserForm, RemoveUserForm, LeaveForm, TableUploadForm, DownloadForm, TableJoinForm, AttributeForm, HistoryForm, AddUserForm, RemoveUserForm
+from View.dataset_forms import DatasetForm, AddUserForm, RemoveUserForm, LeaveForm, TableUploadForm, TableJoinForm, AttributeForm, HistoryForm, AddUserForm, RemoveUserForm
+from View.dataset_forms import DownloadDatasetCSVForm, DownloadDatasetSQLForm, DownloadTableCSVForm, DownloadTableSQLForm
 from View.transf_forms import FindReplaceForm, DataTypeTransform, NormalizeZScore, OneHotEncoding, RegexFindReplace, DiscretizeEqualWidth, ExtractDateTimeForm
 from View.transf_forms import DiscretizeEqualFreq, DiscretizeCustomRange, DeleteOutlier, FillNullsMean, FillNullsMedian, FillNullsCustomValue
 from View.transf_forms import PredicateFormOne, PredicateFormTwo, PredicateFormThree
@@ -61,7 +62,8 @@ def home(dataset_id):
                                                       uploadform          = upload_form,
                                                       join_form           = join_form,
                                                       editform            = editform,
-                                                      downloadform        = DownloadForm(),
+                                                      download_csv_form   = DownloadDatasetCSVForm(),
+                                                      download_sql_form   = DownloadDatasetSQLForm(),
                                                       perm_type           = perm_type)
 # ENDFUNCTION
 
@@ -155,7 +157,8 @@ def table(dataset_id, tablename):
                                                 predicateone_form     = predicateone_form,
                                                 predicatetwo_form     = predicatetwo_form,
                                                 predicatethree_form   = predicatethree_form,
-                                                downloadform          = DownloadForm(),
+                                                download_csv_form     = DownloadDatasetCSVForm(),
+                                                download_sql_form     = DownloadTableSQLForm(),
                                                 original              = False,
                                                 row_count             = row_count,
                                                 attribute_list        = tv.get_attributes())
@@ -559,11 +562,13 @@ def upload(dataset_id):
     return redirect(url_for('dataset_pages.home', dataset_id=dataset_id))
 # ENDFUNCTION
 
-@dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>/download/', defaults = {'original': False})
-@dataset_pages.route('/dataset/<int:dataset_id>/original_table/<string:tablename>/download', defaults = {'original': True})
+@dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>/download/CSV',          defaults = {'original': False, 'fileformat': 'CSV'})
+@dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>/download/SQL',          defaults = {'original': False, 'fileformat': 'SQL'})
+@dataset_pages.route('/dataset/<int:dataset_id>/original_table/<string:tablename>/download/CSV', defaults = {'original': True,  'fileformat': 'CSV'})
+@dataset_pages.route('/dataset/<int:dataset_id>/original_table/<string:tablename>/download/SQL', defaults = {'original': True,  'fileformat': 'SQL'})
 @require_login
 @require_readperm
-def download_table(dataset_id, tablename, original):
+def download_table(dataset_id, tablename, original, fileformat):
     """Callback to download the specified table from the specified dataset."""
 
     if original:
@@ -571,25 +576,32 @@ def download_table(dataset_id, tablename, original):
     else:
         mode = "TABLE"
 
-    return __download_helper(dataset_id=dataset_id, mode=mode, tablename=tablename)
+    return __download_helper(dataset_id=dataset_id, mode=mode, tablename=tablename, fileformat = fileformat)
 # ENDFUNCTION
 
-@dataset_pages.route('/dataset/<int:dataset_id>/download/')
+@dataset_pages.route('/dataset/<int:dataset_id>/download/CSV', defaults = {'fileformat': 'CSV'})
+@dataset_pages.route('/dataset/<int:dataset_id>/download/SQL', defaults = {'fileformat': 'SQL'})
 @require_login
 @require_readperm
-def download_dataset(dataset_id):
+def download_dataset(dataset_id, fileformat):
     """Callback to download all the tables from the specified dataset."""
-    return __download_helper(dataset_id, mode="DATASET")
+    return __download_helper(dataset_id=dataset_id, mode="DATASET", fileformat = fileformat)
 # ENDFUNCTION
 
-def __download_helper(dataset_id, mode, tablename = None):
+def __download_helper(dataset_id, mode, fileformat, tablename = None):
     if not DatasetManager.existsID(dataset_id):
         abort(404)
 
     dataset = DatasetManager.getDataset(dataset_id)
 
-    # get form
-    form = DownloadForm(request.args)
+    if mode == "DATASET" and fileformat == "CSV":
+        form = DownloadDatasetCSVForm(request.args)
+    elif mode == "DATASET" and fileformat == "SQL":
+        form = DownloadDatasetSQLForm(request.args)
+    elif mode in ["TABLE", "ORIGINAL"] and fileformat == "CSV":
+        form = DownloadTableCSVForm(request.args)
+    elif mode in ["TABLE", "ORIGINAL"] and fileformat == "SQL":
+        form = DownloadTableSQLForm(request.args)
 
     if not form.validate():
         flash_errors(form)
@@ -621,22 +633,37 @@ def __download_helper(dataset_id, mode, tablename = None):
     if real_download_dir is None:
         abort(500)
 
-    # GET PARAMETERS
-    delimiter = str(form.delimiter.data)
-    nullrep = str(form.nullrep.data)
-    quotechar = str(form.quotechar.data)
+    if fileformat == 'CSV':
+        # GET PARAMETERS
+        delimiter = str(form.delimiter.data)
+        nullrep = str(form.nullrep.data)
+        quotechar = str(form.quotechar.data)
 
-    # PREPARE FILE FOR DOWNLOAD
-    dd = dataset.getDownloader()
-    if mode == "DATASET":
-        dd.get_csv_zip(foldername=real_download_dir, delimiter=delimiter, null=nullrep, quotechar=quotechar)
-    elif mode == "TABLE":
-        dd.to_csv(tablename=tablename, foldername=real_download_dir, delimiter=delimiter, null=nullrep, quotechar=quotechar, original = False)
-    elif mode == "ORIGINAL":
-        dd.to_csv(tablename=tablename, foldername=real_download_dir, delimiter=delimiter, null=nullrep, quotechar=quotechar, original = True)
-
-    # determine the filename of the zip
-    filename = str(dataset_id) + ".zip"
+        # PREPARE FILE FOR DOWNLOAD
+        dd = dataset.getDownloader()
+        if mode == "DATASET":
+            dd.get_csv_zip(foldername=real_download_dir, delimiter=delimiter, null=nullrep, quotechar=quotechar, original=form.original_check.data)
+            filename = str(dataset_id) + ".zip"
+        elif mode == "TABLE":
+            dd.get_csv(tablename=tablename, foldername=real_download_dir, delimiter=delimiter, null=nullrep, quotechar=quotechar, original = False)
+            filename = tablename + ".csv"
+        elif mode == "ORIGINAL":
+            dd.get_csv(tablename=tablename, foldername=real_download_dir, delimiter=delimiter, null=nullrep, quotechar=quotechar, original = True)
+            filename = tablename + ".csv"
+        
+    elif fileformat == 'SQL':
+        dd = dataset.getDownloader()
+        if mode == "DATASET":
+            dd.get_dataset_dump(foldername=real_download_dir, original=form.original_check.data)
+            filename = str(dataset_id) + ".zip"
+        elif mode == "TABLE":
+            dd.get_table_dump(tablename=tablename, foldername=real_download_dir, original=False)
+            filename = tablename + ".dump"
+        elif mode == "ORIGINAL":
+            dd.get_table_dump(tablename=tablename, foldername=real_download_dir, original=True)
+            filename = tablename + ".dump"
+    else:
+        raise RuntimeError("Invalid file format: '" + fileformat + "'.")
 
     # SEND TO USER
     send_file = send_from_directory(real_download_dir, filename, mimetype="text/csv", attachment_filename=filename, as_attachment = True)

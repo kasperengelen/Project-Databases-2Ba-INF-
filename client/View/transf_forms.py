@@ -8,10 +8,14 @@ from View.form_utils import EnumCheck, FilenameCheck
 class TransformationFormBase(FlaskForm):
     """Base class for all transformation forms."""
 
-    make_new_table = BooleanField('Make backup?', default = False)
-    new_table_name = StringField('Backup name', [InputRequired(message="Table name is required."), 
+    make_new_table = BooleanField('Create New Table?', default = False)
+    new_table_name = StringField('New Table Name', [InputRequired(message="Table name is required."), 
                                               Length(min=3, max=20, message="Tablename needs to be between 3 and 20 characters long."), 
-                                              Regexp('^[A-Za-z0-9][A-Za-z0-9]+$')], default="name")
+                                              Regexp('^[A-Za-z0-9][A-Za-z0-9]+$')])
+
+    def validate_new_table_name(form, field):
+        if make_new_table.data: # only validate if the checkbox is clicked.
+            field.validate()
 # ENDCLASS
 
 class FindReplaceForm(TransformationFormBase):
@@ -88,6 +92,7 @@ class OneHotEncoding(TransformationFormBase):
 class DiscretizeEqualWidth(TransformationFormBase):
     """Form to discretize values into equidistant intervals."""
     select_attr = SelectField('Attribute', choices=[])
+    nr_of_bins = IntegerField('Number of Bins', [InputRequired(message="Number of bins is required.")])
 
     def fillForm(self, attrs):
         self.select_attr.choices = [(attrname, attrname) for attrname in attrs]

@@ -37,7 +37,7 @@
 		<table id="listtable">
 			<thead>
 				<tr>
-					<th>ID</th>
+					
 					<th>Name</th>
 					<th>Description</th>
 					<th>Permission</th>
@@ -49,7 +49,6 @@
 				
 				{% for dataset in datasets %}
 					<tr>
-						<td>{{ dataset.datasetinfo.setid }}</td>
 						<td><a href="{{ url_for('dataset_pages.home', dataset_id=dataset.datasetinfo.setid) }}">{{ dataset.datasetinfo.name }}</a></td>
 						<td>{{ dataset.datasetinfo.desc }}</td>
 						<td>{{ dataset.permtype }}</td>
