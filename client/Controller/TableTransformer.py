@@ -250,7 +250,22 @@ class TableTransformer:
 
         error_msg = "This method should only be called when converting to date/time."
         raise ValueError(error_msg)
-        
+
+    def __get_datetime_regex(self, d_type, d_format):
+        """Method that returns the regex matching the type (DATE, TIMESTAMP, TIME)."""
+        pattern = d_format
+        if d_type in ['DATE', 'TIMESTAMP']:
+            pattern = pattern.replace('DD', '[0-9]{1,2}')
+            pattern = pattern.replace('MM', '[0-9]{1,2}')
+            pattern = pattern.replace('YYYY', '[0-9]{4}')
+        if d_type in ['TIMESTAMP', 'TIME']:
+            pattern = pattern.replace('HH24', '[0-9]{1,2}')
+            #pattern = pattern.replace('HH24', '[0-9]{1,2}')
+            pattern = pattern.replace('MI', '(:[0-9]{1-2})?')
+            pattern = pattern.replace('SS', '(:[0-9]{1-2})?')
+            pattern = pattern.replace('AM', '')
+        return pattern
+
     def get_attribute_type(self, tablename, attribute, detailed=False):
         """Return the postgres data type of an attribute.
         Parameters:
@@ -368,6 +383,11 @@ class TableTransformer:
             
         elif to_type == 'FLOAT':
             pattern = '^[-+.]?[0-9]+[.]?[e]?[-+]?[0-9]*$'
+
+        elif to_type in ['DATE', 'TIMESTAMP', 'TIME']:
+            data_format = self.__readable_format_to_postgres(to_type, data_format)
+            pattern = self.__get_datetime_regex(to_type, data_format)
+            
 
         else:
             # This is going to be very tough to express....
@@ -810,9 +830,9 @@ class TableTransformer:
         else:
             comparator = '<'
         #Create query for larger/smaller deletion of outlier
-        sql_query = "UPDATE {0}.{1} SET {2} = %s  WHERE {2} %s %s" 
+        sql_query = "UPDATE {0}.{1} SET {2} = %s  WHERE {2} cmp %s".replace('cmp', comparator)
         self.db_connection.cursor().execute(sql.SQL(sql_query).format(sql.Identifier(internal_ref[0]), sql.Identifier(internal_ref[1]),
-                                                                                    sql.Identifier(attribute)), (value, comparator, replacement))
+                                                                                    sql.Identifier(attribute)), (value, replacement))
         self.db_connection.commit()
         self.history_manager.write_to_history(internal_ref[1], tablename, attribute, [larger, value, replacement], 3)
         

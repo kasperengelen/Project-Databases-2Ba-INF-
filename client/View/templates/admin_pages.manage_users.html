@@ -49,7 +49,7 @@
             <tbody>
             {% for user in users %}
                 <tr>
-                    <td>{{ user.userinfo.fname }} {{ user.userinfo.lname }}</td>
+                    <td><a href="{{ url_for('user_pages.profile', user_id=user.userinfo.userid) }}">{{ user.userinfo.fname }} {{ user.userinfo.lname }}</a></td>
                     <td>{{ user.userinfo.email }}</td>
                     <td>{% if user.userinfo.admin == true %}
                             Yes
@@ -99,7 +99,9 @@
                 scrollX: true,
                 scrollY: true,
                 paging: false,
-                info: false
+                info: false,
+                lengthChange: false,
+                autoWidth: false
             } );
         } );
     </script>

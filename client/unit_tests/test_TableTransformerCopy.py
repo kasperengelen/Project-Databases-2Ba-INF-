@@ -96,7 +96,6 @@ class TestTransformerCopy(unittest.TestCase):
         self.assertEqual(found, False)
         self.db_connection.commit()
 
-
     def test_find_and_replace(self):
         """A test for the find and replace method resulting in a new table."""
         self.test_object.find_and_replace('test_table','string', 'C-Corp', 'Replacement', new_name='new_table2')
@@ -108,7 +107,6 @@ class TestTransformerCopy(unittest.TestCase):
         self.assertEqual(result[1], 1)
         self.assertEqual(result[2], '08/08/1997')
         self.db_connection.commit()
-
 
     def test_find_and_replace_string(self):
         """A test for find and replace method but for finding substrings resulting in a new table."""
@@ -132,8 +130,6 @@ class TestTransformerCopy(unittest.TestCase):
         #We found Toshiba but replaced To with Waka to get Wakashiba
         self.assertEqual(result[1], 8)
         self.assertEqual(result[2], '01/07/1975')
-
-
 
     def test_regex_find_and_replace(self):
         """A test for the method of TableTransformer that uses regular expressions. This will result in a new table."""
@@ -166,7 +162,6 @@ class TestTransformerCopy(unittest.TestCase):
         result = cur.fetchone()
         self.assertIsNone(result) #Shouldn't be able to find out due the difference in case"""
 
-
     def test_numeric_conversion(self):
         """Test the conversion of numeric types (INTEGER, FLOAT). This will result in a new table."""
         #From integer to float
@@ -191,7 +186,6 @@ class TestTransformerCopy(unittest.TestCase):
         cur.execute("SELECT pg_typeof(number) FROM \"0\".new_table10")
         result = cur.fetchone()[0]
         self.assertEqual(result, 'character varying')
-
 
     def test_character_conversion(self):
         """Test the conversion of character types. This will result in a new table."""
@@ -218,8 +212,7 @@ class TestTransformerCopy(unittest.TestCase):
         cur.execute("SELECT pg_typeof(number) FROM \"0\".new_table13")
         result = cur.fetchone()[0]
         self.assertEqual(result, 'character varying')
-
-
+        
     def test_datetime_conversion(self):
         """Test the conversion of an attribute to  a date/time type. This will result in a new table."""
         cur = self.db_connection.cursor()
@@ -250,7 +243,6 @@ class TestTransformerCopy(unittest.TestCase):
         self.assertEqual(result, 'time without time zone')
         self.db_connection.commit()
 
-
     def test_one_hot_encode(self):
         """Test the one-hot-encoding method for a column with unique and duplicate values. This will result in a new table."""
         cur = self.db_connection.cursor()
@@ -273,7 +265,6 @@ class TestTransformerCopy(unittest.TestCase):
         #There should 22 columns, 3 previous one + 16 unique categories 
         self.assertEqual(len(all_columns), 19)
         self.db_connection.commit()
-
 
     def test_equidistant_discretization(self):
         """Test the equidistant discretization method. This will result in a new table."""
@@ -305,7 +296,6 @@ class TestTransformerCopy(unittest.TestCase):
         self.assertIsNone(result)
         self.db_connection.commit()
 
-
     def test_equifrequent_discretization(self):
         """Test the equifrequent discretization method. This will result in a new table."""
         cur = self.db_connection.cursor()
@@ -335,7 +325,6 @@ class TestTransformerCopy(unittest.TestCase):
         result = cur.fetchone()
         self.assertIsNone(result)
         self.db_connection.commit()
-
 
     def test_discretization_with_custom_ranges(self):
         """Test the discretization with custom ranges method. This will result in a new table."""
@@ -389,21 +378,19 @@ class TestTransformerCopy(unittest.TestCase):
         result = cur.fetchone()
         self.assertIsNone(result)
         self.db_connection.commit()
-
-
-
-    def depr_test_delete_outliers(self):
+        
+    def test_delete_outliers(self):
         """Test the method of TableTransformer to delete outliers. This will result in a new table."""
         #Test outliers larger than presented value
         cur = self.db_connection.cursor()
-        self.test_object.delete_outliers('test_table', 'number', True, 40, 'new_table22')
+        self.test_object.delete_outliers('test_table', 'number', True, 40, 0, 'new_table22')
         result = self.__test_table_exists('new_table22')
         self.assertTrue(result)
         cur.execute('SELECT * FROM "0".new_table22 WHERE number > 40')
         result = cur.fetchone()
         self.assertIsNone(result)
 
-        self.test_object.delete_outliers('test_table', 'number', True, 20, 'new_table23')
+        self.test_object.delete_outliers('test_table', 'number', True, 20, 0, 'new_table23')
         result = self.__test_table_exists('new_table23')
         self.assertTrue(result)
         cur.execute('SELECT * FROM "0".new_table23 WHERE number > 20')
@@ -411,22 +398,21 @@ class TestTransformerCopy(unittest.TestCase):
         self.assertIsNone(result)
 
         #Test outliers smaller than presented value
-        self.test_object.delete_outliers('test_table', 'number', False, -15, 'new_table24')
+        self.test_object.delete_outliers('test_table', 'number', False, -15, 0, 'new_table24')
         result = self.__test_table_exists('new_table24')
         self.assertTrue(result)
         cur.execute('SELECT * FROM "0".new_table24 WHERE number < -15')
         result = cur.fetchone()
         self.assertIsNone(result)
 
-        self.test_object.delete_outliers('test_table', 'number', False, 0, 'new_table25')
+        self.test_object.delete_outliers('test_table', 'number', False, 0, 0, 'new_table25')
         result = self.__test_table_exists('new_table25')
         self.assertTrue(result)
         cur.execute('SELECT * FROM "0".new_table25 WHERE number < 0')
         result = cur.fetchone()
         self.assertIsNone(result)
         self.db_connection.commit()
-
-
+        
     def test_fill_nulls_with_mean(self):
         """Test the method of TableTransformer that fills null values with the mean. This will result in a new table."""
         cur = self.db_connection.cursor()
@@ -446,8 +432,7 @@ class TestTransformerCopy(unittest.TestCase):
         result = cur.fetchall()
         self.assertIsNotNone(result)
         self.assertEqual(1,1)
-
-
+        
     def test_fill_nulls_with_median(self):
         """Test the method of TableTransformer that fills null values with the median. This will result in a new table."""
         cur = self.db_connection.cursor()
@@ -466,8 +451,7 @@ class TestTransformerCopy(unittest.TestCase):
         cur.execute('SELECT * FROM "0".new_table27 WHERE number = 9 AND string = \'Elevate ltd\'')
         result = cur.fetchall()
         self.assertIsNotNone(result)
-
-
+        
     def test_fill_nulls_with_custom_value(self):
         """Test the method of TableTransformer that fills null values with a custom value."""
         cur = self.db_connection.cursor()
@@ -478,8 +462,7 @@ class TestTransformerCopy(unittest.TestCase):
         cur.execute('SELECT * FROM "0".new_table28 WHERE number = 10000 AND string = \'Elevate ltd\'')
         result = cur.fetchall()
         self.assertIsNotNone(result)
-
-
+        
     def incomplete_test_delete_rows_using_conditions(self):
         """Test method of TableTransformer deletes rows by using provided predicates. This will result in a new table."""
         cur = self.db_connection.cursor()
@@ -500,9 +483,7 @@ class TestTransformerCopy(unittest.TestCase):
         cur.execute(query)
         result = cur.fetchone()
         self.assertIsNone(result)
-
-
-
+        
     def test_datetime_extraction(self):
         """This one is for testing the extraction of parts of the date/time done by TableTransformer. This will result in a new table."""
         cur = self.db_connection.cursor()
@@ -528,9 +509,3 @@ class TestTransformerCopy(unittest.TestCase):
         result = cur.fetchone()
         self.assertIsNotNone(result)
         self.assertEqual(result[0], 'Nintendo')
-
-
-
-
-    
-    

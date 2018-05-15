@@ -6,6 +6,7 @@ from Controller.TableViewer import TableViewer
 from Controller.TableTransformer import TableTransformer
 from Model.TableUploader import TableUploader
 from Controller.DatasetHistoryManager import DatasetHistoryManager
+from Model.DatasetDownloader import DatasetDownloader
 
 class DatasetInfo:
     """Class that represents a dataset."""
@@ -15,8 +16,8 @@ class DatasetInfo:
         """Convert a SQL-tuple containing information about a user
         to a DatasetInfo object."""
 
-        setid = int(tupl[0])
-        setname = str(tupl[1])
+        setid       = int(tupl[0])
+        setname     = str(tupl[1])
         description = str(tupl[2])
 
         return DatasetInfo(setid, setname, description, db_conn = db_conn)
@@ -55,36 +56,48 @@ class DatasetInfo:
         return tablenames
     # ENDMETHOD
 
-    def getTableViewer(self, tablename, engine = None, original = False):
+    def getOriginalTableNames(self):
+        """Retrieve the names of the original tables that are part of the dataset."""
+
+        cur = self.db_conn.cursor()
+        cur.execute("SELECT table_name FROM information_schema.tables WHERE table_schema = %s;", ["original_" + str(self.setid)])
+        result = cur.fetchall()
+
+        tablenames = [t[0] for t in result]
+
+        return tablenames
+    # ENDMETHOD
+
+    def getTableViewer(self, tablename, original = False):
         """Retrieves a TableViewer object associated with the specified set and table."""
         
-        if engine is None:
-            engine = get_sqla_eng()
-
         if not tablename in self.getTableNames():
             raise RuntimeError("Invalid tablename.")
 
         return TableViewer(setid = self.setid, 
                             tablename = tablename, 
-                            engine = engine, 
+                            engine = get_sqla_eng(), 
                             db_connection = self.db_conn, 
                             is_original = original)
     # ENDMETHOD
 
-    def getTableTransformer(self, tablename, engine = None):
+    def getTableTransformer(self, tablename):
         """Retrieves a TableTransformer object associated with the specified set and table."""
-
-        if engine is None:
-            engine = get_sqla_eng()
 
         if not tablename in self.getTableNames():
             raise RuntimeError("Invalid tablename.")
 
-        return TableTransformer(self.setid, self.db_conn, engine)
+        return TableTransformer(self.setid, self.db_conn, get_sqla_eng())
     # ENDMETHOD
 
-    def getDataLoader(self):
-        """Retrieve the dataloader for this dataset."""
+    def getDownloader(self):
+        """Retrieves a DatasetDownloader object associated with the dataset."""
+
+        return DatasetDownloader(setid=self.setid, db_connection=self.db_conn)
+    # ENDMETHOD
+
+    def getUploader(self):
+        """Retrieve the TableUploader for this dataset."""
         return TableUploader(self.setid, self.db_conn)
 
     def getHistoryManager(self):
@@ -96,9 +109,8 @@ class DatasetInfo:
         if not tablename in self.getTableNames():
             raise RuntimeError("Invalid tablename.")
 
+        # TODO update this for original tables
         cur = self.db_conn.cursor()
         cur.execute("DROP TABLE \"{}\".{};".format(int(self.setid), extensions.quote_ident(tablename, get_db().cursor())))
-        cur.execute("DROP TABLE \"original_{}\".{};".format(int(self.setid), extensions.quote_ident(tablename, get_db().cursor())))
-        # TODO remove history?
         self.db_conn.commit()
     # ENDMETHOD

@@ -3,38 +3,91 @@
 {% block body %}
 	<div class="jumbotron text-center" style="padding: 1%">
 		<h2>Datasets</h2>
-		<a href="{{ url_for('dataset_pages.create_dataset') }}" class="btn btn-primary">Create Dataset</a>
+		{% include "includes/modals/_create_dataset_modal.html" %}
 	</div>
 
-	<div class="jumbotron">
-		<div style="overflow-x: auto;">
-			<table>
-			{% with datasets = setlist %}
-				{% if datasets %}
+	<div style="overflow-x: auto;">
+		<style>
+	        table {
+	            border-collapse: collapse;
+	            float:left;
+	            padding:3px;
+	            border-radius: 3px;
+	            }
+
+	        td, th {
+	            font-size: 15px;
+	            text-align: left;
+	            padding: 8px;
+	            width: 25%;
+	        }
+
+	        table thead {
+	            background-color: lightgrey;
+	        }
+
+	        table tbody tr:nth-child(even) {
+	            background-color: #eaeaea;
+	        }
+
+	        .dataTables_filter {
+	            display: none;
+	        }
+	    </style>
+		<table id="listtable">
+			<thead>
+				<tr>
+					
+					<th>Name</th>
+					<th>Description</th>
+					<th>Permission</th>
+					<th>Leave</th>
+				</tr>
+			</thead>
+			<tbody>
+			{% if datasets %}
+				
+				{% for dataset in datasets %}
 					<tr>
-						<th>ID</th>
-						<th>Name</th>
-						<th>Description</th>
-						<th></th>
-					</tr>
-					{% for dataset in datasets %}
-						<tr>
-							<td>{{ dataset.setid }}</td>
-							<td><a href="{{ url_for('dataset_pages.view_dataset_home', dataset_id=dataset.setid) }}">{{ dataset.name }}</a></td>
-							<td>{{ dataset.desc }}</td>
-							<input type="hidden" id="input" value="leave this dataset?">
-							<td><form method="post" action="{{ url_for('dataset_pages.leave', dataset_id=dataset.setid) }}" name="leave" onsubmit="return check()">
-									<a><input id="leave" type="submit" value="Leave" style="border: none; background: none; padding: 0;"></a>
-									<!--<p><input id="leave" type="submit" class="btn btn-primary" value="Leave"></p>-->
-								</form>
-							</td>
-						</tr>					
-					{% endfor %}
-				{% else %}
-					<p>No existing datasets</p>
-				{% endif %}
-			{% endwith %}
-			</table>
-		</div>
+						<td><a href="{{ url_for('dataset_pages.home', dataset_id=dataset.datasetinfo.setid) }}">{{ dataset.datasetinfo.name }}</a></td>
+						<td>{{ dataset.datasetinfo.desc }}</td>
+						<td>{{ dataset.permtype }}</td>
+						<input type="hidden" id="input" value="leave this dataset?">
+						<td><form method="post" action="{{ url_for('dataset_pages.leave', dataset_id=dataset.datasetinfo.setid) }}" name="leave"
+								onsubmit="return check()">
+								 <button style="border: none; background-color: transparent;" type="submit" id="leave">
+	                                <span  class="glyphicon glyphicon-log-out"></span>
+	                            </button>
+							</form>
+						</td>
+					</tr>					
+				{% endfor %}
+
+			{% else %}
+				<tr>
+					<td></td>
+					<td></td>
+					<td></td>
+					<td></td>
+					<td></td>
+				</tr>
+			{% endif %}
+			</tbody>
+
+		</table>
+		<script>
+			$(document).ready( function () {
+    			var table = $('#listtable').DataTable( {
+    				scrollX: true,
+    				scrollY: true,
+    				paging: false,
+    				lengthChange: false,
+    				bInfo: false,
+    				autoWidth: false,
+    				ordering: true
+    			} );
+    		} );
+		</script>
 	</div>
+
 {% endblock %}

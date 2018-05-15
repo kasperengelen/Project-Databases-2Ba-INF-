@@ -4,10 +4,11 @@
 	<div class="jumbotron" style="padding: 1%;">
 		<div class="row">
 			<div class="col-sm-3 text-left">
-				<a href="{{ url_for('dataset_pages.list_dataset') }}" class="btn btn-primary">Datasets</a>
-				</br>
-				</br>
-				<a href="{{ url_for('dataset_pages.view_dataset_table_history', dataset_id=dataset_info.setid) }}" class="btn btn-primary">History</a>
+				<a data-hover="tooltip" title="Previous" href="{{ url_for('dataset_pages.list') }}" class="btn btn-primary">
+					<span class="glyphicon glyphicon-share-alt" style="-webkit-transform: scaleX(-1); transform: scaleX(-1);"></span></a>
+				<div style="padding-top: 4.5em;"></div>
+				<a href="{{ url_for('dataset_pages.history', dataset_id=dataset_info.setid) }}" data-hover="tooltip" title="History"
+					class="btn btn-primary"><span class="glyphicon glyphicon-time"></span></a>
 			</div>
 			<div class="col-sm-6 text-center">
 				<h2>{{ dataset_info.name }}</h2>
@@ -15,13 +16,14 @@
 			</div>
 			{% if perm_type == 'admin' %}
 				<div class="col-sm-3 text-right">
-					<div>
-						{% include "includes/modals/_edit_dataset_modal.html" %}
-						</br>
-						</br>
-						<a href="{{ url_for('dataset_pages.edit_perms_dataset', dataset_id=dataset_info.setid) }}" 
-							class="btn btn-primary">Permissions</a>
-					</div>
+					{% include "includes/modals/_edit_dataset_modal.html" %}
+					<div style="padding-top: 1em;"></div>
+					<a id="edit" href="#" class="btn btn-primary" data-toggle="modal" data-hover="tooltip" title="Download"
+    					data-target="#downloadDatasetModal_{{ dataset_info.setid  }}"><span class="glyphicon glyphicon-download-alt"></span></a>
+    					{% include "includes/modals/_dataset_download_modal.html" %}
+    				<div style="padding-top: 1em;"></div>
+					<a data-hover="tooltip" title="Permissions" href="{{ url_for('dataset_pages.permissions', dataset_id=dataset_info.setid) }}" 
+						class="btn btn-primary"><span class="glyphicon glyphicon-eye-open"></span></a>
 				</div>
 			{% endif %}
 		</div>
@@ -32,7 +34,7 @@
 		    <div class="panel panel-default">
 		      	<div class="panel-heading">
 		        	<h4 class="panel-title">
-		          		<a data-toggle="collapse" data-Hang onparent="#accordion" href="#add">Add Table</a>
+		          		<a data-toggle="collapse" data-parent="#accordion" href="#add">Add Table</a>
 		        	</h4>
 		      	</div>
 		      	<div id="add" class="panel-collapse collapse">
@@ -64,7 +66,7 @@
 			        	<div class="panel-body">	
 			        		<!-- JOIN FORM -->
 			        		{% from "includes/_formhelpers.html" import render_field %}
-		                    <form action="{{ url_for('dataset_pages.transform_join_tables', dataset_id=dataset_info.setid, tablename=table)}}" method="post" 
+		                    <form action="{{ url_for('dataset_pages.join_tables', dataset_id=dataset_info.setid, tablename=table)}}" method="post" 
 		                    	id="join">
 		                        {{ join_form.hidden_tag() }}
 		                    	<div class="form-group" style="width: 20%; display: inline-block;">
@@ -92,35 +94,128 @@
 	  	</div>		
 	{% endif %}
 
-    <div class="jumbotron">
-    	<div style="overflow-x: auto;">
-			<table>
-				{% if table_list %}
-					<tr>
-						<th>Tables</th>
-						<th></th>
-						<th></th>
-					</tr>
 
-					{% for table in table_list %}
-					<tr>
-						<td><a href="{{ url_for('dataset_pages.view_dataset_table', dataset_id=dataset_info.setid, tablename=table) }}">
-							{{ table }}</a></td>
-						
-						<td><a href="{{ url_for('dataset_pages.view_dataset_table_original', dataset_id=dataset_info.setid, tablename=table) }}">
-							View Raw</a></td>
+	<div style="overflow-x: none;">
+		<style>
+	        table {
+	            border-collapse: collapse;
+	            float:left;
+	            padding:3px;
+	            border-radius: 3px;
+	            }
 
-						<td><input type="hidden" id="input" value="delete this table?">
-							<form method="post" action="{{ url_for('dataset_pages.delete_table', dataset_id=dataset_info.setid, tablename=table) }}"
-										name="delete{{ table }}" onsubmit="return check()">
-									<label for="delete{{ table }}" class="glyphicon glyphicon-remove"></label>
-									<input href="" id="delete{{ table }}" style="visibility: hidden;" type="submit"></form></td>
-					</tr>
-					{% endfor %}
-					
-				{% endif %}
-			</table>
+	        td, th {
+	            font-size: 15px;
+	            text-align: left;
+	            padding: 8px;
+	            width: 25%;
+	        }
+
+	        table thead {
+	            background-color: lightgrey;
+	        }
+
+	        table tbody tr:nth-child(even) {
+	            background-color: #eaeaea;
+	        }
+
+	        .dataTables_filter {
+	            display: none;
+	        }
+	    </style>
+	    <div class="col-sm-3"></div>
+	    <div class="col-sm-6">
+			<!-- TABLE LIST -->
+		    <!-- NAV TABS -->
+		    <ul class="nav nav-tabs" role="tablist">
+		    	<li class="active"><a href="#activeTables" role="tab" data-toggle="tab">Active Tables</a></li>
+		    	<li><a href="#originalTables" role="tab" data-toggle="tab">Original Tables</a></li>
+		    </ul>
+
+		    <!-- TAB PANES -->
+		    <div class="tab-content">
+				<div class="tab-pane active" id="activeTables">
+					<table id="table_tables">
+						<thead>
+							<tr>
+								<th>Tables</th>
+								<th>Delete</th>
+							</tr>
+						</thead>
+						<tbody>
+						{% if table_list %}
+							{% for table in table_list %}
+								<tr>
+									<td>
+										<a href="{{ url_for('dataset_pages.table', dataset_id=dataset_info.setid, tablename=table) }}"> {{ table }}</a>
+									</td>
+									<td>
+										<input type="hidden" id="input" value="delete this table?">
+										<form method="post" action="{{ url_for('dataset_pages.delete_table', dataset_id=dataset_info.setid, tablename=table) }}"
+													name="delete{{ table }}" onsubmit="return check()">
+												<label for="delete{{ table }}" class="glyphicon glyphicon-remove"></label>
+												<input href="" id="delete{{ table }}" style="visibility: hidden;" type="submit"></form>
+									</td>
+								</tr>
+							{% endfor %}
+						{% endif %}
+						</tbody>
+					</table>
+				</div>
+				<div class="tab-pane" id="originalTables">
+					<table id="table_originaltables">
+						<thead>
+							<tr>
+								<th>Tables</th>
+							</tr>
+						</thead>
+						<tbody>
+						{% if original_table_list %}
+							{% for table in original_table_list %}
+								<tr>
+									<td>
+										<a href="{{ url_for('dataset_pages.table_original', dataset_id=dataset_info.setid, tablename=table) }}"> {{ table }}</a>
+									</td>
+								</tr>
+							{% endfor %}
+						{% endif %}
+						</tbody>
+					</table>
+				</div>
+			</div>
 		</div>
+		<script>
+	        $(document).ready( function () {
+	            $('#table_tables').DataTable( {
+	                scrollX: true,
+	                scrollY: true,
+	                paging: false,
+	                info: false,
+	                lengthChange: false,
+	                autoWidth: true,
+	                order: [[0, 'asc']],
+	                columnDefs: [
+	                	{"targets": 1, "orderable": false},
+	                	{"targets": 0, "orderable": false}
+	                ]
+	            } );
+	        } );
+	    </script>
+	    <script>
+	        $(document).ready( function () {
+	            $('#table_originaltables').DataTable( {
+	                scrollX: true,
+	                scrollY: true,
+	                paging: false,
+	                info: false,
+	                lengthChange: false,
+	                autoWidth: false,
+	                order: [[1, 'asc']]
+	            } );
+	        } );
+	    </script>
+
+	    <!-- TABLE LIST -->
 	</div>
 
 	<script charset="utf-8" type="text/javascript">

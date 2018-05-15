@@ -1,0 +1,52 @@
+<div id="discretizewidthmodal" class="modal fade text-left" role="dialog">
+    <div class="modal-dialog">
+    
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Discretize - Equal Width</h4>
+            </div>
+            <div class="modal-body" id="discretizewidth_div">
+                <!-- Discretize Equal Width -->
+            <div style="overflow-x: auto;">
+                {% from "includes/_formhelpers.html" import render_field %}
+                <form method="post" action="{{ url_for('transf_callbacks.transform_discretizeEqualWidth', dataset_id=dataset_info.setid, tablename=table_name) }}"
+                 name="discretizewidth">
+                {{ discretizeWidth_form.csrf_token }}
+                <div class="form-group" style="width: 35%; display: inline-block;">
+                    {{render_field(discretizeWidth_form.select_attr, class_="form-control")}}
+                </div>
+                <div class="form-group" style="width: 35%; display: inline-block;">
+                    {{render_field(discretizeWidth_form.nr_of_bins, class_="form-control", placeholder="Number of Bins")}}
+                </div>
+                <div class="text-right">
+                    <a href="#" class="btn btn-primary" id="discretizewidth" onclick="$('#discretizewidth_newtable').show();$('#discretizewidth_div').hide();">
+                        Discretize</a> 
+                </div>
+                
+            </div>
+            <!-- Discretize Equal Width  -->
+            </div>
+            <div class="modal-body" id="discretizewidth_newtable">
+            	<!-- Download form -->
+            	{% from "includes/_formhelpers.html" import render_field %}
+            	<div class="form-group">
+            		{{ render_field(discretizeWidth_form.make_new_table, class_="checkbox", id="dewc") }}
+            	</div>
+            	<div class="form-group" id="dewdiv" style="width: 70%">
+            		{{ render_field(discretizeWidth_form.new_table_name, class_="form-control", placeholder="Table Name") }}
+            	</div>
+                <div class="text-right">
+                    <button class="btn btn-primary" type="submit">Submit</button>
+                </div>
+        		</form>
+                <!-- Download form -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="discretizewidth" onclick="$('#discretizewidth_div').show();" class="btn btn-default" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+        <!-- Modal content -->
+    </div>
+</div>

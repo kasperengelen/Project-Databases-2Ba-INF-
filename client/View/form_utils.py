@@ -11,6 +11,7 @@ class EnumCheck:
     def __call__(self, form, field):
         if field.data not in self.choices:
             raise ValidationError(self.message)
+# ENDCLASS
 
 class FilenameCheck:
     """Validator to check if the filename of a field matches a regex."""
@@ -21,9 +22,15 @@ class FilenameCheck:
     def __call__(self, form, field):
         if not self.regex.fullmatch(field.data.filename):
             raise ValidationError(self.message)
+# ENDCLASS
 
 def flash_errors(form):
     """Function that displays the errors contained 
     withing a form with flash.flash()."""
 
-    pass
+    for field, errors in form.errors.items():
+        for error in errors:
+            flash(message="Invalid input: '" + error + "'", category="error")
+        # ENDFOR
+    # ENDFOR
+# ENDFUNCTION

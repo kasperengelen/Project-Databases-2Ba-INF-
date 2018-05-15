@@ -86,8 +86,6 @@ class TestTableTransformer(unittest.TestCase):
         #Close database connection
         cls.db_connection.close()
 
-
-
     def test_is_nullable(self):
         """Test to see if the is_nullable method of TableTransformer works correctly."""
         result = self.test_object.is_nullable('test_table', 'string')
@@ -101,7 +99,6 @@ class TestTableTransformer(unittest.TestCase):
         result = self.test_object.is_nullable('test_table', 'date_string')
         self.assertFalse(result)
 
-
     def remove_this_plox(self):
         is_numerical = self.test_object.is_numerical("double precision")
         self.assertTrue(is_numerical)
@@ -114,7 +111,6 @@ class TestTableTransformer(unittest.TestCase):
         is_numerical = self.test_object.is_numerical("character varying")
         self.assertFalse(is_numerical)
 
-        
     def test_delete_attribute(self):
         """Test to see if TableTransformer can correctly delete an attribute."""
         self.test_object.delete_attribute('test_table', 'garbage') #Delete attribute "garbage"
@@ -146,8 +142,6 @@ class TestTableTransformer(unittest.TestCase):
         self.assertEqual(result[2], '08/08/1997')
         self.db_connection.commit()
 
-
-
     def test_find_and_replace_substring(self):
         """A test for find and replace method but for finding substrings."""
         #Find a word with substring Sam and replace the whole word with Foobar
@@ -166,8 +160,7 @@ class TestTableTransformer(unittest.TestCase):
         #We found Toshiba but replaced To with Waka to get Wakashiba
         self.assertEqual(result[1], 8)
         self.assertEqual(result[2], '01/07/1975')
-
-
+        
     def test_regex_find_and_place(self):
         """A test for the method of TableTransformer that uses regular expressions."""
         #Use a regular expression to find Nintendo and replace it with SEGA
@@ -192,8 +185,7 @@ class TestTableTransformer(unittest.TestCase):
         cur.execute("SELECT * FROM \"0\".test_table4 WHERE string = 'Ethereal'")
         result = cur.fetchone()
         self.assertIsNone(result) #Shouldn't be able to find out due the difference in case
-
-
+        
     def test_get_conversion_options(self):
         """A test to see whether the correct conversion options are being returned."""
         obj = self.test_object
@@ -203,9 +195,7 @@ class TestTableTransformer(unittest.TestCase):
         self.assertEqual(obj.get_conversion_options('test_table', 'fpoint'), ['INTEGER', 'VARCHAR(255)','CHAR(n)'])
         self.assertEqual(obj.get_conversion_options('test_table', 'raw_time'), ['VARCHAR(255)', 'VARCHAR(n)', 'CHAR(n)'])
         self.assertEqual(obj.get_conversion_options('test_table', 'date_time'), ['VARCHAR(255)', 'VARCHAR(n)', 'CHAR(n)'])
-
         
-
     def test_get_attribute_type(self):
         """Method to test whether the getter returns the correct attribute type."""
         #Test whether the method can correctly return the type of an attribute
@@ -216,10 +206,7 @@ class TestTableTransformer(unittest.TestCase):
         self.assertEqual(obj.get_attribute_type('test_table', 'fpoint')[0], 'double precision')
         self.assertEqual(obj.get_attribute_type('test_table', 'raw_time')[0], 'time without time zone')
         self.assertEqual(obj.get_attribute_type('test_table', 'date_time')[0], 'timestamp without time zone')
-
         
-
-    
     def test_numeric_conversion(self):
         """Test the conversion of numeric types (INTEGER, FLOAT)."""
         #From integer to float
@@ -307,9 +294,7 @@ class TestTableTransformer(unittest.TestCase):
         result = cur.fetchone()[0]
         self.assertEqual(result, 'time without time zone')
         self.db_connection.commit()
-
-
-
+        
     def test_datetime_extraction(self):
         """This one is for testing the extraction of parts of the date/time done by TableTransformer"""
         cur = self.db_connection.cursor()
@@ -333,9 +318,6 @@ class TestTableTransformer(unittest.TestCase):
         result = cur.fetchone()
         self.assertIsNotNone(result)
         self.assertEqual(result[0], 'Nintendo')
-        
-
-
         
     def test_one_hot_encode(self):
         """Test the one-hot-encoding method for a column with unique and duplicate values."""
@@ -370,9 +352,7 @@ class TestTableTransformer(unittest.TestCase):
         #There should be 35 columns, the previous 22 - 1(date_string) + 14 (16 categeroies - 2 duplicates = 35
         self.assertEqual(len(all_columns), 35)
         self.db_connection.commit()
-
-
-
+        
     def test_normalize_using_zscore(self):
         """Test the method that normalizes the values of a column by using the z-score."""
         cur = self.db_connection.cursor()
@@ -393,7 +373,6 @@ class TestTableTransformer(unittest.TestCase):
         #And 2 extreme values should both be mapped to 1.0 so there should be 14 unqiue values.
         self.assertEqual(unique_nr, 14)
         self.assertEqual(1, 1)
-
 
     def test_equidistant_discretization(self):
         """Test the equidistant discretization method."""
@@ -423,7 +402,6 @@ class TestTableTransformer(unittest.TestCase):
         self.assertIsNone(result)
         self.db_connection.commit()
         
-
     def test_equifrequent_discretization(self):
         """Test the equifrequent discretization method."""
         cur = self.db_connection.cursor()
@@ -452,7 +430,6 @@ class TestTableTransformer(unittest.TestCase):
         self.assertIsNone(result)
         self.db_connection.commit()
         
-
     def test_discretization_with_custom_ranges(self):
         """Test the discretization with custom ranges method."""
         #Let's simulate equidistant discretization with our custom bins.
@@ -500,35 +477,33 @@ class TestTableTransformer(unittest.TestCase):
         result = cur.fetchone()
         self.assertIsNone(result)
         self.db_connection.commit()
-
-
-    def depr_test_delete_outliers(self):
+        
+    def test_delete_outliers(self):
         """Test the method of TableTransformer to delete outliers."""
         #Test outliers larger than presented value
         cur = self.db_connection.cursor()
-        self.test_object.delete_outliers('test_table5', 'number', True, 40)
+        self.test_object.delete_outliers('test_table5', 'number', True, 40, 0)
         cur.execute('SELECT * FROM "0".test_table5 WHERE number > 40')
         result = cur.fetchone()
         self.assertIsNone(result)
 
-        self.test_object.delete_outliers('test_table5', 'number', True, 20)
+        self.test_object.delete_outliers('test_table5', 'number', True, 20, 0)
         cur.execute('SELECT * FROM "0".test_table5 WHERE number > 20')
         result = cur.fetchone()
         self.assertIsNone(result)
 
         #Test outliers smaller than presented value
-        self.test_object.delete_outliers('test_table5', 'number', False, -15)
+        self.test_object.delete_outliers('test_table5', 'number', False, -15, 0)
         cur.execute('SELECT * FROM "0".test_table5 WHERE number < -15')
         result = cur.fetchone()
         self.assertIsNone(result)
 
-        self.test_object.delete_outliers('test_table5', 'number', False, 0)
+        self.test_object.delete_outliers('test_table5', 'number', False, 0, 0)
         cur.execute('SELECT * FROM "0".test_table5 WHERE number < 0')
         result = cur.fetchone()
         self.assertIsNone(result)
         self.db_connection.commit()
-
-
+        
     def test_fill_nulls_with_mean(self):
         """Test the method of TableTransformer that fills null values with the mean."""
         cur = self.db_connection.cursor()
@@ -579,7 +554,6 @@ class TestTableTransformer(unittest.TestCase):
         cur.execute('SELECT * FROM "0".test_table7 WHERE number = 10000 AND string = \'Dummy\'')
         result = cur.fetchall()
         self.assertIsNotNone(result)
-
 
     def incomplete_test_delete_rows_using_conditions(self):
         """Test the method of TableTransformer that deletes rows by using provided predicates."""

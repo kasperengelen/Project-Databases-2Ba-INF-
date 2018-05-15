@@ -17,7 +17,6 @@
             font-size: 15px;
             text-align: left;
             padding: 8px;
-            width: 50%;
         }
 
         table thead {
@@ -37,6 +36,7 @@
     <table id="datasettable">
         <thead>    
             <tr>
+                <th>ID</th>
                 <th>Name</th>
                 <th>Description</th>
                 <th>Edit</th>
@@ -46,7 +46,8 @@
         <tbody>
             {% for dataset in datasets %}
                 <tr>
-                    <td>{{ dataset.datasetinfo.name }}</td>
+                    <td>{{ dataset.datasetinfo.setid }}</td>
+                    <td><a href="{{ url_for('dataset_pages.home', dataset_id=dataset.datasetinfo.setid) }}">{{ dataset.datasetinfo.name }}</a></td>
                     <td>{{ dataset.datasetinfo.desc }}</td>
                     <td>{% include "includes/modals/_admin_edit_dataset_modal.html" %}</td>
                     <td>{% from "includes/_formhelpers.html" import render_field %}
@@ -68,7 +69,9 @@
                 scrollX: true,
                 scrollY: true,
                 paging: false,
-                info: false
+                info: false,
+                lengthChange: false,
+                autoWidth: false
             } );
         } );
     </script>

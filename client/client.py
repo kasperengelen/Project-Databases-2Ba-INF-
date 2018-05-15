@@ -4,6 +4,7 @@ from Controller.UserManager import UserManager
 from View.user_pages import user_pages
 from View.admin_pages import admin_pages
 from View.dataset_pages import dataset_pages
+from View.transf_callbacks import transf_callbacks
 from Model.DatabaseConfiguration import DatabaseConfiguration
 
 app = Flask(__name__, template_folder="./View/templates/")
@@ -17,6 +18,8 @@ app.config.update(dict(
 app.register_blueprint(user_pages)
 app.register_blueprint(admin_pages)
 app.register_blueprint(dataset_pages)
+app.register_blueprint(transf_callbacks)
+
 @app.before_request
 def before_request():
     """Prepare request."""
@@ -32,7 +35,7 @@ def before_request():
     if not 'rowcount' in session:
         session['rowcount'] = 10
 
-    if not session['rowcount'] in [10,20,50,100,500]:
+    if not session['rowcount'] in [10,25,50,100,500]:
         session['rowcount'] = 10
 
     # make sure that user information is up to date

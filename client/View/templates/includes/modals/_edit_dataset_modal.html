@@ -1,5 +1,5 @@
-<a id="edit" href="#" class="btn btn-primary" data-toggle="modal"
-                                    data-target="#editDatasetModal_{{ dataset_info.setid  }}">Manage</a>
+<a id="edit" href="#" class="btn btn-primary" data-toggle="modal" data-hover="tooltip" title="Manage"
+    data-target="#editDatasetModal_{{ dataset_info.setid  }}"><span class="glyphicon glyphicon-pencil"></span></a>
 <div id="editDatasetModal_{{ dataset_info.setid }}" class="modal fade text-left" role="dialog">
     <div class="modal-dialog">
     
@@ -11,7 +11,7 @@
             </div>
             <div class="modal-body">
             	{% from "includes/_formhelpers.html" import render_field %}
-                <form method="post" action="{{ url_for('dataset_pages.manage_dataset', dataset_id=dataset_info.setid) }}">
+                <form method="post" action="{{ url_for('dataset_pages.edit_info', dataset_id=dataset_info.setid) }}">
                     {{ editform.csrf_token }}
                     <div class="form-group">
                         {{render_field(editform.name, class_="form-control")}}
@@ -19,7 +19,9 @@
                     <div class="form-group">
                         {{render_field(editform.description, class_="form-control")}}
                     </div>
-                    <p><input type="submit" class="btn btn-primary" value="Save Changes"></p>
+                    <div class="text-right">
+                        <p><input type="submit" class="btn btn-primary" value="Save Changes"></p>
+                    </div>
                 </form>
             </div>
             <div class="modal-footer">

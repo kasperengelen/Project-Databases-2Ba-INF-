@@ -28,19 +28,20 @@ class DatasetHistoryManager:
             cur = self.db_connection.cursor()
             query = "SELECT COUNT(*) FROM system.dataset_history WHERE setid = %s"
             cur.execute(sql.SQL(query), [self.setid])
-            return cur.fetchone()[0]
+            return int(cur.fetchone()[0])
 
 
     def get_rowcount(self, tablename=None):
-        """Quick methdo to get the number of rows in the dataset history table."""
+        """Quick method to get the number of rows in the dataset history table."""
         if tablename is None: #If we're viewing history of all the tables.
             return self.entry_count
 
         else:
             cur = self.db_connection.cursor()
             query = "SELECT COUNT(*) FROM system.dataset_history WHERE setid = %s AND (table_name = %s OR origin_table = %s)"
-            cur.execute(sql.SQL(query), [self.setid, table_name, table_name])
-            cur.fetchone()[0]
+            cur.execute(sql.SQL(query), [self.setid, tablename, tablename])
+            return int(cur.fetchone()[0])
+            
             
               
     def write_to_history(self, table_name, origin_table, attribute, parameters, transformation_type):
@@ -225,20 +226,18 @@ class DatasetHistoryManager:
 
 
     def render_history_json(self, offset, limit, reverse_order=False, show_all=True, table_name=""):
-        rel_offset = offset - 1
-        rel_limit = limit - rel_offset
-        cur = self.db_connection.cursor()
+        dict_cur = self.db_connection.cursor(cursor_factory=psycopg2.extras.DictCursor)
         if show_all is False:
             query = ("SELECT * FROM system.dataset_history WHERE setid = %s AND (table_name = %s OR origin_table = %s)"
                      " LIMIT %s OFFSET %s")
-            cur.execute(sql.SQL(query), [self.setid, table_name, table_name, rel_limit, rel_offset])
+            dict_cur.execute(sql.SQL(query), [self.setid, table_name, table_name, limit, offset])
         else:
             query = "SELECT * FROM system.dataset_history WHERE setid = %s LIMIT %s OFFSET %s"
-            cur.execute(sql.SQL(query), [self.setid, nr_rows, offset])
+            dict_cur.execute(sql.SQL(query), [self.setid, limit, offset])
 
         all_rows = dict_cur.fetchall()
         df = self.__rows_to_dataframe(all_rows)
-        json_string = data_frame.to_json(orient='records')
+        json_string = df.to_json(orient='values', date_format='iso')
         return json_string
 
 

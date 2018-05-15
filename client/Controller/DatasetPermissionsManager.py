@@ -110,7 +110,7 @@ class DatasetPermissionsManager:
             db_conn = get_db()
 
         if DatasetPermissionsManager.getPermForUserID(setid, userid, db_conn = db_conn) is None:
-            raise RuntimeError("The specifeid user does not have access to the specified dataset.")
+            raise RuntimeError("The specified user does not have access to the specified dataset.")
 
         db_conn.cursor().execute("DELETE FROM SYSTEM.set_permissions WHERE setid = %s AND userid = %s;", [int(setid), int(userid)])
         db_conn.commit()

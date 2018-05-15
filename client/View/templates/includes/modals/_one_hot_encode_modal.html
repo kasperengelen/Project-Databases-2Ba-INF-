@@ -1,0 +1,49 @@
+<div id="onehotencodemodal" class="modal fade text-left" role="dialog">
+    <div class="modal-dialog">
+    
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">One Hot Encode</h4>
+            </div>
+            <div class="modal-body" id="onehotencode_div">
+                {% from "includes/_formhelpers.html" import render_field %}
+                <!-- One Hot Encoding -->
+                <div style="overflow-x: auto;">
+                    <form method="post" action="{{ url_for('transf_callbacks.transform_onehotencoding', dataset_id=dataset_info.setid,
+                    tablename=table_name) }}" name="onehotencode">
+                    {{ onehotencodingform.csrf_token }}
+                    <div class="form-group" style="width: 35%; display: inline-block;">
+                        {{render_field(onehotencodingform.select_attr, class_="form-control")}}
+                    </div>
+                    <div class="text-right">
+                        <a href="#" class="btn btn-primary" id="onehotencode" onclick="$('#onehotencode_newtable').show();$('#onehotencode_div').hide();">
+                            One Hot Encode</a>
+                    </div>
+                </div>
+                <!-- One Hot Encoding -->
+            </div>
+
+            <div class="modal-body" id="onehotencode_newtable">
+            	<!-- Download form -->
+            	{% from "includes/_formhelpers.html" import render_field %}
+            	<div class="form-group">
+            		{{ render_field(onehotencodingform.make_new_table, class_="checkbox", id="ohec") }}
+            	</div>
+            	<div class="form-group" id="ohediv" style="width: 70%">
+            		{{ render_field(onehotencodingform.new_table_name, class_="form-control", placeholder="Table Name") }}
+            	</div>
+                <div class="text-right">
+                    <button class="btn btn-primary" type="submit">Submit</button>
+                </div>
+                </form>
+                <!-- Download form -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="onehotencode" onclick="$('#onehotencode_div').show();" class="btn btn-default" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+        <!-- Modal content -->
+    </div>
+</div>

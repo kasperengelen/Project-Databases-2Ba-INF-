@@ -6,6 +6,7 @@
         <h2>My Profile</h2>
     </div>
     <div class="jumbotron text-left">
+    	{% if view_self %}
         <div class="pull-right text-right">
             <a id="editinfo" href="#" class="btn btn-primary" data-toggle="modal"
                                 data-target="#editModal_{{ userinfo.userid }}">Edit Profile</a>
@@ -35,7 +36,9 @@
                             <div class="form-group">
                                 {{render_field(editpassform.passwordconfirm, class_="form-control")}}
                             </div>
-                            <p><input type="submit" class="btn btn-primary" value="Save Changes"></p>
+                            <div class="text-right">
+                                <p><input type="submit" class="btn btn-primary" value="Save Changes"></p>
+                            </div>
                         </form>
                     </div>
                     <div class="modal-footer">
@@ -69,7 +72,9 @@
                             <div class="form-group">
                                 {{render_field(editform.email, class_="form-control")}}
                             </div>
-                            <p><input type="submit" class="btn btn-primary" value="Save Changes"></p>
+                            <div class="text-right">
+                                <p><input type="submit" class="btn btn-primary" value="Save Changes"></p>
+                            </div>
                         </form>
                     </div>
                     <div class="modal-footer">
@@ -79,6 +84,8 @@
                 <!-- Modal content -->
             </div>
         </div>
+
+        {% endif %}
 
         <div style="overflow-x: auto;">
             <table style="width: 100%">

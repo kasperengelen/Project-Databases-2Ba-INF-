@@ -4,6 +4,7 @@ from Controller.AccessController import require_login
 from Controller.UserManager import UserManager
 from Controller.DatasetManager import DatasetManager
 from View.admin_forms import DeleteUserForm, DeleteDatasetForm, AdminUserEditForm, ActivateDeactivateUser, DatasetEditForm
+from View.form_utils import flash_errors
 
 admin_pages = Blueprint('admin_pages', __name__)
 
@@ -51,8 +52,7 @@ def edit_user(userid):
     form = AdminUserEditForm(request.form)
 
     if not form.validate():
-        flash(message="Invalid input.", category="error")
-        # TODO display errors
+        flash_errors(form)
     else:
         current_user = UserManager.getUserFromID(userid)
         # check if new email is in use.
@@ -81,6 +81,7 @@ def delete_user():
     form = DeleteUserForm(request.form)
 
     if not form.validate():
+        # DO NOT PRINT ERRORS, this error can only happen by editing HTML
         return redirect(url_for('admin_pages.manage_users'))
 
     userid = int(form.userid.data)
@@ -105,6 +106,7 @@ def set_user_activation():
     form = ActivateDeactivateUser(request.form)
 
     if not form.validate():
+        # DO NOT PRINT ERRORS, this error can only happen by editing HTML
         return redirect(url_for('admin_pages.manage_users'))
 
     userid = int(form.userid.data)
@@ -161,8 +163,7 @@ def edit_dataset():
     form = DatasetEditForm(request.form)
 
     if not form.validate():
-        flash(message="Invalid form.", category="error")
-        # print errors
+        flash_errors(form)
         return redirect(url_for('admin_pages.manage_datasets'))
 
     dataset_id = int(form.setid.data)
@@ -188,6 +189,7 @@ def delete_dataset():
     form = DeleteDatasetForm(request.form)
 
     if not form.validate():
+        # DO NOT PRINT ERRORS, this error can only happen by editing HTML
         return redirect(url_for('admin_pages.manage_datasets'))
 
     dataset_id = int(form.setid.data)

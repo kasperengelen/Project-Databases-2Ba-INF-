@@ -1,0 +1,405 @@
+<div class="panel panel-default">
+  	<div class="panel-heading">
+    	<h4 class="panel-title">
+     		<a data-toggle="collapse" data-parent="#accordion2" href="#tc">Attribute Type Conversion</a>
+    	</h4>
+  	</div>
+  	<div id="tc" class="panel-collapse collapse">
+  		<div class="panel-body">
+  			{% from "includes/_formhelpers.html" import render_field %}
+  			<!-- Type Conversion -->
+			<div class="col-sm-12" style="overflow-x: auto;">
+				<form method="post" action="{{ url_for('transf_callbacks.transform_typeconversion', dataset_id=dataset_info.setid, tablename=table_name) }}"
+					name="typeconversion">
+				{{ typeconversion_form.csrf_token }}
+				<div class="form-group" style="width: 20%; display: inline-block;">
+					{{render_field(typeconversion_form.select_attr, class_="form-control") }}
+				</div>
+				<div class="form-group" style="width: 20%; display: inline-block;">
+					{{render_field(typeconversion_form.new_datatype, class_="form-control") }}
+				</div>
+				<div class="form-group" style="width: 20%; display: inline-block;" id="char_div">
+					{{render_field(typeconversion_form.char_amount, class_="form-control", placeholder="Character Amount") }}
+				</div>
+				<div class="form-group" style="width: 20%; display: inline-block;" id="date_div">
+					{{render_field(typeconversion_form.date_type, class_="form-control") }}
+				</div>
+				</br>
+				<div class="form-group" style="width: 15%; display: inline-block;">
+					{{render_field(typeconversion_form.do_force, class_="checkbox-inline", id="force_check") }}
+				</div>
+				<div class="form-group" style="width: 20%; display: inline-block;" id="force_div">
+					{{render_field(typeconversion_form.force_mode, class_="form-control") }}
+				</div>
+				<a href="#" class="btn btn-primary" id="typeconversion" data-toggle="modal" data-target="#typeconversionmodal">Convert</a>
+				{% include "includes/modals/_type_conversion_modal.html" %}
+				</form>
+			</div>
+			<!-- Type Conversion -->
+        </div>
+	</div>
+</div>
+
+<div class="panel panel-default">
+  	<div class="panel-heading">
+    	<h4 class="panel-title">
+     		<a data-toggle="collapse" data-parent="#accordion2" href="#fr">Find and Replace</a>
+    	</h4>
+  	</div>
+  	<div id="fr" class="panel-collapse collapse">
+  		<div class="panel-body">
+  			<!-- Find & Replace -->
+  			<div class="col-sm-12" style="overflow-x: auto;">
+  				{% from "includes/_formhelpers.html" import render_field %}
+				<form method="post" action="{{ url_for('transf_callbacks.transform_findreplace', dataset_id=dataset_info.setid, tablename=table_name) }}"
+					name="findreplace">
+				{{ findrepl_form.csrf_token }}
+				<div class="form-group" style="width: 20%; display: inline-block;">
+					{{render_field(findrepl_form.select_attr, class_="form-control")}}
+				</div>
+				<div class="form-group" style="width: 30%; display: inline-block;">
+					{{render_field(findrepl_form.search, class_="form-control", placeholder="Searchterm")}}
+				</div>
+				<div class="form-group" style="width: 30%; display: inline-block;">
+					{{render_field(findrepl_form.replacement, class_="form-control", placeholder="Replacement")}}  
+				</div>
+				<a href="#" class="btn btn-primary" id="findandreplace" data-toggle="modal" data-target="#findreplacemodal">Find and Replace</a>
+				<div class="form-group" style="width: 30%; display: inline-block;">
+					{{render_field(findrepl_form.exactmatch, class_="checkbox-inline", placeholder="True")}}
+				</div>
+				<div class="form-group" style="width: 30%; display: inline-block;">
+					{{render_field(findrepl_form.replace_full_match, class_="checkbox-inline", placeholder="True")}}
+				</div>
+				{% include "includes/modals/_find_replace_modal.html" %}
+				</form>
+			</div>
+			<!-- Find & Replace  -->		
+        </div>
+	</div>
+</div>
+
+<div class="panel panel-default">
+  	<div class="panel-heading">
+    	<h4 class="panel-title">
+     		<a data-toggle="collapse" data-parent="#accordion2" href="#frr">Find and Replace with Regex</a>
+    	</h4>
+  	</div>
+  	<div id="frr" class="panel-collapse collapse">
+  		<div class="panel-body">
+  			{% from "includes/_formhelpers.html" import render_field %}
+  			<!-- Regex Find & Replace -->
+  			<div class="col-sm-12" style="overflow-x: auto;">
+				<form method="post" action="{{ url_for('transf_callbacks.transform_findreplaceregex', dataset_id=dataset_info.setid, tablename=table_name) }}"
+					name="findreplaceregex">
+				{{ findrepl_form.csrf_token }}
+				<div class="form-group" style="width: 20%; display: inline-block;">
+					{{render_field(regexfindreplace_form.select_attr, class_="form-control")}}
+				</div>
+				<div class="form-group" style="width: 30%; display: inline-block;">
+					{{render_field(regexfindreplace_form.regex, class_="form-control", placeholder="Search Regex")}}
+				</div>
+				<div class="form-group" style="width: 30%; display: inline-block;">
+					{{render_field(regexfindreplace_form.replacement, class_="form-control", placeholder="Replacement")}}  
+				</div>
+				<a href="#" class="btn btn-primary" id="findandreplaceregex" data-toggle="modal" data-target="#findreplaceregexmodal">Find and Replace</a>
+				<div class="form-group" style="width: 30%; display: inline-block;">
+					{{render_field(regexfindreplace_form.case_sens, class_="checkbox-inline", placeholder="True")}}
+				</div>
+				{% include "includes/modals/_find_replace_regex_modal.html" %}
+				</form>
+			</div>
+			<!-- Regex Find & Replace  -->
+        </div>
+	</div>
+</div>
+
+<div class="panel panel-default">
+  	<div class="panel-heading">
+    	<h4 class="panel-title">
+     		<a data-toggle="collapse" data-parent="#accordion2" href="#pr">Delete Rows Using Predicate</a>
+    	</h4>
+  	</div>
+  	<div id="pr" class="panel-collapse collapse">
+  		<div class="panel-body">
+  			{% from "includes/_formhelpers.html" import render_field %}
+  			<!-- Predicates -->
+			<div class="col-sm-12" style="overflow-x: auto;">
+				{% include "includes/_predicates.html" %}
+			</div>
+			<!-- Predicates -->	
+        </div>
+	</div>
+</div>
+
+
+
+<div class="panel panel-default">
+  	<div class="panel-heading">
+    	<h4 class="panel-title">
+     		<a data-toggle="collapse" data-parent="#accordion2" href="#do">Delete Outliers</a>
+    	</h4>
+  	</div>
+  	<div id="do" class="panel-collapse collapse">
+  		<div class="panel-body">
+  			{% from "includes/_formhelpers.html" import render_field %}
+  			<!-- Delete Outliers -->
+  			<div class="col-sm-12" style="overflow-x: auto;">
+				<form method="post" action="{{ url_for('transf_callbacks.transform_deleteOutlier', dataset_id=dataset_info.setid,
+					tablename=table_name) }}" name="deleteoutliers">
+				{{ deleteoutlier_form.csrf_token }}
+				<div class="form-group" style="width: 30%; display: inline-block;">
+					{{render_field(deleteoutlier_form.select_attr, class_="form-control")}}
+				</div>
+				<div class="form-group" style="width: 20%; display: inline-block;">
+					{{render_field(deleteoutlier_form.select_comparison, class_="form-control")}}
+				</div>
+				<div class="form-group" style="width: 30%; display: inline-block;">
+					{{render_field(deleteoutlier_form.value, class_="form-control", placeholder="Value")}}
+				</div>
+				<a href="#" class="btn btn-primary" id="deleteoutliers" data-toggle="modal" data-target="#deleteoutliersmodal">Delete Outliers</a>
+				{% include "includes/modals/_delete_outliers_modal.html" %}
+				</form>
+			</div>
+			<!-- Delete Outliers -->
+        </div>
+	</div>
+</div>
+
+<div class="panel panel-default">
+  	<div class="panel-heading">
+    	<h4 class="panel-title">
+     		<a data-toggle="collapse" data-parent="#accordion2" href="#nuz">Normalize Using Z-Score</a>
+    	</h4>
+  	</div>
+  	<div id="nuz" class="panel-collapse collapse">
+  		<div class="panel-body">
+  			<!-- Normalize Using Z-Score -->
+			<div class="col-sm-6" style="overflow-x: auto;">
+				<form method="post" action="{{ url_for('transf_callbacks.transform_zscorenormalisation', dataset_id=dataset_info.setid,
+					tablename=table_name) }}" name="normalize">
+				{{ zscoreform.csrf_token }}
+				<div class="form-group" style="width: 30%; display: inline-block;">
+					{{render_field(zscoreform.select_attr, class_="form-control")}}
+				</div>
+				<a href="#" class="btn btn-primary" id="normalize" data-toggle="modal" data-target="#normalizemodal">Normalize</a>
+				{% include "includes/modals/_normalize_modal.html" %}
+				</form>
+			</div>
+			<!-- Normalize Using Z-Score -->
+        </div>
+	</div>
+</div>
+
+<div class="panel panel-default">
+  	<div class="panel-heading">
+    	<h4 class="panel-title">
+     		<a data-toggle="collapse" data-parent="#accordion2" href="#dew">Discretize Equal Width</a>
+    	</h4>
+  	</div>
+  	<div id="dew" class="panel-collapse collapse">
+  		<div class="panel-body">
+			<!-- Discretize Equal Width -->
+  			<div class="col-sm-6" style="overflow-x: auto;">
+				<form method="post" action="{{ url_for('transf_callbacks.transform_discretizeEqualWidth', dataset_id=dataset_info.setid, tablename=table_name) }}"
+				 name="discretizewidth">
+				{{ discretizeWidth_form.csrf_token }}
+				<div class="form-group" style="width: 30%; display: inline-block;">
+					{{render_field(discretizeWidth_form.select_attr, class_="form-control")}}
+				</div>
+				<a href="#" class="btn btn-primary" id="discretizeequalwidth" data-toggle="modal" data-target="#discretizewidthmodal">Discretize</a>
+				{% include "includes/modals/_discretize_width_modal.html" %}
+				</form>
+			</div>
+			<!-- Discretize Equal Width  -->
+		</div>
+	</div>
+</div>
+
+<div class="panel panel-default">
+  	<div class="panel-heading">
+    	<h4 class="panel-title">
+     		<a data-toggle="collapse" data-parent="#accordion2" href="#def">Discretize Equal Frequency</a>
+    	</h4>
+  	</div>
+  	<div id="def" class="panel-collapse collapse">
+  		<div class="panel-body">
+			<!-- Discretize Equal Frequency -->
+  			<div class="col-sm-6" style="overflow-x: auto;">
+  				<h5><u><strong>Discretize with Equal Frequency</strong></u></h5>
+				<form method="post" action="{{ url_for('transf_callbacks.transform_discretizeEqualFreq', dataset_id=dataset_info.setid, tablename=table_name) }}"
+					name="discretizefreq">
+				{{ discretizeFreq_form.csrf_token }}
+				<div class="form-group" style="width: 30%; display: inline-block;">
+					{{render_field(discretizeFreq_form.select_attr, class_="form-control")}}
+				</div>
+				<a href="#" class="btn btn-primary" id="discretizeequalfreq" data-toggle="modal" data-target="#discretizefreqmodal">Discretize</a>
+				{% include "includes/modals/_discretize_freq_modal.html" %}
+				</form>
+			</div>
+			<!-- Discretize Equal Frequency  -->
+		</div>
+	</div>
+</div>
+
+<div class="panel panel-default">
+  	<div class="panel-heading">
+    	<h4 class="panel-title">
+     		<a data-toggle="collapse" data-parent="#accordion2" href="#dcr">Discretize Custom Range</a>
+    	</h4>
+  	</div>
+  	<div id="dcr" class="panel-collapse collapse">
+  		<div class="panel-body">
+			<!-- Discretize Equal Width -->
+  			<div class="col-sm-12" style="overflow-x: auto;">
+				<form method="post" action="{{ url_for('transf_callbacks.transform_discretizeCustomRange', dataset_id=dataset_info.setid, tablename=table_name) }}"		name="discretizecustom">
+				{{ discretizeCustom_form.csrf_token }}
+				<div class="form-group" style="width: 20%; display: inline-block;">
+					{{render_field(discretizeCustom_form.select_attr, class_="form-control")}}
+				</div>
+				<div class="form-group" style="width: 20%; display: inline-block;">
+					{{render_field(discretizeCustom_form.ranges, class_="form-control")}}
+				</div>
+				<div class="form-group" style="width: 15%; display: inline-block;">
+					{{render_field(discretizeCustom_form.interval_spec, class_="form-control")}}
+				</div>
+				<a href="#" class="btn btn-primary" id="discretizeequalcustom" data-toggle="modal" data-target="#discretizecustommodal">Discretize</a>
+				{% include "includes/modals/_discretize_custom_modal.html" %}
+				</form>
+			</div>
+			<!-- Discretize Equal Width  -->
+		</div>
+	</div>
+</div>
+
+<div class="panel panel-default">
+  	<div class="panel-heading">
+    	<h4 class="panel-title">
+     		<a data-toggle="collapse" data-parent="#accordion2" href="#edt">Extract Part of Date</a>
+    	</h4>
+  	</div>
+  	<div id="edt" class="panel-collapse collapse">
+  		<div class="panel-body">
+  			{% from "includes/_formhelpers.html" import render_field %}
+  			<!-- Extract Date/Time -->
+  			<div class="col-sm-12" style="overflow-x: auto;">
+				<form method="post" action="{{ url_for('transf_callbacks.transform_extractdatetime', dataset_id=dataset_info.setid,
+					tablename=table_name) }}" name="extractdate">
+				{{ extract_form.csrf_token }}
+				<div class="form-group" style="width: 30%; display: inline-block;">
+					{{render_field(extract_form.select_attr, class_="form-control")}}
+				</div>
+				<div class="form-group" style="width: 20%; display: inline-block;">
+					{{render_field(extract_form.select_extracttype, class_="form-control")}}
+				</div>
+				<a href="#" class="btn btn-primary" id="extractdate" data-toggle="modal" data-target="#extractmodal">Extract</a>
+				{% include "includes/modals/_extract_date_modal.html" %}
+				</form>
+			</div>
+			<!-- Extract Date/Time -->
+        </div>
+	</div>
+</div>
+
+<div class="panel panel-default">
+  	<div class="panel-heading">
+    	<h4 class="panel-title">
+     		<a data-toggle="collapse" data-parent="#accordion2" href="#ohe">One Hot Encoding</a>
+    	</h4>
+  	</div>
+  	<div id="ohe" class="panel-collapse collapse">
+  		<div class="panel-body">
+  			{% from "includes/_formhelpers.html" import render_field %}
+  			<!-- One Hot Encoding -->
+      		<div class="col-sm-6" style="overflow-x: auto;">
+	        	<form method="post" action="{{ url_for('transf_callbacks.transform_onehotencoding', dataset_id=dataset_info.setid,
+	        	tablename=table_name) }}" name="onehotencode">
+				{{ onehotencodingform.csrf_token }}
+				<div class="form-group" style="width: 30%; display: inline-block;">
+					{{render_field(onehotencodingform.select_attr, class_="form-control")}}
+				</div>
+				<a href="#" class="btn btn-primary" id="onehotencode" data-toggle="modal" data-target="#onehotencodemodal">One Hot Encode</a>
+				{% include "includes/modals/_one_hot_encode_modal.html" %}
+				</form>
+			</div>
+			<!-- One Hot Encoding -->
+        </div>
+	</div>
+</div>
+
+<div class="panel panel-default">
+  	<div class="panel-heading">
+    	<h4 class="panel-title">
+     		<a data-toggle="collapse" data-parent="#accordion2" href="#fnmean">Fill Nulls - Mean</a>
+    	</h4>
+  	</div>
+  	<div id="fnmean" class="panel-collapse collapse">
+  		<div class="panel-body">
+			<!-- Fill Nulls Mean -->
+			<div class="col-sm-6" style="overflow-x: auto;">
+				<form method="post" action="{{ url_for('transf_callbacks.transform_fillNullsMean', dataset_id=dataset_info.setid,
+					tablename=table_name) }}" name="fillnullsmean">
+				{{ fillnullmean_form.csrf_token }}
+				<div class="form-group" style="width: 30%; display: inline-block;">
+					{{render_field(fillnullmean_form.select_attr, class_="form-control")}}
+				</div>
+				<a href="#" class="btn btn-primary" id="fillnullsmean" data-toggle="modal" data-target="#fillnullsmeanmodal">Fill Nulls</a>
+				{% include "includes/modals/_fill_nulls_mean_modal.html" %}
+				</form>
+			</div>
+		<!-- Fill Nulls Mean -->
+		</div>
+	</div>
+</div>
+
+<div class="panel panel-default">
+  	<div class="panel-heading">
+    	<h4 class="panel-title">
+     		<a data-toggle="collapse" data-parent="#accordion2" href="#fnmedian">Fill Nulls - Median</a>
+    	</h4>
+  	</div>
+  	<div id="fnmedian" class="panel-collapse collapse">
+  		<div class="panel-body">
+			<!-- Fill Nulls Median -->
+  			<div class="col-sm-6" style="overflow-x: auto;">
+				<form method="post" action="{{ url_for('transf_callbacks.transform_fillNullsMedian', dataset_id=dataset_info.setid,
+					tablename=table_name) }}" name="fillnullsmedian">
+				{{ fillnullmedian_form.csrf_token }}
+				<div class="form-group" style="width: 30%; display: inline-block;">
+					{{render_field(fillnullmedian_form.select_attr, class_="form-control")}}
+				</div>
+				<a href="#" class="btn btn-primary" id="fillnullsmedian" data-toggle="modal" data-target="#fillnullsmedianmodal">Fill Nulls</a>
+				{% include "includes/modals/_fill_nulls_median_modal.html" %}
+				</form>
+			</div>
+			<!-- Fill Nulls Median -->
+		</div>
+	</div>
+</div>
+
+<div class="panel panel-default">
+  	<div class="panel-heading">
+    	<h4 class="panel-title">
+     		<a data-toggle="collapse" data-parent="#accordion2" href="#fnc">Fill Nulls - Custom Value</a>
+    	</h4>
+  	</div>
+  	<div id="fnc" class="panel-collapse collapse">
+  		<div class="panel-body">
+			<!-- Fill Nulls Custom Value -->
+  			<div class="col-sm-6" style="overflow-x: auto;">
+				<form method="post" action="{{ url_for('transf_callbacks.transform_fillNullsCustomValue', dataset_id=dataset_info.setid,
+					tablename=table_name) }}" name="fillnullscustom">
+				{{ fillnullcustom_form.csrf_token }}
+				<div class="form-group" style="width: 30%; display: inline-block;">
+					{{render_field(fillnullcustom_form.select_attr, class_="form-control")}}
+				</div>
+				<div class="form-group" style="width: 30%; display: inline-block;">
+					{{render_field(fillnullcustom_form.replacement, class_="form-control", placeholder="Replacement")}}
+				</div>
+				<a href="#" class="btn btn-primary" id="fillnullscustom" data-toggle="modal" data-target="#fillnullscustommodal">Fill Nulls</a>
+				{% include "includes/modals/_fill_nulls_custom_modal.html" %}
+				</form>
+			</div>
+			<!-- Fill Nulls Median -->
+		</div>
+	</div>
+</div>

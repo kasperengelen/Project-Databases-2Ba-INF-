@@ -3,6 +3,7 @@ from Controller.AccessController import require_login
 from Controller.LoginManager import LoginManager
 from Controller.UserManager import UserManager
 from View.user_forms import UserEditInfoForm, UserLoginForm, UserRegisterForm, UserEditPasswordForm
+from View.form_utils import flash_errors
 
 user_pages = Blueprint('user_pages', __name__)
 
@@ -36,6 +37,7 @@ def login():
             flash(message="Invalid email and password combination.", category="error")
             return render_template('user_pages.login.html', form=form)
     else:
+        # FORM ERRORS ARE DISPLAYED UNDERNEATH FIELDS
         return render_template('user_pages.login.html', form = form)
 # ENDFUNCTION
 
@@ -61,6 +63,7 @@ def register():
 
             return redirect(url_for('user_pages.login'))
     else:
+        # FORM ERRORS ARE DISPLAYED UNDERNEATH FIELDS
         return render_template('user_pages.register.html', form=form)
 # ENDFUNCTION
 
@@ -69,19 +72,25 @@ def register():
 @require_login
 def profile(user_id):
     """Returns a page that contains information about a user."""
-    
+
     if user_id is None:
         user_id = session['userdata']['userid']
 
     if not UserManager.existsID(user_id):
         abort(404)
 
+    view_self = False
+
+    if user_id == session['userdata']['userid']:
+        view_self = True
+
     userinfo = UserManager.getUserFromID(user_id)
     editform = UserEditInfoForm()
     editform.fillForm(userinfo)
 
     return render_template('user_pages.profile.html', 
-                                userinfo = userinfo.toDict(), 
+                                userinfo = userinfo.toDict(),
+                                view_self = view_self,
                                 editform = editform,
                                 editpassform = UserEditPasswordForm())
 # ENDFUNCTION
@@ -100,8 +109,7 @@ def edit_info():
     form = UserEditInfoForm(request.form)
 
     if not form.validate():
-        flash(message="Invalid form.", category="error")
-        # TODO flash errors
+        flash_errors(form)
     else:
         current_user = UserManager.getUserFromID(userid)
 
@@ -137,7 +145,7 @@ def edit_pass():
     form = UserEditPasswordForm(request.form)
 
     if not form.validate():
-        flash(message="Invalid form.", category="error")
+        flash_errors(form)
     else:
         current_user = UserManager.getUserFromID(userid)
 
