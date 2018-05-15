@@ -9,25 +9,48 @@
                 <h4 class="modal-title">Download Table</h4>
             </div>
             <div class="modal-body">
-            	<!-- Download form -->
-            	{% from "includes/_formhelpers.html" import render_field %}
-                <form action="{{ url_for('dataset_pages.download_table', dataset_id=dataset_info.setid, tablename=table_name, original=original)}}"
-                method="get" id="downloadForm_{{ table }}">
-                    {{ downloadform.hidden_tag() }}
-                	<div class="form-group">
-                		{{ render_field(downloadform.delimiter, class_="form-control") }}
-                	</div>
-                	<div class="form-group">
-                		{{ render_field(downloadform.quotechar, class_="form-control") }}
-                	</div>
-                	<div class="form-group">
-                		{{ render_field(downloadform.nullrep, class_="form-control") }}
-                	</div>
-                    <div class="text-right">
-            		    <input id="downloadForm_{{ table }}" class="btn btn-primary" type="submit" value="Download">
+            	<ul class="nav nav-tabs" role="tablist">
+                    <li class="active"><a href="#CSV" role="tab" data-toggle="tab">CSV Download</a></li>
+                    <li><a href="#DUMP" role="tab" data-toggle="tab">SQL Download</a></li>
+                </ul>
+
+                {% from "includes/_formhelpers.html" import render_field %}
+                <!-- TAB PANES -->
+                <div class="tab-content">
+                    {% from "includes/_formhelpers.html" import render_field %}
+                    <div style="padding-top: 1em;"></div>
+                    <div class="tab-pane active" id="CSV">
+                        <!-- Download form csv -->
+                        <form action="{{ url_for('dataset_pages.download_table', dataset_id=dataset_info.setid, tablename=table_name, original=original, fileformat='CSV')}}"
+                        method="get">
+                            {{ download_csv_form.hidden_tag() }}
+                            <div class="form-group">
+                                {{ render_field(download_csv_form.delimiter, class_="form-control") }}
+                            </div>
+                            <div class="form-group">
+                                {{ render_field(download_csv_form.quotechar, class_="form-control") }}
+                            </div>
+                            <div class="form-group">
+                                {{ render_field(download_csv_form.nullrep, class_="form-control") }}
+                            </div>
+                            <div class="text-right">
+                                <input class="btn btn-primary" type="submit" value="Download">
+                            </div>
+                        </form>
+                        <!-- Download form csv -->
                     </div>
-                </form>
-                <!-- Download form -->
+                    <div class="tab-pane" id="DUMP">
+                        <!-- Download form dump -->
+                        <form action="{{ url_for('dataset_pages.download_table', dataset_id=dataset_info.setid, tablename=table_name, original=original,
+                        fileformat='SQL')}}"
+                        method="get">
+                            <div class="text-right">
+                                <input class="btn btn-primary" type="submit" value="Download">
+                            </div>
+                        </form>
+                        <!-- Download form dump -->
+                    </div>
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>

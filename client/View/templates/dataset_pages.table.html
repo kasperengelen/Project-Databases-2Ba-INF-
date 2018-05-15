@@ -228,9 +228,11 @@
 							{% for attr in attribute_list %}
 								<th>
 									{{ attr }}
-			                        <form method="post" id="deleteform_{{ attr }}" action="{{ url_for('transf_callbacks.transform_deleteattr', dataset_id=dataset_info.setid, tablename=table_name, attrname=attr) }}" id="deleteform_{{ attr }}">
-			                       <button style="border: none; background-color: transparent;" type="submit" id="delete_{{ attr }}" ><span class="glyphicon glyphicon-trash"></span></button>
-			                        </form>
+									{% if original != True %}
+				                       <form method="post" id="deleteform_{{ attr }}" action="{{ url_for('transf_callbacks.transform_deleteattr', dataset_id=dataset_info.setid, tablename=table_name, attrname=attr) }}" id="deleteform_{{ attr }}">
+				                       <button style="border: none; background-color: transparent;" type="submit" id="delete_{{ attr }}" ><span class="glyphicon glyphicon-trash"></span></button>
+				                       </form>
+			                       {% endif %}
 								</th>
 							{% endfor %}
 						</tr>

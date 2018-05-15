@@ -5,9 +5,25 @@
 	<div class="jumbotron" style="padding: 1%;">
 		<div class="row">
 			<div class="col-sm-3 text-left">
-				<a href="{{ url_for('dataset_pages.home', dataset_id=dataset_info.setid) }}" class="btn btn-primary">
+				<a href="{{ url_for('dataset_pages.home', dataset_id=dataset_info.setid) }}" class="btn btn-primary" data-hover="tooltip"
+					title="Previous">
 					<span class="glyphicon glyphicon-share-alt" style="-webkit-transform: scaleX(-1); transform: scaleX(-1);"></span>
 				</a>
+				<div style="padding-top: 3em;">
+					{% if undo_check != True %}
+						<div id="undo_false">
+							<button href="#" class="btn btn-primary" data-hover="tooltip" title="Undo" disabled>
+								<span class="glyphicon glyphicon-repeat" style="-webkit-transform: scaleX(-1); transform: scaleX(-1);"></span>
+							</button>
+						</div>
+					{% else %}
+						<div id="undo_true">
+							<a href="#" class="btn btn-primary" data-hover="tooltip" title="Undo">
+								<span class="glyphicon glyphicon-repeat" style="-webkit-transform: scaleX(-1); transform: scaleX(-1);"></span>
+							</a>
+						</div>
+				{% endif %}
+				</div>
 			</div>
 			<div class="col-sm-6 text-center">
 				<h2>{{ dataset_info.name }}</h2>
@@ -19,7 +35,7 @@
 					<form id="history" method="post" action="{{ url_for('dataset_pages.history', dataset_id=dataset_info.setid) }}">
 	    				{{ history_form.hidden_tag() }}
 		        		<div class="form-group">
-		        			{{render_field(history_form.options, class_="form-control")}}
+		        			{{render_field(history_form.options, class_="form-control", id="hist_table")}}
 		        		</div>
 		        	</form>
 		        </div>
@@ -78,23 +94,36 @@
 			</div>
 
 		<script>
-    			var table = $('#mytable').DataTable( {
-    				scrollX: true,
-    				scrollY: true,
-    				processing: true,
-    				serverSide: true,
-    				pageLength: {{ row_count }},
-    				order: [[0, 'desc']],
-    				columnDefs: [
-	                	{"targets": 1, "orderable": false}
-	                ],
-    				ajax: '{{ url_for("dataset_pages._get_history_table", dataset_id=dataset_info.setid, tablename=table_name) }}'
-    			} );
+			var table = $('#mytable').DataTable( {
+				scrollX: true,
+				scrollY: true,
+				processing: true,
+				serverSide: true,
+				pageLength: {{ row_count }},
+				order: [[0, 'desc']],
+				columnDefs: [
+                	{"targets": 1, "orderable": false}
+                ],
+				ajax: '{{ url_for("dataset_pages._get_history_table", dataset_id=dataset_info.setid, tablename=table_name) }}'
+			} );
 
     		$('#mytable tbody').on('click', 'tr td', function() {
 				var idx = table.cell(this, 1).data();
 				alert(idx);
 				
+			});
+		</script>
+
+		<script>
+			$('#hist_table').change(function() {
+				if($('#hist_table option:selected').text() == "Entire Dataset" ){
+					$('#undo_false').show();
+					$('#undo_true').hide();
+				}
+				else {
+					$('#undo_true').show();
+					$('#undo_false').hide();
+				}
 			});
 		</script>
 

@@ -603,9 +603,6 @@ def __download_helper(dataset_id, mode, fileformat, tablename = None):
     elif mode in ["TABLE", "ORIGINAL"] and fileformat == "SQL":
         form = DownloadTableSQLForm(request.args)
 
-    if mode == "DATASET":
-        form = DatasetDownloadForm(request.args)
-
     if not form.validate():
         flash_errors(form)
         return redirect(url_for('dataset_pages.home', dataset_id=dataset_id))
@@ -648,10 +645,10 @@ def __download_helper(dataset_id, mode, fileformat, tablename = None):
             dd.get_csv_zip(foldername=real_download_dir, delimiter=delimiter, null=nullrep, quotechar=quotechar, original=form.original_check.data)
             filename = str(dataset_id) + ".zip"
         elif mode == "TABLE":
-            dd.to_csv(tablename=tablename, foldername=real_download_dir, delimiter=delimiter, null=nullrep, quotechar=quotechar, original = False)
+            dd.get_csv(tablename=tablename, foldername=real_download_dir, delimiter=delimiter, null=nullrep, quotechar=quotechar, original = False)
             filename = tablename + ".csv"
         elif mode == "ORIGINAL":
-            dd.to_csv(tablename=tablename, foldername=real_download_dir, delimiter=delimiter, null=nullrep, quotechar=quotechar, original = True)
+            dd.get_csv(tablename=tablename, foldername=real_download_dir, delimiter=delimiter, null=nullrep, quotechar=quotechar, original = True)
             filename = tablename + ".csv"
         
     elif fileformat == 'SQL':
