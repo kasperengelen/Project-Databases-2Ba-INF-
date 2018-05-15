@@ -1,5 +1,5 @@
 
-from utils import get_db
+from Model.db_access import get_db
 from passlib.hash import sha256_crypt
 from Controller.UserInfo import UserInfo
 
