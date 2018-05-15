@@ -594,8 +594,14 @@ def __download_helper(dataset_id, mode, fileformat, tablename = None):
 
     dataset = DatasetManager.getDataset(dataset_id)
 
-    # get form
-    form = DownloadForm(request.args)
+    if mode == "DATASET" and fileformat == "CSV":
+        form = DownloadDatasetCSVForm(request.args)
+    elif mode == "DATASET" and fileformat == "SQL":
+        form = DownloadDatasetSQLForm(request.args)
+    elif mode in ["TABLE", "ORIGINAL"] and fileformat == "CSV":
+        form = DownloadTableCSVForm(request.args)
+    elif mode in ["TABLE", "ORIGINAL"] and fileformat == "SQL":
+        form = DownloadTableSQLForm(request.args)
 
     if mode == "DATASET":
         form = DatasetDownloadForm(request.args)
@@ -651,11 +657,14 @@ def __download_helper(dataset_id, mode, fileformat, tablename = None):
     elif fileformat == 'SQL':
         dd = dataset.getDownloader()
         if mode == "DATASET":
-            pass
+            dd.get_dataset_dump(foldername=real_download_dir, original=form.original_check.data)
+            filename = str(dataset_id) + ".zip"
         elif mode == "TABLE":
-            pass
+            dd.get_table_dump(tablename=tablename, foldername=real_download_dir, original=False)
+            filename = tablename + ".dump"
         elif mode == "ORIGINAL":
-            pass
+            dd.get_table_dump(tablename=tablename, foldername=real_download_dir, original=True)
+            filename = tablename + ".dump"
     else:
         raise RuntimeError("Invalid file format: '" + fileformat + "'.")
 
