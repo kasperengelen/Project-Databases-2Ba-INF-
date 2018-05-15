@@ -22,15 +22,13 @@ class DatasetHistoryManager:
         self.track = track
         self.entry_count = self.__initialize_entrycount()
         self.choice_dict = None
-
-
+        
     def __initialize_entrycount(self):
             cur = self.db_connection.cursor()
             query = "SELECT COUNT(*) FROM system.dataset_history WHERE setid = %s"
             cur.execute(sql.SQL(query), [self.setid])
             return int(cur.fetchone()[0])
-
-
+        
     def get_rowcount(self, tablename=None):
         """Quick method to get the number of rows in the dataset history table."""
         if tablename is None: #If we're viewing history of all the tables.
@@ -41,9 +39,7 @@ class DatasetHistoryManager:
             query = "SELECT COUNT(*) FROM system.dataset_history WHERE setid = %s AND (table_name = %s OR origin_table = %s)"
             cur.execute(sql.SQL(query), [self.setid, tablename, tablename])
             return int(cur.fetchone()[0])
-            
-            
-              
+        
     def write_to_history(self, table_name, origin_table, attribute, parameters, transformation_type):
         """Method thar writes an entry to the dataset history table for a performed transformation.
 
@@ -54,7 +50,6 @@ class DatasetHistoryManager:
             parameters: List of parameters used with the transformation
             transformation_type: Integer representing the transformation used.
         """
-
         if self.track is False:
             return None
         
@@ -64,7 +59,30 @@ class DatasetHistoryManager:
         cur.execute(sql.SQL(query), [self.setid, table_name, attribute, transformation_type, param_array, origin_table])
         self.db_connection.commit()
 
+    def render_history_json(self, offset, limit, reverse_order=False, show_all=True, table_name=""):
+        """Method that returns a json string containing the asked data of the dataset_history table.
 
+        Parameters:
+            offset: Offset to determine from which row number we start showing entries.
+            limit: The number of rows we will render in the json.
+            reverse_order: False implies earlier history entries first and True implies oldest entries first.
+            show_all: True if all entries for the dataset should be shown, False implies history for a specific table
+            transformation_type: If show_all is False, all the history entries of table_name will returned in json.
+        """
+        dict_cur = self.db_connection.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        if show_all is False:
+            query = ("SELECT * FROM system.dataset_history WHERE setid = %s AND (table_name = %s OR origin_table = %s)"
+                     " LIMIT %s OFFSET %s")
+            dict_cur.execute(sql.SQL(query), [self.setid, table_name, table_name, limit, offset])
+        else:
+            query = "SELECT * FROM system.dataset_history WHERE setid = %s LIMIT %s OFFSET %s"
+            dict_cur.execute(sql.SQL(query), [self.setid, limit, offset])
+
+        all_rows = dict_cur.fetchall()
+        df = self.__rows_to_dataframe(all_rows)
+        json_string = df.to_json(orient='values', date_format='iso')
+        return json_string
+        
     def __python_list_to_postgres_array(self, py_list, transformation_type):
         """Method that represents a python list as a postgres array for inserting into a PostreSQL database."""
         param_array = ""
@@ -126,8 +144,6 @@ class DatasetHistoryManager:
         all_tx = cur.fetchall()
         return all_tx
         
-        
-
     def __get_edit_distance(self, t_id):
         """Method that calculates the edit distance defined by us to determine how dissimilar two tables are.
         This is done by looking at various transformations and rating how hard a transformation changed the
@@ -140,107 +156,6 @@ class DatasetHistoryManager:
         else:
             return 0.3
         
-    #DEPRECATED
-    def get_page_indices(self, display_nr, page_nr=1):
-        """Method that returns the relevant indices for the history table that's being viewed.
-
-        Parameters:
-            display_nr: Integer specifying how much rows of a table have to be shown per page.
-            page_nr: Integer indicating which page we're viewing to extract the right rows.
-        """
-        if self.entry_count is None:
-            #This method will set the maxrows
-            raise RuntimeError("Method is_in_range() was not called prior to get_page_indices, causing this failed operation.")
-    
-        table_size = self.entry_count
-        max_index = math.ceil(table_size / display_nr)
-        if max_index == 0:
-            return [1]
-        #At this point the table is too large to just show all the indices, we have to minimize clutter
-        if(max_index > 5):
-            if page_nr > 4:
-                indices = ['1', '...', ]
-                start = page_nr - 1 #Get index before current
-            else:
-                indices = []
-                start = 1
-
-            end = start + 3 #Show 3 indices including current page
-            if(start == 1):
-                end += 1
-                if(page_nr == 4): #At this point only index = 2 will be '...', we only want to skip 2 or more values.
-                    end += 1
-
-            elif(page_nr == (max_index - 3)): #At this point the last 4 indices should always be shown
-               start = page_nr - 1
-               end = max_index + 1
-               
-            
-            elif (end >= max_index):
-                start = max_index -3 #Keep last pages from being isolated
-                end = max_index + 1 
-
-        else:
-            indices = []
-            start = 1
-            end = max_index + 1
-            
-        for i in range(start, end):
-            indices.append(str(i))
-
-        if(end < max_index):
-            indices.append('...')
-            indices.append(str(max_index))
-
-        return indices
-
-    def is_in_range(self, page_nr, nr_rows, show_all=True, table_name=""):
-        """Method that returns True if a page index is in range and False if it's not in range.
-
-        Parameters:
-            page_nr: Integer indicating which page we're trying to view
-            nr_rows: The number of rows that are being showed per page.
-            show_all: Boolean indicating if all entries for the dataset should be shown.
-                      False implies only the entries for a specific table should be shown.
-            table_name: Name of the table that has to be shown.
-        """
-        cur = self.db_connection.cursor()
-        if show_all is False:
-            query = "SELECT COUNT(*) FROM system.dataset_history WHERE setid = %s AND (table_name = %s OR origin_table = %s)"
-            cur.execute(sql.SQL(query), [self.setid, table_name, table_name])
-        else:
-            query = "SELECT COUNT(*) FROM system.dataset_history WHERE setid = %s"
-            cur.execute(sql.SQL(query), [self.setid])
-        
-
-        self.entry_count = cur.fetchone()[0]
-            
-        if((page_nr - 1) * nr_rows >= self.entry_count):
-            #In case it's an empty table, the first page should still be in range
-            if (self.entry_count == 0) and (page_nr == 1):
-                return True
-            else:
-                return False
-        else:
-            return True
-
-
-    def render_history_json(self, offset, limit, reverse_order=False, show_all=True, table_name=""):
-        dict_cur = self.db_connection.cursor(cursor_factory=psycopg2.extras.DictCursor)
-        if show_all is False:
-            query = ("SELECT * FROM system.dataset_history WHERE setid = %s AND (table_name = %s OR origin_table = %s)"
-                     " LIMIT %s OFFSET %s")
-            dict_cur.execute(sql.SQL(query), [self.setid, table_name, table_name, limit, offset])
-        else:
-            query = "SELECT * FROM system.dataset_history WHERE setid = %s LIMIT %s OFFSET %s"
-            dict_cur.execute(sql.SQL(query), [self.setid, limit, offset])
-
-        all_rows = dict_cur.fetchall()
-        df = self.__rows_to_dataframe(all_rows)
-        json_string = df.to_json(orient='values', date_format='iso')
-        return json_string
-
-
     def __generate_choice_dict(self):
         """Generate the dictionary used to write away history table entries."""
         if self.choice_dict is not None:
@@ -293,37 +208,7 @@ class DatasetHistoryManager:
     def __unquote_string(self, string):
         """Assuming a string is quoted, this method will return the same string without the quotes"""
         return string[1:-1]
-        
-
-    def render_history_table(self, page_nr, nr_rows, show_all=True, table_name=""):
-        """This method returns a html table representing the page of the history table.
-
-        Parameters:
-            page_nr: Integer indicating which page we're viewing.
-            nr_rows: The number of rows that are being showed per page.
-            show_all: Boolean indicating if all entries for the dataset should be shown.
-                      False implies only the entries for a specific table should be shown.
-            table_name: Name of the table that has to be shown.
-        """
-        offset = (page_nr - 1) * nr_rows
-        dict_cur = self.db_connection.cursor(cursor_factory=psycopg2.extras.DictCursor)
-
-        if show_all is False:
-            query = ("SELECT * FROM system.dataset_history WHERE setid = %s AND (table_name = %s OR origin_table = %s)"
-                     " LIMIT %s OFFSET %s")
-            dict_cur.execute(sql.SQL(query), [self.setid, table_name, table_name, nr_rows, offset])
-        else:
-            query = "SELECT * FROM system.dataset_history WHERE setid = %s LIMIT %s OFFSET %s"
-            dict_cur.execute(sql.SQL(query), [self.setid, nr_rows, offset])
-
-
-        all_rows = dict_cur.fetchall()
-        df = self.__rows_to_dataframe(all_rows)
-        #html_string = df.to_html(None, None, None, True, False)
-        html_string = re.sub(' mytable', '" id="mytable', df.to_html(None, None, None, True, False, classes="mytable"))
-        return html_string
-
-        
+    
     def __is_new_table(self, dict_obj):
         """Method that checks whether a table is a new table created from a transformation."""
         if dict_obj['table_name'] != dict_obj['origin_table'] :
@@ -450,14 +335,3 @@ class DatasetHistoryManager:
         rowstring = 'Executed user-generated query on table "{}". Used query: {}'
         rowstring = rowstring.format(dict_obj['origin_table'], param[0])
         return rowstring
-        
-
-
-
-
-        
-        
-            
-        
-        
-    
