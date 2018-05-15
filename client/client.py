@@ -12,7 +12,8 @@ app.config.update(dict(
     SECRET_KEY = "\xbf\xcf\xde\xee\xe8\xc1\x8c\\\xfd\xe6\\!t^(\x1c/\xc6l\xe1,\xc9#\xd7",
     WTF_CSRF_SECRET_KEY = "Uei\xc2&\x8a\x18.H\x87\xc5\x1d\xd1\xc8\xc3\xcf\xe5\xfft_\x8c:\x03r",
     UPLOAD_FOLDER = "./upload",
-    DOWNLOAD_FOLDER = "./download"
+    DOWNLOAD_FOLDER = "./download",
+    ADMIN_KEY = "2g9om268bvf3913lps545nf4oz589hzi"
 ))
 
 app.register_blueprint(user_pages)
@@ -33,9 +34,6 @@ def before_request():
 
     # make sure that the default row count is set
     if not 'rowcount' in session:
-        session['rowcount'] = 10
-
-    if not session['rowcount'] in [10,25,50,100,500]:
         session['rowcount'] = 10
 
     # make sure that user information is up to date

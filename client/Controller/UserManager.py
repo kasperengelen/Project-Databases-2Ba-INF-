@@ -183,4 +183,15 @@ class UserManager:
         db_conn.cursor().execute("UPDATE SYSTEM.user_accounts SET passwd = %s WHERE userid=%s;", [passwd_hash, int(userid)])
         db_conn.commit()
     # ENDMETHOD
+
+    @staticmethod
+    def editAdminStatus(userid, admin_status, db_conn = None):
+        """Given True of False as the new admin status, this will update the current status to the new status."""
+
+        if db_conn is None:
+            db_conn = get_db()
+
+        db_conn.cursor().execute("UPDATE SYSTEM.user_accounts SET admin = %s WHERE userid = %s", [admin_status])
+        db_conn.commit()
+    # ENDMETHOD
 # ENDCLASS

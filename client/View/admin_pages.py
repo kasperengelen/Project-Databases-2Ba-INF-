@@ -1,4 +1,6 @@
 from flask import Blueprint, render_template, redirect, url_for, request, flash
+from flask import current_app as app
+
 from Controller.AccessController import require_admin
 from Controller.AccessController import require_login
 from Controller.UserManager import UserManager
@@ -204,3 +206,41 @@ def delete_dataset():
     return redirect(url_for('admin_pages.manage_datasets'))
 # ENDFUNCTION
 
+@admin_pages.route('/admin/promote_demote', methods=['GET', 'POST'])
+def promote_demote():
+    """Page to promote and demote admins."""
+
+    admin_form = AlterAdminForm(request.form)
+
+    if request.method == "POST" and admin_form.validate():
+
+        real_pincode = app.config['ADMIN_KEY']
+
+        if admin_form.pincode.data != real_pincode:
+            flash(message="Specified pincode is invalid.", category="error")
+            return render_template('admin_pages.create_admin.html', admin_form = admin_form)
+
+        if not UserManager.existsEmail(admin_form.email.data):
+            flash(message="User with specified e-mail does not exist.", category="error")
+            return render_template('admin_pages.create_admin.html', admin_form = admin_form)
+
+        user = UserManager.getUserFromEmail(admin_form.email.data)
+
+        if admin_form.action.data == "PROMOTE":
+            # check if user is non-admin
+            if user.admin:
+                flash(message="Specified user is already an admin.", category="error")
+                return render_template('admin_pages.create_admin.html', admin_form = admin_form)
+
+            # make admin
+            UserManager.editAdminStatus(user.userid, True)
+        else:
+            # check if user is admin
+            if not user.admin:
+                flash(message="Specified user is not an admin.", category="error")
+                return render_template('admin_pages.create_admin.html', admin_form = admin_form)
+            # demote admin
+            UserManager.editAdminStatus(user.userid, False)
+
+    return render_template('admin_pages.create_admin.html', admin_form = admin_form)
+# ENDFUNCTION
