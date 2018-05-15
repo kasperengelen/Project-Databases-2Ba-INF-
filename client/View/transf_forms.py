@@ -12,6 +12,10 @@ class TransformationFormBase(FlaskForm):
     new_table_name = StringField('New Table Name', [InputRequired(message="Table name is required."), 
                                               Length(min=3, max=20, message="Tablename needs to be between 3 and 20 characters long."), 
                                               Regexp('^[A-Za-z0-9][A-Za-z0-9]+$')])
+
+    def validate_new_table_name(form, field):
+        if make_new_table.data: # only validate if the checkbox is clicked.
+            field.validate()
 # ENDCLASS
 
 class FindReplaceForm(TransformationFormBase):
