@@ -51,6 +51,16 @@ class TableUploadForm(FlaskForm):
     columnnames_included = BooleanField('Column names included in files? (CSV only)', default = True)
 # ENDCLASS
 
+class DatasetDownloadForm(FlaskForm):
+    """Form to specify CSV properties for download."""
+
+    delimiter = StringField('Delimiter', [InputRequired('Delimiter is required.'), Length(min=1, max=1)], default=",")
+    quotechar = StringField('Qoute character', [InputRequired('Qoute character is required.'), Length(min=1, max=1)], default='"')
+    nullrep = StringField('NULL representation', [InputRequired('NULL representation is required.'), Length(min=1, max=10)], default="NULL")
+    original_check = BooleanField('Download Original Tables as well?', default = False)
+
+# ENDCLASS
+
 class DownloadForm(FlaskForm):
     """Form to specify CSV properties for download."""
 

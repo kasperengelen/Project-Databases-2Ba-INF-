@@ -10,7 +10,7 @@ from Controller.TableViewer import TableViewer
 
 from Model.TableUploader import FileException as DLFileExcept
 
-from View.dataset_forms import DatasetForm, AddUserForm, RemoveUserForm, LeaveForm, TableUploadForm, DownloadForm, TableJoinForm, AttributeForm, HistoryForm, AddUserForm, RemoveUserForm
+from View.dataset_forms import DatasetForm, AddUserForm, RemoveUserForm, LeaveForm, TableUploadForm, DatasetDownloadForm, DownloadForm, TableJoinForm, AttributeForm, HistoryForm, AddUserForm, RemoveUserForm
 from View.transf_forms import FindReplaceForm, DataTypeTransform, NormalizeZScore, OneHotEncoding, RegexFindReplace, DiscretizeEqualWidth, ExtractDateTimeForm
 from View.transf_forms import DiscretizeEqualFreq, DiscretizeCustomRange, DeleteOutlier, FillNullsMean, FillNullsMedian, FillNullsCustomValue
 from View.transf_forms import PredicateFormOne, PredicateFormTwo, PredicateFormThree
@@ -61,7 +61,7 @@ def home(dataset_id):
                                                       uploadform          = upload_form,
                                                       join_form           = join_form,
                                                       editform            = editform,
-                                                      downloadform        = DownloadForm(),
+                                                      downloadform        = DatasetDownloadForm(),
                                                       perm_type           = perm_type)
 # ENDFUNCTION
 
@@ -591,6 +591,9 @@ def __download_helper(dataset_id, mode, tablename = None):
     # get form
     form = DownloadForm(request.args)
 
+    if mode == "DATASET":
+        form = DatasetDownloadForm(request.args)
+
     if not form.validate():
         flash_errors(form)
         return redirect(url_for('dataset_pages.home', dataset_id=dataset_id))
@@ -629,7 +632,7 @@ def __download_helper(dataset_id, mode, tablename = None):
     # PREPARE FILE FOR DOWNLOAD
     dd = dataset.getDownloader()
     if mode == "DATASET":
-        dd.get_csv_zip(foldername=real_download_dir, delimiter=delimiter, null=nullrep, quotechar=quotechar)
+        dd.get_csv_zip(foldername=real_download_dir, delimiter=delimiter, null=nullrep, quotechar=quotechar, original=form.original_check.data)
     elif mode == "TABLE":
         dd.to_csv(tablename=tablename, foldername=real_download_dir, delimiter=delimiter, null=nullrep, quotechar=quotechar, original = False)
     elif mode == "ORIGINAL":

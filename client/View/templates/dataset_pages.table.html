@@ -6,9 +6,7 @@
 			<div class="col-sm-3 text-left">
 				<a data-hover="tooltip" title="Previous" href="{{ url_for('dataset_pages.home', dataset_id=dataset_info.setid) }}" class="btn btn-primary">
 					<span class="glyphicon glyphicon-share-alt" style="-webkit-transform: scaleX(-1); transform: scaleX(-1);"></span></a>
-				</br>
-				</br>
-				</br>
+				<div style="padding-top: 3em;"></div>
 				{% if original != True %}
 				<div>
 					<button id="transbutton" type="button" class="btn btn-primary" data-hover="tooltip" title="Transformations" data-toggle="collapse"
@@ -43,9 +41,7 @@
 					<a id="file" href="#" class="btn btn-primary" data-toggle="modal" data-hover="tooltip" title="Download" data-target="#downloadFormModal_{{ table }}">
 						<span class="glyphicon glyphicon-download-alt"></span></a>
 					{% include "includes/modals/_download_modal.html" %}
-					</br>
-					</br>
-					</br>
+					<div style="padding-top: 3em;"></div>
 					{% if original != True %}
 					<a id="file" class="btn btn-primary" data-toggle="collapse" data-hover="tooltip" title="Statistics" data-parent="#accordion" href="#view">
 						<span class="glyphicon glyphicon-stats"></span></a>
