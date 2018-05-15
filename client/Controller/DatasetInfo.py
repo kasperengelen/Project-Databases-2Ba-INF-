@@ -1,12 +1,14 @@
 from psycopg2 import sql
 from psycopg2 import extensions
-from utils import get_db
-from utils import get_sqla_eng
+
+from Model.db_access import get_db
+from Model.db_access import get_sqla_eng
+from Model.TableUploader import TableUploader
+from Model.DatasetDownloader import DatasetDownloader
+
 from Controller.TableViewer import TableViewer
 from Controller.TableTransformer import TableTransformer
-from Model.TableUploader import TableUploader
 from Controller.DatasetHistoryManager import DatasetHistoryManager
-from Model.DatasetDownloader import DatasetDownloader
 
 class DatasetInfo:
     """Class that represents a dataset."""

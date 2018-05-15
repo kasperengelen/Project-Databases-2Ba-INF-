@@ -317,6 +317,7 @@ def transform_zscorenormalisation(dataset_id, tablename):
         abort(404)
 
     tt = dataset.getTableTransformer(tablename)
+    tv = dataset.getTableViewer(tablename)
 
     form = NormalizeZScore(request.form)
     form.fillForm(tv.get_attributes())
@@ -481,7 +482,11 @@ def transform_deleteOutlier(dataset_id, tablename):
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
 
     try:
-        tt.delete_outlier(tablename, form.select_attr.data, form.select_comparison.data, form.value.data)
+        tt.delete_outlier(tablename=tablename, 
+                            attribute=form.select_attr.data, 
+                            larger=form.select_comparison.data, 
+                            value=form.comparison_value.data,
+                            replacement=form.replacement_value.data)
         flash(message="Outliers deleted.", category="success")
     except Exception as e:
         flash(message="An error occurred. Details: " + str(e), category="error")

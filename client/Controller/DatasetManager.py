@@ -1,4 +1,4 @@
-from utils import get_db
+from Model.db_access import get_db
 from Controller.DatasetInfo import DatasetInfo
 
 class DatasetManager:
