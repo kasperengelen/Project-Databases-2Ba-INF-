@@ -585,10 +585,10 @@ def download_table(dataset_id, tablename, original, fileformat):
 @require_readperm
 def download_dataset(dataset_id, fileformat):
     """Callback to download all the tables from the specified dataset."""
-    return __download_helper(dataset_id, mode="DATASET", fileformat = fileformat)
+    return __download_helper(dataset_id=dataset_id, mode="DATASET", fileformat = fileformat)
 # ENDFUNCTION
 
-def __download_helper(dataset_id, mode, tablename = None, fileformat):
+def __download_helper(dataset_id, mode, fileformat, tablename = None):
     if not DatasetManager.existsID(dataset_id):
         abort(404)
 
