@@ -1,7 +1,10 @@
 
 class QueryManager:
 
-    def getUser(*args, **kwargs):
+    def __init__(self, db_conn, engine):
+        self.db_conn = db_conn
+
+    def getUser(self, *args, **kwargs):
         """Method to retrieve user entries from the SYSTEM.user_accounts table.
         Fields:
             userid (int),
@@ -16,13 +19,13 @@ class QueryManager:
         # ex: getUser(userid=5,fname="Peter"), getUser(lname="Selie"), etc
         pass
 
-    def getDataset():
+    def getDataset(self):
         pass
 
-    def existsUser():
+    def existsUser(self):
         pass
 
-    def existsDataset():
+    def existsDataset(self):
         pass
 
     

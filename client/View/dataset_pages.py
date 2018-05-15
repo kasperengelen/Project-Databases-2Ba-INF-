@@ -61,6 +61,7 @@ def home(dataset_id):
                                                       uploadform          = upload_form,
                                                       join_form           = join_form,
                                                       editform            = editform,
+                                                      downloadform        = DownloadForm(),
                                                       perm_type           = perm_type)
 # ENDFUNCTION
 
