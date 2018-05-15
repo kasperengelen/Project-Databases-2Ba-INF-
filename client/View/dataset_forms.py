@@ -51,25 +51,31 @@ class TableUploadForm(FlaskForm):
     columnnames_included = BooleanField('Column names included in files? (CSV only)', default = True)
 # ENDCLASS
 
-class DatasetDownloadForm(FlaskForm):
-    """Form to specify CSV properties for download."""
-
+class DownloadDatasetCSVForm(DownloadDatasetForm):
+    """Form to download dataset as CSV."""
+    
     delimiter = StringField('Delimiter', [InputRequired('Delimiter is required.'), Length(min=1, max=1)], default=",")
     quotechar = StringField('Qoute character', [InputRequired('Qoute character is required.'), Length(min=1, max=1)], default='"')
     nullrep = StringField('NULL representation', [InputRequired('NULL representation is required.'), Length(min=1, max=10)], default="NULL")
     original_check = BooleanField('Include original tables', default = False)
-    fileformat = SelectField('Fileformat', choices = [('CSV', 'CSV'),('SQL', 'SQL')])
-
 # ENDCLASS
 
-class DownloadForm(FlaskForm):
-    """Form to specify CSV properties for download."""
+class DownloadDatasetSQLForm(DownloadDatasetForm):
+    """Form to download dataset as SQL."""
 
+    original_check = BooleanField('Include original tables', default = False)
+# ENDCLASS
+
+class DownloadTableCSVForm(FlaskForm):
+    """Form to download table as CSV."""
     delimiter = StringField('Delimiter', [InputRequired('Delimiter is required.'), Length(min=1, max=1)], default=",")
     quotechar = StringField('Qoute character', [InputRequired('Qoute character is required.'), Length(min=1, max=1)], default='"')
     nullrep = StringField('NULL representation', [InputRequired('NULL representation is required.'), Length(min=1, max=10)], default="NULL")
-    fileformat = SelectField('Fileformat', choices = [('CSV', 'CSV'),('SQL', 'SQL')])
+# ENDCLASS
 
+class DownloadTableSQLForm(FlaskForm):
+    """Form to download table as SQL."""
+    pass
 # ENDCLASS
 
 class TableJoinForm(FlaskForm):
