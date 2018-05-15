@@ -628,6 +628,7 @@ def __download_helper(dataset_id, mode, tablename = None):
     delimiter = str(form.delimiter.data)
     nullrep = str(form.nullrep.data)
     quotechar = str(form.quotechar.data)
+    fileformat = str(form.fileformat.data)
 
     # PREPARE FILE FOR DOWNLOAD
     dd = dataset.getDownloader()
