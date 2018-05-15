@@ -6,9 +6,7 @@
 			<div class="col-sm-3 text-left">
 				<a data-hover="tooltip" title="Previous" href="{{ url_for('dataset_pages.list') }}" class="btn btn-primary">
 					<span class="glyphicon glyphicon-share-alt" style="-webkit-transform: scaleX(-1); transform: scaleX(-1);"></span></a>
-				</br>
-				</br>
-				</br>
+				<div style="padding-top: 3em;"></div>
 				<a href="{{ url_for('dataset_pages.history', dataset_id=dataset_info.setid) }}" data-hover="tooltip" title="History"
 					class="btn btn-primary"><span class="glyphicon glyphicon-time"></span></a>
 			</div>
@@ -18,14 +16,10 @@
 			</div>
 			{% if perm_type == 'admin' %}
 				<div class="col-sm-3 text-right">
-					<div>
-						{% include "includes/modals/_edit_dataset_modal.html" %}
-						</br>
-						</br>
-						</br>
-						<a href="{{ url_for('dataset_pages.permissions', dataset_id=dataset_info.setid) }}" 
-							class="btn btn-primary"><span class="glyphicon glyphicon-wrench"></a>
-					</div>
+					{% include "includes/modals/_edit_dataset_modal.html" %}
+					<div style="padding-top: 3em;"></div>
+					<a data-hover="tooltip" title="Permissions" href="{{ url_for('dataset_pages.permissions', dataset_id=dataset_info.setid) }}" 
+						class="btn btn-primary"><span class="glyphicon glyphicon-eye-open"></span></a>
 				</div>
 			{% endif %}
 		</div>
@@ -164,9 +158,9 @@
 					</table>
 				</div>
 				<div class="tab-pane" id="originalTables">
-					<table id="table_originaltables" style="width: 100%;">
+					<table id="table_originaltables">
 						<thead>
-							<tr style="width: 100%;">
+							<tr>
 								<th>Tables</th>
 							</tr>
 						</thead>
@@ -194,8 +188,10 @@
 	                info: false,
 	                lengthChange: false,
 	                autoWidth: false,
+	                order: [[0, 'asc']],
 	                columnDefs: [
-	                	{"targets": 1, "orderable": false}
+	                	{"targets": 1, "orderable": false},
+	                	{"targets": 0, "orderable": false}
 	                ]
 	            } );
 	        } );
@@ -206,9 +202,10 @@
 	                scrollX: true,
 	                scrollY: true,
 	                paging: false,
-	                lengthChange: false,
 	                info: false,
-	                autoWidth: false
+	                lengthChange: false,
+	                autoWidth: false,
+	                order: [[1, 'asc']]
 	            } );
 	        } );
 	    </script>
