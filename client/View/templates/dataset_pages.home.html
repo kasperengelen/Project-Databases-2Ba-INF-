@@ -95,7 +95,7 @@
 	{% endif %}
 
 
-	<div style="overflow-x: auto;">
+	<div style="overflow-x: none;">
 		<style>
 	        table {
 	            border-collapse: collapse;
@@ -123,7 +123,8 @@
 	            display: none;
 	        }
 	    </style>
-	    <div class="col-sm-6 col-sm-offset-3">
+	    <div class="col-sm-3"></div>
+	    <div class="col-sm-6">
 			<!-- TABLE LIST -->
 		    <!-- NAV TABS -->
 		    <ul class="nav nav-tabs" role="tablist">
@@ -191,7 +192,7 @@
 	                paging: false,
 	                info: false,
 	                lengthChange: false,
-	                autoWidth: false,
+	                autoWidth: true,
 	                order: [[0, 'asc']],
 	                columnDefs: [
 	                	{"targets": 1, "orderable": false},
