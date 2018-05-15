@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, SelectField, BooleanField, IntegerField
+from wtforms import StringField, SelectField, BooleanField, IntegerField, FloatField
 from wtforms.widgets import HiddenInput
 from wtforms.validators import Length, InputRequired, Email, EqualTo, Regexp
 from wtforms.form import Form
@@ -122,7 +122,8 @@ class DeleteOutlier(TransformationFormBase):
     """Form to replace outlier values with NULL."""
     select_attr = SelectField('Attribute', choices=[])
     select_comparison = SelectField('Larger/Smaller', choices=[(True, 'Larger'), (False, 'Smaller')], coerce = lambda x : x == 'True')
-    value = StringField('Value', [InputRequired(message="Comparison value is required.")])
+    comparison_value = FloatField('Comparison Value', [InputRequired(message="Comparison value is required.")])
+    replacement_value = FloatField('Replacement Value', [InputRequired(message="Replacement value is required.")])
     
     def fillForm(self, attrs):
         self.select_attr.choices = [(attrname, attrname) for attrname in attrs]
