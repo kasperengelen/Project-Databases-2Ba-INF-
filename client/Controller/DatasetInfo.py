@@ -16,8 +16,8 @@ class DatasetInfo:
         """Convert a SQL-tuple containing information about a user
         to a DatasetInfo object."""
 
-        setid = int(tupl[0])
-        setname = str(tupl[1])
+        setid       = int(tupl[0])
+        setname     = str(tupl[1])
         description = str(tupl[2])
 
         return DatasetInfo(setid, setname, description, db_conn = db_conn)
@@ -109,9 +109,8 @@ class DatasetInfo:
         if not tablename in self.getTableNames():
             raise RuntimeError("Invalid tablename.")
 
+        # TODO update this for original tables
         cur = self.db_conn.cursor()
         cur.execute("DROP TABLE \"{}\".{};".format(int(self.setid), extensions.quote_ident(tablename, get_db().cursor())))
-        cur.execute("DROP TABLE \"original_{}\".{};".format(int(self.setid), extensions.quote_ident(tablename, get_db().cursor())))
-        # TODO remove history?
         self.db_conn.commit()
     # ENDMETHOD
