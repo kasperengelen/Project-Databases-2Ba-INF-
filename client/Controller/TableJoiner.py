@@ -29,10 +29,16 @@ class TableJoiner:
         self.cur.execute(query)
         self.db_connection.commit()
 
-    def natural_join(self):
-        query = sql.SQL("CREATE TABLE {} AS (SELECT * FROM ({} NATURAL INNER JOIN {}))").format(sql.Identifier(self.new_table),
-                                                                                         sql.Identifier(self.table1),
-                                                                                         sql.Identifier(self.table2))
+    def natural_join(self, type="inner"):
+        """:param type: can be 'inner', 'left', 'right' or 'full' """
+        
+        if type not in ["inner", "left", "right", "full"]:
+            raise ValueError("type should be 'inner', 'left', 'right' or 'full'")
+
+        query = sql.SQL("CREATE TABLE {} AS (SELECT * FROM ({} NATURAL {} JOIN {}))").format(sql.Identifier(self.new_table),
+                                                                                             sql.Identifier(self.table1),
+                                                                                             sql.SQL(type),
+                                                                                             sql.Identifier(self.table2))
 
         self.cur.execute("SET search_path TO {};".format(self.schema))
         self.cur.execute(query)
@@ -41,4 +47,4 @@ class TableJoiner:
 if __name__ == "__main__":
     DC = DatabaseConfiguration()
     TJ = TableJoiner(37, "join1", "join2", "joined", DC.get_db())
-    TJ.natural_join()
+    TJ.natural_join(type="left")
