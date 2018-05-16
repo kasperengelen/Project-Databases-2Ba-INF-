@@ -36,7 +36,8 @@ class TransformationFormBase(FlaskForm):
 
     def handle_tt(self, tt):
         """Depending on the contents of the new_table settings, prepare the tabletransformer."""
-        tt.set_to_copy()
+        if self.new_table_name.data:
+            tt.set_to_copy()
     # ENDMETHOD
 # ENDCLASS
 
