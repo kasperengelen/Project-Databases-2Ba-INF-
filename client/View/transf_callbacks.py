@@ -276,7 +276,8 @@ def transform_typeconversion(dataset_id, tablename):
             tt.force_attribute_type(tablename=tablename, 
                                     attribute=form.select_attr.data, 
                                     to_type=form.new_datatype.data, 
-                                    data_format=form.date_type.data)
+                                    data_format=form.date_type.data,
+                                    new_name= form.new_table_name.data)
             flash(message="Attribute type changed.", category="success")
             redir_name = form.get_table_name(tablename)
         except Exception as e:
@@ -288,7 +289,8 @@ def transform_typeconversion(dataset_id, tablename):
                                      attribute=form.select_attr.data, 
                                      to_type=form.new_datatype.data, 
                                      data_format=form.date_type.data, 
-                                     length=form.char_amount.data)
+                                     length=form.char_amount.data,
+                                     new_name= form.new_table_name.data)
             flash(message="Attribute type changed.", category="success")
             redir_name = form.get_table_name(tablename)
         except Exception as e:
