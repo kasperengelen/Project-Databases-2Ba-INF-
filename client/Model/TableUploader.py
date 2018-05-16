@@ -3,6 +3,7 @@ import os
 import shutil
 import psycopg2
 import re
+import pandas as pd
 from psycopg2 import sql
 from Model.DatabaseConfiguration import DatabaseConfiguration
 from flask import abort
@@ -52,9 +53,11 @@ class TableUploader:
         self.header = None
 
 
-    def read_file(self, filename, header):
+    def read_file(self, filename, header=True, automatic_type_conversion=False):
         """
         :param header: True if the first line in the csv file contains the column names
+        :param automatic_type_conversion: True if csv file should be read with pandas, so that types are automatically converted.
+        if it's False, it will be read with psycopg2's function copy_from() which is much faster than pandas' read_csv()
         """
         self.header = header
 
@@ -69,7 +72,10 @@ class TableUploader:
             raise EmptyFileException
 
         if filename.endswith(".csv"):
-            self.__csv(filename)
+            if automatic_type_conversion:
+                self.__csv_pandas(filename)
+            else:
+                self.__csv_psycopg2(filename)
 
         elif filename.endswith(".zip"):
             self.__unzip(filename)
@@ -83,7 +89,12 @@ class TableUploader:
         # only commit when no errors occurred
         self.db_conn.commit()
 
-    def __csv(self, filename):
+    def __csv_pandas(self, filename):
+        dataframe = pd.read_csv(filename)
+        tablename = os.path.basename(filename.replace(".csv", ""))
+        dataframe.to_sql(self.__get_valid_name(tablename), self.db_conn, index=False)
+
+    def __csv_psycopg2(self, filename):
         # list of sql.Identifiers for the column names
         column_names = []
 
@@ -191,7 +202,7 @@ class TableUploader:
             # files other than csv's are ignored
             if sub_filename.endswith(".csv"):
                 try:
-                    self.__csv(sub_filename)
+                    self.__csv_psycopg2(sub_filename)
                 except psycopg2.ProgrammingError:
                     self.db_conn.rollback()
 
@@ -243,9 +254,9 @@ class TableUploader:
 
 
 if __name__ == "__main__":
-
-    # test = DataLoader(45)
-    # test.read_file("../empty.csv", True)
+    DC = DatabaseConfiguration()
+    test = TableUploader(37, DC.get_db())
+    test.read_file("../type_test.csv", True)
     # test.read_file("load_departments.dump", True)
     # test.delete_dataset()
     pass

@@ -114,5 +114,6 @@ class DatasetInfo:
         # TODO update this for original tables
         cur = self.db_conn.cursor()
         cur.execute("DROP TABLE \"{}\".{};".format(int(self.setid), extensions.quote_ident(tablename, get_db().cursor())))
+        cur.execute("DROP TABLE IF EXISTS original_{}.{}".format(int(self.setid), extensions.quote_ident(tablename, get_db().cursor())))
         self.db_conn.commit()
     # ENDMETHOD
