@@ -53,7 +53,7 @@ class TableViewer:
         return self.maxrows
 
     def render_json(self, offset, limit, order=False, ascending=True, on_column=""):
-        , limit, offset)
+        SQL_query =  'SELECT * FROM "%s"."%s" LIMIT %s OFFSET %s' % (self.schema, self.tablename, limit, offset)
         data_frame = pd.read_sql(SQL_query, self.engine)
         json_string = data_frame.to_json(orient='values', date_format='iso')
         return json_string
