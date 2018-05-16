@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import HiddenField, StringField, IntegerField, TextAreaField
+from wtforms import HiddenField, StringField, IntegerField, TextAreaField, SelectField, PasswordField
 from wtforms.widgets import HiddenInput
 from wtforms.validators import Email, InputRequired, Length
 
@@ -64,3 +64,10 @@ class ActivateDeactivateUser(FlaskForm):
     # ENDMETHOD
 # ENDCLASS
 
+class AlterAdminForm(FlaskForm):
+    email = StringField('Email', [InputRequired(message="Email address is required."),
+                                  Email(message="The supplied email address is not of a valid format."),
+                                  Length(min=6, max=70, message="Email address should contain between 1 and 50 characters.")])
+    action = SelectField('Action', choices=[('PROMOTE', 'PROMOTE'),('DEMOTE','DEMOTE')])
+    pincode = PasswordField('Pincode', [InputRequired("Pincode is required.")])
+# ENDCLASS

@@ -101,6 +101,8 @@
 				            <li><a href="#" data-toggle="modal" data-target="#tcmodal" onclick="$('#typeconversion_newtable').hide()">
 				            	Attribute Type Conversion</a></li>
 
+				            <li><a href="#" data-toggle="modal" data-target="#querymodal_1">Custom Query/Queries</a></li>
+
 				            <li><a href="#" data-toggle="modal" data-target="#predicatemodal" onclick="$('#predicate_newtable').hide()">
 				            	Delete Rows using Predicate</a></li>
 
@@ -187,6 +189,7 @@
 				{% include "includes/modals/_predicate_modal.html" %}
 				{% include "includes/modals/_extract_date_modal.html" %}
 				{% include "includes/modals/_normalize_modal.html" %}
+				{% include "includes/modals/_custom_query_modal.html" %}
 
 			{% endif %}
 		

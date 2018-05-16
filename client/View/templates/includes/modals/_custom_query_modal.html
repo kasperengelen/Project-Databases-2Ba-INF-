@@ -1,0 +1,25 @@
+{% set i = 1 %}
+{% for i in range(11) %}
+<div  id="querymodal_{{ i }}" class="modal fade text-left" role="dialog">
+    <div class="modal-dialog">
+    
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Data Duplicates</h4>
+            </div>           
+            <div class="modal-body">
+                <p>test {{ i }} </p>
+            </div>
+            
+            <a href="#" class="btn btn-primary" onclick="$('#querymodal_{{ i + 1 }}').modal('show'); $('#querymodal_{{ i }}').modal('hide'); ">Next</a>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+        <!-- Modal content -->
+
+    </div>
+</div>
+{% endfor %}

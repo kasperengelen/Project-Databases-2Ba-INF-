@@ -8,8 +8,6 @@ from Controller.UserManager import UserManager
 from Controller.DatasetPermissionsManager import DatasetPermissionsManager
 from Controller.TableViewer import TableViewer
 
-from Model.TableUploader import FileException as DLFileExcept
-
 from View.dataset_forms import DatasetForm, AddUserForm, RemoveUserForm, LeaveForm, TableUploadForm, TableJoinForm, AttributeForm, HistoryForm, AddUserForm, RemoveUserForm
 from View.dataset_forms import DownloadDatasetCSVForm, DownloadDatasetSQLForm, DownloadTableCSVForm, DownloadTableSQLForm
 from View.transf_forms import FindReplaceForm, DataTypeTransform, NormalizeZScore, OneHotEncoding, RegexFindReplace, DiscretizeEqualWidth, ExtractDateTimeForm
@@ -19,10 +17,7 @@ from View.form_utils import flash_errors
 
 from werkzeug.utils import secure_filename
 import os
-
 import shutil
-from utils import get_db
-
 import json
 
 dataset_pages = Blueprint('dataset_pages', __name__)
@@ -936,3 +931,16 @@ def _get_history_table(dataset_id, tablename):
 
     return jsonify(retval)
 # ENDFUNCTION
+
+@dataset_pages.route('/dataset/<int:dataset_id>/test', methods=['POST'])
+@require_login
+@require_writeperm
+def _test_page(dataset_id):
+    
+
+    retval = {
+        "data": [[1,2,3,4],[5,6,7,8],[9,10,11,12]],
+        "columns": ["A", "B", "C", "D"]
+    }
+
+    return jsonify(retval)

@@ -1,6 +1,6 @@
 import unittest
 from Controller.DatasetManager import DatasetManager
-from Model.DatabaseConfiguration import DatabaseConfiguration
+from Model.DatabaseConfiguration import TestConnection
 
 from passlib.hash import sha256_crypt
 
@@ -44,11 +44,14 @@ class TestDatasetManager(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         """Set up the test environment."""
-        cls.db_conn = DatabaseConfiguration().get_db()
-        cls.engine = DatabaseConfiguration().get_engine()
+        cls.db_conn = TestConnection().get_db()
+        cls.engine = TestConnection().get_engine()
         cls.cur = cls.db_conn.cursor()
 
         cls.cur.execute("DELETE FROM SYSTEM.datasets WHERE TRUE;")
+        cls.db_conn.commit()
+
+        cls.cur.execute("DELETE FROM SYSTEM.user_accounts WHERE TRUE;");
         cls.db_conn.commit()
 
         # create 4 read-only datasets

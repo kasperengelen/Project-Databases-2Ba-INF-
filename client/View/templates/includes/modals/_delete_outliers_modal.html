@@ -20,8 +20,12 @@
                 <div class="form-group" style="width: 20%; display: inline-block;">
                     {{render_field(deleteoutlier_form.select_comparison, class_="form-control")}}
                 </div>
+                <div style="padding-top: 1em;"></div>
                 <div class="form-group" style="width: 35%; display: inline-block;">
-                    {{render_field(deleteoutlier_form.value, class_="form-control", placeholder="Value")}}
+                    {{render_field(deleteoutlier_form.comparison_value, class_="form-control", placeholder="Comparison Value")}}
+                </div>
+                <div class="form-group" style="width: 35%; display: inline-block;">
+                    {{render_field(deleteoutlier_form.replacement_value, class_="form-control", placeholder="Replacement Value")}}
                 </div>
                 <div class="text-right">
                     <a href="#" class="btn btn-primary" id="discretizecustom" onclick="$('#deleteoutliers_newtable').show();$('#deleteoutliers_div').hide();">Delete Outliers</a>
