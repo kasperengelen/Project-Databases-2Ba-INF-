@@ -8,6 +8,8 @@ from Controller.UserManager import UserManager
 from Controller.DatasetPermissionsManager import DatasetPermissionsManager
 from Controller.TableViewer import TableViewer
 
+from Model.TableUploader import FileException as DLFileExcept
+
 from View.dataset_forms import DatasetForm, AddUserForm, RemoveUserForm, LeaveForm, TableUploadForm, TableJoinForm, AttributeForm, HistoryForm, AddUserForm, RemoveUserForm
 from View.dataset_forms import DownloadDatasetCSVForm, DownloadDatasetSQLForm, DownloadTableCSVForm, DownloadTableSQLForm
 from View.transf_forms import FindReplaceForm, DataTypeTransform, NormalizeZScore, OneHotEncoding, RegexFindReplace, DiscretizeEqualWidth, ExtractDateTimeForm
