@@ -65,12 +65,16 @@ class Deduplicator:
                 continue
 
             if np.issubdtype(self.dataframe[column].dtype, np.number):
+                # convert numeric attributes to text so we can compare them
                 self.dataframe[column] = self.dataframe[column].astype(str)
                 num_cols.append(column)
 
             compare.string(column, column, label=column, method="damerau_levenshtein")
 
         potential_pairs = compare.compute(pairs, self.dataframe)
+        # now that the comparison has happened, we can convert the numeric types back to their original
+        for col in num_cols:
+            self.dataframe[col] = pd.to_numeric(self.dataframe[col])
 
         kmeans = rl.KMeansClassifier()
         kmeans.learn(potential_pairs)
