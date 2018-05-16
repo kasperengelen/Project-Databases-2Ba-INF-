@@ -133,6 +133,18 @@ def table(dataset_id, tablename):
     if session['userdata']['admin']:
         perm_type = 'admin'
 
+    # create attribute list
+    attr_map = tv.get_columntype_dict()
+
+    attribute_list = []
+
+    for attr in tv.get_attributes():
+        attribute_list.append({
+            "name": attr,
+            "type": attr_map[attr]
+        })
+    # ENDFOR
+
     return render_template('dataset_pages.table.html', 
                                                 table_name            = tablename,
                                                 dataset_info          = dataset_info,
@@ -158,7 +170,7 @@ def table(dataset_id, tablename):
                                                 download_sql_form     = DownloadTableSQLForm(),
                                                 original              = False,
                                                 row_count             = row_count,
-                                                attribute_list        = tv.get_attributes())
+                                                attribute_list        = attribute_list)
 # ENDFUNCTION
 
 @dataset_pages.route('/dataset/<int:dataset_id>/original_table/<string:tablename>')
@@ -180,13 +192,25 @@ def table_original(dataset_id, tablename):
     # get tableviewer
     tv = dataset.getTableViewer(tablename, original = True)
 
+    # create attribute list
+    attr_map = tv.get_columntype_dict()
+
+    attribute_list = []
+
+    for attr in tv.get_attributes():
+        attribute_list.append({
+            "name": attr,
+            "type": attr_map[attr]
+        })
+    # ENDFOR
+
     return render_template('dataset_pages.table.html',
                                                 table_name      = tablename,
                                                 dataset_info    = dataset_info,
                                                 original        = True,
                                                 row_count       = row_count,
                                                 downloadform    = DownloadForm(),
-                                                attribute_list  = tv.get_attributes())
+                                                attribute_list  = attribute_list)
 # ENDFUNCTION
 
 # TODO check if this works
