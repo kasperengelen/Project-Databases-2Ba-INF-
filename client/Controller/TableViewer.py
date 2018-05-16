@@ -62,7 +62,8 @@ class TableViewer:
         """Method that generates all the types of the table attributes."""
         cur = self.db_connection.cursor()
         type_list = []
-        df = pd.read_sql('SELECT * from "%s"."%s" LIMIT 1', self.engine, params=(self.schema, self.tablename))
+        SQL_query = 'SELECT * from "%s"."%s" LIMIT 1' % (self.schema, self.tablename)
+        df = pd.read_sql(SQL_query, self.engine)
         attr_list = df.columns.values.tolist()
         type_dict = dict()
         
