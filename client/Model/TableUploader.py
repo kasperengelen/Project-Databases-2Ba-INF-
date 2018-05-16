@@ -44,8 +44,9 @@ class EODException(FileException):
 
 class TableUploader:
 
-    def __init__(self, setid, db_connection=None):
+    def __init__(self, setid, db_connection=None, engine=None):
         self.db_conn = db_connection
+        self.engine = engine
         self.cur = self.db_conn.cursor()
         self.setid = setid
 
@@ -91,8 +92,18 @@ class TableUploader:
 
     def __csv_pandas(self, filename):
         dataframe = pd.read_csv(filename)
+        # convert column to datetime type
+        for column in dataframe.columns:
+            # only convert text to datetime
+            if pd.api.types.is_string_dtype(dataframe[column]):
+                dataframe[column] = pd.to_datetime(dataframe[column], errors="ignore")
+
         tablename = os.path.basename(filename.replace(".csv", ""))
-        dataframe.to_sql(self.__get_valid_name(tablename), self.db_conn, index=False)
+        # raise error if the table name is not alphanumeric, this is to not cause problems with url's
+        if not self.__check_alnum(tablename):
+            raise ValueError("Table names should be alphanumeric")
+
+        dataframe.to_sql(self.__get_valid_name(tablename), self.engine, index=False, schema=str(self.setid))
 
     def __csv_psycopg2(self, filename):
         # list of sql.Identifiers for the column names
@@ -255,8 +266,8 @@ class TableUploader:
 
 if __name__ == "__main__":
     DC = DatabaseConfiguration()
-    test = TableUploader(37, DC.get_db())
-    test.read_file("../type_test.csv", True)
+    test = TableUploader(37, DC.get_db(), DC.get_engine())
+    test.read_file("../type_test.csv", True, automatic_type_conversion=True)
     # test.read_file("load_departments.dump", True)
     # test.delete_dataset()
     pass
