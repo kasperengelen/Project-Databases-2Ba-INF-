@@ -124,7 +124,7 @@ class SQLTypeHandler:
                 "sec_full": sec_full
             }
 
-        def sql_time_to_dict(sql_date_string):
+        def sql_time_to_dict(self, sql_date_string):
             """Given a string of the format "YYYY:MM:DD HH:MM:SS.SSSSSS" this
             returns a dict containing the same data under the keys 'Y', 'M', 'D', 'hr', 'min', 'sec', 'sec_full'.
             With 'sec' containing the seconds rounded to an integer, and 'sec_full' containing the full original value."""
