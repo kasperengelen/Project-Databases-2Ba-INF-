@@ -931,3 +931,16 @@ def _get_history_table(dataset_id, tablename):
 
     return jsonify(retval)
 # ENDFUNCTION
+
+@dataset_pages.route('/dataset/<int:dataset_id>/test', methods=['POST'])
+@require_login
+@require_writeperm
+def _test_page(dataset_id):
+    
+
+    retval = {
+        "data": [[1,2,3,4],[5,6,7,8],[9,10,11,12]],
+        "columns": ["A", "B", "C", "D"]
+    }
+
+    return jsonify(retval)
