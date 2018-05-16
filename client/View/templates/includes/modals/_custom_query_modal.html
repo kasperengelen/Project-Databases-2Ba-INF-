@@ -1,25 +1,77 @@
-{% set i = 1 %}
-{% for i in range(11) %}
-<div  id="querymodal_{{ i }}" class="modal fade text-left" role="dialog">
-    <div class="modal-dialog">
+<div  id="querymodal" class="modal fade text-left" role="dialog">
+    <div class="modal-dialog modal-lg">
     
         <!-- Modal content-->
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal">&times;</button>
-                <h4 class="modal-title">Data Duplicates</h4>
-            </div>           
+                <h4 class="modal-title">Custom Query/Queries</h4>
+            </div>  
+
             <div class="modal-body">
-                <p>test {{ i }} </p>
+                <div id="querymodal_body">
+                    <table id='testtable'>
+
+                    </table>
+                </div>
+
+                <script>
+                    function draw_table() {
+
+                         $.ajax({
+                            url: '{{ url_for("dataset_pages._test_page", dataset_id=dataset_info.setid) }}',
+                            type: 'POST',
+                            success: function(data) {
+                                var html = "<thead><tr>";
+
+                                for(var key in data.columns) {
+                                    html += '<th>' + data.columns[key] + '</th>';
+                                }
+
+                                html += '</tr></thead><tbody>';
+
+                                for(var key in data.data) {
+                                    html += '<tr>';
+                                    for(var i = 0; i < data.data[key].length; i++) {
+                                        html += '<td>' + data.data[key][i] + '</td>';
+                                    }
+                                    html += '</tr>';
+                                }
+
+                                html += '</tbody>';
+
+                                $('#testtable').append(html);
+
+                                if($.fn.dataTable.isDataTable('#testtable')){
+                                    test_table = $('#testtable').DataTable();
+                                 }
+                                 else {
+                                    var test_table = $('#testtable').DataTable( {
+                                        paging: true,
+                                        info: false,
+                                        autoWidth: false,
+                                        order: [[1, 'asc']]
+                                    } );
+
+
+                                 }                                
+                            }
+                         });
+                    };
+
+                    $('#query_button').on('click', function() {
+                        draw_table();
+                    });         
+
+
+                </script>
             </div>
             
-            <a href="#" class="btn btn-primary" onclick="$('#querymodal_{{ i + 1 }}').modal('show'); $('#querymodal_{{ i }}').modal('hide'); ">Next</a>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal" onclick="$('#testtable').empty();">Close</button>
             </div>
         </div>
         <!-- Modal content -->
 
     </div>
 </div>
-{% endfor %}

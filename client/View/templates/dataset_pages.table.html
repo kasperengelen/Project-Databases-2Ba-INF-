@@ -36,7 +36,6 @@
 				{% endif %}
 			</div>
 			<div class="col-sm-3 text-right">
-				
 				<div>
 					<a id="file" href="#" class="btn btn-primary" data-toggle="modal" data-hover="tooltip" title="Download" data-target="#downloadFormModal_{{ table }}">
 						<span class="glyphicon glyphicon-download-alt"></span></a>
@@ -99,9 +98,11 @@
 						
 						<ul class="nav navbar-nav sidebar collapse out" id="sidenav">
 				            <li><a href="#" data-toggle="modal" data-target="#tcmodal" onclick="$('#typeconversion_newtable').hide()">
-				            	Attribute Type Conversion</a></li>
+				            	Attribute Type Conversion</a></li></br>
 
-				            <li><a href="#" data-toggle="modal" data-target="#querymodal_1">Custom Query/Queries</a></li>
+				            <li><a id="query_button" href="#" data-toggle="modal" data-target="#querymodal">Custom Query/Queries</a></li>
+
+				            <li><a href="#" data-toggle="modal" data-target="#datadedupmodal_1">Data Deduplication</a></li>
 
 				            <li><a href="#" data-toggle="modal" data-target="#predicatemodal" onclick="$('#predicate_newtable').hide()">
 				            	Delete Rows using Predicate</a></li>
@@ -190,6 +191,7 @@
 				{% include "includes/modals/_extract_date_modal.html" %}
 				{% include "includes/modals/_normalize_modal.html" %}
 				{% include "includes/modals/_custom_query_modal.html" %}
+				{% include "includes/modals/_data_dedup_modal.html" %}
 
 			{% endif %}
 		
@@ -229,12 +231,14 @@
 					<thead>
 						<tr>
 							{% for attr in attribute_list %}
-								<th>
-									{{ attr }}
+								<th data-hover="tooltip" title="{{ attr.type }}">
+									{{ attr.name }}
 									{% if original != True %}
-				                       <form method="post" id="deleteform_{{ attr }}" action="{{ url_for('transf_callbacks.transform_deleteattr', dataset_id=dataset_info.setid, tablename=table_name, attrname=attr) }}" id="deleteform_{{ attr }}">
-				                       <button style="border: none; background-color: transparent;" type="submit" id="delete_{{ attr }}" ><span class="glyphicon glyphicon-trash"></span></button>
-				                       </form>
+				                        <form method="post" id="deleteform_{{ attr }}" action="{{ url_for('transf_callbacks.transform_deleteattr', dataset_id=dataset_info.setid, tablename=table_name, attrname=attr) }}" id="deleteform_{{ attr }}">
+				                        <button style="border: none; background-color: transparent;" type="submit" id="delete_{{ attr }}">
+				                       		<span class="glyphicon glyphicon-trash"></span>
+				                       	</button>
+				                        </form>
 			                       {% endif %}
 								</th>
 							{% endfor %}
