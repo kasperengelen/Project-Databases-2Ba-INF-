@@ -2,13 +2,27 @@ import recordlinkage as rl
 import pandas as pd
 import numpy as np
 import psycopg2
+from psycopg2 import sql
 from Model.DatabaseConfiguration import DatabaseConfiguration
 from recordlinkage.datasets import load_krebsregister
 
 class Deduplicator:
 
+    class DataFrameWrapper:
+
+        def __init__(self, dataframe):
+            self.dataframe = dataframe
+
+        def get_table_html(self):
+            return self.dataframe.to_html()
+
+        def get_entry_indices(self):
+            return self.dataframe.index.values
+
     def __init__(self, setid, tablename, db_connection, engine):
+        """Class to deduplicate a table"""
         self.schema = str(setid)
+        self.tablename = tablename
         self.engine = engine
         self.db_connection = db_connection
         self.cur = self.db_connection.cursor()
@@ -16,15 +30,19 @@ class Deduplicator:
         # entries that will be removed after submit() is called
         self.entries_to_remove = set()
 
-        table_name = "dataset1"
-        query = "SELECT * FROM \"{}\".\"{}\";".format(self.schema, table_name)
+        query = "SELECT * FROM \"{}\".\"{}\";".format(self.schema, self.tablename)
         self.dataframe = pd.read_sql(query, self.engine)
 
-    def test(self, exact_match, ignore):
+    def find_matches(self, exact_match, ignore):
+        """Function that finds entries that look alike
+        :param exact_match: list of columns that need to have the exact same value
+        :param ignore: list of columns that need to be ignored in the comparison
+        :return a list of DataFrameWrappers that each represent a set of similar entries"""
+
         col_names = list(self.dataframe)
 
         self.cur.execute("SELECT column_name, data_type FROM information_schema.columns "
-                            "WHERE table_schema = '{}' AND table_name = '{}'".format(self.schema, table_name))
+                            "WHERE table_schema = '{}' AND table_name = '{}'".format(self.schema, self.tablename))
         types = self.cur.fetchall()
         types_dict = dict()
         for tuple in types:
@@ -55,12 +73,7 @@ class Deduplicator:
         potential_pairs = compare.compute(pairs, self.dataframe)
 
         kmeans = rl.KMeansClassifier()
-        result_kmeans = kmeans.learn(potential_pairs)
-        cm_kmeans = rl.confusion_matrix(potential_pairs.index, result_kmeans, len(potential_pairs))
-
-        # ecm = rl.ECMClassifier()
-        # result_ecm = ecm.learn((potential_pairs > 0.8).astype(int))
-        # conf_ecm = rl.confusion_matrix(potential_pairs.index, result_ecm, len(potential_pairs))
+        kmeans.learn(potential_pairs)
         results = kmeans.predict(potential_pairs)
 
         self.clusters = self.__cluster_pairs(results)
@@ -69,31 +82,34 @@ class Deduplicator:
             rows = list()
             for row_id in cluster:
                 rows.append(self.dataframe.ix[row_id])
-            paired_table = pd.DataFrame(rows)
+            paired_table = self.DataFrameWrapper(pd.DataFrame(rows))
             certain_paired_rows.append(paired_table)
 
         return certain_paired_rows
 
-    def deduplicate_cluster(self, cluster_id, correct_entry=None, bad_entries=list()):
+    def deduplicate_cluster(self, cluster_id, entries_to_keep=None):
         """Removes duplicates in a cluster according to user_feedback
         :param cluster_id: index in self.clusters
-        :param correct_entry: index of entry that should represent the cluster
-        :param bad_entries: indices of entries that don't belong in the cluster"""
+        :param entries_to_keep: entries that should not be deduplicated"""
 
         cluster = self.clusters[cluster_id]
 
-        if correct_entry is None:
-            correct_entry = cluster[0]
+        # if no entries are specified to keep, only keep the first entry
+        if entries_to_keep is None: entries_to_keep = [cluster[0]]
 
         # remove the entries that should not be deduplicated
-        for bad_entry in bad_entries:
-            cluster.remove(bad_entry)
-
-        # remove the one entry that should remain
-        cluster.remove(correct_entry)
+        for entry in entries_to_keep:
+            cluster.remove(entry)
 
         self.entries_to_remove.union(cluster)
 
+    def submit(self):
+        """Deletes all duplicates and alters the table in the database"""
+
+        # delete all duplicates
+        self.dataframe.drop([self.entries_to_remove])
+
+        self.dataframe.to_sql(self.tablename, self.db_connection, if_exists="replace", index=False)
 
     def __cluster_pairs(self, pairs):
         """Group pairs together, for example:
@@ -154,6 +170,6 @@ class Deduplicator:
 
 if __name__ == "__main__":
     DC = DatabaseConfiguration()
-    dd = Deduplicator(37, DC.get_db(), DC.get_engine())
-    result = dd.test(["postcode"], ["rec_id"])
+    dd = Deduplicator(37, "dataset1", DC.get_db(), DC.get_engine())
+    result = dd.find_matches(["postcode"], ["rec_id"])
     print(len(result))
