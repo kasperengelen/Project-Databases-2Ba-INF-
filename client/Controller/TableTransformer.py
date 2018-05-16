@@ -1,7 +1,6 @@
 import sys
 import os
 import math
-
 import psycopg2
 from psycopg2 import sql
 import sqlalchemy
@@ -1001,7 +1000,6 @@ class TableTransformer:
                                                                sql.Identifier(old_name),
                                                                sql.Identifier(new_name)))
         self.db_connection.commit()
-
 
     def join_tables(self, table1, table2, table1_columns, table2_columns, new_table):
         # not complete
