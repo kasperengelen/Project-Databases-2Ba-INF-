@@ -8,8 +8,10 @@ from Controller.UserManager import UserManager
 from Controller.DatasetPermissionsManager import DatasetPermissionsManager
 from Controller.TableViewer import TableViewer
 
+from Model.TableUploader import FileException as DLFileExcept
+
 from View.dataset_forms import DatasetForm, AddUserForm, RemoveUserForm, LeaveForm, TableUploadForm, TableJoinForm, AttributeForm, HistoryForm, AddUserForm, RemoveUserForm
-from View.dataset_forms import DownloadDatasetCSVForm, DownloadDatasetSQLForm, DownloadTableCSVForm, DownloadTableSQLForm
+from View.dataset_forms import DownloadDatasetCSVForm, DownloadDatasetSQLForm, DownloadTableCSVForm, DownloadTableSQLForm, CustomQueryForm
 from View.transf_forms import FindReplaceForm, DataTypeTransform, NormalizeZScore, OneHotEncoding, RegexFindReplace, DiscretizeEqualWidth, ExtractDateTimeForm
 from View.transf_forms import DiscretizeEqualFreq, DiscretizeCustomRange, DeleteOutlier, FillNullsMean, FillNullsMedian, FillNullsCustomValue
 from View.transf_forms import PredicateFormOne, PredicateFormTwo, PredicateFormThree
@@ -59,7 +61,8 @@ def home(dataset_id):
                                                       editform            = editform,
                                                       download_csv_form   = DownloadDatasetCSVForm(),
                                                       download_sql_form   = DownloadDatasetSQLForm(),
-                                                      perm_type           = perm_type)
+                                                      perm_type           = perm_type,
+                                                      queryform           = CustomQueryForm())
 # ENDFUNCTION
 
 @dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>')
@@ -131,6 +134,18 @@ def table(dataset_id, tablename):
     if session['userdata']['admin']:
         perm_type = 'admin'
 
+    # create attribute list
+    attr_map = tv.get_columntype_dict()
+
+    attribute_list = []
+
+    for attr in tv.get_attributes():
+        attribute_list.append({
+            "name": attr,
+            "type": attr_map[attr]
+        })
+    # ENDFOR
+
     return render_template('dataset_pages.table.html', 
                                                 table_name            = tablename,
                                                 dataset_info          = dataset_info,
@@ -156,7 +171,8 @@ def table(dataset_id, tablename):
                                                 download_sql_form     = DownloadTableSQLForm(),
                                                 original              = False,
                                                 row_count             = row_count,
-                                                attribute_list        = tv.get_attributes())
+                                                attribute_list        = attribute_list,
+                                                queryform             = CustomQueryForm())
 # ENDFUNCTION
 
 @dataset_pages.route('/dataset/<int:dataset_id>/original_table/<string:tablename>')
@@ -178,13 +194,25 @@ def table_original(dataset_id, tablename):
     # get tableviewer
     tv = dataset.getTableViewer(tablename, original = True)
 
+    # create attribute list
+    attr_map = tv.get_columntype_dict()
+
+    attribute_list = []
+
+    for attr in tv.get_attributes():
+        attribute_list.append({
+            "name": attr,
+            "type": attr_map[attr]
+        })
+    # ENDFOR
+
     return render_template('dataset_pages.table.html',
                                                 table_name      = tablename,
                                                 dataset_info    = dataset_info,
                                                 original        = True,
                                                 row_count       = row_count,
                                                 downloadform    = DownloadForm(),
-                                                attribute_list  = tv.get_attributes())
+                                                attribute_list  = attribute_list)
 # ENDFUNCTION
 
 # TODO check if this works
@@ -931,3 +959,19 @@ def _get_history_table(dataset_id, tablename):
 
     return jsonify(retval)
 # ENDFUNCTION
+
+@dataset_pages.route('/dataset/<int:dataset_id>/test', methods=['POST'])
+@require_login
+@require_writeperm
+def _test_page(dataset_id):
+    
+
+    retval = {
+        "data": [[1,2,3,4],[5,6,7,8],[9,10,11,12]],
+        "columns": ["A", "B", "C", "D"],
+        "empty": True,
+        "error": True,
+        "error_msg": "Some error"
+    }
+
+    return jsonify(retval)

@@ -120,3 +120,11 @@ class HistoryForm(FlaskForm):
         self.options.choices.insert(0, ("__dataset", "Entire Dataset"))
     # ENDMETHOD
 # ENDCLASS
+
+class CustomQueryForm(FlaskForm):
+    """Form to issue user-made queries to the server."""
+
+    query = StringField('Query', [InputRequired("Query is required.")])
+# ENDCLASS
+
+

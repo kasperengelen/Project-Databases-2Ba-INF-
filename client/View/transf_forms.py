@@ -9,13 +9,36 @@ class TransformationFormBase(FlaskForm):
     """Base class for all transformation forms."""
 
     make_new_table = BooleanField('Create New Table?', default = False)
-    new_table_name = StringField('New Table Name', [InputRequired(message="Table name is required."), 
-                                              Length(min=3, max=20, message="Tablename needs to be between 3 and 20 characters long."), 
-                                              Regexp('^[A-Za-z0-9][A-Za-z0-9]+$')])
+    new_table_name = StringField('New Table Name', [])
 
     def validate_new_table_name(form, field):
-        if make_new_table.data: # only validate if the checkbox is clicked.
-            field.validate()
+        if form.make_new_table.data: # only validate if the checkbox is clicked.
+
+            requiredcheck = InputRequired(message="Table name is required.")
+            lengthcheck   = Length(min=3, max=20, message="Tablename needs to be between 3 and 20 characters long.")
+            regexcheck    = Regexp('^[A-Za-z0-9][A-Za-z0-9]+$')
+
+            requiredcheck(form, field)
+            lengthcheck(form, field)
+            regexcheck(form, field)
+
+            field.validate(form)
+
+        else:
+            field.data = ""
+
+    def get_table_name(self, original_tablename):
+        if self.make_new_table.data:
+            return self.new_table_name.data
+        else:
+            return original_tablename
+    # ENDMETHOD
+
+    def handle_tt(self, tt):
+        """Depending on the contents of the new_table settings, prepare the tabletransformer."""
+        if self.new_table_name.data:
+            tt.set_to_copy()
+    # ENDMETHOD
 # ENDCLASS
 
 class FindReplaceForm(TransformationFormBase):

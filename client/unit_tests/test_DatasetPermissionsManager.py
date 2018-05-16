@@ -1,7 +1,7 @@
 import unittest
 from Controller.DatasetPermissionsManager import DatasetPermissionsManager
 from Controller.DatasetManager import DatasetManager
-from Model.DatabaseConfiguration import DatabaseConfiguration
+from Model.DatabaseConfiguration import TestConnection
 from passlib.hash import sha256_crypt
 
 class TestDatasetPermissionsManager(unittest.TestCase):
@@ -52,9 +52,18 @@ class TestDatasetPermissionsManager(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         """Set up the test environment."""
-        cls.db_conn = DatabaseConfiguration().get_db()
+        cls.db_conn = TestConnection().get_db()
         cls.cur = cls.db_conn.cursor()
-        cls.engine = DatabaseConfiguration().get_engine()
+        cls.engine = TestConnection().get_engine()
+
+        cls.cur.execute("DELETE FROM SYSTEM.user_accounts WHERE TRUE;");
+        cls.db_conn.commit()
+
+        cls.cur.execute("DELETE FROM SYSTEM.datasets WHERE TRUE;");
+        cls.db_conn.commit()
+
+        cls.cur.execute("DELETE FROM SYSTEM.set_permissions WHERE TRUE;");
+        cls.db_conn.commit()
 
         # create the dataset
         dataset_id = cls.__create_dataset_manually(cls, 'Dataset', 'Test Dataset')

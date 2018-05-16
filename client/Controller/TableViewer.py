@@ -58,10 +58,15 @@ class TableViewer:
         json_string = data_frame.to_json(orient='values', date_format='iso')
         return json_string
         
-    def __render_types(self, attr_list):
+    def get_columntype_dict(self):
         """Method that generates all the types of the table attributes."""
         cur = self.db_connection.cursor()
         type_list = []
+        SQL_query = 'SELECT * from "%s"."%s" LIMIT 1' % (self.schema, self.tablename)
+        df = pd.read_sql(SQL_query, self.engine)
+        attr_list = df.columns.values.tolist()
+        type_dict = dict()
+        
         for elem in attr_list:
             query = ("SELECT data_type, character_maximum_length FROM information_schema.columns"
                      " WHERE table_schema = %s AND table_name =  %s AND column_name = %s LIMIT 1")
@@ -73,9 +78,9 @@ class TableViewer:
             else:
                 type_name = sql_type
 
-            type_list.append(type_name)
+            type_dict[elem] = type_name
 
-        return type_list
+        return type_dict
 
     def get_numerical_histogram(self, columnname, bar_nr=10):
         # first check if the attribute type is numerical

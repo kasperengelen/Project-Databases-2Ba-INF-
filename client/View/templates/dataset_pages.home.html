@@ -187,8 +187,6 @@
 		<script>
 	        $(document).ready( function () {
 	            $('#table_tables').DataTable( {
-	                scrollX: true,
-	                scrollY: true,
 	                paging: false,
 	                info: false,
 	                lengthChange: false,
@@ -196,7 +194,7 @@
 	                order: [[0, 'asc']],
 	                columnDefs: [
 	                	{"targets": 1, "orderable": false},
-	                	{"targets": 0, "orderable": false}
+	                	{"targets": 0, "orderable": true}
 	                ]
 	            } );
 	        } );
@@ -204,13 +202,14 @@
 	    <script>
 	        $(document).ready( function () {
 	            $('#table_originaltables').DataTable( {
-	                scrollX: true,
-	                scrollY: true,
 	                paging: false,
 	                info: false,
 	                lengthChange: false,
 	                autoWidth: false,
-	                order: [[1, 'asc']]
+	                order: [[0, 'asc']],
+	                columnDefs: [
+	                	{"targets": 0, "orderable": true}
+	                ]
 	            } );
 	        } );
 	    </script>

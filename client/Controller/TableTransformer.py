@@ -1,7 +1,6 @@
 import sys
 import os
 import math
-
 import psycopg2
 from psycopg2 import sql
 import sqlalchemy
@@ -367,7 +366,7 @@ class TableTransformer:
             
         self.history_manager.write_to_history(internal_ref[1], tablename, attribute, [to_type, data_format, length], 1)
 
-    def force_attribute_type(self, tablename, attribute, to_type, data_format="", new_name=""):
+    def force_attribute_type(self, tablename, attribute, to_type, data_format="", length='1', force_mode=True, new_name=""):
         """In case that change_attribute_type fails due to elements that can't be converted
         this method will force the conversion by deleting the row containing the bad element.
         The parameters are identical to change_attribute_type().
@@ -394,17 +393,18 @@ class TableTransformer:
             #Know the formats we need to support for date, time, timestamp
             return None
 
-        self.db_connection.cursor().execute(sql.SQL("DELETE FROM {}.{} WHERE ({} !~ %s )").format(sql.Identifier(internal_ref[0]), sql.Identifier(internal_ref[1]),
-                                                                                         sql.Identifier(attribute)), [pattern])
+        self.db_connection.cursor().execute(sql.SQL("DELETE FROM {}.{} WHERE ({} !~ %s )").format(sql.Identifier(internal_ref[0]),
+                                                                                                  sql.Identifier(internal_ref[1]),
+                                                                                                  sql.Identifier(attribute)), [pattern])
         self.db_connection.commit()
 
         if self.replace is True:
-            self.change_attribute_type(tablename, attribute, to_type, data_format, new_name)
+            self.change_attribute_type(tablename, attribute, to_type, data_format, length, new_name)
         else:
             # The first call of change_attribute_type already created a new table which is a copy of (tablename)
             # But we don't want to copy this table once again, only overwrite it
-            self.replace = True
-            self.change_attribute_type(new_name, attribute, to_type, data_format, new_name)
+            self.set_to_overwrite()
+            self.change_attribute_type(new_name, attribute, to_type,  data_format, length, new_name)
 
     def find_and_replace(self, tablename, attribute, value, replacement, exact=True, replace_all=True, new_name=""):
         """Method that finds values and replaces them with the provided argument.
@@ -992,31 +992,3 @@ class TableTransformer:
             new_name: A string representing the name of the recreated table.
         """
         pass
-                
-
-    def change_column_name(self, tablename, old_name, new_name):
-        self.db_connection.cursor().execute(sql.SQL(
-            "ALTER TABlE {}.{} RENAME COLUMN {} TO {}").format(sql.Identifier(str(self.setid)),
-                                                               sql.Identifier(tablename),
-                                                               sql.Identifier(old_name),
-                                                               sql.Identifier(new_name)))
-        self.db_connection.commit()
-
-
-    def join_tables(self, table1, table2, table1_columns, table2_columns, new_table):
-        # not complete
-
-        query = sql.SQL("CREATE TABLE {} AS (SELECT * FROM {} t1 JOIN {} t2 ON ").format(sql.Identifier(new_table),
-                                                                                         sql.Identifier(table1),
-                                                                                         sql.Identifier(table2))
-
-        for i in range(len(table1_columns) - 1):
-            query += sql.SQL("t1.{} = t2.{} AND ").format(sql.Identifier(table1_columns[i]),
-                                                          sql.Identifier(table2_columns[i]))
-
-        query += sql.SQL("t1.{} = t2.{})").format(sql.Identifier(table1_columns[-1]),
-                                                  sql.Identifier(table2_columns[-1]))
-
-        self.db_connection.cursor().execute("SET search_path TO {};".format(self.setid))
-        self.db_connection.cursor().execute(query)
-        self.db_connection.commit()
