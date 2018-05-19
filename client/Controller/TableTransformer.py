@@ -23,6 +23,7 @@ class TableTransformer:
 
     def __init__(self, setid, db_conn, engine, replace=True, track_history=True):
         self.setid = setid
+        self.schema = str(setid)
         self.replace = replace
         self.db_connection = db_conn
         self.engine = engine
@@ -68,6 +69,10 @@ class TableTransformer:
         query_args = [sql.Identifier(schema),sql.Identifier(table), sql.Identifier(attribute)]
         cur.execute(sql.SQL("ALTER TABLE {}.{} DROP COLUMN IF EXISTS {}").format(*query_args))
         self.db_connection.commit()
+
+    def drop_table(self, schema, table):
+        """Execute query that drops an SQL table."""
+        
 
     def create_copy_of_table(self, schema1, table_name1, schema2, tablename2):
         """Execute query that copies a whole table to another table with name new_name."""
@@ -388,8 +393,9 @@ class TableTransformer:
         The parameters are identical to change_attribute_type().
         """
         attr_type = self.get_attribute_type(tablename, attribute)[0]
-        if SQLTypeHandler().is_numerical(attr_type) is False:
-            raise self.AttrTypeError("Filling nulls failed due attribute not being of numeric type (neither integer or float)")
+        if SQLTypeHandler().is_string(attr_type) is False:
+            self.change_attribute_type(tablename, attribute, to_type, data_format, length, new_name)
+            return
         if self.replace is True:
             internal_ref = self.get_internal_reference(tablename)
         else:
@@ -411,7 +417,9 @@ class TableTransformer:
             # This is going to be very tough to express....
             #Know the formats we need to support for date, time, timestamp
             return None
-
+        print('###################################################################')
+        print(pattern)
+        print('###################################################################')
         self.db_connection.cursor().execute(sql.SQL("DELETE FROM {}.{} WHERE ({} !~ %s )").format(sql.Identifier(internal_ref[0]),
                                                                                                   sql.Identifier(internal_ref[1]),
                                                                                                   sql.Identifier(attribute)), [pattern])
@@ -422,7 +430,6 @@ class TableTransformer:
         else:
             # The first call of change_attribute_type already created a new table which is a copy of (tablename)
             # But we don't want to copy this table once again, only overwrite it
-            self.set_to_overwrite()
             self.change_attribute_type(new_name, attribute, to_type,  data_format, length, new_name)
 
     def find_and_replace(self, tablename, attribute, value, replacement, exact=True, replace_all=True, new_name=""):
