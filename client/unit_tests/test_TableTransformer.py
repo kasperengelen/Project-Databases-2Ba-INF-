@@ -86,31 +86,6 @@ class TestTableTransformer(unittest.TestCase):
         #Close database connection
         cls.db_connection.close()
 
-    def test_is_nullable(self):
-        """Test to see if the is_nullable method of TableTransformer works correctly."""
-        result = self.test_object.is_nullable('test_table', 'string')
-        self.assertFalse(result)
-        result = self.test_object.is_nullable('test_table', 'number')
-        self.assertFalse(result)
-        result = self.test_object.is_nullable('test_table', 'garbage')
-        self.assertTrue(result)
-        result = self.test_object.is_nullable('test_table', 'fpoint')
-        self.assertTrue(result)
-        result = self.test_object.is_nullable('test_table', 'date_string')
-        self.assertFalse(result)
-
-    def remove_this_plox(self):
-        is_numerical = self.test_object.is_numerical("double precision")
-        self.assertTrue(is_numerical)
-        is_numerical = self.test_object.is_numerical("bigserial")
-        self.assertTrue(is_numerical)
-        is_numerical = self.test_object.is_numerical("real")
-        self.assertTrue(is_numerical)
-        is_numerical = self.test_object.is_numerical("character")
-        self.assertFalse(is_numerical)
-        is_numerical = self.test_object.is_numerical("character varying")
-        self.assertFalse(is_numerical)
-
     def test_delete_attribute(self):
         """Test to see if TableTransformer can correctly delete an attribute."""
         self.test_object.delete_attribute('test_table', 'garbage') #Delete attribute "garbage"
@@ -200,12 +175,12 @@ class TestTableTransformer(unittest.TestCase):
         """Method to test whether the getter returns the correct attribute type."""
         #Test whether the method can correctly return the type of an attribute
         obj = self.test_object
-        self.assertEqual(obj.get_attribute_type('test_table', 'string')[0], 'character varying')
-        self.assertEqual(obj.get_attribute_type('test_table', 'number')[0],'integer')
-        self.assertEqual(obj.get_attribute_type('test_table', 'garbage')[0], 'character')
-        self.assertEqual(obj.get_attribute_type('test_table', 'fpoint')[0], 'double precision')
-        self.assertEqual(obj.get_attribute_type('test_table', 'raw_time')[0], 'time without time zone')
-        self.assertEqual(obj.get_attribute_type('test_table', 'date_time')[0], 'timestamp without time zone')
+        self.assertEqual(obj.get_attribute_type('test_table', 'string'), 'character varying')
+        self.assertEqual(obj.get_attribute_type('test_table', 'number'),'integer')
+        self.assertEqual(obj.get_attribute_type('test_table', 'garbage'), 'character')
+        self.assertEqual(obj.get_attribute_type('test_table', 'fpoint'), 'double precision')
+        self.assertEqual(obj.get_attribute_type('test_table', 'raw_time'), 'time without time zone')
+        self.assertEqual(obj.get_attribute_type('test_table', 'date_time'), 'timestamp without time zone')
         
     def test_numeric_conversion(self):
         """Test the conversion of numeric types (INTEGER, FLOAT)."""

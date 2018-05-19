@@ -46,25 +46,23 @@ class TableTransformer:
         This exception is raised whenever an operation is provided with an inappropiate value causing
         the operation to fail.
         """
-
-    ###########################################################################
-    #                               SQL Queries                               #
-    ###########################################################################
         
-    def get_attribute_type(self, schema, table, attribute):
-        """Execute query that returns the type of the attribute of an SQL table in a specified schema."""
+    def get_attribute_type(self, table, attribute):
+        """Execute query that returns the type of the attribute of an SQL table in the dataset schema."""
         cur = self.db_connection.cursor()
         cur.execute(("SELECT data_type FROM information_schema.columns WHERE table_schema = %s "
-                     "AND table_name = %s AND column_name = %s LIMIT 1"), (schema, table, attribute))
+                     "AND table_name = %s AND column_name = %s LIMIT 1"), (self.schema, table, attribute))
+        self.db_connection.commit()
         return cur.fetchone()[0]
 
-    def get_attribute_type_with_length(self, schema, table, attribute):
+    def get_attribute_type_with_length(self, table, attribute):
         """Execute query that returns a tuple of the attribute type and length limit of that type if specified.
         For varchar(255) this will yield (character varying, 255), in case of no length limit the value is None."""
         cur = self.db_connection.cursor()
         cur.execute(("SELECT data_type, character_maximum_length FROM information_schema.columns"
                     " WHERE table_schema = %s AND table_name =  %s AND column_name = %s LIMIT 1"),
-                    (schema, table, attribute))
+                    (self.schema, table, attribute))
+        self.db_connection.commit()
         return cur.fetchone()
 
     def drop_attribute(self, schema, table, attribute):
@@ -81,17 +79,18 @@ class TableTransformer:
         cur.execute(sql.SQL("DROP TABLE {}.{} IF EXISTS {}").format(*query_args))
         self.db_connection.commit()
         
-    def create_copy_of_table(self, schema1, table_name1, schema2, tablename2):
+    def create_copy_of_table(self, schema1, tablename1, schema2, tablename2):
         """Execute query that copies a whole table to another table with name new_name."""
         cur = self.db_connection.cursor()
-        query_args = [sql.Identifier(schema1), sql.Identifier(table_name1),
-                     sql.Identifier(schema2), sql.Identifier(table_name2)]
+        query_args = [sql.Identifier(schema2), sql.Identifier(tablename2),
+                     sql.Identifier(schema1), sql.Identifier(tablename1)]
         cur.execute(sql.SQL("CREATE TABLE {}.{} AS SELECT * FROM {}.{}").format(*query_args))
+        self.db_connection.commit()
 
-    def load_table_in_dataframe(self, schema, table):
+    def load_table_in_dataframe(self, table):
         """Load all the data of a SQL table in a pandas dataframe."""
         cur = self.db_connection.cursor()
-        cur.execute(sql.SQL("SELECT * FROM {}.{}").format(sql.Identifier(schema), sql.Identifier(table)))
+        cur.execute(sql.SQL("SELECT * FROM {}.{}").format(sql.Identifier(self.schema), sql.Identifier(table)))
         rows = cur.fetchall()
         cols = [desc[0] for desc in cur.description]
         df = pd.DataFrame(rows, columns=cols)
@@ -105,10 +104,6 @@ class TableTransformer:
         """Method that changes the behavior of the TableTransformer to create a new table when performing modifcations."""
         self.replace = False
         
-    def get_internal_reference(self, tablename):
-        """Get the internal reference for the table of (setid) and (tablename). This returns a pair (id, name)."""
-        return (str(self.setid), tablename)
-
     def get_resulting_table(self, tablename, new_name):
         """Method that returns the name of the table where TableTransformer will operate on. In case of overwrtie it's just tablename,
         but in case it's an operation that needs to result in a new table, we create table 'new_name' and return that name.
@@ -125,13 +120,13 @@ class TableTransformer:
         and perform the operation on this newly created copy.
 
         Parameters:
-           internal_ref: A tuple of form (schema, table_name) to identify tables. This is returned by get_internal_reference().
-           new_name: A string representing the name of the new table constructed after performing a transformation.
+           old: A string representing the name of the old table we're constructing the new one from.
+           new: A string representing the name of the new table constructed after performing a transformation.
         """
         if new == "":
             raise self.ValueError('No tablename given to the new table resulting from this operation. Please assign a valid tablename.')
 
-        new_name = self.__get_unique_name(new_name, new_name, False)
+        new_name = self.__get_unique_name(new, new, False)
         query_args = [self.schema, old, self.schema, new_name]
         self.create_copy_of_table(*query_args)
         return new_name
@@ -243,7 +238,7 @@ class TableTransformer:
 
     def get_conversion_options(self, tablename, attribute):
         """Returns a list of supported types that the given attribute can be converted to."""
-        data_type = self.get_attribute_type(tablename, attribute)[0]
+        data_type = self.get_attribute_type(tablename, attribute)
         options = { 'character varying' : ['INTEGER', 'FLOAT', 'DATE', 'TIME', 'TIMESTAMP',  'CHAR(n)'],
                     'character'         : ['VARCHAR(255)', 'VARCHAR(n)', 'INTEGER', 'FLOAT', 'DATE', 'TIME', 'TIMESTAMP'],
                     'integer'           : ['FLOAT', 'VARCHAR(255)', 'VARCHAR(n)','CHAR(n)'],
@@ -478,7 +473,7 @@ class TableTransformer:
             raise self.ValueError(error_msg)
 
         self.db_connection.commit()
-        self.history_manager.write_to_history(internal_ref[1], tablename, attribute, [regex, replacement, case_sens], 9)
+        self.history_manager.write_to_history(resulting_table, tablename, attribute, [regex, replacement, case_sens], 9)
         
     def __get_simplified_types(self, tablename, data_frame):
         """Method that makes sure pandas dataframe uses correct datatypes when writing to SQL."""
@@ -486,8 +481,8 @@ class TableTransformer:
         new_types = {}
         sqla_type = None
         for  elem in new_attributes:
-            try:
-                psql_type = self.get_attribute_type_with_length(tablename, elem, True)
+            psql_type = self.get_attribute_type_with_length(tablename, elem)
+            if psql_type is not None:
                 sqla_type = SQLTypeHandler().to_sqla_object(psql_type[0])
                 if sqla_type is None:
                     if psql_type[0] == 'character varying':
@@ -495,8 +490,8 @@ class TableTransformer:
                     elif psql_type[0] == 'character':
                         sqla_type = sqlalchemy.types.CHAR(psql_type[1])
                     else:
-                        continue
-            except self.ValueError:
+                        raise ValueError('thoncc')
+            else:
                 pd_type = str(data_frame[elem].dtype)
                 sqla_type = SQLTypeHandler().to_sqla_object(pd_type)
                 
@@ -505,9 +500,7 @@ class TableTransformer:
     
     def one_hot_encode(self, tablename, attribute, new_name=""):
         """Method that performs one hot encoding given an attribute"""
-        internal_ref = self.get_internal_reference(tablename)
-        sql_query = "SELECT * FROM \"{}\".\"{}\"".format(*internal_ref)
-        df = pd.read_sql(sql_query, self.engine)
+        df = self.load_table_in_dataframe(tablename)
         encoded = pd.get_dummies(df[attribute]) #Perfom one-hot-encoding
         df = df.drop(attribute, axis=1) #Drop the attribute used for encoding
         df = df.join(encoded) #Join the original attributes with the encoded table
@@ -515,12 +508,12 @@ class TableTransformer:
         eventual_table = "" #This will be the name of table containing the changes.
         if self.replace is True:
             #If the table should be replaced, drop it and recreate it.
-            df.to_sql(tablename, self.engine, None, internal_ref[0], 'replace', index = False, dtype = new_dtypes)
+            df.to_sql(tablename, self.engine, None, self.schema, 'replace', index = False, dtype = new_dtypes)
             eventual_table = tablename
         elif self.replace is False:
             #We need to create a new table and leave the original untouched
             new_name = self.__get_unique_name("", new_name, False)
-            df.to_sql(new_name, self.engine, None, internal_ref[0], 'fail', index = False, dtype = new_dtypes)
+            df.to_sql(new_name, self.engine, None, self.schema, 'fail', index = False, dtype = new_dtypes)
             eventual_table = new_name
             
         self.history_manager.write_to_history(eventual_table, tablename, attribute, [], 14)
@@ -535,13 +528,11 @@ class TableTransformer:
         This will normalize everything in a 1-point range, thus [0-1].
         """
         #Let's check if the attribute is a numeric type, this should not be performed on non-numeric types
-        attr_type = self.get_attribute_type(tablename, attribute)[0]
+        attr_type = self.get_attribute_type(tablename, attribute)
         if SQLTypeHandler().is_numerical(attr_type) is False:
             raise self.AttrTypeError("Normalization failed due attribute not being of numeric type (neither integer or float)")
         
-        internal_ref = self.get_internal_reference(tablename)
-        sql_query = "SELECT * FROM \"{}\".\"{}\"".format(*internal_ref)
-        df = pd.read_sql(sql_query, self.engine)
+        df = self.load_table_in_dataframe(tablename)
         mean = df[attribute].mean()
         #Calculate the standard deviation, for this method we consider the data as the population
         #and not a sample so we don't use Bessel's correction
@@ -568,15 +559,15 @@ class TableTransformer:
 
         if self.replace is True:
             #If the table should be replaced, drop it and recreate it.
-            df.to_sql(tablename, self.engine, None, internal_ref[0], 'replace', index = False, dtype = new_dtypes)
+            df.to_sql(tablename, self.engine, None, self.schema, 'replace', index = False, dtype = new_dtypes)
             eventual_table = tablename
         elif self.replace is False:
             #We need to create a new table and leave the original untouched
             new_name = self.__get_unique_name("", new_name, False)
-            df.to_sql(new_name, self.engine, None, internal_ref[0], 'fail', index = False, dtype = new_dtypes)
+            df.to_sql(new_name, self.engine, None, self.schema, 'fail', index = False, dtype = new_dtypes)
             eventual_table = new_name
 
-        self.history_manager.write_to_history(internal_ref[1], tablename, attribute, [mean], 10)
+        self.history_manager.write_to_history(eventual_table, tablename, attribute, [mean], 10)
         
     def __get_unique_name(self, tablename, name, is_attribute=True):
         """Method that makes sure an attribute name or table name given the name
@@ -627,14 +618,12 @@ class TableTransformer:
         
     def discretize_using_equal_width(self, tablename, attribute, nr_bins, new_name=""):
         """Method that calulates the bins for an equi-distant discretization and performs it"""
-        internal_ref = self.get_internal_reference(tablename)
-        attr_type = self.get_attribute_type(tablename, attribute)[0]
+        attr_type = self.get_attribute_type(tablename, attribute)
         if SQLTypeHandler().is_numerical(attr_type) is False:
             raise self.AttrTypeError("Discretization failed due attribute not being of numeric type (neither integer or float)")
 
         integer_bool = SQLTypeHandler().is_integer(attr_type)
-        sql_query = 'SELECT * FROM "{}"."{}"'.format(*internal_ref)
-        df = pd.read_sql(sql_query, self.engine)
+        df = self.load_table_in_dataframe(tablename)
         minimum = df[attribute].min()
         maximum = df[attribute].max() + 0.0001 #Add a little bit to make sure the max element is included
         leftmost_edge = (math.floor(minimum * 1000) / 1000)
@@ -666,12 +655,12 @@ class TableTransformer:
 
         if self.replace is True:
             #If the table should be replaced, drop it and recreate it.
-            df.to_sql(tablename, self.engine, None, internal_ref[0], 'replace', index = False, dtype = new_dtypes)
+            df.to_sql(tablename, self.engine, None, self.schema, 'replace', index = False, dtype = new_dtypes)
             eventual_table = tablename
         elif self.replace is False:
             #We need to create a new table and leave the original untouched
             new_name = self.__get_unique_name("", new_name, False)
-            df.to_sql(new_name, self.engine, None, internal_ref[0], 'fail', index = False, dtype = new_dtypes)
+            df.to_sql(new_name, self.engine, None, self.schema, 'fail', index = False, dtype = new_dtypes)
             eventual_table = new_name
         
         self.history_manager.write_to_history(eventual_table, tablename, attribute, [], 6)
@@ -692,14 +681,12 @@ class TableTransformer:
     def discretize_using_equal_frequency(self, tablename, attribute, new_name=""):
         """Method that calulates the bins for an equi-frequent discretization and performs it"""
         #The initial steps are similar to equi-distant discretization
-        attr_type = self.get_attribute_type(tablename, attribute)[0]
+        attr_type = self.get_attribute_type(tablename, attribute)
         if SQLTypeHandler().is_numerical(attr_type) is False:
             raise self.AttrTypeError("Discretization failed due attribute not being of numeric type (neither integer or float)")
 
         round_to_int = True
-        internal_ref = self.get_internal_reference(tablename)
-        sql_query = "SELECT * FROM \"{}\".\"{}\"".format(*internal_ref)
-        df = pd.read_sql(sql_query, self.engine)
+        df = self.load_table_in_dataframe(tablename)
         if attr_type != 'integer':
             if df[attribute].max() < 2: #Probably working with values [0-1]
                 round_to_int = False
@@ -743,12 +730,12 @@ class TableTransformer:
         
         if self.replace is True:
             #If the table should be replaced, drop it and recreate it.
-            df.to_sql(tablename, self.engine, None, internal_ref[0], 'replace', index = False, dtype = new_dtypes)
+            df.to_sql(tablename, self.engine, None, self.schema, 'replace', index = False, dtype = new_dtypes)
             eventual_table = tablename
         elif self.replace is False:
             #We need to create a new table and leave the original untouched
             new_name = self.__get_unique_name("", new_name, False)
-            df.to_sql(new_name, self.engine, None, internal_ref[0], 'fail', index = False, dtype = new_dtypes)
+            df.to_sql(new_name, self.engine, None, self.schema, 'fail', index = False, dtype = new_dtypes)
             eventual_table = new_name
             
         self.history_manager.write_to_history(eventual_table, tablename, attribute, [], 5)
@@ -761,10 +748,11 @@ class TableTransformer:
             exclude_right: A boolean indicating whether the rightmost edge should be included
                            True if the rightmost edge is excluded [X - Y[, False if rightmost edge is included ]X - Y]
         """
+        attr_type = self.get_attribute_type(tablename, attribute)
         if SQLTypeHandler().is_numerical(attr_type) is False:
             raise self.AttrTypeError("Discretization failed due attribute not being of numeric type (neither integer or float)")
 
-        df = pd.read_sql(sql_query, self.engine)
+        df = self.load_table_in_dataframe(tablename)
         bracket = ""
         bins = ranges
 
@@ -793,12 +781,12 @@ class TableTransformer:
 
         if self.replace is True:
             #If the table should be replaced, drop it and recreate it.
-            df.to_sql(tablename, self.engine, None, internal_ref[0], 'replace', index = False, dtype = new_dtypes)
+            df.to_sql(tablename, self.engine, None, self.schema, 'replace', index = False, dtype = new_dtypes)
             eventual_table = tablename
         elif self.replace is False:
             #We need to create a new table and leave the original untouched
             new_name = self.__get_unique_name("", new_name, False)
-            df.to_sql(new_name, self.engine, None, internal_ref[0], 'fail', index = False, dtype = new_dtypes)
+            df.to_sql(new_name, self.engine, None, self.schema, 'fail', index = False, dtype = new_dtypes)
             eventual_table = new_name
 
         self.history_manager.write_to_history(eventual_table, tablename, attribute, [ranges, exclude_right], 4)
@@ -824,7 +812,7 @@ class TableTransformer:
             comparator = '<'
         #Create query for larger/smaller deletion of outlier
         sql_query = "UPDATE {0}.{1} SET {2} = %s  WHERE {2} cmp %s".replace('cmp', comparator)
-        self.db_connection.cursor().execute(sql.SQL(sql_query).format(sql.Identifier(self.schema]), sql.Identifier(resulting_table),
+        self.db_connection.cursor().execute(sql.SQL(sql_query).format(sql.Identifier(self.schema), sql.Identifier(resulting_table),
                                                                                     sql.Identifier(attribute)), (value, replacement))
         self.db_connection.commit()
         self.history_manager.write_to_history(resulting_table, tablename, attribute, [larger, value, replacement], 3)
@@ -843,12 +831,11 @@ class TableTransformer:
         """Method that fills null values of an attribute with the mean."""
         resulting_table = self.get_resulting_table(tablename, new_name)
         #Let's check if the attribute is a numeric type, this should not be performed on non-numeric types
-        attr_type = self.get_attribute_type(tablename, attribute)[0]
+        attr_type = self.get_attribute_type(tablename, attribute)
         if SQLTypeHandler().is_numerical(attr_type) is False:
             raise self.AttrTypeError("Filling nulls failed due attribute not being of numeric type (neither integer or float)")
 
-        sql_query = "SELECT * FROM \"{}\".\"{}\"".format(*internal_ref)
-        df = pd.read_sql(sql_query, self.engine)
+        df = self.load_table_in_dataframe(tablename)
         mean = df[attribute].mean()
 
         self.__fill_nulls_with_x(attribute, resulting_table, mean)
@@ -859,12 +846,11 @@ class TableTransformer:
         """Method that fills null values of an attribute with the median."""
         resulting_table = self.get_resulting_table(tablename, new_name)
         #Let's check if the attribute is a numeric type, this should not be performed on non-numeric types
-        attr_type = self.get_attribute_type(tablename, attribute)[0]
+        attr_type = self.get_attribute_type(tablename, attribute)
         if SQLTypeHandler().is_numerical(attr_type) is False:
             raise self.AttrTypeError("Filling nulls failed due attribute not being of numeric type (neither integer or float)")
 
-        sql_query = "SELECT * FROM \"{}\".\"{}\"".format(*internal_ref)
-        df = pd.read_sql(sql_query, self.engine)
+        df = self.load_table_in_dataframe(tablename)
         median = df[attribute].median()
 
         self.__fill_nulls_with_x(attribute, resulting_table, median)
