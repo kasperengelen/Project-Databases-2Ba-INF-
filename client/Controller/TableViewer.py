@@ -37,9 +37,10 @@ class TableViewer:
         self.maxrows = self.__initialize_rowcount()
         
     def __initialize_rowcount(self):
-        count_query  = 'SELECT COUNT(*) FROM "%s"."%s"' % (self.schema, self.tablename)
-        query_result = pd.read_sql(count_query, self.engine)
-        rowcount = query_result.iat[0, 0]
+        cur = self.db_connection.cursor()
+        cur.execute(sql.SQL('SELECT COUNT(*) FROM {}.{}').format(sql.Identifier(self.schema),
+                                                                 sql.Identifier(self.tablename)))
+        rowcount = cur.fetchone()[0]
         return int(rowcount)
         
     def get_attributes(self):

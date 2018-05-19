@@ -22,7 +22,6 @@ class TableTransformer:
     """
 
     def __init__(self, setid, db_conn, engine, replace=True, track_history=True):
-        """Inits the TableTransformer with provided values"""
         self.setid = setid
         self.replace = replace
         self.db_connection = db_conn
@@ -47,28 +46,51 @@ class TableTransformer:
         the operation to fail.
         """
         
-    def is_nullable(self, tablename, attribute):
-        """Extra option to check whether an attribute is nullable or not. If deleting something is impossible due to a not null
-        constraint, the row will be deleted as a whole.
-        """
-        internal_ref = self.get_internal_reference(tablename)
+    def get_attribute_type2(self, schema, table, attribute):
+        """Execute query that returns the type of the attribute of an SQL table in a specified schema."""
         cur = self.db_connection.cursor()
-        query = ("SELECT is_nullable FROM information_schema.columns  WHERE table_schema = %s"
-                " AND table_name =  %s AND column_name = %s LIMIT 1")
-        cur.execute(sql.SQL(query), [internal_ref[0], tablename, attribute])
-        result = cur.fetchone()[0]
-        if result == 'YES':
-            return True
-        elif result == 'NO':
-            return False
-        raise self.ValueError("Error: is_nullabe returned something else than YES or NO.")
+        cur.execute(("SELECT data_type FROM information_schema.columns WHERE table_schema = %s "
+                     "AND table_name = %s AND column_name = %s LIMIT 1"), (schema, table, attribute))
+        return cur.fetchone()[0]
+
+    def get_attribute_type_with_length(self, schema, table, attribute):
+        """Execute query that returns a tuple of the attribute type and length limit of that type if specified.
+        For varchar(255) this will yield (character varying, 255), in case of no length limit the value is None."""
+        cur = self.db_connection.cursor()
+        cur.execute(("SELECT data_type, character_maximum_length FROM information_schema.columns"
+                    " WHERE table_schema = %s AND table_name =  %s AND column_name = %s LIMIT 1"),
+                    (schema, table, attribute))
+        return cur.fetchone()
+
+    def drop_attribute(self, schema, table, attribute):
+        """Execute query that drops the attribute of an SQL table."""
+        cur = self.db_connection.cursor()
+        query_args = [sql.Identifier(schema),sql.Identifier(table), sql.Identifier(attribute)]
+        cur.execute(sql.SQL("ALTER TABLE {}.{} DROP COLUMN IF EXISTS {}").format(*query_args))
+        self.db_connection.commit()
+
+    def create_copy_of_table(self, schema1, table_name1, schema2, tablename2):
+        """Execute query that copies a whole table to another table with name new_name."""
+        cur = self.db_connection.cursor()
+        query_args = [sql.Identifier(schema1), sql.Identifier(table_name1),
+                     sql.Identifier(schema2), sql.Identifier(table_name2)]
+        cur.execute(sql.SQL("CREATE TABLE {}.{} AS SELECT * FROM {}.{}").format(*query_args))
+
+    def load_table_in_dataframe(self, schema, table):
+        """Load all the data of a SQL table in a pandas dataframe."""
+        cur = self.db_connection.cursor()
+        cur.execute(sql.SQL("SELECT * FROM {}.{}").format(sql.Identifier(schema), sql.Identifier(table)))
+        rows = cur.fetchall()
+        cols = [desc[0] for desc in cur.description]
+        df = pd.DataFrame(rows, columns=cols)
+        return df
     
     def set_to_overwrite(self):
-        """Method that changes the behavior of the TableTransforler to overwrite the table when performing modifcations."""
+        """Method that changes the behavior of the TableTransformer to overwrite the table when performing modifcations."""
         self.replace = True
         
     def set_to_copy(self):
-        """Method that changes the behavior of the TableTransforler to create a new table when performing modifcations."""
+        """Method that changes the behavior of the TableTransformer to create a new table when performing modifcations."""
         self.replace = False
         
     def get_internal_reference(self, tablename):
@@ -76,20 +98,19 @@ class TableTransformer:
         return (str(self.setid), tablename)
     
     def copy_table(self, internal_ref, new_name):
-        """In case the transformation has to result in a new table, we copy the existing one and perform modifications on this copy.
+        """In case the transformation has to result in a new table, we copy the existing one to a new table in this dataset
+        and perform the operation on this newly created copy.
 
         Parameters:
-           internal_ref: A tuple containing information to identify the table in our system. This is returned by get_internal_reference().
+           internal_ref: A tuple of form (schema, table_name) to identify tables. This is returned by get_internal_reference().
            new_name: A string representing the name of the new table constructed after performing a transformation.
         """
         if new_name == "":
             raise self.ValueError('No tablename given to the new table resulting from this operation. Please assign a valid tablename.')
 
         new_name = self.__get_unique_name(new_name, new_name, False)
-        #Execute with the dynamic SQL module of psycopg2 to avoid SQL injecitons
-        self.db_connection.cursor().execute(sql.SQL("CREATE TABLE {}.{} AS SELECT * FROM {}.{}").format(sql.Identifier(internal_ref[0]),sql.Identifier(new_name),
-                                                                                          sql.Identifier(internal_ref[0]), sql.Identifier(internal_ref[1])))
-        self.db_connection.commit()
+        query_args = [internal_ref[0], internal_ref[1], internal_ref[0], new_name]
+        self.create_copy_of_table(*query_args)
         return (internal_ref[0], new_name)
 
     def delete_rows_using_predicate_logic(self, tablename, arg_list, new_name=""):
@@ -196,14 +217,9 @@ class TableTransformer:
         internal_ref = self.get_internal_reference(tablename)
         if self.replace is False:
             internal_ref = self.copy_table(internal_ref, new_name)
-        self.db_connection.cursor().execute(sql.SQL("ALTER TABLE {}.{} DROP COLUMN {}").format(sql.Identifier(internal_ref[0]), sql.Identifier(internal_ref[1]),
-                                                                                    sql.Identifier(attribute)))
-        self.db_connection.commit()
-        self.history_manager.write_to_history(internal_ref[1], tablename, attribute, [], 2)
 
-    def get_supported_types(self):
-        """Quick method that returns all the types supported by the TableTransformer for conversion purposes"""
-        return ['VARCHAR(255)', 'CHAR(255)', 'INTEGER', 'FLOAT', 'DATE', 'TIME', 'TIMESTAMP']
+        self.drop_attribute(internal_ref[0], internal_ref[1], attribute)
+        self.history_manager.write_to_history(internal_ref[1], tablename, attribute, [], 2)
 
     def get_conversion_options(self, tablename, attribute):
         """Returns a list of supported types that the given attribute can be converted to."""
@@ -371,6 +387,9 @@ class TableTransformer:
         this method will force the conversion by deleting the row containing the bad element.
         The parameters are identical to change_attribute_type().
         """
+        attr_type = self.get_attribute_type(tablename, attribute)[0]
+        if SQLTypeHandler().is_numerical(attr_type) is False:
+            raise self.AttrTypeError("Filling nulls failed due attribute not being of numeric type (neither integer or float)")
         if self.replace is True:
             internal_ref = self.get_internal_reference(tablename)
         else:
@@ -977,18 +996,3 @@ class TableTransformer:
                                           sql.Identifier(attr_name), sql.Identifier(attribute)))
         self.db_connection.commit()
         self.history_manager.write_to_history(internal_ref[1], tablename, attribute, [extraction_arg], 7)
-
-
-    def undo_transformation(self, t_id):
-        """Method to undo changes brought by an operation of TableTransformer."""
-        pass
-
-
-    def recreate_table_from_history(self, t_id, new_name):
-        """Method that recreates a previous table described in the transformation history.
-
-        Parameters:
-            t_id: The internal id of the transformation as used in the DatasetHistory table.
-            new_name: A string representing the name of the recreated table.
-        """
-        pass
