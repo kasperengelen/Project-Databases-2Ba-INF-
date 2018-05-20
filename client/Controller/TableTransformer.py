@@ -481,7 +481,7 @@ class TableTransformer:
         new_types = {}
         sqla_type = None
         for  elem in new_attributes:
-            psql_type = self.get_attribute_type_with_length(tablename, elem)
+            psql_type = self.get_attribute_type_with_length(tablename, str(elem))
             if psql_type is not None:
                 sqla_type = SQLTypeHandler().to_sqla_object(psql_type[0])
                 if sqla_type is None:
@@ -490,7 +490,8 @@ class TableTransformer:
                     elif psql_type[0] == 'character':
                         sqla_type = sqlalchemy.types.CHAR(psql_type[1])
                     else:
-                        raise ValueError('thoncc')
+                        #Then this is another type that won't bring us trouble.
+                        continue
             else:
                 pd_type = str(data_frame[elem].dtype)
                 sqla_type = SQLTypeHandler().to_sqla_object(pd_type)
