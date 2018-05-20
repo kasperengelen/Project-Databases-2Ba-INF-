@@ -551,7 +551,8 @@ def upload(dataset_id):
     # HANDLE SUBMITTED FILE
     if request.method == 'POST' and form.validate():
         file = form.data_file.data
-        columnnames_included = bool(form.columnnames_included.data)
+        columnnames_included = form.columnnames_included.data
+        automatic_types      = form.automatic_types.data
 
         if file:
             sec_filename = secure_filename(file.filename)
@@ -579,7 +580,7 @@ def upload(dataset_id):
             tu = dataset.getUploader()
             
             try:
-                tu.read_file(real_filename, columnnames_included)
+                tu.read_file(filename=real_filename, header=columnnames_included, automatic_type_conversion=automatic_types)
             except DLFileExcept as e: # DLFileExcept = FileException
                 flash(message=str(e), category="error")
                 # TODO print error message
