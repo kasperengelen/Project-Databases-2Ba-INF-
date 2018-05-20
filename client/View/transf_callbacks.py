@@ -541,7 +541,7 @@ def transform_deleteOutlier(dataset_id, tablename):
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
 
     try:
-        tt.delete_outlier(tablename=tablename, 
+        tt.delete_outliers(tablename=tablename, 
                             attribute=form.select_attr.data, 
                             larger=form.select_comparison.data, 
                             value=form.comparison_value.data,
