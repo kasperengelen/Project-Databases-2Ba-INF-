@@ -994,7 +994,48 @@ def _test_page(dataset_id):
 
 @dataset_pages.route('/dataset/<int:dataset_id>/_custom_query', methods=['POST'])
 @require_login
-@require_writeperm
+@require_readperm
 def _custom_query(dataset_id):
-    pass
+    """Callback to execute custom queries."""
+
+    form = CustomQueryForm(request.form)
+
+    if not DatasetManager.existsID(dataset_id):
+        abort(404)
+
+    dataset = DatasetManager.getDataset(dataset_id)
+    write = DatasetPermissionsManager.userHasSpecifiedAccessTo(setid=dataset_id, userid=session['userdata']['userid'], minimum_perm_type="write")
+                or session['userdata']['admin']
+
+    qe = dataset.getQueryExecutor(write_perm = write)
+
+    retval = {
+        "data": None,
+        "columns": None,
+        "empty": True,
+        "error": False,
+        "error_msg": ""
+    }
+
+    if not form.validate():
+        retval["error"] = False
+        # TODO retrieve errors
+        retval["error_msg"] = "Invalid form."
+
+        return jsonify(retval)
+    # ENDIF
+
+    try:
+        result = qe.execute(form.query.data)
+        # alter retval to include data
+
+        if result:
+            retval["columns"] = result[0]
+            retval["data"]    = json.loads(result[1])
+    except:
+        # TODO error message
+        retval["error"] = True
+        retval["error_msg"] = "An error occurred."
+
+    return jsonify(retval)
 # ENDFUNCTION
