@@ -225,6 +225,7 @@ def transform_findreplaceregex(dataset_id, tablename):
 # ENDFUNCTION
 
 # DONE
+# TODO: force attr parameters
 @transf_callbacks.route('/dataset/<int:dataset_id>/table/<string:tablename>/transform/typeconversion', methods = ['POST'])
 @require_login
 @require_writeperm
@@ -277,6 +278,7 @@ def transform_typeconversion(dataset_id, tablename):
                                     attribute=form.select_attr.data, 
                                     to_type=form.new_datatype.data, 
                                     data_format=form.date_type.data,
+                                    force_mode = force_mode,
                                     new_name= form.new_table_name.data)
             flash(message="Attribute type changed.", category="success")
             redir_name = form.get_table_name(tablename)
@@ -338,6 +340,7 @@ def transform_onehotencoding(dataset_id, tablename):
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
 # ENDFUNCTION
 
+# DONE
 @transf_callbacks.route('/dataset/<int:dataset_id>/table/<string:tablename>/transform/zscorenormalisation', methods = ['POST'])
 @require_login
 @require_writeperm
@@ -357,20 +360,24 @@ def transform_zscorenormalisation(dataset_id, tablename):
 
     form = NormalizeZScore(request.form)
     form.fillForm(tv.get_attributes())
+    form.handle_tt(tt)
 
     if not form.validate():
         flash_errors(form)
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
 
     try:
-        tt.normalize_using_zscore(tablename, form.select_attr.data)
+        tt.normalize_using_zscore(tablename = tablename, 
+                                  attribute = form.select_attr.data, 
+                                  new_name  = form.new_table_name.data)
         flash(message="Normalization complete.", category="success")
-        return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
+        return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=form.get_table_name(tablename)))
     except Exception as e:
         flash(message="An error occurred. Details: " + str(e), category="error")
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
 # ENDFUNCTION
 
+# DONE
 @transf_callbacks.route('/dataset/<int:dataset_id>/table/<string:tablename>/transform/discretize/equalwidth', methods = ['POST'])
 @require_login
 @require_writeperm
@@ -390,20 +397,25 @@ def transform_discretizeEqualWidth(dataset_id, tablename):
 
     form = DiscretizeEqualWidth(request.form)
     form.fillForm(tv.get_attributes())
+    form.handle_tt(tt)
 
     if not form.validate():
         flash_errors(form)
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
 
     try:
-        tt.discretize_using_equal_width(tablename, form.select_attr.data, form.nr_of_bins.data)
+        tt.discretize_using_equal_width(tablename=tablename, 
+                                        attribute=form.select_attr.data, 
+                                        nr_bins=form.nr_of_bins.data, 
+                                        new_name  = form.new_table_name.data)
         flash(message="Discretization complete.", category="success")
-        return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
+        return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=form.get_table_name(tablename)))
     except Exception as e:
         flash(message="An error occurred. Details: " + str(e), category="error")
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
 # ENDFUNCTION
 
+# DONE
 @transf_callbacks.route('/dataset/<int:dataset_id>/table/<string:tablename>/transform/discretize/equalfreq', methods = ['POST'])
 @require_login
 @require_writeperm
@@ -423,20 +435,24 @@ def transform_discretizeEqualFreq(dataset_id, tablename):
 
     form = DiscretizeEqualFreq(request.form)
     form.fillForm(tv.get_attributes())
+    form.handle_tt(tt)
 
     if not form.validate():
         flash_errors(form)
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
 
     try:
-        tt.discretize_using_equal_frequency(tablename, form.select_attr.data)
+        tt.discretize_using_equal_frequency(tablename=tablename, 
+                                            attribute=form.select_attr.data,
+                                            new_name = form.new_table_name.data)
         flash(message="Discretization complete.", category="success")
-        return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
+        return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=form.get_table_name(tablename)))
     except Exception as e:
         flash(message="An error occurred. Details: " + str(e), category="error")
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
 # ENDFUNCTION
 
+# DONE
 @transf_callbacks.route('/dataset/<int:dataset_id>/table/<string:tablename>/transform/discretize/customrange', methods = ['POST'])
 @require_login
 @require_writeperm
@@ -456,6 +472,7 @@ def transform_discretizeCustomRange(dataset_id, tablename):
 
     form = DiscretizeCustomRange(request.form)
     form.fillForm(tv.get_attributes())
+    form.handle_tt(tt)
 
     if not form.validate():
         flash_errors(form)
@@ -485,14 +502,19 @@ def transform_discretizeCustomRange(dataset_id, tablename):
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
 
     try:
-        tt.discretize_using_custom_ranges(tablename, form.select_attr.data, int_ranges, form.interval_spec.data)
+        tt.discretize_using_custom_ranges(tablename=tablename, 
+                                          attribute=form.select_attr.data, 
+                                          ranges=int_ranges, 
+                                          exclude_right=form.interval_spec.data,
+                                          new_name = form.new_table_name.data)
         flash(message="Discretization complete.", category="success")
-        return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
+        return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=form.get_table_name(tablename)))
     except Exception as e:
         flash(message="An error occurred. Details: " + str(e), category="error")
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
 # ENDFUNCTION
 
+# DONE
 @transf_callbacks.route('/dataset/<int:dataset_id>/table/<string:tablename>/transform/delete_outlier', methods = ['POST'])
 @require_login
 @require_writeperm
@@ -512,6 +534,7 @@ def transform_deleteOutlier(dataset_id, tablename):
 
     form = DeleteOutlier(request.form)
     form.fillForm(tv.get_attributes())
+    form.handle_tt(tt)
 
     if not form.validate():
         flash_errors(form)
@@ -522,14 +545,16 @@ def transform_deleteOutlier(dataset_id, tablename):
                             attribute=form.select_attr.data, 
                             larger=form.select_comparison.data, 
                             value=form.comparison_value.data,
-                            replacement=form.replacement_value.data)
+                            replacement=form.replacement_value.data,
+                            new_name = form.new_table_name.data)
         flash(message="Outliers deleted.", category="success")
-        return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
+        return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=form.get_table_name(tablename)))
     except Exception as e:
         flash(message="An error occurred. Details: " + str(e), category="error")
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
 # ENDFUNCTION
 
+# DONE
 @transf_callbacks.route('/dataset/<int:dataset_id>/table/<string:tablename>/transform/fill_null/mean', methods = ['POST'])
 @require_login
 @require_writeperm
@@ -549,20 +574,24 @@ def transform_fillNullsMean(dataset_id, tablename):
 
     form = FillNullsMean(request.form)
     form.fillForm(tv.get_attributes())
+    form.handle_tt(tt)
 
     if not form.validate():
         flash_errors(form)
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
 
     try:
-        tt.fill_nulls_with_mean(tablename, form.select_attr.data)
+        tt.fill_nulls_with_mean(tablename=tablename, 
+                                attribute=form.select_attr.data, 
+                                new_name = form.new_table_name.data)
         flash(message="NULL values replaced with mean.", category="success")
-        return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
+        return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=form.get_table_name(tablename)))
     except Exception as e:
         flash(message="An error occurred. Details: " + str(e), category="error")
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
 # ENDFUNCTION
 
+# DONE
 @transf_callbacks.route('/dataset/<int:dataset_id>/table/<string:tablename>/transform/fill_null/median', methods = ['POST'])
 @require_login
 @require_writeperm
@@ -582,20 +611,24 @@ def transform_fillNullsMedian(dataset_id, tablename):
 
     form = FillNullsMedian(request.form)
     form.fillForm(tv.get_attributes())
+    form.handle_tt(tt)
 
     if not form.validate():
         flash_errors(form)
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
 
     try:
-        tt.fill_nulls_with_median(tablename, form.select_attr.data)
+        tt.fill_nulls_with_median(tablename=tablename, 
+                                  attribute=form.select_attr.data, 
+                                  new_name = form.new_table_name.data)
         flash(message="NULL values replaced with median.", category="success")
-        return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
+        return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=form.get_table_name(tablename)))
     except Exception as e:
         flash(message="An error occurred. Details: " + str(e), category="error")
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
 # ENDFUNCTION
 
+# DONE
 @transf_callbacks.route('/dataset/<int:dataset_id>/table/<string:tablename>/transform/fill_null/custom', methods = ['POST'])
 @require_login
 @require_writeperm
@@ -615,15 +648,19 @@ def transform_fillNullsCustomValue(dataset_id, tablename):
 
     form = FillNullsCustomValue(request.form)
     form.fillForm(tv.get_attributes())
+    form.handle_tt(tt)
 
     if not form.validate():
         flash_errors(form)
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
 
     try:
-        tt.fill_nulls_with_custom_value(tablename, form.select_attr.data, form.replacement.data)
+        tt.fill_nulls_with_custom_value(tablename=tablename, 
+                                        attribute=form.select_attr.data, 
+                                        value=form.replacement.data,
+                                        new_name=form.new_table_name.data)
         flash(message="NULL values filled with custom value.", category="success")
-        return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
+        return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=form.get_table_name(tablename)))
     except Exception as e:
         flash(message="An error occurred. Details: " + str(e), category="error")
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
