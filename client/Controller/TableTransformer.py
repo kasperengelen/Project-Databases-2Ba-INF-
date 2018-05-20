@@ -371,7 +371,7 @@ class TableTransformer:
             
         self.history_manager.write_to_history(resulting_table, tablename, attribute, [to_type, data_format, length], 1)
 
-    def force_attribute_type(self, tablename, attribute, to_type, data_format="", length='1', force_mode=True, new_name=""):
+    def force_attribute_type(self, tablename, attribute, to_type, data_format="", length=None, force_mode=True, new_name=""):
         """In case that change_attribute_type fails due to elements that can't be converted
         this method will force the conversion by deleting the row containing the bad element.
         The parameters are identical to change_attribute_type().
@@ -396,13 +396,26 @@ class TableTransformer:
             data_format = self.__readable_format_to_postgres(to_type, data_format)
             pattern = self.__get_datetime_regex(to_type, data_format)
 
+        cur = self.db_connection.cursor()
+        query_args = [sql.Identifier(self.schema), sql.Identifier(resulting_table), sql.Identifier(attribute)]
+
+        if force_mode is True:
+            query1 = "DELETE FROM {}.{} WHERE ({} !~ %s )"
+            query2 = "DELETE FROM {}.{} WHERE char_length({}) < %s"
+
         else:
-            pass
+            query1 = "UPDATE {0}.{1} SET {2} = NULL WHERE ({2} !~ %s )"
+            query2 = "UPDATE {0}.{1} SET {2} = NULL WHERE char_length({}) < %s"
             
 
-        query_args = [sql.Identifier(self.schema), sql.Identifier(resulting_table), sql.Identifier(attribute)]
-        self.db_connection.cursor().execute(sql.SQL("DELETE FROM {}.{} WHERE ({} !~ %s )").format(*query_args), [pattern])
-        self.db_connection.commit()
+        if pattern != "":
+            cur.execute(sql.SQL(query1).format(*query_args), [pattern])
+            self.db_connection.commit()
+
+        if length is not None:
+            cur.execute(sql.SQL(query2).format(*query_args), [length])
+            self.db_connection.commit()
+            
         #If we were to create a new table for this operation, this already happened, so overwrite the newly created table.
         if self.replace is False:
             self.set_to_overwrite
