@@ -76,9 +76,6 @@ class TestTableViewer(unittest.TestCase):
         #Close database connection
         cls.db_connection.close()
 
-
-
-
     def test_get_attributes(self):
         all_attributes = ['string', 'number', 'date_time']
         result = self.test_object.get_attributes()
@@ -88,45 +85,6 @@ class TestTableViewer(unittest.TestCase):
         self.assertEqual(all_attributes[0] in result, True)
         self.assertEqual(all_attributes[1] in result, True)
         self.assertEqual(all_attributes[2] in result, True)
-
-    def depr_is_in_range(self):
-        #There are 70 rows in the table
-        #Check if page one with 50 rows per page is in range
-        self.assertEqual(self.test_object.is_in_range(1, 50), True)
-        #Check if page 7 with 10 rows per page is in range
-        self.assertEqual(self.test_object.is_in_range(7, 10), True)
-        #Check if page 8 with 10 rows per page is in range
-        self.assertEqual(self.test_object.is_in_range(8, 50), False)
-        #Check if it fails for way big values
-        self.assertEqual(self.test_object.is_in_range(72, 1), False)
-        self.assertEqual(self.test_object.is_in_range(1001, 50), False)
-        self.assertEqual(self.test_object.is_in_range(2458, 50), False)
-
-    def test_get_page_indices(self):
-        #We can set maxrows of our object since we don't explicitly check range
-        self.test_object.maxrows = 50
-        indices = self.test_object.get_page_indices(10, 1)
-        self.assertEqual(indices, ['1', '2', '3', '4', '5'])
-        indices = self.test_object.get_page_indices(10, 3)
-        self.assertEqual(indices, ['1', '2', '3', '4', '5'])
-
-        #Set the number of rows to 50 000
-        self.test_object.maxrows = 50000
-        #Get indices when being on page 1 when displaying 50 rows per page
-        indices = self.test_object.get_page_indices(50, 1)
-        self.assertEqual(indices, ['1', '2', '3', '4', '...', '1000'])
-        #Get indices when being on page 2 when displaying 50 rows per page
-        indices = self.test_object.get_page_indices(50, 2)
-        self.assertEqual(indices, ['1', '2', '3', '4', '...', '1000'])
-        #Get indices when being on page 72 when displaying 50 rows per page
-        indices = self.test_object.get_page_indices(50, 72)
-        self.assertEqual(indices, ['1', '...', '71', '72', '73', '...', '1000'])
-        #Get indices when being on page 997 when displaying 50 rows per page
-        indices = self.test_object.get_page_indices(50, 996)
-        self.assertEqual(indices, ['1', '...', '995', '996', '997', '...', '1000'])
-        #Get indices when being on page 1000 when displaying 50 rows per page
-        indices = self.test_object.get_page_indices(50, 997)
-        self.assertEqual(indices, ['1', '...', '996', '997', '998', '999', '1000'])
 
     def test_get_most_frequent_value(self):
         most_frequent = self.test_object2.get_most_frequent_value("string")

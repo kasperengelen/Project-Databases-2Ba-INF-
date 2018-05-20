@@ -15,11 +15,11 @@
 		            </button>
 		            <script>
 		            	function divClick(){
-		            		if($('#tablediv').hasClass("col-sm-12")){
-		            			$('#tablediv').attr('class', 'col-sm-9');
+		            		if($('#tablediv').hasClass("col-sm-9")){
+		            			$('#tablediv').attr('class', 'col-sm-12');
 		            		}
 		            		else {
-		            			$('#tablediv').attr('class', 'col-sm-12');
+		            			$('#tablediv').attr('class', 'col-sm-9');
 		            		}
 		            	}
 				    </script>
@@ -96,7 +96,7 @@
 							}
 						</style>
 						
-						<ul class="nav navbar-nav sidebar collapse out" id="sidenav">
+						<ul class="nav navbar-nav sidebar collapse in" id="sidenav">
 				            <li><a href="#" data-toggle="modal" data-target="#tcmodal" onclick="$('#typeconversion_newtable').hide()">
 				            	Attribute Type Conversion</a></li></br>
 
@@ -196,7 +196,7 @@
 			{% endif %}
 		
 		
-			<div id="tablediv" class="col-sm-12">
+			<div id="tablediv" class="col-sm-9">
 				<style>
 					table {
 		       			border-collapse: collapse;
@@ -234,7 +234,7 @@
 								<th data-hover="tooltip" title="{{ attr.type }}">
 									{{ attr.name }}
 									{% if original != True %}
-				                        <form method="post" id="deleteform_{{ attr }}" action="{{ url_for('transf_callbacks.transform_deleteattr', dataset_id=dataset_info.setid, tablename=table_name, attrname=attr) }}" id="deleteform_{{ attr }}">
+				                        <form method="post" id="deleteform_{{ attr }}" action="{{ url_for('transf_callbacks.transform_deleteattr', dataset_id=dataset_info.setid, tablename=table_name, attrname=attr.name) }}" id="deleteform_{{ attr }}">
 				                        <button style="border: none; background-color: transparent;" type="submit" id="delete_{{ attr }}">
 				                       		<span class="glyphicon glyphicon-trash"></span>
 				                       	</button>
