@@ -879,6 +879,27 @@ def _get_attr2_options(dataset_id):
     return jsonify(options)
 # ENDFUNCTION
 
+@dataset_pages.route('/dataset/<int:dataset_id>/_get_table_attrs')
+@require_login
+@require_readperm
+def _get_table_attrs(dataset_id):
+    tablename = request.args.get('tablename', type=str)
+
+    if not DatasetManager.existsID(dataset_id):
+        abort(404)
+
+    dataset = DatasetManager.getDataset(dataset_id)
+
+    if tablename not in dataset.getTableNames():
+        abort(404)
+
+    tv = dataset.getTableViewer(tablename)
+
+    options = [(option, option) for option in tv.get_attributes()]
+
+    return jsonify(options)
+# ENDFUNCTION
+
 @dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>/_get_table', defaults = {'original': False})
 @dataset_pages.route('/dataset/<int:dataset_id>/original_table/<string:tablename>/_get_table', defaults = {'original': True})
 @require_login
