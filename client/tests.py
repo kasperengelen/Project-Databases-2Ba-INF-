@@ -14,7 +14,17 @@ from unit_tests.test_TableViewer import TestTableViewer
 from unit_tests.test_TableUploader import TestTableUploader
 
 if __name__ == "__main__":
-    tests = [TestTableUploader, TestTableTransformer, TestTransformerCopy, TestTableViewer]
+    tests = []
+
+    # comment uit wat je niet gebruikt
+    tests.append(TestUserManager)
+    tests.append(TestDatasetManager)
+    tests.append(TestDatasetPermissionsManager)
+    tests.append(TestTableTransformer)
+    tests.append(TestTransformerCopy)
+    tests.append(TestTableViewer)
+    tests.append(TestTableUploader)
+
     tester = ProjectTester(tests)
     
     try:

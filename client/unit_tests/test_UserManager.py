@@ -190,7 +190,7 @@ class TestUserManager(unittest.TestCase):
 
     def test_editAdminStatus_promote(self):
         # update status
-        UserManager.editAdminStatus(cls.testuser3_id, True, db_conn = self.db_conn)
+        UserManager.editAdminStatus(self.testuser3_id, True, db_conn = self.db_conn)
 
         self.cur.execute("SELECT admin FROM SYSTEM.user_accounts WHERE userid = %s;", [self.testuser3_id])
         result = self.cur.fetchone()[0]
@@ -198,9 +198,9 @@ class TestUserManager(unittest.TestCase):
         self.assertTrue(result)
 
     def test_editAdminStatus_demote(self):
-        UserManager.editAdminStatus(cls.testuser4_id, True, db_conn = self.db_conn)
+        UserManager.editAdminStatus(self.testuser4_id, False, db_conn = self.db_conn)
 
-        self.cur.execute("SELECT * FROM SYSTEM.user_accounts WHERE userid = %s;", [self.testuser4_id])
+        self.cur.execute("SELECT admin FROM SYSTEM.user_accounts WHERE userid = %s;", [self.testuser4_id])
         result = self.cur.fetchone()[0]
 
         self.assertFalse(result)

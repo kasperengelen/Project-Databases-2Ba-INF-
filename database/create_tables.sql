@@ -38,7 +38,7 @@ CREATE TABLE SYSTEM.set_permissions (
 );
 
 -- Table containing history of the transformations perfomed in the system.
-CREATE TABLE SYSTEM.DATASET_HISTORY(
+CREATE TABLE SYSTEM.dataset_history (
 	setid INTEGER,
 	table_name VARCHAR(255) NOT NULL,
 	attribute VARCHAR(255) NOT NULL,
