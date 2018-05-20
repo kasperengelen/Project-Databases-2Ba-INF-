@@ -907,10 +907,10 @@ def _get_table_attrs(dataset_id):
 def _get_table(dataset_id, tablename, original):
     """Callback to retrieve the dataset in JSON format."""
 
-    start_nr   = request.args.get('start', type=int)
-    row_count  = request.args.get('length', type=int)
+    start_nr   = request.args.get('start',            type=int)
+    row_count  = request.args.get('length',           type=int)
     col_nr     = request.args.get('order[0][column]', type=int)
-    sort_order = request.args.get('order[0][dir]', type=str)
+    sort_order = request.args.get('order[0][dir]',    type=str)
 
     # set current session row_count to the specified count
     session['rowcount'] = row_count
@@ -943,10 +943,10 @@ def _get_table(dataset_id, tablename, original):
 def _get_history_table(dataset_id, tablename):
     """Callback to retrieve the history table in JSON format."""
 
-    start_nr   = request.args.get('start', type=int)
-    row_count  = request.args.get('length', type=int)
+    start_nr   = request.args.get('start',            type=int)
+    row_count  = request.args.get('length',           type=int)
     col_nr     = request.args.get('order[0][column]', type=int)
-    sort_order = request.args.get('order[0][dir]', type=str)
+    sort_order = request.args.get('order[0][dir]',    type=str)
 
     if col_nr != 0:
         abort(500)
