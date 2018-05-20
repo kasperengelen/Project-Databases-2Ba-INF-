@@ -1032,10 +1032,10 @@ def _custom_query(dataset_id):
         if result:
             retval["columns"] = result[0]
             retval["data"]    = json.loads(result[1])
-    except:
+    except Exception as e:
         # TODO error message
         retval["error"] = True
-        retval["error_msg"] = "An error occurred."
+        retval["error_msg"] = "An error occurred. Details: " + str(e)
 
     return jsonify(retval)
 # ENDFUNCTION
