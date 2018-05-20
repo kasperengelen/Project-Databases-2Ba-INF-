@@ -1037,7 +1037,7 @@ def _custom_query(dataset_id):
     # ENDIF
 
     try:
-        result = qe.execute(form.query.data)
+        result = qe.execute_transaction(form.query.data)
         # alter retval to include data
 
         if result:
