@@ -41,17 +41,38 @@
 		        	<div class="panel-body">
 		        		{% from "includes/_formhelpers.html" import render_field %}
 						<form method="post" enctype="multipart/form-data" action="{{ url_for('dataset_pages.upload', 
-						dataset_id=dataset_info.setid) }}">
+						dataset_id=dataset_info.setid) }}" name="upload_form">
 							{{ uploadform.hidden_tag() }}
-							<div class="form-group" style="width: 50%;">
-	                 			{{render_field(uploadform.data_file, class_="form-control")}}  
+							<div class="form-group" style="width: 35%; display: inline-block;">
+	                 			{{render_field(uploadform.data_file, class_="form-control", id="file_upload")}}  
 	                		</div>
-                            <div class="form-group" style="width: 50%;">
-                                {{render_field(uploadform.columnnames_included, class_="checkbox-inline")}}  
-	                		</div>
+	                		<div style="width: 55%;"></div>
+	                		<div id="csv_div">
+	                            <div class="form-group" style="width: 30%; display: inline-block;">
+	                                {{render_field(uploadform.columnnames_included, class_="checkbox-inline")}}  
+		                		</div>
+		                		<div class="form-group" style="width: 30%; display: inline-block;">
+	                                {{render_field(uploadform.automatic_types, class_="checkbox-inline")}}  
+		                		</div>
+		                	</div>
 							<p><input type="submit" class="btn btn-primary" value="Upload File"></p>
 						</form>
 						<p>Allowed extensions: .csv, .zip, .dump, .sql</p>
+						<script>
+							$(function() {
+								$('#csv_div').hide();
+							});
+							$('#file_upload').change(function(){
+								var file = document.forms['upload_form']['file_upload'].value;
+
+								if(file.indexOf('.csv') >= 0 || file.indexOf('.zip') >= 0){
+									$('#csv_div').show();
+								}
+								else {
+									$('#csv_div').hide();
+								}
+							});
+						</script>
 		        	</div>
 		      	</div>
 		    </div>
@@ -69,27 +90,63 @@
 		                    <form action="{{ url_for('dataset_pages.join_tables', dataset_id=dataset_info.setid, tablename=table)}}" method="post" 
 		                    	id="join">
 		                        {{ join_form.hidden_tag() }}
-		                    	<div class="form-group" style="width: 20%; display: inline-block;">
-		                    		{{ render_field(join_form.tablename1, class_="form-control") }}
+		                        <div class="form-group" style="width: 19%; display: inline-block;">
+		                    		{{ render_field(join_form.jointype, class_="form-control", id="join_type") }}
 		                    	</div>
-		                    	<div class="form-group" style="width: 20%; display: inline-block;">
-		                    		{{ render_field(join_form.attribute1, class_="form-control") }}
+		                    	<div class="form-group" style="width: 19%; display: inline-block;" id="natural_type">
+		                    		{{ render_field(join_form.join_subtype, class_="form-control") }}
 		                    	</div>
-		                    	<div class="form-group" style="width: 20%; display: inline-block;">
-		                    		{{ render_field(join_form.tablename2, class_="form-control") }}
-		                    	</div>
-		                    	<div class="form-group" style="width: 20%; display: inline-block;">
-		                    		{{ render_field(join_form.attribute2, class_="form-control") }}
-		                    	</div>
-		                    	<div class="form-group" style="width: 20%; display: inline-block;">
-		                    		{{ render_field(join_form.newname, class_="form-control") }}
-		                    	</div>
-		                		<input style="display: inline-block;" id="join" class="btn btn-primary" type="submit" value="Join Tables">
+		                    	<div style="width: 40%; display: inline-block;"></div>
+		                    	<div>
+			                    	<div class="form-group" style="width: 19%; display: inline-block;" id="table_1">
+			                    		{{ render_field(join_form.tablename1, class_="form-control") }}
+			                    	</div>
+			                    	<div class="form-group" style="width: 19%; display: inline-block;" id="attr_1">
+			                    		{{ render_field(join_form.attribute1, class_="form-control") }}
+			                    	</div>
+			                    	<div class="form-group" style="width: 19%; display: inline-block;" id="table_2" >
+			                    		{{ render_field(join_form.tablename2, class_="form-control") }}
+			                    	</div>
+			                    	<div class="form-group" style="width: 19%; display: inline-block;" id="attr_2">
+			                    		{{ render_field(join_form.attribute2, class_="form-control") }}
+			                    	</div>
+			                    	<div class="form-group" style="width: 19%; display: inline-block;">
+			                    		{{ render_field(join_form.newname, class_="form-control", placeholder="New Table Name") }}
+			                    	</div>
+			                    </div>
+			                    <div class="text-right" style="padding-right: 3em;">
+		                			<input id="join" class="btn btn-primary" type="submit" value="Join Tables">
+		                		</div>
 		                    </form>
 			        		<!-- JOIN FORM -->
 			        	</div>
 		     		</div>
 		    	</div>
+
+		    	<script>
+		    		$(function() {
+		    			$('#natural_type').hide();
+		    		});
+
+		    		$('#join_type').change(function() {
+		    			if($('#join_type option:selected').text() == "Natural join") {
+		    				$('#natural_join_div').show();
+		    				$('#natural_type').show();
+		    				$('#attr_1').hide();
+		    				$('#attr_2').hide();
+		    				$('#table_1').show();
+		    				$('#table_2').show();
+		    			}
+		    			else {
+		    				$('#natural_join_div').hide();
+		    				$('#natural_type').hide();
+		    				$('#attr_1').show();
+		    				$('#attr_2').show();
+		    				$('#table_1').show();
+		    				$('#table_2').show();
+		    			}
+		    		});
+		    	</script>
 		    {% endif %}
 	  	</div>		
 	{% endif %}
