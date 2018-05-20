@@ -131,7 +131,8 @@ class QueryExecutor:
             raise self.SyntaxError(e.__context__) from e
 
         json_string = data_frame.to_json(orient='values')
-        return json_string
+        cols = data_frame.columns.values.tolist()
+        return (cols, json_string)
 
 
     def __assert_permitted_statement(self, statement_obj):
