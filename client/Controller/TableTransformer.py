@@ -378,6 +378,8 @@ class TableTransformer:
         """
         attr_type = self.get_attribute_type(tablename, attribute)
         resulting_table = self.get_resulting_table(tablename, new_name)
+        if resulting_table != tablename:
+            self.set_to_overwrite() #The next call should overwrite the newly created table.
         #If the attribute is not of string type then forcing will have no effect, so we can proceed as normal.
         if SQLTypeHandler().is_string(attr_type) is False:
             self.change_attribute_type(resulting_table, attribute, to_type, data_format, length, new_name)
@@ -394,11 +396,16 @@ class TableTransformer:
             data_format = self.__readable_format_to_postgres(to_type, data_format)
             pattern = self.__get_datetime_regex(to_type, data_format)
 
+        else:
+            pass
+            
+
         query_args = [sql.Identifier(self.schema), sql.Identifier(resulting_table), sql.Identifier(attribute)]
-        self.db_connection.cursor().execute(sql.SQL("DELETE FROM {}.{} WHERE ({} !~ %s )").format(*query_args, [pattern]))
+        self.db_connection.cursor().execute(sql.SQL("DELETE FROM {}.{} WHERE ({} !~ %s )").format(*query_args), [pattern])
         self.db_connection.commit()
         #If we were to create a new table for this operation, this already happened, so overwrite the newly created table.
-        if self.replace is False: self.set_to_overwrite
+        if self.replace is False:
+            self.set_to_overwrite
         self.change_attribute_type(resulting_table, attribute, to_type,  data_format, length, new_name)
 
     def find_and_replace(self, tablename, attribute, value, replacement, exact=True, replace_all=True, new_name=""):
