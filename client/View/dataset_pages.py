@@ -1004,8 +1004,7 @@ def _custom_query(dataset_id):
         abort(404)
 
     dataset = DatasetManager.getDataset(dataset_id)
-    write = DatasetPermissionsManager.userHasSpecifiedAccessTo(setid=dataset_id, userid=session['userdata']['userid'], minimum_perm_type="write")
-                or session['userdata']['admin']
+    write = DatasetPermissionsManager.userHasSpecifiedAccessTo(setid=dataset_id, userid=session['userdata']['userid'], minimum_perm_type="write") or session['userdata']['admin']
 
     qe = dataset.getQueryExecutor(write_perm = write)
 
