@@ -259,6 +259,7 @@ def history(dataset_id, tablename):
                                             history_form = form)
 # ENDFUNCTION
 
+# TODO error messages
 @dataset_pages.route('/dataset/<int:dataset_id>/jointables', methods=['POST'])
 @require_login
 @require_writeperm

@@ -49,6 +49,7 @@ class TableUploadForm(FlaskForm):
     """Form to upload tables."""
     data_file = FWFileField('File', [FWFileRequired("No file selected."), FilenameCheck("Invalid filename. Only alphanumeric characters and underscore allowed. Only csv, zip, sql and dump files allowed.", "[A-Za-z0-9][A-Za-z0-9_]+\\.(sql|csv|zip|dump)")])
     columnnames_included = BooleanField('Column names included in files? (CSV only)', default = True)
+    automatic_types = BooleanField('Automatic type detection', default=False)
 # ENDCLASS
 
 class DownloadDatasetCSVForm(FlaskForm):
@@ -80,12 +81,19 @@ class DownloadTableSQLForm(FlaskForm):
 # ENDCLASS
 
 class TableJoinForm(FlaskForm):
-    '''Test Form for Dynamic Fields'''
+    """Form to join two tables together."""
     tablename1 = SelectField('First Table', choices=[], id='tablename1')
-    attribute1 = SelectField('First Table Attribute', choices=[], id='attribute1')
     tablename2 = SelectField('Second Table', choices=[], id='tablename2')
+
+    jointype = SelectField('Join type',              choices = [('NORMAL', 'Normal join'),('NATURAL', 'Natural join')])
+    join_subtype = SelectField('Join specification', choices = [('INNER', 'Inner join'),('LEFT', 'Left outer join'),('RIGHT', 'Right outer join'),('FULL', 'Full outer join')])
+
+    # only on normal join
+    attribute1 = SelectField('First Table Attribute', choices=[], id='attribute1')
     attribute2 = SelectField('Second Table Attribute', choices=[], id='attribute2')
-    newname = StringField('New Table Name', [InputRequired(message="New table name is required."), Regexp('^[A-Za-z0-9][A-Za-z0-9]+$')])
+
+    newname    = StringField('New Table Name', [InputRequired(message="New table name is required."), Regexp('^[A-Za-z0-9][A-Za-z0-9]+$')])
+
 
     def fillForm(self, tables):
         self.tablename1.choices = [(table, table) for table in tables]
