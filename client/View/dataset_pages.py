@@ -260,6 +260,7 @@ def history(dataset_id, tablename):
 # ENDFUNCTION
 
 # TODO error messages
+# TODO check for non-existing select-attr fields
 @dataset_pages.route('/dataset/<int:dataset_id>/jointables', methods=['POST'])
 @require_login
 @require_writeperm
@@ -278,6 +279,7 @@ def join_tables(dataset_id):
 
     table1_name = str(form.tablename1.data)
     table2_name = str(form.tablename2.data)
+    newtable_name = str(form.newname.data)
 
     # check if tables exist.
     if not (table1_name in dataset.getTableNames() and table2_name in dataset.getTableNames()):
@@ -287,6 +289,7 @@ def join_tables(dataset_id):
     table1_info = dataset.getTableViewer(table1_name)
     table2_info = dataset.getTableViewer(table2_name)
 
+    # fill anyways
     form.fillTable1(table1_info.get_attributes())
     form.fillTable2(table2_info.get_attributes())
 
@@ -294,13 +297,25 @@ def join_tables(dataset_id):
         flash_errors(form)
         return redirect(url_for('dataset_pages.home', dataset_id=dataset_id))
 
-    tt = dataset.getTableTransformer(table2_name)
+    # retrieve attr data
+    table1_attr = form.attribute1.data
+    table2_attr = form.attribute2.data
+
+    join_type = form.join_type.data
+    join_subtype = form.join_subtype.data
+
+    tj = dataset.getTableJoiner(table1 = table1_name, table2=table2_name, newtable=newtable_name)
 
     try:
-        tt.join_tables(form.tablename1.data, form.tablename2.data, [form.attribute1.data], [form.attribute2.data], form.newname.data)
+        if join_type == "normal":
+            # tj.normal_join([table1_attr],[table2_attr], join_subtype)
+            tj.normal_join([table1_attr],[table2_attr])
+        else:
+            tj.natural_join(type=join_subtype)
         flash(message="Tables joined", category="success")
     except Exception as e:
         flash(message="An error occurred. Details: " + str(e), category="error")
+    
     return redirect(url_for('dataset_pages.home', dataset_id=dataset_id))
 # ENDFUNCTION
 
@@ -863,27 +878,6 @@ def _get_attr1_options(dataset_id):
 @require_writeperm
 def _get_attr2_options(dataset_id):
     tablename = request.args.get('tablename2', '01', type=str)
-
-    if not DatasetManager.existsID(dataset_id):
-        abort(404)
-
-    dataset = DatasetManager.getDataset(dataset_id)
-
-    if tablename not in dataset.getTableNames():
-        abort(404)
-
-    tv = dataset.getTableViewer(tablename)
-
-    options = [(option, option) for option in tv.get_attributes()]
-
-    return jsonify(options)
-# ENDFUNCTION
-
-@dataset_pages.route('/dataset/<int:dataset_id>/_get_table_attrs')
-@require_login
-@require_readperm
-def _get_table_attrs(dataset_id):
-    tablename = request.args.get('tablename', type=str)
 
     if not DatasetManager.existsID(dataset_id):
         abort(404)

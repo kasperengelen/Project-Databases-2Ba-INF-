@@ -85,8 +85,8 @@ class TableJoinForm(FlaskForm):
     tablename1 = SelectField('First Table', choices=[], id='tablename1')
     tablename2 = SelectField('Second Table', choices=[], id='tablename2')
 
-    jointype = SelectField('Join type',              choices = [('NORMAL', 'Normal join'),('NATURAL', 'Natural join')])
-    join_subtype = SelectField('Join specification', choices = [('INNER', 'Inner join'),('LEFT', 'Left outer join'),('RIGHT', 'Right outer join'),('FULL', 'Full outer join')])
+    join_type = SelectField('Join type',              choices = [('normal', 'Normal join'),('natural', 'Natural join')])
+    join_subtype = SelectField('Join specification', choices = [('inner', 'Inner join'),('left', 'Left outer join'),('right', 'Right outer join'),('full', 'Full outer join')])
 
     # only on normal join
     attribute1 = SelectField('First Table Attribute', choices=[], id='attribute1')

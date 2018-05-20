@@ -9,6 +9,7 @@ from Model.DatasetDownloader import DatasetDownloader
 from Controller.TableViewer import TableViewer
 from Controller.TableTransformer import TableTransformer
 from Controller.DatasetHistoryManager import DatasetHistoryManager
+from Controller.TableJoiner import TableJoiner
 
 class DatasetInfo:
     """Class that represents a dataset."""
@@ -96,6 +97,12 @@ class DatasetInfo:
         """Retrieves a DatasetDownloader object associated with the dataset."""
 
         return DatasetDownloader(setid=self.setid, db_connection=self.db_conn)
+    # ENDMETHOD
+
+    def getTableJoiner(self, table1, table2, newtable):
+        """Retrieves a TableJoiner object for this dataset and the specified table names."""
+
+        return TableJoiner(setid= self.setid, table1=table1, table2=table2, new_table=newtable, db_connection=self.db_conn)
     # ENDMETHOD
 
     def getUploader(self):
