@@ -17,12 +17,11 @@
                             {{render_field(queryform.query, class_="form-control", id="larger")}}
                         </div>
                         <div class="text-right" style="padding-top: 2em;">
-                        <a href="#" id="query_submit"  class="btn btn-primary">Query</a>
-                    </div>
+                            <a href="#" id="query_submit" class="btn btn-primary">Query</a>
+                        </div>
+
+                        
                     </form>
-
-
-                    
                 </div>
 
                 <div id="querymodal_body">
@@ -34,6 +33,7 @@
                          $('#testtable').empty();
                          $.ajax({
                             url: '{{ url_for("dataset_pages._custom_query", dataset_id=dataset_info.setid) }}',
+
                             type: 'POST',
                             success: function(data) {
                                 if(data.empty == true){
