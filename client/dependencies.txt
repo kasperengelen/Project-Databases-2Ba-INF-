@@ -7,3 +7,4 @@ passlib
 sqlalchemy
 mpld3
 configparser
+psqlparse==1.0rc5
