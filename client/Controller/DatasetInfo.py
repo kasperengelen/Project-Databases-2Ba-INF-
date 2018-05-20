@@ -10,6 +10,7 @@ from Controller.TableViewer import TableViewer
 from Controller.TableTransformer import TableTransformer
 from Controller.DatasetHistoryManager import DatasetHistoryManager
 from Controller.TableJoiner import TableJoiner
+from Controller.QueryExecutor import QueryExecutor
 
 class DatasetInfo:
     """Class that represents a dataset."""
