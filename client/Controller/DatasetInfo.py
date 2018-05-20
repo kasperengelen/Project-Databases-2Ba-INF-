@@ -108,10 +108,18 @@ class DatasetInfo:
     def getUploader(self):
         """Retrieve the TableUploader for this dataset."""
         return TableUploader(self.setid, self.db_conn)
+    # ENDMETHOD
 
     def getHistoryManager(self):
         """Retrieve the history manager for this dataset."""
         return DatasetHistoryManager(self.setid, self.db_conn)
+    # ENDMETHOD
+
+    def getQueryExecutor(self, write_perm):
+        """Retrieve the query executor associated with this set."""
+
+        return QueryExecutor(setid=self.setid, db_conn=self.db_conn, engine=get_sqla_eng(), write_perm=write_perm)
+    # ENDMETHOD
 
     def deleteTable(self, tablename):
         """Deletes the specified table from the dataset."""
