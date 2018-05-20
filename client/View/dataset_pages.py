@@ -975,3 +975,10 @@ def _test_page(dataset_id):
     }
 
     return jsonify(retval)
+
+@dataset_pages.route('/dataset/<int:dataset_id>/_custom_query', methods=['POST'])
+@require_login
+@require_writeperm
+def _custom_query(dataset_id):
+    pass
+# ENDFUNCTION
