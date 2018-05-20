@@ -11,7 +11,7 @@
             <div class="modal-body">
                 <div>
                     {% from "includes/_formhelpers.html" import render_field %}
-                    <form method="post" action="{{ url_for('dataset_pages._custom_query', dataset_id=dataset_info.setid ) }}" id="query_input">
+                    <form method="post" id="query_input">
                         {{ queryform.hidden_tag() }}
                         <div class="form-group">
                             {{render_field(queryform.query, class_="form-control", id="larger")}}
@@ -19,8 +19,6 @@
                         <div class="text-right" style="padding-top: 2em;">
                             <a href="#" id="query_submit" class="btn btn-primary">Query</a>
                         </div>
-
-                        
                     </form>
                 </div>
 
@@ -28,12 +26,20 @@
                     <table id='testtable'></table>
                 </div>
 
+                <div id="errorbox"></div>
+
                 <script>
-                    function draw_table() {
+                    function draw_table(first) {
+                        var dfr = $.Deferred();
+
                          $('#testtable').empty();
+                         $('#errorbox').empty();
+
+                         var formdata = $('#query_input').serialize();
+
                          $.ajax({
                             url: '{{ url_for("dataset_pages._custom_query", dataset_id=dataset_info.setid) }}',
-
+                            data: formdata,
                             type: 'POST',
                             success: function(data) {
                                 if(data.empty == true){
@@ -43,47 +49,58 @@
                                     $('#querymodal_body').show();
                                 }
 
-                                var html = "<thead><tr>";
+                                if(data.error != false) {
+                                    var html = "<thead><tr>";
 
-                                for(var key in data.columns) {
-                                    html += '<th>' + data.columns[key] + '</th>';
-                                }
-
-                                html += '</tr></thead><tbody>';
-
-                                for(var key in data.data) {
-                                    html += '<tr>';
-                                    for(var i = 0; i < data.data[key].length; i++) {
-                                        html += '<td>' + data.data[key][i] + '</td>';
+                                    for(var key in data.columns) {
+                                        html += '<th>' + data.columns[key] + '</th>';
                                     }
-                                    html += '</tr>';
+
+                                    html += '</tr></thead><tbody>';
+
+                                    for(var key in data.data) {
+                                        html += '<tr>';
+                                        for(var i = 0; i < data.data[key].length; i++) {
+                                            html += '<td>' + data.data[key][i] + '</td>';
+                                        }
+                                        html += '</tr>';
+                                    }
+
+                                    html += '</tbody>';
+
+                                    $('#testtable').append(html);
+
+                                    if($.fn.dataTable.isDataTable('#testtable')){
+                                        test_table = $('#testtable').DataTable();
+                                     }
+                                     else {
+                                        var test_table = $('#testtable').DataTable( {
+                                            paging: true,
+                                            info: false,
+                                            autoWidth: false,
+                                            order: [[1, 'asc']]
+                                        } );
+                                    }
                                 }
-
-                                html += '</tbody>';
-
-                                $('#testtable').append(html);
-
-                                if($.fn.dataTable.isDataTable('#testtable')){
-                                    test_table = $('#testtable').DataTable();
-                                 }
-                                 else {
-                                    var test_table = $('#testtable').DataTable( {
-                                        paging: true,
-                                        info: false,
-                                        autoWidth: false,
-                                        order: [[1, 'asc']]
-                                    } );
+                                else {
+                                    if(first != true){
+                                        $('#errorbox').show();
+                                    }
+                                    else {
+                                        $('#errorbox').hide();
+                                    }
+                                    $('#errorbox').append('<p>' + data.error_msg + '</p>');
                                 }
                             }
-                         });
+                        });
+                        return dfr.promise();
                     };
 
                     $('#query_button').on('click', function() {
-                        draw_table();
+                        draw_table(true);
                     });    
 
                     $('#query_submit').on('click', function() {
-                        $('#query_input').submit();
                         draw_table();
                     })
 
