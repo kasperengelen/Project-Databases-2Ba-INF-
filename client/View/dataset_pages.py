@@ -207,12 +207,13 @@ def table_original(dataset_id, tablename):
     # ENDFOR
 
     return render_template('dataset_pages.table.html',
-                                                table_name      = tablename,
-                                                dataset_info    = dataset_info,
-                                                original        = True,
-                                                row_count       = row_count,
-                                                downloadform    = DownloadForm(),
-                                                attribute_list  = attribute_list)
+                                                table_name        = tablename,
+                                                dataset_info      = dataset_info,
+                                                original          = True,
+                                                row_count         = row_count,
+                                                download_csv_form = DownloadDatasetCSVForm(),
+                                                download_sql_form = DownloadTableSQLForm(),
+                                                attribute_list    = attribute_list)
 # ENDFUNCTION
 
 # TODO check if this works
@@ -910,15 +911,23 @@ def _get_table(dataset_id, tablename, original):
     # set current session row_count to the specified count
     session['rowcount'] = row_count
 
+
+
     if not DatasetManager.existsID(dataset_id):
         abort(404)
 
     dataset = DatasetManager.getDataset(dataset_id)
 
-    if not tablename in dataset.getTableNames():
-        abort(404)
+    if original:
+        if not tablename in dataset.getOriginalTableNames():
+            abort(404)
+    else:
+        if not tablename in dataset.getTableNames():
+            abort(404)
 
     tv = dataset.getTableViewer(tablename, original = original)
+
+
 
     data = tv.render_json(offset = start_nr, limit = row_count, order = True, ascending = (sort_order == 'asc'), on_column=col_nr)
 
