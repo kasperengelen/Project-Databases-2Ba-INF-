@@ -1001,6 +1001,8 @@ def _custom_query(dataset_id):
 
     form = CustomQueryForm(request.form)
 
+    print(form.query.data)
+
     if not DatasetManager.existsID(dataset_id):
         abort(404)
 
@@ -1018,7 +1020,7 @@ def _custom_query(dataset_id):
     }
 
     if not form.validate():
-        retval["error"] = False
+        retval["error"] = True
         # TODO retrieve errors
         retval["error_msg"] = "Invalid form."
 
@@ -1032,6 +1034,7 @@ def _custom_query(dataset_id):
         if result:
             retval["columns"] = result[0]
             retval["data"]    = json.loads(result[1])
+            retval["empty"]   = False
     except Exception as e:
         # TODO error message
         retval["error"] = True
