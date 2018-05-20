@@ -9,19 +9,40 @@
             </div>  
 
             <div class="modal-body">
-                <div id="querymodal_body">
-                    <table id='testtable'>
+                <div>
+                    {% from "includes/_formhelpers.html" import render_field %}
+                    <form method="post" action="{{ url_for('admin_pages.edit_dataset') }}" id="query_input">
+                        {{ queryform.hidden_tag() }}
+                        <div class="form-group">
+                            {{render_field(queryform.query, class_="form-control", id="larger")}}
+                        </div>
+                        <div class="text-right" style="padding-top: 2em;">
+                        <a href="#" id="testbtn"  class="btn btn-primary">Query</a>
+                    </div>
+                    </form>
 
-                    </table>
+
+                    
+                </div>
+
+                <div id="querymodal_body">
+                    <table id='testtable'></table>
                 </div>
 
                 <script>
                     function draw_table() {
-
+                         $('#testtable').empty();
                          $.ajax({
                             url: '{{ url_for("dataset_pages._test_page", dataset_id=dataset_info.setid) }}',
                             type: 'POST',
                             success: function(data) {
+                                if(data.empty == true){
+                                    $('#querymodal_body').hide();
+                                }                                
+                                else {
+                                    $('#querymodal_body').show();
+                                }
+
                                 var html = "<thead><tr>";
 
                                 for(var key in data.columns) {
@@ -52,17 +73,19 @@
                                         autoWidth: false,
                                         order: [[1, 'asc']]
                                     } );
-
-
-                                 }                                
+                                }
                             }
                          });
                     };
 
                     $('#query_button').on('click', function() {
                         draw_table();
-                    });         
+                    });    
 
+                    $('#testbtn').on('click', function() {
+                        draw_table();
+                        $('#query_input').submit();
+                    })
 
                 </script>
             </div>

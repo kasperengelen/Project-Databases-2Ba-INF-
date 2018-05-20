@@ -1,7 +1,7 @@
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField as FWFileField, FileRequired as FWFileRequired
 from wtforms import StringField, PasswordField, TextAreaField, SelectField, HiddenField, FileField, BooleanField, IntegerField
-from wtforms.widgets import HiddenInput
+from wtforms.widgets import HiddenInput, TextArea
 from wtforms.validators import Length, InputRequired, Email, EqualTo, Regexp
 from View.form_utils import EnumCheck, FilenameCheck
 
@@ -124,7 +124,7 @@ class HistoryForm(FlaskForm):
 class CustomQueryForm(FlaskForm):
     """Form to issue user-made queries to the server."""
 
-    query = StringField('Query', [InputRequired("Query is required.")])
+    query = TextAreaField('Query', [InputRequired("Query is required.")], widget=TextArea())
 # ENDCLASS
 
 
