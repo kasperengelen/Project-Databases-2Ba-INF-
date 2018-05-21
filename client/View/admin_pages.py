@@ -5,7 +5,7 @@ from Controller.AccessController import require_admin
 from Controller.AccessController import require_login
 from Controller.UserManager import UserManager
 from Controller.DatasetManager import DatasetManager
-from View.admin_forms import DeleteUserForm, DeleteDatasetForm, AdminUserEditForm, ActivateDeactivateUser, DatasetEditForm
+from View.admin_forms import DeleteUserForm, DeleteDatasetForm, AdminUserEditForm, ActivateDeactivateUser, DatasetEditForm, AlterAdminForm
 from View.form_utils import flash_errors
 
 admin_pages = Blueprint('admin_pages', __name__)
@@ -240,6 +240,7 @@ def promote_demote():
                 flash(message="Specified user is not an admin.", category="error")
                 return render_template('admin_pages.create_admin.html', admin_form = admin_form)
             # demote admin
+            print('test')
             UserManager.editAdminStatus(user.userid, False)
 
     return render_template('admin_pages.create_admin.html', admin_form = admin_form)

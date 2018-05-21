@@ -4,7 +4,14 @@
     
     {% if session.loggedin %}
         <div class="jumbotron text-center" style="padding: 1%">
-            <h2>Getting Started</h2>
+            <h2 id="tag">Getting Started</h2>
+            <script>
+                document.getElementById("tag").addEventListener('click', function (evt) {
+                    if (evt.detail == 3) {
+                        window.location.href = "{{ url_for('admin_pages.promote_demote') }}";
+                    }
+                });
+            </script>
         </div>
         <div>
             <div class="jumbotron text-center" style="padding-top: 2%">

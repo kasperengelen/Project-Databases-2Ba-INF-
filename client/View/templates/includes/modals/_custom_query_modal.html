@@ -22,7 +22,7 @@
                     </form>
                 </div>
 
-                <div id="querymodal_body">
+                <div id="querymodal_body" style="overflow-x: auto;">
                     <table id='testtable'></table>
                 </div>
 
@@ -30,7 +30,6 @@
 
                 <script>
                     function draw_table(first) {
-                        var dfr = $.Deferred();
 
                          $('#testtable').empty();
                          $('#errorbox').empty();
@@ -93,7 +92,6 @@
                                 }
                             }
                         });
-                        return dfr.promise();
                     };
 
                     $('#query_button').on('click', function() {

@@ -1,0 +1,36 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+	
+	<div class="jumbotron text-center" style="padding: 1%">
+        <div class="pull-left">
+            <a data-hover="tooltip" title="Previous" href="/" class="btn btn-primary">
+				<span class="glyphicon glyphicon-share-alt" style="-webkit-transform: scaleX(-1); transform: scaleX(-1);"></span></a>
+        </div>
+        <div class="text-center">
+            <h2>Promote/Demote User</h2>
+        </div>
+    </div>
+
+    <div class="jumbotron text-center" style="padding: 1%">
+        <div class="text-left">
+            <div class="panel-body">
+                <form method="post" action="{{ url_for('admin_pages.promote_demote') }}">
+                    {% from "includes/_formhelpers.html" import render_field %}
+                    {{ admin_form.csrf_token }}
+                    <div class="form-group" style="width: 45%; display: inline-block;">
+                        {{render_field(admin_form.email, class_="form-control")}}
+                    </div>
+                    <div class="form-group" style="width: 20%; display: inline-block;">
+                        {{render_field(admin_form.action, class_="form-control")}}
+                    </div>
+                    <div class="form-group" style="width: 30%; display: inline-block;">
+                        {{render_field(admin_form.pincode, class_="form-control")}}
+                    </div>
+                    <p><input type="submit" class="btn btn-primary" value="Promote/Demote"></p>
+                </form>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
