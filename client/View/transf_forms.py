@@ -25,6 +25,7 @@ class TransformationFormBase(FlaskForm):
             field.validate(form)
 
         else:
+            # make sure the supplied data is erased if no new table is needed
             field.data = ""
 
     def get_table_name(self, original_tablename):
