@@ -110,12 +110,13 @@ def transform_extractdatetime(dataset_id, tablename):
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
 # ENDFUNCTION
 
-# TODO attrname from POST parameter
-@transf_callbacks.route('/dataset/<int:dataset_id>/table/<string:tablename>/transform/deleteattr/<string:attrname>/', methods=['POST'])
+@transf_callbacks.route('/dataset/<int:dataset_id>/table/<string:tablename>/transform/deleteattr', methods=['POST'])
 @require_login
 @require_writeperm
-def transform_deleteattr(dataset_id, tablename, attrname):
+def transform_deleteattr(dataset_id, tablename):
     """Callback for delete attribute transformation."""
+
+    attrname = request.form.get('attribute_name', type=str)
 
     if not DatasetManager.existsID(dataset_id):
         abort(404)
