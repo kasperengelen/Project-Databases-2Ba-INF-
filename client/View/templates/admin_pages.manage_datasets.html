@@ -50,15 +50,9 @@
                     <td><a href="{{ url_for('dataset_pages.home', dataset_id=dataset.datasetinfo.setid) }}">{{ dataset.datasetinfo.name }}</a></td>
                     <td>{{ dataset.datasetinfo.desc }}</td>
                     <td>{% include "includes/modals/_admin_edit_dataset_modal.html" %}</td>
-                    <td>{% from "includes/_formhelpers.html" import render_field %}
-                        <input type="hidden" id="input" value="delete this dataset?">
-                        <form method="post" action="{{ url_for('admin_pages.delete_dataset') }}" name="remove" onsubmit="return check()">
-                            {{ dataset.deleteform.hidden_tag() }}
-                            <button id="remove{{ dataset.datasetinfo.setid }}" style="border: none; background-color: transparent;" type="submit">
-                                <span class="glyphicon glyphicon-remove"></span>
-                            </button>
-                        </form>
-                    </td>
+                    <td><a href="#" style="color: black;" data-toggle="modal" data-target="#deleteDatasetModal{{ dataset.datasetinfo.setid  }}">
+                            <span class="glyphicon glyphicon-remove"></span></a>
+                        {% include "includes/modals/_admin_delete_dataset_modal.html" %}</td>
                 </tr>
             {% endfor %}
         </tbody>

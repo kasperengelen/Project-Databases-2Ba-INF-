@@ -63,31 +63,35 @@
                             Deactive
                         {% endif %}
                     </td>
-                    <td>{% from "includes/_formhelpers.html" import render_field %}
-                        <form method="post" action="{{ url_for('admin_pages.set_user_activation') }}" name="activate">
-                            {{ user.activationform.hidden_tag() }}
-                            {% if user.activationform.new_activation_status.data == False %}
-                            <button style="border: none; background-color: transparent;" type="submit" id="activate{{ user.userinfo.userid }}">
-                                <span class="glyphicon glyphicon-stop"></span>
-                            </button>
-                            {% else %}
-                            <button style="border: none; background-color: transparent;" type="submit" id="activate{{ user.userinfo.userid }}">
-                                <span  class="glyphicon glyphicon-play"></span>
-                            </button>
-                            {% endif %}
-                        </form>
-                    </td>
+                    {% if user.userinfo.userid != session.userdata.userid %}
+                        <td>{% from "includes/_formhelpers.html" import render_field %}
+                            <form method="post" action="{{ url_for('admin_pages.set_user_activation') }}" name="activate">
+                                {{ user.activationform.hidden_tag() }}
+                                {% if user.activationform.new_activation_status.data == False %}
+                                <button style="border: none; background-color: transparent;" type="submit" id="activate{{ user.userinfo.userid }}">
+                                    <span class="glyphicon glyphicon-stop"></span>
+                                </button>
+                                {% else %}
+                                <button style="border: none; background-color: transparent;" type="submit" id="activate{{ user.userinfo.userid }}">
+                                    <span  class="glyphicon glyphicon-play"></span>
+                                </button>
+                                {% endif %}
+                            </form>
+                        </td>
+                    {% else %}
+                        <td></td>
+                    {% endif %}
                     <td>
                         {% include "includes/modals/_admin_edit_user_modal.html" %}
                     </td>
-                    <td>{% from "includes/_formhelpers.html" import render_field %}
-                        <input type="hidden" id="input" value="delete this user?">
-                        <form method="post" action="{{ url_for('admin_pages.delete_user') }}" id="remove{{ user.userinfo.userid }}"
-                            onsubmit="return check()">
-                            {{ user.deleteform.hidden_tag() }}
-                            <button style="border: none; background-color: transparent;" type="submit" id="remove{{ user.userinfo.userid }}" ><span class="glyphicon glyphicon-remove"></span></button>
-                        </form>
-                    </td>
+                    {% if user.userinfo.userid != session.userdata.userid %}
+                        <td><a href="#" style="color: black;" data-toggle="modal" data-target="#deleteUserModal{{ user.userinfo.userid  }}">
+                                <span class="glyphicon glyphicon-remove"></span></a>
+                            {% include "includes/modals/_admin_delete_user_modal.html" %}
+                        </td>
+                    {% else %}
+                        <td></td>
+                    {% endif %}
                 </tr>
             {% endfor %}
             </tbody>

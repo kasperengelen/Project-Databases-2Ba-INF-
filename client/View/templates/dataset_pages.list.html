@@ -53,12 +53,9 @@
 						<td>{{ dataset.datasetinfo.desc }}</td>
 						<td>{{ dataset.permtype }}</td>
 						<input type="hidden" id="input" value="leave this dataset?">
-						<td><form method="post" action="{{ url_for('dataset_pages.leave', dataset_id=dataset.datasetinfo.setid) }}" name="leave"
-								onsubmit="return check()">
-								 <button style="border: none; background-color: transparent;" type="submit" id="leave">
-	                                <span  class="glyphicon glyphicon-log-out"></span>
-	                            </button>
-							</form>
+						<td><a href="#" style="color: black" data-toggle="modal" data-target="#leaveDatasetModal{{ dataset.datasetinfo.setid }}">
+								<span class="glyphicon glyphicon-log-out"></span></a>
+							{% include "includes/modals/_leave_dataset_modal.html" %}
 						</td>
 					</tr>					
 				{% endfor %}
