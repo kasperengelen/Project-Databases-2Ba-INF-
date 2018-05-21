@@ -69,13 +69,16 @@ class DatasetHistoryManager:
             show_all: True if all entries for the dataset should be shown, False implies history for a specific table
             transformation_type: If show_all is False, all the history entries of table_name will returned in json.
         """
+        print(reverse_order, show_all, table_name)
         dict_cur = self.db_connection.cursor(cursor_factory=psycopg2.extras.DictCursor)
         if show_all is False:
             query = ("SELECT * FROM system.dataset_history WHERE setid = %s AND (table_name = %s OR origin_table = %s)"
-                     " LIMIT %s OFFSET %s")
+                     " ORDER BY transformation_date DESC LIMIT %s OFFSET %s")
             dict_cur.execute(sql.SQL(query), [self.setid, table_name, table_name, limit, offset])
         else:
-            query = "SELECT * FROM system.dataset_history WHERE setid = %s LIMIT %s OFFSET %s"
+            query = "SELECT * FROM system.dataset_history WHERE setid = %s ORDER BY transformation_date DESC LIMIT %s OFFSET %s"
+            if reverse_order is True:
+                query.replace('DESC', 'ASC', 1)
             dict_cur.execute(sql.SQL(query), [self.setid, limit, offset])
 
         all_rows = dict_cur.fetchall()
