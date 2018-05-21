@@ -8,6 +8,7 @@ from psycopg2 import sql
 from Model.DatabaseConfiguration import DatabaseConfiguration
 from flask import abort
 
+
 class FileException(Exception):
     def __init__(self, message):
         super().__init__(message)
@@ -17,6 +18,7 @@ class InvalidFileExtention(FileException):
     # exception thrown if the file is of an unsupported type
     def __init__(self):
         super().__init__("File type is unsupported")
+
 
 class EmptyFileException(FileException):
     # exception thrown if file is empty

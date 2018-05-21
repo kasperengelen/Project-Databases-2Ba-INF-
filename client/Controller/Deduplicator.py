@@ -4,6 +4,7 @@ import numpy as np
 import psycopg2
 from psycopg2 import sql
 from Model.DatabaseConfiguration import DatabaseConfiguration
+from Model.QueryManager import QueryManager
 from recordlinkage.datasets import load_krebsregister
 
 class Deduplicator:
@@ -29,6 +30,7 @@ class Deduplicator:
         self.clusters = list()
         # entries that will be removed after submit() is called
         self.entries_to_remove = set()
+        self.query_man = QueryManager(self.db_connection, None)
 
         query = "SELECT * FROM \"{}\".\"{}\";".format(self.schema, self.tablename)
         self.dataframe = pd.read_sql(query, self.engine)
@@ -40,13 +42,7 @@ class Deduplicator:
         :return a list of DataFrameWrappers that each represent a set of similar entries"""
 
         col_names = list(self.dataframe)
-
-        self.cur.execute("SELECT column_name, data_type FROM information_schema.columns "
-                            "WHERE table_schema = '{}' AND table_name = '{}'".format(self.schema, self.tablename))
-        types = self.cur.fetchall()
-        types_dict = dict()
-        for tuple in types:
-            types_dict[tuple[0]] = tuple[1]
+        types_dict = self.query_man.get_col_types(self.schema, self.tablename)
 
         indexer = rl.SortedNeighbourhoodIndex(on=exact_match, window=3)
         pairs = indexer.index(self.dataframe)

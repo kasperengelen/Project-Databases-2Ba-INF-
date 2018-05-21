@@ -54,6 +54,22 @@ class QueryManager:
         table_names = [t[0] for t in result]
         return table_names
 
+    def get_col_types(self, schema, tablename):
+        cur = self.db_conn.cursor()
+        cur.execute("SELECT column_name, data_type FROM information_schema.columns "
+                         "WHERE table_schema = '{}' AND table_name = '{}'".format(schema, tablename))
+        types = cur.fetchall()
+        types_dict = dict()
+        for tuple in types:
+            types_dict[tuple[0]] = tuple[1]
+        return types_dict
+
+    def get_col_names(self, schema, tablename):
+        self.dict_cur.execute("SELECT column_name,  FROM information_schema.columns "
+                         "WHERE table_schema = '{}' AND table_name = '{}'".format(schema, tablename))
+        col_names = self.dict_cur.fetchall()
+        return col_names
+
     def __check_specified_params(self, tablename, specified_fields):
         tablefields = self.__get_table_fields(tablename)
 
