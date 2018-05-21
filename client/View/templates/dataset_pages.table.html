@@ -235,7 +235,7 @@
 									{{ attr.name }}
 									{% if original != True %}
 				                        <form method="post" id="deleteform_{{ attr.name }}" action="{{ url_for('transf_callbacks.transform_deleteattr', dataset_id=dataset_info.setid, tablename=table_name) }}">
-				                        	<input type="hidden" id="attribute_name_{{ attr.name }}" value="{{ attr.name }}">
+				                        	<input type="hidden" id="attribute_name_{{ attr.name }}" name="attribute_name" value="{{ attr.name }}">
 					                        <button style="border: none; background-color: transparent;" type="submit">
 					                       		<span class="glyphicon glyphicon-trash"></span>
 					                       	</button>

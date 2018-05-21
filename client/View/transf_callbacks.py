@@ -118,6 +118,8 @@ def transform_deleteattr(dataset_id, tablename):
 
     attrname = request.form.get('attribute_name', type=str)
 
+    print(attrname)
+
     if not DatasetManager.existsID(dataset_id):
         abort(404)
 
