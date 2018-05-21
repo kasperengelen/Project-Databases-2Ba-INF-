@@ -371,13 +371,15 @@ class TableTransformer:
             
         self.history_manager.write_to_history(resulting_table, tablename, attribute, [to_type, data_format, length], 1)
 
-    def force_attribute_type(self, tablename, attribute, to_type, data_format="", length='1', force_mode=True, new_name=""):
+    def force_attribute_type(self, tablename, attribute, to_type, data_format="", length=None, force_mode=True, new_name=""):
         """In case that change_attribute_type fails due to elements that can't be converted
         this method will force the conversion by deleting the row containing the bad element.
         The parameters are identical to change_attribute_type().
         """
         attr_type = self.get_attribute_type(tablename, attribute)
         resulting_table = self.get_resulting_table(tablename, new_name)
+        if resulting_table != tablename:
+            self.set_to_overwrite() #The next call should overwrite the newly created table.
         #If the attribute is not of string type then forcing will have no effect, so we can proceed as normal.
         if SQLTypeHandler().is_string(attr_type) is False:
             self.change_attribute_type(resulting_table, attribute, to_type, data_format, length, new_name)
@@ -394,11 +396,29 @@ class TableTransformer:
             data_format = self.__readable_format_to_postgres(to_type, data_format)
             pattern = self.__get_datetime_regex(to_type, data_format)
 
+        cur = self.db_connection.cursor()
         query_args = [sql.Identifier(self.schema), sql.Identifier(resulting_table), sql.Identifier(attribute)]
-        self.db_connection.cursor().execute(sql.SQL("DELETE FROM {}.{} WHERE ({} !~ %s )").format(*query_args, [pattern]))
-        self.db_connection.commit()
+
+        if force_mode is True:
+            query1 = "DELETE FROM {}.{} WHERE ({} !~ %s )"
+            query2 = "DELETE FROM {}.{} WHERE char_length({}) < %s"
+
+        else:
+            query1 = "UPDATE {0}.{1} SET {2} = NULL WHERE ({2} !~ %s )"
+            query2 = "UPDATE {0}.{1} SET {2} = NULL WHERE char_length({}) < %s"
+            
+
+        if pattern != "":
+            cur.execute(sql.SQL(query1).format(*query_args), [pattern])
+            self.db_connection.commit()
+
+        if length is not None:
+            cur.execute(sql.SQL(query2).format(*query_args), [length])
+            self.db_connection.commit()
+            
         #If we were to create a new table for this operation, this already happened, so overwrite the newly created table.
-        if self.replace is False: self.set_to_overwrite
+        if self.replace is False:
+            self.set_to_overwrite
         self.change_attribute_type(resulting_table, attribute, to_type,  data_format, length, new_name)
 
     def find_and_replace(self, tablename, attribute, value, replacement, exact=True, replace_all=True, new_name=""):

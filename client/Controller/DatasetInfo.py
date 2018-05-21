@@ -74,9 +74,6 @@ class DatasetInfo:
 
     def getTableViewer(self, tablename, original = False):
         """Retrieves a TableViewer object associated with the specified set and table."""
-        
-        if not tablename in self.getTableNames():
-            raise RuntimeError("Invalid tablename.")
 
         return TableViewer(setid = self.setid, 
                             tablename = tablename, 
@@ -87,9 +84,6 @@ class DatasetInfo:
 
     def getTableTransformer(self, tablename):
         """Retrieves a TableTransformer object associated with the specified set and table."""
-
-        if not tablename in self.getTableNames():
-            raise RuntimeError("Invalid tablename.")
 
         return TableTransformer(self.setid, self.db_conn, get_sqla_eng())
     # ENDMETHOD
