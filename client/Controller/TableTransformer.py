@@ -1,6 +1,8 @@
 import sys
 import os
 import math
+import copy
+
 import psycopg2
 from psycopg2 import sql
 import sqlalchemy
@@ -72,11 +74,11 @@ class TableTransformer:
         cur.execute(sql.SQL("ALTER TABLE {}.{} DROP COLUMN IF EXISTS {}").format(*query_args))
         self.db_connection.commit()
 
-    def drop_table(self, schema, table):
-        """Execute query that drops an SQL table."""
+    def drop_table(self, table):
+        """Execute query that drops an SQL table of the dataset."""
         cur = self.db_connection.cursor()
-        query_args = [sql.Identifier(schema), sql.Identifier(table)]
-        cur.execute(sql.SQL("DROP TABLE {}.{} IF EXISTS {}").format(*query_args))
+        query_args = [sql.Identifier(self.schema), sql.Identifier(table)]
+        cur.execute(sql.SQL("DROP TABLE IF EXISTS {}.{}").format(*query_args))
         self.db_connection.commit()
         
     def create_copy_of_table(self, schema1, tablename1, schema2, tablename2):
@@ -352,7 +354,7 @@ class TableTransformer:
         self.db_connection.commit()
         return to_type
     
-    def change_attribute_type(self, tablename, attribute, to_type, data_format="", length='1', new_name=""):
+    def change_attribute_type(self, tablename, attribute, to_type, data_format="", length=None, new_name=""):
         """Change the type of a table attribute.
 
         Parameters:
@@ -363,11 +365,19 @@ class TableTransformer:
         """
         cur_type = self.get_attribute_type(tablename, attribute)
         resulting_table = self.get_resulting_table(tablename, new_name)
-        
-        if (cur_type == 'character varying') or (cur_type == 'character'):
-            to_type = self.__convert_character(resulting_table, attribute, to_type, data_format, length)
-        else:
-            to_type = self.__convert_numeric(resulting_table, attribute, to_type, length)
+        try:
+            if SQLTypeHandler().is_string(cur_type):
+                to_type = self.__convert_character(resulting_table, attribute, to_type, data_format, length)
+            else:
+                to_type = self.__convert_numeric(resulting_table, attribute, to_type, length)
+        except:
+            self.db_connection.commit()
+            #If anything went wrong in the transformation, the new table has to be dropped.
+            if resulting_table != tablename:
+                self.drop_table(resulting_table)
+            #Reraise the exception for the higher level caller
+            raise
+            
             
         self.history_manager.write_to_history(resulting_table, tablename, attribute, [to_type, data_format, length], 1)
 
@@ -421,8 +431,10 @@ class TableTransformer:
             self.set_to_overwrite
         self.change_attribute_type(resulting_table, attribute, to_type,  data_format, length, new_name)
 
+
     def find_and_replace(self, tablename, attribute, value, replacement, exact=True, replace_all=True, new_name=""):
-        """Method that finds values and replaces them with the provided argument.
+        """Method that finds values and replaces them with the provided argument. This wraps around an internal
+        method that does the heavy work.
 
         Parameters:
             value: The value that needs to found so it can be replaced.
@@ -431,9 +443,22 @@ class TableTransformer:
             replace_all : A boolean indicating whether a found substring should be replaced or the string should be replaced.
                           True replaces the whole string, False replaces the found substring with the replacement.
         """
-        cur_type = self.get_attribute_type(tablename, attribute)
         resulting_table = self.get_resulting_table(tablename, new_name)
+        args = locals()
+        params = {k:v for k,v in args.items() if k != 'self'}
+        try:
+            self.__execute_normal_find_and_replace(**params)
 
+        except:
+            if resulting_table != tablename:
+                self.db_connection.commit()
+                self.drop_table(resulting_table)
+            raise
+            
+    def __execute_normal_find_and_replace(self, resulting_table, tablename, attribute, value, replacement, exact, replace_all, new_name):
+        """Internal method that executes the wanted behavior specified in find_and_replace."""
+        cur_type = self.get_attribute_type(tablename, attribute)
+        
         original_value = value            
         if exact is True:
             sql_query = "UPDATE {0}.{1} SET {2} = %s WHERE {2} = %s"
@@ -464,6 +489,7 @@ class TableTransformer:
                 raise self.ValueError("Could not perform find-and-replace due to an invalid input value for this attribute.")
             self.db_connection.commit()
         self.history_manager.write_to_history(resulting_table, tablename, attribute, [original_value, replacement, exact, replace_all], 8)
+        
 
     def regex_find_and_replace(self, tablename, attribute, regex, replacement, case_sens=False, new_name=""):
         """Method that finds values with a provided regex and replaces them with a provided replacement.
@@ -474,8 +500,21 @@ class TableTransformer:
             case_sens: A boolean indicating whether the regex is case sensitive. True for sensitive, False for insensitive.
             new_name: The name of the new table if the TableTransformer is not set to overwrite.
         """
-        cur_type = self.get_attribute_type(tablename, attribute)
         resulting_table = self.get_resulting_table(tablename, new_name)
+        args = locals()
+        params = {k:v for k,v in args.items() if k != 'self'}
+        try:
+            self.__execute_regex_find_and_replace(**params)
+
+        except:
+            if resulting_table != tablename:
+                self.db_connection.commit()
+                self.drop_table(resulting_table)
+            raise
+
+    def __execute_regex_find_and_replace(self, resulting_table, tablename, attribute, regex, replacement, case_sens, new_name):
+        """Internal method that executes the wanted behavior specified in regex_find_and_replace."""
+        cur_type = self.get_attribute_type(tablename, attribute)
         if SQLTypeHandler().is_string(cur_type) is False:
             raise self.AttrTypeError("Find-and-replace using regular epxressions is only possible with character type attributes. "
                                      "Please convert the needed attribute to VARCHAR or CHAR.")
