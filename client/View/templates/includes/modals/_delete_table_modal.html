@@ -1,0 +1,24 @@
+<div id="deleteTableModal{{ table }}" class="modal fade text-left" role="dialog">
+    <div class="modal-dialog">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Delete this table?: {{ table }}</h4>
+            </div>
+            <div class="modal-body">
+            	{% from "includes/_formhelpers.html" import render_field %}
+                <form method="post" action="{{ url_for('dataset_pages.delete_table', dataset_id=dataset_info.setid, tablename=table) }}"
+                    name="delete{{ table }}">
+                    <div class="text-right">
+                        <button type="submit" class="btn btn-primary">Delete Table</button>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+        <!-- Modal content -->
+    </div>
+</div>

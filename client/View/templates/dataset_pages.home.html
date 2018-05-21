@@ -206,12 +206,9 @@
 									<td>
 										<a href="{{ url_for('dataset_pages.table', dataset_id=dataset_info.setid, tablename=table) }}"> {{ table }}</a>
 									</td>
-									<td>
-										<input type="hidden" id="input" value="delete this table?">
-										<form method="post" action="{{ url_for('dataset_pages.delete_table', dataset_id=dataset_info.setid, tablename=table) }}"
-													name="delete{{ table }}" onsubmit="return check()">
-												<label for="delete{{ table }}" class="glyphicon glyphicon-remove"></label>
-												<input href="" id="delete{{ table }}" style="visibility: hidden;" type="submit"></form>
+									<td>{% include "includes/modals/_delete_table_modal.html" %}
+										<a href="#" style="color: black;" data-toggle="modal" data-target="#deleteTableModal{{ table }}">
+                           					<span class="glyphicon glyphicon-remove"></span></a>
 									</td>
 								</tr>
 							{% endfor %}
