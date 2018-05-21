@@ -463,7 +463,7 @@ class TestTransformerCopy(unittest.TestCase):
         result = cur.fetchall()
         self.assertIsNotNone(result)
         
-    def incomplete_test_delete_rows_using_conditions(self):
+    def test_delete_rows_using_conditions(self):
         """Test method of TableTransformer deletes rows by using provided predicates. This will result in a new table."""
         cur = self.db_connection.cursor()
         predicate1 = ['string', '=', 'C-Corp']
