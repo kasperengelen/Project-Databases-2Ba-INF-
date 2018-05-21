@@ -47,6 +47,13 @@ class QueryManager:
     def existsDataset(self):
         pass
 
+    def get_table_names(self, schema):
+        self.dict_cur.execute("SELECT table_name FROM information_schema.tables WHERE table_schema = %s;",
+                         [schema])
+        result = self.dict_cur.fetchall()
+        table_names = [t[0] for t in result]
+        return table_names
+
     def __check_specified_params(self, tablename, specified_fields):
         tablefields = self.__get_table_fields(tablename)
 
