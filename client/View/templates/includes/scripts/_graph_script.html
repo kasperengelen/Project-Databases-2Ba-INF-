@@ -16,11 +16,7 @@
 				}
 			})
 
-			$.get("{{ url_for('dataset_pages._get_colstats', dataset_id=dataset_info.setid, tablename=table_name, attr_name=input) }}", input, function(response) {
-				if(response != "") {	
-					$('#col_stats').append(response);
-				}
-			})
+			
 		});
 
 		$('#view_attr').change(function() {
@@ -43,10 +39,6 @@
 					$('#chart_freq').append(response);
 			}
 			});
-			$.get("{{ url_for('dataset_pages._get_colstats', dataset_id=dataset_info.setid, tablename=table_name, attr_name=input) }}", input, function(response) {
-				if(response != "") {	
-					$('#col_stats').append(response);
-				}
-			})
+			
 		});
 	</script>

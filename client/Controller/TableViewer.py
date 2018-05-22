@@ -150,9 +150,6 @@ class TableViewer:
         # # close the figure to free memory
         # plt.close(fig)
 
-        print(labels)
-        print(sizes)
-
         return (labels, sizes)
 
     def get_most_frequent_value(self, columnname):
