@@ -825,7 +825,7 @@ class TableTransformer:
         #Create query for larger/smaller deletion of outlier
         sql_query = "UPDATE {0}.{1} SET {2} = %s  WHERE {2} cmp %s".replace('cmp', comparator)
         self.db_connection.cursor().execute(sql.SQL(sql_query).format(sql.Identifier(self.schema), sql.Identifier(resulting_table),
-                                                                                    sql.Identifier(attribute)), (value, replacement))
+                                                                                    sql.Identifier(attribute)), (replacement, value))
         self.db_connection.commit()
         self.history_manager.write_to_history(resulting_table, tablename, attribute, [larger, value, replacement], 3)
         
