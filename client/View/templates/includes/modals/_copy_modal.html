@@ -11,7 +11,7 @@
                 <form method="post" action="{{ url_for('dataset_pages.copy_table') }}">
                     {{ copy_form.hidden_tag() }}
                     <div class="form-group">
-                        {{render_field(copy_form.new_name, class_="form-control")}}
+                        {{render_field(copyform.tablename, class_="form-control")}}
                     </div>
                     <div class="text-right">
                         <button type="submit" class="btn btn-primary">Copy Table</button>
