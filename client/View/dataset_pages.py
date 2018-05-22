@@ -803,12 +803,11 @@ def _get_hist_num(dataset_id, tablename):
     return hist_num
 # ENDFUNCTION
 
-@dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>/_get_chart_freq')
+@dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>/<string:attr_name>/_get_chart_freq')
 @require_login
 @require_readperm
-def _get_chart_freq(dataset_id, tablename):
+def _get_chart_freq(dataset_id, tablename, attr_name):
     """Callback for dynamic forms."""
-    attr_name = request.args.get('view_attr', '01', type=str)
 
     if not DatasetManager.existsID(dataset_id):
         abort(404)
@@ -825,7 +824,13 @@ def _get_chart_freq(dataset_id, tablename):
         abort(404)
 
     chart_freq = tv.get_frequency_pie_chart(attr_name)
-    return chart_freq
+
+    retval = {
+        "labels": chart_freq[0],
+        "sizes": chart_freq[1]
+    }
+
+    return jsonify(retval)
 # ENDFUNCTION
 
 @dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>/_get_colstats')

@@ -60,21 +60,60 @@
 		        			<form name="select_attr">
 		        				{{ attr_form.hidden_tag() }}
 				        		<div class="form-group" style="width: 20%;">
-				        			{{render_field(attr_form.view_attr, class_="form-control")}}
+				        			{{render_field(attr_form.view_attr, class_="form-control", id="view_attr")}}
 				        		</div>
 				        	</form>
 			        	</div>
 			       	    <div style="float: right;" id="col_stats"></div>
-			        	</br>
-			        	</br>
-			        	</br>
-			        	</br>
-			        	</br>
-			        	</br>
-			        	<div>
-				        	<div class="text-center" style="display: inline-block;" id="chart_freq"></div>
-				        	<div class="text-center" style="display: inline-block;" id="hist_num"></div>
-				        </div>
+
+			       	    <div class="col-sm-4 col-sm-offset-4">
+			       	    	<canvas id="PieChart"></canvas>
+						</div>
+						<script>
+    						function getRandomColor() {
+							    var r = Math.floor(Math.random() * 255);
+							    var g = Math.floor(Math.random() * 255);
+							    var b = Math.floor(Math.random() * 255);
+							    return "rgb(" + r + "," + g + "," + b + ")";
+							}
+
+							function getRandomColors(labels) {
+							    var colors = [];
+							    for (var i in labels) {
+							  		colors.push(getRandomColor())
+							    }
+							    return colors;
+							}
+
+							function getPieChart(attr_name) {
+
+							    var formdata = attr_name;
+							    alert(formdata);
+
+							    $.ajax({
+							        url: "{{ url_for('dataset_pages._get_chart_freq', dataset_id=dataset_info.setid, tablename=table_name, attr_name='temp_attr') }}".replace('temp_attr', formdata),
+							        success: function(response) {
+							            var ctx = document.getElementById('PieChart');
+							            var myChart = new Chart(ctx, {
+							              type: 'pie',
+							              data: {
+							                labels: response.labels,
+							                datasets: [
+							                  { 
+							                    data: response.sizes,
+							                    backgroundColor: getRandomColors(response.labels)
+							                  }
+							                ]
+							              }
+							            });
+							        }
+							    });
+							}
+
+							$('#view_attr').change(function() {
+							    getPieChart($('#view_attr option:selected').text());
+							});
+							</script>
 
 				    </div>
 	        	</div>
@@ -276,7 +315,7 @@
 
 	{% include "includes/scripts/_new_table_form_script.html" %}
 	{% include "includes/scripts/_type_conversion_script.html" %}
-	{% include "includes/scripts/_graph_script.html" %}
+	{% include "includes/scripts/_chartjs_script.html" %}
 	{% include "includes/scripts/_predicate_script.html" %}
 
 
