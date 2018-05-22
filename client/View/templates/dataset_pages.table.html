@@ -42,13 +42,14 @@
 					{% include "includes/modals/_download_modal.html" %}
 					<div style="padding-top: 1em;"></div>
 
-					<a id="file" href="#" class="btn btn-primary" data-toggle="modal" data-hover="tooltip" title="Copy" data-target="#copyForm_{{ table }}">
+					<a id="copy" href="#" class="btn btn-primary" data-toggle="modal" data-hover="tooltip" title="Copy" data-target="#copyForm">
 						<span class="glyphicon glyphicon-copy"></span></a>
+					{% include "includes/modals/_copy_modal.html" %}
 
 					<div style="padding-top: 1em;"></div>
 
 					{% if original != True %}
-					<a id="file" class="btn btn-primary" data-toggle="collapse" data-hover="tooltip" title="Statistics" data-parent="#accordion" href="#view">
+					<a id="stats" class="btn btn-primary" data-toggle="collapse" data-hover="tooltip" title="Statistics" data-parent="#accordion" href="#view">
 						<span class="glyphicon glyphicon-stats"></span></a>
 					{% endif %}
 				</div>
@@ -172,7 +173,7 @@
 
 				            <li><a id="query_button" href="#" data-toggle="modal" data-target="#querymodal">Custom Query/Queries</a></li>
 
-				            <li><a href="#" data-toggle="modal" data-target="#datadedupmodal_1">Data Deduplication</a></li>
+				            <li><a href="#" data-toggle="modal" data-target="#datadedupmodal">Data Deduplication</a></li>
 
 				            <li><a href="#" data-toggle="modal" data-target="#predicatemodal" onclick="$('#predicate_newtable').hide()">
 				            	Delete Rows using Predicate</a></li>

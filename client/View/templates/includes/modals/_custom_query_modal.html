@@ -55,7 +55,7 @@
                                         html += '<th>' + data.columns[key] + '</th>';
                                     }
 
-                                    html += '</tr></thead><tbody>';
+                                    html += '<th></th></tr></thead><tbody>';
 
                                     for(var key in data.data) {
                                         html += '<tr>';
@@ -76,8 +76,7 @@
                                         var test_table = $('#testtable').DataTable( {
                                             paging: true,
                                             info: false,
-                                            autoWidth: false,
-                                            order: [[1, 'asc']]
+                                            autoWidth: false
                                         } );
                                     }
                                 }

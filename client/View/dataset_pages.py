@@ -557,7 +557,7 @@ def copy_table(dataset_id, tablename):
 
     tt = dataset.getTableTransformer(tablename)
 
-    newname = form.new_table_name.data
+    newname = form.table_name.data
 
     if newname in dataset.getTableNames():
         flash(message="Specified tablename is already in use.", category="error")
@@ -566,7 +566,7 @@ def copy_table(dataset_id, tablename):
 
     # do copy
     tt.copy_table(old=tablename, new=newname)
-
+    flash(message="Table copy has been made.", category="success")
     return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=newname))
 # ENDFUNCTION
 
@@ -1102,7 +1102,7 @@ def dedup_find_matches(dataset_id, tablename):
     table_list = dd.find_matches(dataset_id, tablename, exactmatch_list, ignore_list)
 
     return render_template('dataset_pages.deduplication.html', table_list=table_list,
-                    attributes=tv.get_attributes())
+                                                                attributes=tv.get_attributes())
 # ENDFUNCTION
 
 @dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>/clusterid/<int:clusterid>/keep_entries/<list:keep_entries>/dedup/deduplicate_cluster', methods=['POST'])
@@ -1154,4 +1154,5 @@ def dedup_cancel(dataset_id, tablename):
 
     dd = dataset.getDeduplicator()
     dd.clean_data(dataset_id, tablename)
+>>>>>>> aac5d7433bafbdd47abece8e57e76cef50c907da
 # ENDFUNCTION
