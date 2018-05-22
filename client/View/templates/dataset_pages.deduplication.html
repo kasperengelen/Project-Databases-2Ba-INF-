@@ -129,7 +129,7 @@
 
 	    			var next_id = cur_id + 1;
 
-	    			if(next_id != {{ table_list|length }} ){
+	    			if(next_id <= {{ table_list|length }} ){
 	    				alert(next_id + " - " + {{ table_list|length }})
 	    				$('#' + next_id).show();
 	    				$(this).parent().parent().hide();
