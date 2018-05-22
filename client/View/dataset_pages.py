@@ -1069,3 +1069,35 @@ def _custom_query(dataset_id):
 
     return jsonify(retval)
 # ENDFUNCTION
+
+@dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>/dedup/find_matches', methods = ['POST'])
+@require_login
+@require_writeperm
+def transform_dedup_find_matches(dataset_id, tablename):
+    """Callback to get a list of html tables. Each table represents a set of matches"""
+    if not DatasetManager.existsID(dataset_id):
+        abort(404)
+
+    dataset = DatasetManager.getDataset(dataset_id)
+
+    if tablename not in dataset.getTableNames():
+        abort(404)
+
+    tv = dataset.getTableViewer(tablename)
+
+    form = DedupForm(request.form)
+
+    form.fillForm(tv.get_attributes())
+
+    if not form.validate():
+        flash(message="Invalid form", category="error")
+        return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
+    # ENDIF
+
+    dd = dataset.getDeduplicator()
+
+    ignore_list = form.ignore_list.data
+    exactmatch_list = form.exactmatch_list.data
+
+    return dd.find_matches(dataset_id, tablename, exactmatch_list, ignore_list)
+# ENDFUNCTION
