@@ -1,3 +1,4 @@
+import json
 import recordlinkage as rl
 import pandas as pd
 import numpy as np
@@ -79,7 +80,7 @@ class Deduplicator:
                 for row_id in cluster:
                     rows.append(dataframe.ix[row_id])
                 paired_table = pd.DataFrame(rows)
-                certain_paired_rows.append(paired_table.to_json(orient='values', date_format='iso'))
+                certain_paired_rows.append(json.loads(paired_table.to_json(orient='values', date_format='iso')))
 
             self.entries_to_remove[(setid, tablename)] = set()
 
@@ -103,9 +104,21 @@ class Deduplicator:
 
             # if the current cluster is the last one, submit the changes
             if cluster_id == len(self.clusters[(setid, tablename)]) - 1:
-                self.submit(setid, tablename)
+                self.__submit(setid, tablename)
 
-        def submit(self, setid, tablename):
+        def yes_to_all(self, setid, tablename, cluster_id):
+            """Deduplicate_cluster automatically starting from cluster_id to the last cluster"""
+
+            for i in range(cluster_id, len(self.clusters[(setid, tablename)])):
+                self.deduplicate_cluster(setid, tablename, i)
+
+        def clean_data(self, setid, tablename):
+            """Clean all data in Deduplicator associated with the table"""
+            self.dataframes.pop((setid, tablename), None)
+            self.clusters.pop((setid, tablename), None)
+            self.entries_to_remove.pop((setid, tablename), None)
+
+        def __submit(self, setid, tablename):
             """Deletes all duplicates and alters the table in the database"""
             schema = str(setid)
 
@@ -117,12 +130,6 @@ class Deduplicator:
             dataframe.to_sql(tablename, self.engine, schema=schema, if_exists="replace", index=False)
 
             self.clean_data(setid, tablename)
-
-        def clean_data(self, setid, tablename):
-            """Clean all data in Deduplicator associated with the table"""
-            self.dataframes.pop((setid, tablename), None)
-            self.clusters.pop((setid, tablename), None)
-            self.entries_to_remove.pop((setid, tablename), None)
 
         def __cluster_pairs(self, pairs):
             """Group pairs together, for example:
