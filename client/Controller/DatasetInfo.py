@@ -11,6 +11,7 @@ from Controller.TableTransformer import TableTransformer
 from Controller.DatasetHistoryManager import DatasetHistoryManager
 from Controller.TableJoiner import TableJoiner
 from Controller.QueryExecutor import QueryExecutor
+from Controller.Deduplicator import Deduplicator
 
 class DatasetInfo:
     """Class that represents a dataset."""
@@ -114,6 +115,11 @@ class DatasetInfo:
         """Retrieve the query executor associated with this set."""
 
         return QueryExecutor(setid=self.setid, db_conn=self.db_conn, engine=get_sqla_eng(), write_perm=write_perm)
+    # ENDMETHOD
+
+    def getDeduplicator(self):
+        """Retrieve the Deduplicator for this dataset."""
+        return Deduplicator(self.db_conn, get_sqla_eng())
     # ENDMETHOD
 
     def deleteTable(self, tablename):
