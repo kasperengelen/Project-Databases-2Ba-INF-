@@ -1,7 +1,7 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, SelectField, BooleanField, IntegerField, FloatField, SelectMultipleField
 from wtforms.widgets import HiddenInput
-from wtforms.validators import Length, InputRequired, Email, EqualTo, Regexp
+from wtforms.validators import Length, InputRequired, Email, EqualTo, Regexp, NumberRange
 from wtforms.form import Form
 from View.form_utils import EnumCheck, FilenameCheck
 
