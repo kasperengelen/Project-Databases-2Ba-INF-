@@ -99,7 +99,8 @@
 
 	    			$('#table_{{ loop.index }} tbody').on('click', 'input', function() {
 	    				if($(this).is(':checked')){
-	    					table_elements.push(parseInt($(this).attr('name')));
+	    					var el = parseInt($(this).attr('name'));
+	    					table_elements.push(el);
 	    				}
 	    				else {
 	    					var idx = table_elements.indexOf($(this).attr('name'));
