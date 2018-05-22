@@ -9,7 +9,8 @@
             </div>   
 
             <div class="modal-body">
-                <form method="post" action="" name="dedupform"> 
+                <form method="post" action="{{ url_for('dataset_pages.transform_dedup_find_matches', dataset_id=dataset_info.setid, tablename=table_name) }}"
+                    name="dedupform"> 
                     {% from "includes/_formhelpers.html" import render_field %}
                     {{ dedup_form.hidden_tag() }}
                     <div class="form-group" style="width: 40%; display: inline-block;">
