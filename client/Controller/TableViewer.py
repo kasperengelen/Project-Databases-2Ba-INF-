@@ -133,7 +133,7 @@ class TableViewer:
             sizes.append(other)
             labels.append("< 5%")
 
-        return labels, sizes
+        return (labels, sizes)
 
     def get_most_frequent_value(self, columnname):
         """Return the value that appears most often in the column"""

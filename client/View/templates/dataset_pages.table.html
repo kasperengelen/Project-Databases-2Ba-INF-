@@ -6,7 +6,7 @@
 			<div class="col-sm-3 text-left">
 				<a data-hover="tooltip" title="Previous" href="{{ url_for('dataset_pages.home', dataset_id=dataset_info.setid) }}" class="btn btn-primary">
 					<span class="glyphicon glyphicon-share-alt" style="-webkit-transform: scaleX(-1); transform: scaleX(-1);"></span></a>
-				<div style="padding-top: 3em;"></div>
+				<div style="padding-top: 4.5em;"></div>
 				{% if original != True %}
 				<div>
 					<button id="transbutton" type="button" class="btn btn-primary" data-hover="tooltip" title="Transformations" data-toggle="collapse"
@@ -40,7 +40,13 @@
 					<a id="file" href="#" class="btn btn-primary" data-toggle="modal" data-hover="tooltip" title="Download" data-target="#downloadFormModal_{{ table }}">
 						<span class="glyphicon glyphicon-download-alt"></span></a>
 					{% include "includes/modals/_download_modal.html" %}
-					<div style="padding-top: 3em;"></div>
+					<div style="padding-top: 1em;"></div>
+
+					<a id="file" href="#" class="btn btn-primary" data-toggle="modal" data-hover="tooltip" title="Copy" data-target="#copyForm_{{ table }}">
+						<span class="glyphicon glyphicon-copy"></span></a>
+
+					<div style="padding-top: 1em;"></div>
+
 					{% if original != True %}
 					<a id="file" class="btn btn-primary" data-toggle="collapse" data-hover="tooltip" title="Statistics" data-parent="#accordion" href="#view">
 						<span class="glyphicon glyphicon-stats"></span></a>
@@ -70,6 +76,20 @@
 			       	    	<canvas id="PieChart"></canvas>
 						</div>
 						<script>
+							$(function() {
+								getPieChart($('#view_attr option:selected').text());
+
+								var input = {
+									view_attr: $('#view_attr option:selected').text()
+								}
+
+								$.get("{{ url_for('dataset_pages._get_colstats', dataset_id=dataset_info.setid, tablename=table_name, attr_name=input) }}", input, function(data) {
+										if(data != "") {	
+											$('#col_stats').append(data);
+										}
+									})
+							});
+
     						function getRandomColor() {
 							    var r = Math.floor(Math.random() * 255);
 							    var g = Math.floor(Math.random() * 255);
@@ -88,7 +108,6 @@
 							function getPieChart(attr_name) {
 
 							    var formdata = attr_name;
-							    alert(formdata);
 
 							    $.ajax({
 							        url: "{{ url_for('dataset_pages._get_chart_freq', dataset_id=dataset_info.setid, tablename=table_name, attr_name='temp_attr') }}".replace('temp_attr', formdata),
@@ -112,6 +131,18 @@
 
 							$('#view_attr').change(function() {
 							    getPieChart($('#view_attr option:selected').text());
+
+							    $('#col_stats').empty();
+
+							    var input = {
+									view_attr: $('#view_attr option:selected').text()
+								}
+
+							    $.get("{{ url_for('dataset_pages._get_colstats', dataset_id=dataset_info.setid, tablename=table_name, attr_name=input) }}", input, function(data) {
+										if(data != "") {	
+											$('#col_stats').append(data);
+										}
+									})
 							});
 							</script>
 

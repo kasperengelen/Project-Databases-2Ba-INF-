@@ -243,7 +243,7 @@ class DatasetHistoryManager:
 
     def __rowstring_generator3(self, dict_obj):
         param = dict_obj['parameters']
-        if param[0] == True:
+        if param[0] == 'True':
             operand = 'larger'
         else:
             operand = 'smaller'

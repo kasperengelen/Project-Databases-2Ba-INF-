@@ -103,7 +103,7 @@ class DatasetInfo:
 
     def getUploader(self):
         """Retrieve the TableUploader for this dataset."""
-        return TableUploader(self.setid, self.db_conn)
+        return TableUploader(self.setid, db_connection=self.db_conn, engine=get_sqla_eng())
     # ENDMETHOD
 
     def getHistoryManager(self):
