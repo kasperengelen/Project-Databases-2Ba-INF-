@@ -1099,5 +1099,8 @@ def transform_dedup_find_matches(dataset_id, tablename):
     ignore_list = form.ignore_list.data
     exactmatch_list = form.exactmatch_list.data
 
-    return dd.find_matches(dataset_id, tablename, exactmatch_list, ignore_list)
+    table_list = dd.find_matches(dataset_id, tablename, exactmatch_list, ignore_list)
+
+    render_template('dataset_pages.deduplication.html', table_list = table_list,
+                                                        attributes = tv.get_attributes())
 # ENDFUNCTION
