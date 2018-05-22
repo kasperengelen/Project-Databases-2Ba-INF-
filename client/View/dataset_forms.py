@@ -82,18 +82,19 @@ class DownloadTableSQLForm(FlaskForm):
 
 class TableJoinForm(FlaskForm):
     """Form to join two tables together."""
-    tablename1 = SelectField('First Table', choices=[], id='tablename1')
+    tablename1 = SelectField('First Table',  choices=[], id='tablename1')
     tablename2 = SelectField('Second Table', choices=[], id='tablename2')
 
-    join_type = SelectField('Join type',              choices = [('normal', 'Normal join'),('natural', 'Natural join')])
+    join_type    = SelectField('Join type',          choices = [('normal', 'Normal join'),('natural', 'Natural join')])
     join_subtype = SelectField('Join specification', choices = [('inner', 'Inner join'),('left', 'Left outer join'),('right', 'Right outer join'),('full', 'Full outer join')])
 
     # only on normal join
     attribute1 = SelectField('First Table Attribute', choices=[], id='attribute1')
     attribute2 = SelectField('Second Table Attribute', choices=[], id='attribute2')
 
-    newname    = StringField('New Table Name', [InputRequired(message="New table name is required."), Regexp('^[A-Za-z0-9][A-Za-z0-9]+$')])
-
+    newname    = StringField('New Table Name', [InputRequired(message="New table name is required."), 
+                                                Regexp('^[A-Za-z0-9][A-Za-z0-9]+$'), 
+                                                Length(min=1, max=63, message="Table name needs to be between 1 and 63 characters long.")])
 
     def fillForm(self, tables):
         self.tablename1.choices = [(table, table) for table in tables]
@@ -135,4 +136,10 @@ class CustomQueryForm(FlaskForm):
     query = TextAreaField('Query', [InputRequired("Query is required.")], widget=TextArea())
 # ENDCLASS
 
+class CopyTableForm(FlaskForm):
+    """Form to make a copy of the table."""
 
+    table_name = StringField('Table Name', [InputRequired(message="Table name is required."), 
+                                            Regexp('^[A-Za-z0-9][A-Za-z0-9]+$'), 
+                                            Length(min=1, max=63, message="Table name needs to be between 1 and 63 characters long.")])
+# ENDCLASS

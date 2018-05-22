@@ -269,12 +269,19 @@ def transform_typeconversion(dataset_id, tablename):
 
     if do_force:
         try:
-            tt.force_attribute_type(tablename=tablename, 
-                                    attribute=form.select_attr.data, 
-                                    to_type=form.new_datatype.data, 
-                                    data_format=form.date_type.data,
-                                    force_mode = force_mode,
-                                    new_name= form.new_table_name.data)
+            # set none
+            if form.new_datatype.data == 'VARCHAR(255)':
+                form.char_amount.data = 255
+            elif form.new_datatype.data not in ['VARCHAR(n)', 'CHAR(n)']:
+                form.char_amount.data = None
+
+            tt.force_attribute_type(tablename   = tablename, 
+                                    attribute   = form.select_attr.data, 
+                                    to_type     = form.new_datatype.data, 
+                                    data_format = form.date_type.data,
+                                    length      = form.char_amount.data,
+                                    force_mode  = force_mode,
+                                    new_name    = form.new_table_name.data)
             flash(message="Attribute type changed.", category="success")
             redir_name = form.get_table_name(tablename)
         except Exception as e:
@@ -282,12 +289,12 @@ def transform_typeconversion(dataset_id, tablename):
             redir_name = tablename
     else:
         try:
-            tt.change_attribute_type(tablename=tablename, 
-                                     attribute=form.select_attr.data, 
-                                     to_type=form.new_datatype.data, 
-                                     data_format=form.date_type.data, 
-                                     length=form.char_amount.data,
-                                     new_name= form.new_table_name.data)
+            tt.change_attribute_type(tablename   = tablename, 
+                                     attribute   = form.select_attr.data, 
+                                     to_type     = form.new_datatype.data, 
+                                     data_format = form.date_type.data, 
+                                     length      = form.char_amount.data,
+                                     new_name    = form.new_table_name.data)
             flash(message="Attribute type changed.", category="success")
             redir_name = form.get_table_name(tablename)
         except Exception as e:
@@ -651,3 +658,5 @@ def transform_fillNullsCustomValue(dataset_id, tablename):
         flash(message="An error occurred. Details: " + str(e), category="error")
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
 # ENDFUNCTION
+
+# DEDUP CALLBACK

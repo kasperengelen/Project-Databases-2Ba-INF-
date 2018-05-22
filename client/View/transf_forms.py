@@ -1,7 +1,7 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, SelectField, BooleanField, IntegerField, FloatField
+from wtforms import StringField, SelectField, BooleanField, IntegerField, FloatField, SelectMultipleField
 from wtforms.widgets import HiddenInput
-from wtforms.validators import Length, InputRequired, Email, EqualTo, Regexp
+from wtforms.validators import Length, InputRequired, Email, EqualTo, Regexp, NumberRange
 from wtforms.form import Form
 from View.form_utils import EnumCheck, FilenameCheck
 
@@ -15,7 +15,7 @@ class TransformationFormBase(FlaskForm):
         if form.make_new_table.data: # only validate if the checkbox is clicked.
 
             requiredcheck = InputRequired(message="Table name is required.")
-            lengthcheck   = Length(min=3, max=20, message="Tablename needs to be between 3 and 20 characters long.")
+            lengthcheck   = Length(min=1, max=63, message="Tablename needs to be between 1 and 63 characters long.")
             regexcheck    = Regexp('^[A-Za-z0-9][A-Za-z0-9]+$')
 
             requiredcheck(form, field)
@@ -82,7 +82,7 @@ class DataTypeTransform(TransformationFormBase):
     """Form for datatype conversion transformation."""
     select_attr = SelectField('Attribute', choices=[], id='attribute')
     new_datatype = SelectField('New Datatype', choices=[], id='typeOptions')
-    char_amount = IntegerField('Character Amount', [InputRequired(message="Character amount is required.")], default=1)
+    char_amount = IntegerField('Character Amount', [InputRequired(message="Character amount is required."), NumberRange(min=1,max=1048576,message="N needs to be between 1 and 1048576.")], default=1)
     date_type = SelectField('Date/Time Format', choices=[], id="date_type")
 
     do_force = BooleanField('Force conversion if needed?', default=False)
@@ -219,3 +219,14 @@ class PredicateFormThree(TransformationFormBase):
     #ENDMETHOD
 # ENDCLASS
 
+class DedupForm(FlaskForm):
+    """Form to execute data deduplication."""
+
+    exactmatch_list = SelectMultipleField('Match exact', choices = []),
+    ignore_list = SelectMultipleField('Ignore', choices=[])
+
+    def fillForm(self, attr_list):
+        self.exactmatch_list.choices = [(attr, attr) for attr in attr_list]
+        self.ignore_list.choices = [(attr, attr) for attr in attr_list]
+    # ENDMETHOD
+# ENDCLASS
