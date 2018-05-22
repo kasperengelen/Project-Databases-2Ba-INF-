@@ -41,14 +41,14 @@
 						<span class="glyphicon glyphicon-download-alt"></span></a>
 					{% include "includes/modals/_download_modal.html" %}
 					<div style="padding-top: 1em;"></div>
-
+					{% if original != True %}
 					<a id="copy" href="#" class="btn btn-primary" data-toggle="modal" data-hover="tooltip" title="Copy" data-target="#copyForm">
 						<span class="glyphicon glyphicon-copy"></span></a>
 					{% include "includes/modals/_copy_modal.html" %}
 
 					<div style="padding-top: 1em;"></div>
 
-					{% if original != True %}
+					
 					<a id="stats" class="btn btn-primary" data-toggle="collapse" data-hover="tooltip" title="Statistics" data-parent="#accordion" href="#view">
 						<span class="glyphicon glyphicon-stats"></span></a>
 					{% endif %}
@@ -266,8 +266,11 @@
 
 			{% endif %}
 		
-		
-			<div id="tablediv" class="col-sm-9">
+			{% if original != True %}
+				<div id="tablediv" class="col-sm-9">
+			{% else %}
+				<div id="originaltablediv" class="col-sm-12">
+			{% endif %}
 				<style>
 					table {
 		       			border-collapse: collapse;

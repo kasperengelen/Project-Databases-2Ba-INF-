@@ -62,9 +62,9 @@ def transform_predicate(dataset_id, tablename):
         predicate_list.append(predicatethree.input3.data)
     
     try:
-        tt.delete_rows_using_predicate_logic(tablename=tablename, arg_list=predicate_list, new_name = form.new_table_name.data)
+        tt.delete_rows_using_predicate_logic(tablename=tablename, arg_list=predicate_list, new_name = predicateone.new_table_name.data)
         flash(message="Rows deleted according to predicate.", category="success")
-        return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=form.get_table_name(tablename)))
+        return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=predicateone.get_table_name(tablename)))
     except (TableTransformer.TTError) as e:
         flash(message=str(e), category="error")
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))

@@ -1099,10 +1099,11 @@ def dedup_find_matches(dataset_id, tablename):
     ignore_list = form.ignore_list.data
     exactmatch_list = form.exactmatch_list.data
 
-    print(ignore_list)
-    print(exactmatch_list)
-
     table_list = dd.find_matches(dataset_id, tablename, exactmatch_list, ignore_list)
+
+    if table_list == []:
+        flash(message="No duplicates found", category="error")
+        return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
 
     return render_template('dataset_pages.deduplication.html', table_list=table_list,
                                                                 attributes=tv.get_attributes(),
@@ -1131,19 +1132,16 @@ def dedup_deduplicate_cluster(dataset_id, tablename):
         clusterid = request.form.get('id', type=int)
         keep_entries = request.form.getlist('entries[]', type=int)
 
-    print(clusterid)
-    print(keep_entries)
-
     dd = dataset.getDeduplicator()
     dd.deduplicate_cluster(dataset_id, tablename, clusterid, keep_entries)
 
     return 'True'
 # ENDFUNCTION
 
-@dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>/clusterid/<int:clusterid>/dedup/yes_to_all', methods=['POST'])
+@dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>/dedup/yes_to_all', methods=['POST'])
 @require_login
 @require_writeperm
-def dedup_yes_to_all(dataset_id, tablename, clusterid):
+def dedup_yes_to_all(dataset_id, tablename):
     """Callback to automatically deduplicate starting from clusterid"""
     if not DatasetManager.existsID(dataset_id):
         abort(404)
@@ -1153,8 +1151,18 @@ def dedup_yes_to_all(dataset_id, tablename, clusterid):
     if tablename not in dataset.getTableNames():
         abort(404)
 
+    clusterid = 0
+
+    if request.method == "POST":
+        clusterid = request.form.get('id', type=int)
+
+    print(clusterid)
+
     dd = dataset.getDeduplicator()
     dd.yes_to_all(dataset_id, tablename, clusterid)
+
+
+    return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
 # ENDFUNCTION
 
 @dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>/dedup/cancel', methods=['POST'])
@@ -1172,4 +1180,6 @@ def dedup_cancel(dataset_id, tablename):
 
     dd = dataset.getDeduplicator()
     dd.clean_data(dataset_id, tablename)
+
+    return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
 # ENDFUNCTION

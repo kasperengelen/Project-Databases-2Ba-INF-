@@ -66,7 +66,8 @@
     			<div style="padding-top: 2em;"></div>
     			
     			<div class="pull-right">
-    				<a id="nextbtn_{{ loop.index }}" href="#" onclick="" class="btn btn-primary">Next</a>
+    				<a style="display: inline-block;" id="yestoall_{{ loop.index }}" href="#" class="btn btn-primary">Yes to All</a>
+    				<a style="display: inline-block;" id="nextbtn_{{ loop.index }}" href="#" class="btn btn-primary">Next</a>
     			</div>
     		</div>
     		<script>
@@ -139,6 +140,21 @@
 	    				table_elements = [];
 	    				window.location.href = "{{ url_for('dataset_pages.table', dataset_id=datasetid, tablename=table_name) }}"
 	    			}
+	    		});
+
+	    		$('#yestoall_{{ loop.index }}').on('click', function() {
+	    			var curid = parseInt($(this).parent().parent().attr('id'));
+	    			var cluster = curid -1;
+
+	    			$.ajax({
+	    				url: "{{ url_for('dataset_pages.dedup_yes_to_all', dataset_id=datasetid, tablename=table_name) }}",
+	    				type: "POST",
+	    				data: {"id":cluster},
+	    				success: function(response) {
+	    					alert('YES')
+	    					document.write(response);
+	    				}
+	    			});
 	    		});
     		</script>
     	{% endfor %}
