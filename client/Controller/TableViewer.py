@@ -131,7 +131,7 @@ class TableViewer:
 
         if other > 0:
             sizes.append(other)
-            labels.append("< 1%")
+            labels.append("< 5%")
 
         # # taken from https://stackoverflow.com/questions/6170246/how-do-i-use-matplotlib-autopct
         # def make_autopct(values):
