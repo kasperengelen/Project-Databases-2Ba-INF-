@@ -1,21 +1,23 @@
 <div id="leaveDatasetModal{{ dataset.datasetinfo.setid }}" class="modal fade text-left" role="dialog">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-sm">
         <!-- Modal content-->
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal">&times;</button>
-                <h4 class="modal-title">Leave this dataset?: {{ dataset.datasetinfo.name }}</h4>
+                <h4 class="modal-title">Leave this dataset?</h4>
             </div>
-            <div class="modal-body">
-            	{% from "includes/_formhelpers.html" import render_field %}
-                <form method="post" action="{{ url_for('dataset_pages.leave', dataset_id=dataset.datasetinfo.setid) }}" name="leave">
-                    <div class="text-right">
-                        <button class="btn btn-primary" type="submit" id="leave">Leave Dataset</button>
-                    </div>
-                </form>
-            </div>
+            
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <div class="pull-left">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
+
+                <div class="pull-right">
+                    {% from "includes/_formhelpers.html" import render_field %}
+                    <form method="post" action="{{ url_for('dataset_pages.leave', dataset_id=dataset.datasetinfo.setid) }}" name="leave">
+                        <button class="btn btn-primary" type="submit" id="leave">Leave Dataset</button>
+                    </form>
+                </div>
             </div>
         </div>
         <!-- Modal content -->

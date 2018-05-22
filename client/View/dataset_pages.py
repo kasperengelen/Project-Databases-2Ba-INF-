@@ -9,11 +9,12 @@ from Controller.DatasetPermissionsManager import DatasetPermissionsManager
 from Controller.TableViewer import TableViewer
 
 from Model.TableUploader import FileException as DLFileExcept
+from Controller.TableJoiner import JoinException
 
 from View.dataset_forms import DatasetForm, AddUserForm, RemoveUserForm, LeaveForm, TableUploadForm, TableJoinForm, AttributeForm, HistoryForm, AddUserForm, RemoveUserForm
-from View.dataset_forms import DownloadDatasetCSVForm, DownloadDatasetSQLForm, DownloadTableCSVForm, DownloadTableSQLForm, CustomQueryForm
+from View.dataset_forms import DownloadDatasetCSVForm, DownloadDatasetSQLForm, DownloadTableCSVForm, DownloadTableSQLForm, CustomQueryForm, CopyTableForm
 from View.transf_forms import FindReplaceForm, DataTypeTransform, NormalizeZScore, OneHotEncoding, RegexFindReplace, DiscretizeEqualWidth, ExtractDateTimeForm
-from View.transf_forms import DiscretizeEqualFreq, DiscretizeCustomRange, DeleteOutlier, FillNullsMean, FillNullsMedian, FillNullsCustomValue
+from View.transf_forms import DiscretizeEqualFreq, DiscretizeCustomRange, DeleteOutlier, FillNullsMean, FillNullsMedian, FillNullsCustomValue, DedupForm
 from View.transf_forms import PredicateFormOne, PredicateFormTwo, PredicateFormThree
 from View.form_utils import flash_errors
 
@@ -108,6 +109,7 @@ def table(dataset_id, tablename):
     predicatetwo_form     = PredicateFormTwo()
     predicatethree_form   = PredicateFormThree()
     extract_form          = ExtractDateTimeForm()
+    dedup_form            = DedupForm()
 
     # fill forms with data
     findrepl_form.fillForm(attrs)
@@ -127,6 +129,9 @@ def table(dataset_id, tablename):
     predicateone_form.fillForm(attrs)
     predicatetwo_form.fillForm(attrs)
     predicatethree_form.fillForm(attrs)
+    dedup_form.fillForm(attrs)
+
+
 
     # RETRIEVE USER PERMISSION
     perm_type = DatasetPermissionsManager.getPermForUserID(dataset_id, session['userdata']['userid'])
@@ -172,7 +177,9 @@ def table(dataset_id, tablename):
                                                 original              = False,
                                                 row_count             = row_count,
                                                 attribute_list        = attribute_list,
-                                                queryform             = CustomQueryForm())
+                                                queryform             = CustomQueryForm(),
+                                                copyform              = CopyTableForm(),
+                                                dedup_form            = dedup_form)
 # ENDFUNCTION
 
 @dataset_pages.route('/dataset/<int:dataset_id>/original_table/<string:tablename>')
@@ -260,8 +267,6 @@ def history(dataset_id, tablename):
                                             history_form = form)
 # ENDFUNCTION
 
-# TODO error messages
-# TODO check for non-existing select-attr fields
 @dataset_pages.route('/dataset/<int:dataset_id>/jointables', methods=['POST'])
 @require_login
 @require_writeperm
@@ -309,13 +314,12 @@ def join_tables(dataset_id):
 
     try:
         if join_type == "normal":
-            # tj.normal_join([table1_attr],[table2_attr], join_subtype)
-            tj.normal_join([table1_attr],[table2_attr])
+            tj.normal_join([table1_attr],[table2_attr], type=join_subtype)
         else:
             tj.natural_join(type=join_subtype)
         flash(message="Tables joined", category="success")
-    except Exception as e:
-        flash(message="An error occurred. Details: " + str(e), category="error")
+    except JoinException as e:
+        flash(message=str(e), category="error")
     
     return redirect(url_for('dataset_pages.home', dataset_id=dataset_id))
 # ENDFUNCTION
@@ -535,6 +539,37 @@ def delete_table(dataset_id, tablename):
 
     return redirect(url_for('dataset_pages.home', dataset_id = dataset_id))
 # ENDFUNCTION
+
+# TODO
+@dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>/copy', methods=['POST'])
+def copy_table(dataset_id, tablename):
+    """Callback to copy a table."""
+
+    form = CopyTableForm(request.form)
+
+    if not DatasetManager.existsID(dataset_id):
+        abort(404)
+
+    dataset = DatasetManager.getDataset(dataset_id)
+
+    if not tablename in dataset.getTableNames():
+        abort(404)
+
+    tt = dataset.getTableTransformer(tablename)
+
+    newname = form.new_table_name.data
+
+    if newname in dataset.getTableNames():
+        flash(message="Specified tablename is already in use.", category="error")
+        return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
+    # ENDIF
+
+    # do copy
+    tt.copy_table(old=tablename, new=newname)
+
+    return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=newname))
+# ENDFUNCTION
+
 
 @dataset_pages.route('/dataset/<int:dataset_id>/upload', methods=['POST'])
 @require_login
@@ -786,10 +821,10 @@ def _get_hist_num(dataset_id, tablename):
     return hist_num
 # ENDFUNCTION
 
-@dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>/_get_chart_freq')
+@dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>/<string:attr_name>/_get_chart_freq')
 @require_login
 @require_readperm
-def _get_chart_freq(dataset_id, tablename, attr):
+def _get_chart_freq(dataset_id, tablename, attr_name):
     """Callback for dynamic forms."""
 
     if not DatasetManager.existsID(dataset_id):
@@ -803,11 +838,17 @@ def _get_chart_freq(dataset_id, tablename, attr):
     tt = dataset.getTableTransformer(tablename)
     tv = dataset.getTableViewer(tablename)
 
-    if not attr in tv.get_attributes():
+    if not attr_name in tv.get_attributes():
         abort(404)
 
-    chart_freq = tv.get_frequency_pie_chart(attr)
-    return chart_freq
+    chart_freq = tv.get_frequency_pie_chart(attr_name)
+
+    retval = {
+        "labels": chart_freq[0],
+        "sizes": chart_freq[1]
+    }
+
+    return jsonify(retval)
 # ENDFUNCTION
 
 @dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>/_get_colstats')
@@ -978,22 +1019,6 @@ def _get_history_table(dataset_id, tablename):
 
     return jsonify(retval)
 # ENDFUNCTION
-
-@dataset_pages.route('/dataset/<int:dataset_id>/test', methods=['POST'])
-@require_login
-@require_writeperm
-def _test_page(dataset_id):
-    
-
-    retval = {
-        "data": [[1,2,3,4],[5,6,7,8],[9,10,11,12]],
-        "columns": ["A", "B", "C", "D"],
-        "empty": True,
-        "error": True,
-        "error_msg": "Some error"
-    }
-
-    return jsonify(retval)
 
 @dataset_pages.route('/dataset/<int:dataset_id>/_custom_query', methods=['POST'])
 @require_login

@@ -1,5 +1,5 @@
-<div  id="datadedupmodal_1" class="modal fade text-left" role="dialog">
-    <div class="modal-dialog">
+<div  id="datadedupmodal" class="modal fade text-left" role="dialog">
+    <div class="modal-dialog modal-lg">
     
         <!-- Modal content-->
         <div class="modal-content">
@@ -8,8 +8,43 @@
                 <h4 class="modal-title">Data Duplicates</h4>
             </div>   
 
-            
-            
+            <div class="modal-body">
+                <div id="dupformdiv">
+                    
+                </div>
+
+                <div  id="datadedupmodal_0" class="modal fade text-left" role="dialog"></div>
+
+                <script>
+                    function find_duplicates() {
+                        var formdata = $('#dupform').serialize();
+
+                        $.ajax({
+                            url: "{{ blabla }}",
+                            data: formdata,
+                            type: 'POST',
+                            success: function(data) {
+                                $('#dupformdiv').hide();
+
+                                var modal_string = '<div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header"><button type="button" class="close" data-dismiss="modal">&times;</button><h4 class="modal-title">Data Duplicates</h4></div><div class="modal-body">';
+
+                                
+
+                                $('#datadedupmodal_0').
+
+                                $('#datadedupmodal_0').modal('show');
+
+
+
+                            }
+                        });
+                    }
+
+                    $('#dupstart').on('click', function() {
+                        find_duplicates();
+                    });
+                </script>
+            </div>            
 
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
