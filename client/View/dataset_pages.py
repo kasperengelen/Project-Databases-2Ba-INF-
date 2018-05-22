@@ -1126,7 +1126,10 @@ def dedup_deduplicate_cluster(dataset_id, tablename):
 
     if request.method == "POST":
         clusterid = request.form.get('id', type=int)
-        keep_entries = request.form.getlist('entries')
+        keep_entries = request.form.getlist('entries[]')
+
+    print(clusterid)
+    print(keep_entries)
 
     dd = dataset.getDeduplicator()
     dd.deduplicate_cluster(dataset_id, tablename, clusterid, keep_entries)

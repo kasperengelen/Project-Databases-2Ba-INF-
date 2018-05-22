@@ -99,7 +99,7 @@
 
 	    			$('#table_{{ loop.index }} tbody').on('click', 'input', function() {
 	    				if($(this).is(':checked')){
-	    					table_elements.push($(this).attr('name'));
+	    					table_elements.push(parseInt($(this).attr('name')));
 	    				}
 	    				else {
 	    					var idx = table_elements.indexOf($(this).attr('name'));
@@ -117,16 +117,19 @@
 	    		$('#nextbtn_{{ loop.index }}').on('click', function() {
 	    			var cur_id = parseInt($(this).parent().parent().attr('id'));
 
+	    			var clusterid = cur_id -1;
+
 	    			$.ajax({
 	    				url: "{{ url_for('dataset_pages.dedup_deduplicate_cluster', dataset_id=datasetid, tablename=table_name) }}",
 	    				type: "POST",
-	    				data: {"entries":table_elements, "id":cur_id},
+	    				data: {"entries":table_elements, "id":clusterid},
 	    				success: function() {}
 	    			});
 
 	    			var next_id = cur_id + 1;
 
 	    			if(next_id != {{ table_list|length }} ){
+	    				alert(next_id + " - " + {{ table_list|length }})
 	    				$('#' + next_id).show();
 	    				$(this).parent().parent().hide();
 	    				table_elements = [];
