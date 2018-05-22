@@ -545,9 +545,25 @@ def copy_table(dataset_id, tablename):
 
     form = CopyTableForm(request.form)
 
+    if not DatasetManager.existsID(dataset_id):
+        abort(404)
+
+    dataset = DatasetManager.getDataset(dataset_id)
+
+    if not tablename in dataset.getTableNames():
+        abort(404)
+
+    tt = dataset.getTableTransformer(tablename)
+
     newname = form.new_table_name.data
 
+    if newname in dataset.getTableNames():
+        flash(message="Specified tablename is already in use.", category="error")
+        return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
+    # ENDIF
+
     # do copy
+    tt.copy_table(old=tablename, new=newname)
 
     return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=newname))
 # ENDFUNCTION

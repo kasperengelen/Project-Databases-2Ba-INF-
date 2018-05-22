@@ -240,7 +240,6 @@ def promote_demote():
                 flash(message="Specified user is not an admin.", category="error")
                 return render_template('admin_pages.create_admin.html', admin_form = admin_form)
             # demote admin
-            print('test')
             UserManager.editAdminStatus(user.userid, False)
 
     return render_template('admin_pages.create_admin.html', admin_form = admin_form)
