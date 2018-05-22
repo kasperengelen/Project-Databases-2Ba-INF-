@@ -30,24 +30,30 @@ class TableTransformer:
         self.db_connection = db_conn
         self.engine = engine
         self.history_manager = DatasetHistoryManager(setid, db_conn, track_history)
+
+    class TTError(Exception):
+        """
+        Base exception for all TableTransformer exceptions used to reference to these exceptions.
+        """
         
-    class AttrTypeError(Exception):
+    class AttrTypeError(TTError):
         """
         This exception is raised whenever an user attempts to perform a transformation on an attribute
         whose type is not supported by the called transformation.
         """
 
-    class ConversionError(Exception):
+    class ConversionError(TTError):
         """
         This exception is raised whenever an implicit type conversion of an attribute failed because of
         values that aren't possible to convert.
         """
 
-    class ValueError(Exception):
+    class ValueError(TTError):
         """
         This exception is raised whenever an operation is provided with an inappropiate value causing
         the operation to fail.
         """
+        
         
     def get_attribute_type(self, table, attribute):
         """Execute query that returns the type of the attribute of an SQL table in the dataset schema."""
