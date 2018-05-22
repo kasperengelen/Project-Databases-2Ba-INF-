@@ -1073,7 +1073,7 @@ def _custom_query(dataset_id):
 @dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>/dedup/find_matches', methods = ['POST'])
 @require_login
 @require_writeperm
-def transform_dedup_find_matches(dataset_id, tablename):
+def dedup_find_matches(dataset_id, tablename):
     """Callback to get a list of html tables. Each table represents a set of matches"""
     if not DatasetManager.existsID(dataset_id):
         abort(404)
@@ -1100,4 +1100,55 @@ def transform_dedup_find_matches(dataset_id, tablename):
     exactmatch_list = form.exactmatch_list.data
 
     return dd.find_matches(dataset_id, tablename, exactmatch_list, ignore_list)
+# ENDFUNCTION
+
+@dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>/clusterid/<int:clusterid>/keep_entries/<list:keep_entries>/dedup/deduplicate_cluster', methods=['POST'])
+@require_login
+@require_writeperm
+def dedup_deduplicate_cluster(dataset_id, tablename, clusterid, keep_entries):
+    """Callback to specifiy what entries need to be kept from a cluster"""
+    if not DatasetManager.existsID(dataset_id):
+        abort(404)
+
+    dataset = DatasetManager.getDataset(dataset_id)
+
+    if tablename not in dataset.getTableNames():
+        abort(404)
+
+    dd = dataset.getDeduplicator()
+    dd.deduplicate_cluster(dataset_id, tablename, clusterid, keep_entries)
+# ENDFUNCTION
+
+@dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>/clusterid/<int:clusterid>/dedup/yes_to_all', methods=['POST'])
+@require_login
+@require_writeperm
+def dedup_yes_to_all(dataset_id, tablename, clusterid):
+    """Callback to automatically deduplicate starting from clusterid"""
+    if not DatasetManager.existsID(dataset_id):
+        abort(404)
+
+    dataset = DatasetManager.getDataset(dataset_id)
+
+    if tablename not in dataset.getTableNames():
+        abort(404)
+
+    dd = dataset.getDeduplicator()
+    dd.yes_to_all(dataset_id, tablename, clusterid)
+# ENDFUNCTION
+
+@dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>/dedup/cancel', methods=['POST'])
+@require_login
+@require_writeperm
+def dedup_cancel(dataset_id, tablename):
+    """Callback to cancel the current deduplication"""
+    if not DatasetManager.existsID(dataset_id):
+        abort(404)
+
+    dataset = DatasetManager.getDataset(dataset_id)
+
+    if tablename not in dataset.getTableNames():
+        abort(404)
+
+    dd = dataset.getDeduplicator()
+    dd.clean_data(dataset_id, tablename)
 # ENDFUNCTION
