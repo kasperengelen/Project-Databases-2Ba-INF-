@@ -1102,14 +1102,17 @@ def dedup_find_matches(dataset_id, tablename):
     table_list = dd.find_matches(dataset_id, tablename, exactmatch_list, ignore_list)
 
     return render_template('dataset_pages.deduplication.html', table_list=table_list,
-                                                                attributes=tv.get_attributes())
+                                                                attributes=tv.get_attributes(),
+                                                                datasetid=dataset_id,
+                                                                table_name=tablename)
 # ENDFUNCTION
 
-@dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>/clusterid/<int:clusterid>/keep_entries/<list:keep_entries>/dedup/deduplicate_cluster', methods=['POST'])
+@dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>/dedup/deduplicate_cluster', methods=['POST'])
 @require_login
 @require_writeperm
-def dedup_deduplicate_cluster(dataset_id, tablename, clusterid, keep_entries):
+def dedup_deduplicate_cluster(dataset_id, tablename):
     """Callback to specifiy what entries need to be kept from a cluster"""
+
     if not DatasetManager.existsID(dataset_id):
         abort(404)
 
@@ -1118,8 +1121,17 @@ def dedup_deduplicate_cluster(dataset_id, tablename, clusterid, keep_entries):
     if tablename not in dataset.getTableNames():
         abort(404)
 
+    clusterid = 0
+    keep_entries = []
+
+    if request.method == "POST":
+        clusterid = request.form.get('id', type=int)
+        keep_entries = request.form.getlist('entries')
+
     dd = dataset.getDeduplicator()
     dd.deduplicate_cluster(dataset_id, tablename, clusterid, keep_entries)
+
+    return 'True'
 # ENDFUNCTION
 
 @dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>/clusterid/<int:clusterid>/dedup/yes_to_all', methods=['POST'])

@@ -115,16 +115,25 @@
 	    		});
 
 	    		$('#nextbtn_{{ loop.index }}').on('click', function() {
-	    			var next_id = parseInt($(this).parent().parent().attr('id')) + 1;
+	    			var cur_id = parseInt($(this).parent().parent().attr('id'));
+
+	    			$.ajax({
+	    				url: "{{ url_for('dataset_pages.dedup_deduplicate_cluster', dataset_id=datasetid, tablename=table_name) }}",
+	    				type: "POST",
+	    				data: {"entries":table_elements, "id":cur_id},
+	    				success: function() {}
+	    			});
+
+	    			var next_id = cur_id + 1;
 
 	    			if(next_id != {{ table_list|length }} ){
-	    				alert(table_elements);
 	    				$('#' + next_id).show();
 	    				$(this).parent().parent().hide();
 	    				table_elements = [];
 	    			}
 	    			else {
-	    				alert('LAATSTE ' + table_elements)
+	    				table_elements = [];
+	    				window.location.href = "{{ url_for('dataset_pages.table', dataset_id=datasetid, tablename=table_name) }}"
 	    			}
 	    		});
     		</script>
