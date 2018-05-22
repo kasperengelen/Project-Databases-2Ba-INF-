@@ -10,7 +10,6 @@ from View.form_utils import flash_errors
 
 transf_callbacks = Blueprint('transf_callbacks', __name__)
 
-# TODO NEW TABLE
 @transf_callbacks.route('/dataset/<int:dataset_id>/table/<string:tablename>/transform/transform_predicate', methods=['POST'])
 @require_login
 @require_writeperm
@@ -26,9 +25,11 @@ def transform_predicate(dataset_id, tablename):
         abort(404)
 
     tv = dataset.getTableViewer(tablename)
+    tt = dataset.getTableTransformer(tablename)
 
     predicateone = PredicateFormOne(request.form)
     predicateone.fillForm(tv.get_attributes())
+    predicateone.handle_tt(tt) # handle tabletransformer
     predicatetwo = PredicateFormTwo(request.form)
     predicatetwo.fillForm(tv.get_attributes())
     predicatethree = PredicateFormThree(request.form)
@@ -59,19 +60,16 @@ def transform_predicate(dataset_id, tablename):
         predicate_list.append(predicatethree.attr3.data)
         predicate_list.append(predicatethree.op3.data)
         predicate_list.append(predicatethree.input3.data)
-
-    tt = dataset.getTableTransformer(tablename)
+    
     try:
-        tt.delete_rows_using_predicate_logic(tablename, predicate_list)
+        tt.delete_rows_using_predicate_logic(tablename=tablename, arg_list=predicate_list, new_name = form.new_table_name.data)
+        flash(message="Rows deleted according to predicate.", category="success")
+        return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=form.get_table_name(tablename)))
     except (TableTransformer.ValueError) as e:
         flash(message="An error occured. Details: " + str(e), category="error")
-        
-    flash(message="Rows deleted according to predicate.", category="success")
-
-    return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
+        return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
 # ENDFUNCTION
 
-# DONE
 @transf_callbacks.route('/dataset/<int:dataset_id>/table/<string:tablename>/transform/transform_extractdatetime', methods=['POST'])
 @require_login
 @require_writeperm
@@ -112,14 +110,15 @@ def transform_extractdatetime(dataset_id, tablename):
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
 # ENDFUNCTION
 
-# TODO NEW TABLE
-@transf_callbacks.route('/dataset/<int:dataset_id>/table/<string:tablename>/transform/deleteattr/<string:attrname>/', methods=['POST'])
+@transf_callbacks.route('/dataset/<int:dataset_id>/table/<string:tablename>/transform/deleteattr', methods=['POST'])
 @require_login
 @require_writeperm
-def transform_deleteattr(dataset_id, tablename, attrname):
+def transform_deleteattr(dataset_id, tablename):
     """Callback for delete attribute transformation."""
 
-    # TODO nieuwe tabel?
+    attrname = request.form.get('attribute_name', type=str)
+
+    print(attrname)
 
     if not DatasetManager.existsID(dataset_id):
         abort(404)
@@ -143,7 +142,6 @@ def transform_deleteattr(dataset_id, tablename, attrname):
     return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
 # ENDFUNCTION
 
-# DONE
 @transf_callbacks.route('/dataset/<int:dataset_id>/table/<string:tablename>/transform/findreplace', methods=['POST'])
 @require_login
 @require_writeperm
@@ -184,7 +182,6 @@ def transform_findreplace(dataset_id, tablename):
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
 # ENDFUNCTION
 
-# DONE
 @transf_callbacks.route('/dataset/<int:dataset_id>/table/<string:tablename>/transform/regexfindreplace', methods=['POST'])
 @require_login
 @require_writeperm
@@ -224,8 +221,6 @@ def transform_findreplaceregex(dataset_id, tablename):
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
 # ENDFUNCTION
 
-# DONE
-# TODO: force attr parameters
 @transf_callbacks.route('/dataset/<int:dataset_id>/table/<string:tablename>/transform/typeconversion', methods = ['POST'])
 @require_login
 @require_writeperm
@@ -302,7 +297,6 @@ def transform_typeconversion(dataset_id, tablename):
     return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=redir_name))
 # ENDFUNCTION
 
-# DONE
 @transf_callbacks.route('/dataset/<int:dataset_id>/table/<string:tablename>/transform/onehotencoding', methods = ['POST'])
 @require_login
 @require_writeperm
@@ -340,7 +334,6 @@ def transform_onehotencoding(dataset_id, tablename):
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
 # ENDFUNCTION
 
-# DONE
 @transf_callbacks.route('/dataset/<int:dataset_id>/table/<string:tablename>/transform/zscorenormalisation', methods = ['POST'])
 @require_login
 @require_writeperm
@@ -377,7 +370,6 @@ def transform_zscorenormalisation(dataset_id, tablename):
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
 # ENDFUNCTION
 
-# DONE
 @transf_callbacks.route('/dataset/<int:dataset_id>/table/<string:tablename>/transform/discretize/equalwidth', methods = ['POST'])
 @require_login
 @require_writeperm
@@ -415,7 +407,6 @@ def transform_discretizeEqualWidth(dataset_id, tablename):
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
 # ENDFUNCTION
 
-# DONE
 @transf_callbacks.route('/dataset/<int:dataset_id>/table/<string:tablename>/transform/discretize/equalfreq', methods = ['POST'])
 @require_login
 @require_writeperm
@@ -452,7 +443,6 @@ def transform_discretizeEqualFreq(dataset_id, tablename):
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
 # ENDFUNCTION
 
-# DONE
 @transf_callbacks.route('/dataset/<int:dataset_id>/table/<string:tablename>/transform/discretize/customrange', methods = ['POST'])
 @require_login
 @require_writeperm
@@ -514,7 +504,6 @@ def transform_discretizeCustomRange(dataset_id, tablename):
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
 # ENDFUNCTION
 
-# DONE
 @transf_callbacks.route('/dataset/<int:dataset_id>/table/<string:tablename>/transform/delete_outlier', methods = ['POST'])
 @require_login
 @require_writeperm
@@ -554,7 +543,6 @@ def transform_deleteOutlier(dataset_id, tablename):
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
 # ENDFUNCTION
 
-# DONE
 @transf_callbacks.route('/dataset/<int:dataset_id>/table/<string:tablename>/transform/fill_null/mean', methods = ['POST'])
 @require_login
 @require_writeperm
@@ -591,7 +579,6 @@ def transform_fillNullsMean(dataset_id, tablename):
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
 # ENDFUNCTION
 
-# DONE
 @transf_callbacks.route('/dataset/<int:dataset_id>/table/<string:tablename>/transform/fill_null/median', methods = ['POST'])
 @require_login
 @require_writeperm
@@ -628,7 +615,6 @@ def transform_fillNullsMedian(dataset_id, tablename):
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
 # ENDFUNCTION
 
-# DONE
 @transf_callbacks.route('/dataset/<int:dataset_id>/table/<string:tablename>/transform/fill_null/custom', methods = ['POST'])
 @require_login
 @require_writeperm

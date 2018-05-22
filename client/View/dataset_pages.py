@@ -683,26 +683,20 @@ def __download_helper(dataset_id, mode, fileformat, tablename = None):
         # PREPARE FILE FOR DOWNLOAD
         dd = dataset.getDownloader()
         if mode == "DATASET":
-            dd.get_csv_zip(foldername=real_download_dir, delimiter=delimiter, null=nullrep, quotechar=quotechar, original=form.original_check.data)
-            filename = str(dataset_id) + ".zip"
+            filename = dd.get_csv_zip(foldername=real_download_dir, delimiter=delimiter, null=nullrep, quotechar=quotechar, original=form.original_check.data)
         elif mode == "TABLE":
-            dd.get_csv(tablename=tablename, foldername=real_download_dir, delimiter=delimiter, null=nullrep, quotechar=quotechar, original = False)
-            filename = tablename + ".csv"
+            filename = dd.get_csv(tablename=tablename, foldername=real_download_dir, delimiter=delimiter, null=nullrep, quotechar=quotechar, original = False)
         elif mode == "ORIGINAL":
-            dd.get_csv(tablename=tablename, foldername=real_download_dir, delimiter=delimiter, null=nullrep, quotechar=quotechar, original = True)
-            filename = tablename + ".csv"
+            filename = dd.get_csv(tablename=tablename, foldername=real_download_dir, delimiter=delimiter, null=nullrep, quotechar=quotechar, original = True)
         
     elif fileformat == 'SQL':
         dd = dataset.getDownloader()
         if mode == "DATASET":
-            dd.get_dataset_dump(foldername=real_download_dir, original=form.original_check.data)
-            filename = str(dataset_id) + ".zip"
+            filename = dd.get_dataset_dump(foldername=real_download_dir, original=form.original_check.data)
         elif mode == "TABLE":
-            dd.get_table_dump(tablename=tablename, foldername=real_download_dir, original=False)
-            filename = tablename + ".dump"
+            filename = dd.get_table_dump(tablename=tablename, foldername=real_download_dir, original=False)
         elif mode == "ORIGINAL":
-            dd.get_table_dump(tablename=tablename, foldername=real_download_dir, original=True)
-            filename = tablename + ".dump"
+            filename = dd.get_table_dump(tablename=tablename, foldername=real_download_dir, original=True)
     else:
         raise RuntimeError("Invalid file format: '" + fileformat + "'.")
 

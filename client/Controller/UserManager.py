@@ -191,7 +191,7 @@ class UserManager:
         if db_conn is None:
             db_conn = get_db()
 
-        db_conn.cursor().execute("UPDATE SYSTEM.user_accounts SET admin = %s WHERE userid = %s", [admin_status, userid])
+        db_conn.cursor().execute("UPDATE SYSTEM.user_accounts SET admin = %s WHERE userid = %s", [admin_status, int(userid)])
         db_conn.commit()
     # ENDMETHOD
 # ENDCLASS

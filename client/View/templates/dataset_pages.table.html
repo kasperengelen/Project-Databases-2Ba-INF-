@@ -234,10 +234,11 @@
 								<th data-hover="tooltip" title="{{ attr.type }}">
 									{{ attr.name }}
 									{% if original != True %}
-				                        <form method="post" id="deleteform_{{ attr }}" action="{{ url_for('transf_callbacks.transform_deleteattr', dataset_id=dataset_info.setid, tablename=table_name, attrname=attr.name) }}" id="deleteform_{{ attr }}">
-				                        <button style="border: none; background-color: transparent;" type="submit" id="delete_{{ attr }}">
-				                       		<span class="glyphicon glyphicon-trash"></span>
-				                       	</button>
+				                        <form method="post" id="deleteform_{{ attr.name }}" action="{{ url_for('transf_callbacks.transform_deleteattr', dataset_id=dataset_info.setid, tablename=table_name) }}">
+				                        	<input type="hidden" id="attribute_name_{{ attr.name }}" name="attribute_name" value="{{ attr.name }}">
+					                        <button style="border: none; background-color: transparent;" type="submit">
+					                       		<span class="glyphicon glyphicon-trash"></span>
+					                       	</button>
 				                        </form>
 			                       {% endif %}
 								</th>
@@ -265,6 +266,8 @@
     			$('#transbutton').click(function(){
     				table.ajax.reload();
     			});
+
+    			$.fn.dataTable.ext.errMode = 'none';
     	
     		} );
 		</script>

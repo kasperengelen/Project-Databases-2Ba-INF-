@@ -1,6 +1,8 @@
 import sys
 import os
 import math
+import copy
+
 import psycopg2
 from psycopg2 import sql
 import sqlalchemy
@@ -72,11 +74,11 @@ class TableTransformer:
         cur.execute(sql.SQL("ALTER TABLE {}.{} DROP COLUMN IF EXISTS {}").format(*query_args))
         self.db_connection.commit()
 
-    def drop_table(self, schema, table):
-        """Execute query that drops an SQL table."""
+    def drop_table(self, table):
+        """Execute query that drops an SQL table of the dataset."""
         cur = self.db_connection.cursor()
-        query_args = [sql.Identifier(schema), sql.Identifier(table)]
-        cur.execute(sql.SQL("DROP TABLE {}.{} IF EXISTS {}").format(*query_args))
+        query_args = [sql.Identifier(self.schema), sql.Identifier(table)]
+        cur.execute(sql.SQL("DROP TABLE IF EXISTS {}.{}").format(*query_args))
         self.db_connection.commit()
         
     def create_copy_of_table(self, schema1, tablename1, schema2, tablename2):
@@ -114,7 +116,6 @@ class TableTransformer:
             resulting_t = self.copy_table(tablename, new_name)
             return resulting_t
             
-    
     def copy_table(self, old, new):
         """In case the transformation has to result in a new table, we copy the existing one to a new table in this dataset
         and perform the operation on this newly created copy.
@@ -137,104 +138,57 @@ class TableTransformer:
         self.drop_attribute(self.schema, resulting_table, attribute)
         self.history_manager.write_to_history(resulting_table, tablename, attribute, [], 2)
 
+    def __create_predicate_piece(self, plist):
+        predicate = ''
+        if plist[1] in ['=', '!='] and plist[2] == '"null"':
+            if plist[1] == '=':
+                plist[1] = 'is'
+            else:
+                plist[1] = 'is not'
+            plist[2] = 'NULL'
+
+        
+        return [sql.Identifier(plist[0]), plist[1], plist[2]]
+    
     def delete_rows_using_predicate_logic(self, tablename, arg_list, new_name=""):
         """Method to delete rows by using provided predicates like "attribute > x AND attribute != y".
 
         Parameters:
             arg_list: A list of strings containing the strings representing the predicates (Identifiers, logical operators).
         """
-        #NEED TO REVIEW THIS METHOD AFTER NEW FRONT-END
-        """internal_ref = self.get_internal_reference(tablename)
-        if self.replace is False:
-            internal_ref = self.copy_table(internal_ref, new_name)
-        #List of length 4 is of type ['ATTRIBUTE' '=' 'X' 'END]
+        resulting_table  = self.get_resulting_table(tablename, new_name)
         list_size = len(arg_list)
-        if list_size  in [3, 7, 11]:
-            predicate = ''
-            part1 = ''
-            part2 = ''
-            part3 = ''
-            if list_size >= 3:
-                part1 += '"{}"'.format(arg_list[0])
-                part1 += ' ' + arg_list[1]
-                attr_type = self.get_attribute_type(tablename, arg_list[0])[0]
-                if SQLTypeHandler().is_numerical(attr_type) is not True:
-                    part1 += ' ' + "'{}'".format(arg_list[2])                   
-                else:
-                    part1 += ' ' + arg_list[2]
-
-                if arg_list[2] == 'None':#Add a NULL check in case user meant to delete NULLS
-                    if attr_type not in ['character', 'character varying']:
-                        part1 = ''
-                    else:
-                        part1 += ' OR '
-                    if arg_list[1] == '=':
-                        part1 = ' (' + part1
-                        part1 += '"{}" IS NULL )'.format(arg_list[0])
-                    elif arg_list[1] == '!=':
-                        part1 = ' (' + part1
-                        part1 += '"{}" IS NOT NULL )'.format(arg_list[0])
-                    
-                    
-            
-            if list_size >= 7:
-                
-                part1 += ' ' + arg_list[3]
-                part2 += ' ' +'"{}"'.format(arg_list[4])
-                part2 += ' ' + arg_list[5]
-                attr_type = self.get_attribute_type(tablename, arg_list[4])[0]
-                if SQLTypeHandler().is_numerical(attr_type) is not True:
-                    part2 += ' ' + "'{}'".format(arg_list[6])                   
-                else:
-                    part2 += ' ' + arg_list[6]
-
-                if arg_list[6] == 'None':#Add a NULL check in case user meant to delete NULLS
-                    if attr_type not in ['character', 'character varying']:
-                        part2 = ''
-                    else:
-                        part2 += ' OR '
-                    if arg_list[5] == '=':
-                        part2 = ' (' + part2
-                        part2 += '"{}" IS NULL )'.format(arg_list[4])
-                    elif arg_list[5] == '!=':
-                        part2 = ' (' + part2
-                        part2 += '"{}" IS NOT NULL )'.format(arg_list[4])
-
-            if list_size == 11:
-                part2 += ' ' + arg_list[7]
-                part3 += ' ' + '"{}"'.format(arg_list[8])
-                part3 += ' ' + arg_list[9]
-                attr_type = self.get_attribute_type(tablename, arg_list[8])[0]
-                if SQLTypeHandler().is_numerical(attr_type):
-                    part3 += ' ' + "'{}'".format(arg_list[10])                   
-                else:
-                    part3 += ' ' + arg_list[10]
-
-                if arg_list[10] == 'None':#Add a NULL check in case user meant to delete NULLS
-                    if SQLTypeHandler().is_string(attr_type) is False:
-                        part3 = ''
-                    else:
-                        part3 += ' OR '
-                    if arg_list[9] == '=':
-                        part3 = ' (' + part3
-                        part3 += '"{}" IS NULL )'.format(arg_list[8])
-                    elif arg_list[1] == '!=':
-                        part3 = ' (' + part3
-                        part3 += '"{}" IS NOT NULL )'.format(arg_list[8])
-
-            predicate = part1 + part2 + part3
+        identifiers = [sql.Identifier(self.schema), sql.Identifier(resulting_table)]
+        values = []
+        delete_query = 'DELETE FROM {}.{} WHERE'
+        # We get list of form ['x', '<', 'y'] or  ['x', '<', 'y', 'AND', 'x', '>','z'] et cetera
+        if ((list_size - 3) % 4) == 0:
+            i = 0
+            while i < list_size:
+                cur_list = self.__create_predicate_piece(arg_list[i:i+3])
+                delete_query += ' {} ' + cur_list[1] + ' ' + '%s'
+                identifiers.append(cur_list[0])
+                values.append(cur_list[2])
+                if list_size > 3 and (i + 4) < list_size: #There should be an AND / OR following
+                    i += 4
+                    delete_query += ' ' +  arg_list[i-1] + ' '
+                else: #Only one clause specified or no more clauses following current clause
+                    break
 
         else:
             raise self.ValueError('Can not delete rows because an invalid predicate has been provided.')
 
-        query = "DELETE FROM {}.{} WHERE %s" % predicate
         try:
-            self.db_connection.cursor().execute(sql.SQL(query).format(sql.Identifier(internal_ref[0]), sql.Identifier(internal_ref[1])))
-        except psycopg2.DataError:
+            self.db_connection.cursor().execute(sql.SQL(delete_query).format(*identifiers), values)
+        except:
+            if resulting_table != tablename:
+                self.db_connection.commit()
+                self.drop_table(resulting_table)
             raise self.ValueError('Could not delete rows using this predicate since it contains invalid input value(s) for the attributes.')
+        
         self.db_connection.commit()
-        clean_predicate = predicate.replace('"', '\\"') #Escape double quotes to pass it in postgres array
-        self.history_manager.write_to_history(internal_ref[1], tablename, 'None', [clean_predicate], 15)"""
+        #clean_predicate = predicate.replace('"', '\\"') #Escape double quotes to pass it in postgres array
+        self.history_manager.write_to_history(resulting_table, tablename, 'None', ['temp'], 15)
 
     def get_conversion_options(self, tablename, attribute):
         """Returns a list of supported types that the given attribute can be converted to."""
@@ -322,7 +276,7 @@ class TableTransformer:
         ident_attr = '"{}"'.format(attribute)
         casting_var = temp.format(ident_attr, data_format)
 
-        if temp in ['CHAR' , 'VARCHAR']: #Char and varchar don't need special parameters
+        if temp in ['CHAR' , 'VARCHAR'] and length is not None: #Char and varchar don't need special parameters
             to_type = to_type.replace('n', str(length))
             casting_var = to_type
             
@@ -352,7 +306,7 @@ class TableTransformer:
         self.db_connection.commit()
         return to_type
     
-    def change_attribute_type(self, tablename, attribute, to_type, data_format="", length='1', new_name=""):
+    def change_attribute_type(self, tablename, attribute, to_type, data_format="", length=None, new_name=""):
         """Change the type of a table attribute.
 
         Parameters:
@@ -363,11 +317,19 @@ class TableTransformer:
         """
         cur_type = self.get_attribute_type(tablename, attribute)
         resulting_table = self.get_resulting_table(tablename, new_name)
-        
-        if (cur_type == 'character varying') or (cur_type == 'character'):
-            to_type = self.__convert_character(resulting_table, attribute, to_type, data_format, length)
-        else:
-            to_type = self.__convert_numeric(resulting_table, attribute, to_type, length)
+        try:
+            if SQLTypeHandler().is_string(cur_type):
+                to_type = self.__convert_character(resulting_table, attribute, to_type, data_format, length)
+            else:
+                to_type = self.__convert_numeric(resulting_table, attribute, to_type, length)
+        except:
+            self.db_connection.commit()
+            #If anything went wrong in the transformation, the new table has to be dropped.
+            if resulting_table != tablename:
+                self.drop_table(resulting_table)
+            #Reraise the exception for the higher level caller
+            raise
+            
             
         self.history_manager.write_to_history(resulting_table, tablename, attribute, [to_type, data_format, length], 1)
 
@@ -421,8 +383,10 @@ class TableTransformer:
             self.set_to_overwrite
         self.change_attribute_type(resulting_table, attribute, to_type,  data_format, length, new_name)
 
+
     def find_and_replace(self, tablename, attribute, value, replacement, exact=True, replace_all=True, new_name=""):
-        """Method that finds values and replaces them with the provided argument.
+        """Method that finds values and replaces them with the provided argument. This wraps around an internal
+        method that does the heavy work.
 
         Parameters:
             value: The value that needs to found so it can be replaced.
@@ -431,9 +395,22 @@ class TableTransformer:
             replace_all : A boolean indicating whether a found substring should be replaced or the string should be replaced.
                           True replaces the whole string, False replaces the found substring with the replacement.
         """
-        cur_type = self.get_attribute_type(tablename, attribute)
         resulting_table = self.get_resulting_table(tablename, new_name)
+        args = locals()
+        params = {k:v for k,v in args.items() if k != 'self'}
+        try:
+            self.__execute_normal_find_and_replace(**params)
 
+        except:
+            if resulting_table != tablename:
+                self.db_connection.commit()
+                self.drop_table(resulting_table)
+            raise
+            
+    def __execute_normal_find_and_replace(self, resulting_table, tablename, attribute, value, replacement, exact, replace_all, new_name):
+        """Internal method that executes the wanted behavior specified in find_and_replace."""
+        cur_type = self.get_attribute_type(tablename, attribute)
+        
         original_value = value            
         if exact is True:
             sql_query = "UPDATE {0}.{1} SET {2} = %s WHERE {2} = %s"
@@ -464,6 +441,7 @@ class TableTransformer:
                 raise self.ValueError("Could not perform find-and-replace due to an invalid input value for this attribute.")
             self.db_connection.commit()
         self.history_manager.write_to_history(resulting_table, tablename, attribute, [original_value, replacement, exact, replace_all], 8)
+        
 
     def regex_find_and_replace(self, tablename, attribute, regex, replacement, case_sens=False, new_name=""):
         """Method that finds values with a provided regex and replaces them with a provided replacement.
@@ -474,8 +452,21 @@ class TableTransformer:
             case_sens: A boolean indicating whether the regex is case sensitive. True for sensitive, False for insensitive.
             new_name: The name of the new table if the TableTransformer is not set to overwrite.
         """
-        cur_type = self.get_attribute_type(tablename, attribute)
         resulting_table = self.get_resulting_table(tablename, new_name)
+        args = locals()
+        params = {k:v for k,v in args.items() if k != 'self'}
+        try:
+            self.__execute_regex_find_and_replace(**params)
+
+        except:
+            if resulting_table != tablename:
+                self.db_connection.commit()
+                self.drop_table(resulting_table)
+            raise
+
+    def __execute_regex_find_and_replace(self, resulting_table, tablename, attribute, regex, replacement, case_sens, new_name):
+        """Internal method that executes the wanted behavior specified in regex_find_and_replace."""
+        cur_type = self.get_attribute_type(tablename, attribute)
         if SQLTypeHandler().is_string(cur_type) is False:
             raise self.AttrTypeError("Find-and-replace using regular epxressions is only possible with character type attributes. "
                                      "Please convert the needed attribute to VARCHAR or CHAR.")
