@@ -1,0 +1,62 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+	
+	<div class="jumbotron text-center" style="padding: 1%">
+        <div class="pull-left">
+            <a data-hover="tooltip" title="Previous" href="/" class="btn btn-primary">
+				<span class="glyphicon glyphicon-share-alt" style="-webkit-transform: scaleX(-1); transform: scaleX(-1);"></span></a>
+        </div>
+        <div class="text-center">
+            <h2>Promote/Demote User</h2>
+        </div>
+    </div>
+
+    <div class="jumbotron">
+    	{% for deduptable in list %}
+    		<div id="deduptable_{{ loop.index }}">
+    			<table id="table_{{ loop.index }}">
+    				<thead>
+    					<tr>
+    						<th></th>
+    						{% for col in deduptable.columns %}
+    							<th>col</th>
+    						{% endfor %}
+    						<th></th>
+    					</tr>
+    				</thead>
+    				<tbody>
+    					{% for row in deduptable.data %}
+	    					<tr>
+	    						{% for item in deduptable.data.row %}
+	    							<td>item</td>
+	    						{% endfor %}
+	    					</tr>
+	    				{% endfor %}
+    				</tbody>
+    			</table>
+    		</div>
+    		<script>
+    			$('table').attr('id', 'table_{{ loop.index }}');
+
+    			var row_index = -1;
+
+    			var dtable = $('#table_{{ loop.index }}').DataTable({
+    				paging: false,
+    				sorting: false,
+    				bInfo: false,
+    				autoWidth: false
+    			}); 
+
+    			$(function() {
+    				for(var i = 0; i < {{ list|length }}; i++){
+	    				if(i != {{ loop.index }}){
+	    					$('#table_{{ loop.index }}').hide();
+	    				}
+	    			}
+    			})
+    		</script>
+    	{% endfor %}
+    </div>
+
+{% endblock %}
