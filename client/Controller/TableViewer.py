@@ -61,8 +61,10 @@ class TableViewer:
         read_query = 'SELECT * FROM {}.{}'
         identifiers = [sql.Identifier(self.schema), sql.Identifier(self.tablename)]
         if order is True:
-            pass
-        read_query += 'LIMIT %s OFFSET %s' % (limit, offset)
+            ordering = 'ASC' if ascending else 'DESC'
+            identifiers.append(sql.Identifier(on_column))
+            read_query += (' ORDER BY {} ' + ordering)
+        read_query += ' LIMIT %s OFFSET %s' % (limit, offset)
         cur.execute(sql.SQL(read_query).format(*identifiers))
         json_string = json.dumps(cur.fetchall(), default=str)
         return json_string
