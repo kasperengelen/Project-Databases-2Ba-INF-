@@ -961,9 +961,9 @@ def _get_table(dataset_id, tablename, original):
 
     tv = dataset.getTableViewer(tablename, original = original)
 
+    col_name = tv.get_attributes()[col_nr]
 
-
-    data = tv.render_json(offset = start_nr, limit = row_count, order = True, ascending = (sort_order == 'asc'), on_column=col_nr)
+    data = tv.render_json(offset = start_nr, limit = row_count, order = True, ascending = (sort_order == 'asc'), on_column=col_name)
 
     retval = {
         'recordsTotal':    int(tv.get_rowcount()),
