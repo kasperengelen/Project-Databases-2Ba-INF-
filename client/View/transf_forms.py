@@ -222,7 +222,7 @@ class PredicateFormThree(TransformationFormBase):
 class DedupForm(FlaskForm):
     """Form to execute data deduplication."""
 
-    exactmatch_list = SelectMultipleField('Match exact', choices = []),
+    exactmatch_list = SelectMultipleField('Match exact', choices = [])
     ignore_list = SelectMultipleField('Ignore', choices=[])
 
     def fillForm(self, attr_list):

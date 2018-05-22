@@ -131,6 +131,8 @@ def table(dataset_id, tablename):
     predicatethree_form.fillForm(attrs)
     dedup_form.fillForm(attrs)
 
+
+
     # RETRIEVE USER PERMISSION
     perm_type = DatasetPermissionsManager.getPermForUserID(dataset_id, session['userdata']['userid'])
 
