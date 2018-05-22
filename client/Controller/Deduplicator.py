@@ -79,7 +79,7 @@ class Deduplicator:
                 for row_id in cluster:
                     rows.append(dataframe.ix[row_id])
                 paired_table = pd.DataFrame(rows)
-                certain_paired_rows.append(paired_table.to_html())
+                certain_paired_rows.append(paired_table.to_json(orient='values', date_format='iso'))
 
             self.entries_to_remove[(setid, tablename)] = set()
 
