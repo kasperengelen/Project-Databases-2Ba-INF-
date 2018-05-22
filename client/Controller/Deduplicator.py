@@ -103,9 +103,21 @@ class Deduplicator:
 
             # if the current cluster is the last one, submit the changes
             if cluster_id == len(self.clusters[(setid, tablename)]) - 1:
-                self.submit(setid, tablename)
+                self.__submit(setid, tablename)
 
-        def submit(self, setid, tablename):
+        def yes_to_all(self, setid, tablename, cluster_id):
+            """Deduplicate_cluster automatically starting from cluster_id to the last cluster"""
+
+            for i in range(cluster_id, len(self.clusters[(setid, tablename)])):
+                self.deduplicate_cluster(setid, tablename, i)
+
+        def clean_data(self, setid, tablename):
+            """Clean all data in Deduplicator associated with the table"""
+            self.dataframes.pop((setid, tablename), None)
+            self.clusters.pop((setid, tablename), None)
+            self.entries_to_remove.pop((setid, tablename), None)
+
+        def __submit(self, setid, tablename):
             """Deletes all duplicates and alters the table in the database"""
             schema = str(setid)
 
@@ -117,12 +129,6 @@ class Deduplicator:
             dataframe.to_sql(tablename, self.engine, schema=schema, if_exists="replace", index=False)
 
             self.clean_data(setid, tablename)
-
-        def clean_data(self, setid, tablename):
-            """Clean all data in Deduplicator associated with the table"""
-            self.dataframes.pop((setid, tablename), None)
-            self.clusters.pop((setid, tablename), None)
-            self.entries_to_remove.pop((setid, tablename), None)
 
         def __cluster_pairs(self, pairs):
             """Group pairs together, for example:
