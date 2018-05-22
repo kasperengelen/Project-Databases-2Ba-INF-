@@ -47,7 +47,6 @@
 					{% include "includes/modals/_copy_modal.html" %}
 
 					<div style="padding-top: 1em;"></div>
-
 					
 					<a id="stats" class="btn btn-primary" data-toggle="collapse" data-hover="tooltip" title="Statistics" data-parent="#accordion" href="#view">
 						<span class="glyphicon glyphicon-stats"></span></a>
@@ -151,12 +150,18 @@
 	        	</div>
 	      	</div>
 	    </div>
-	{% endif %}
-		
-		  			  		
+	{% endif %}		  		
 
 
 	  <div class="row">
+	  	<div class="col-sm-12" id="loading" style="height: 150px;">
+	  		<div class="col-sm-5"></div>
+	  		<div class="col-sm-2 text-center">
+			    <h3>Rendering</h3>
+			    <img width="120" height="auto" src="https://upload.wikimedia.org/wikipedia/commons/b/b1/Loading_icon.gif">
+			</div>
+			<div class="col-sm-5"></div>
+		</div>
 	  		{% if original != True %}
 			<div class="col-sm-3" style="position: sticky; top: 65px;">
 				<nav class="navbar-default sidebar" style="border-radius: 5px; background-color: #e5e5e5;">
@@ -300,7 +305,6 @@
 				</style>
 
 				<!-- TABLE -->
-
 				<table id="mytable">
 					<thead>
 						<tr>
