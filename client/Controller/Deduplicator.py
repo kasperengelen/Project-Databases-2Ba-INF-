@@ -41,7 +41,10 @@ class Deduplicator:
             col_names = list(dataframe)
             types_dict = QueryManager(self.db_connection, None).get_col_types(schema, tablename)
 
-            indexer = rl.SortedNeighbourhoodIndex(on=exact_match, window=3)
+            if len(exact_match) == 0:
+                indexer = rl.FullIndex()
+            else:
+                indexer = rl.SortedNeighbourhoodIndex(on=exact_match, window=3)
             pairs = indexer.index(dataframe)
 
             num_cols = list()
