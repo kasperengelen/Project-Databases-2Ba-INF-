@@ -119,7 +119,7 @@ class TableViewer:
         sizes = []
 
         # group all containers smaller than 1%
-        one_percent = sum(temp_sizes)/100
+        one_percent = sum(temp_sizes)/20
         other = 0
 
         for i in range(len(temp_labels)):
@@ -133,24 +133,24 @@ class TableViewer:
             sizes.append(other)
             labels.append("< 1%")
 
-        # taken from https://stackoverflow.com/questions/6170246/how-do-i-use-matplotlib-autopct
-        def make_autopct(values):
-            def my_autopct(pct):
-                total = sum(sizes)
-                val = int(round(pct * total / 100.0))
-                return '{p:.1f}%  ({v:d})'.format(p=pct, v=val)
+        # # taken from https://stackoverflow.com/questions/6170246/how-do-i-use-matplotlib-autopct
+        # def make_autopct(values):
+        #     def my_autopct(pct):
+        #         total = sum(sizes)
+        #         val = int(round(pct * total / 100.0))
+        #         return '{p:.1f}%  ({v:d})'.format(p=pct, v=val)
+        #
+        #     return my_autopct
+        #
+        # fig, ax = plt.subplots()
+        # fig.set_size_inches(5.12, 3.84)
+        # ax.pie(sizes, labels=labels, autopct=make_autopct(sizes))
+        # ax.axis('equal')
+        # html = mpld3.fig_to_html(fig)
+        # # close the figure to free memory
+        # plt.close(fig)
 
-            return my_autopct
-
-        fig, ax = plt.subplots()
-        fig.set_size_inches(5.12, 3.84)
-        ax.pie(sizes, labels=labels, autopct=make_autopct(sizes))
-        ax.axis('equal')
-        html = mpld3.fig_to_html(fig)
-        # close the figure to free memory
-        plt.close(fig)
-
-        return html
+        return (labels, sizes)
 
     def get_most_frequent_value(self, columnname):
         """Return the value that appears most often in the column"""
