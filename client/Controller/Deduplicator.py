@@ -91,16 +91,16 @@ class Deduplicator:
             :param cluster_id: index in self.clusters
             :param entries_to_keep: entries that should not be deduplicated"""
 
-            cluster = self.clusters[(setid, tablename)][cluster_id]
+            cluster = list(self.clusters[(setid, tablename)][cluster_id])
 
             # if no entries are specified to keep, only keep the first entry
-            if entries_to_keep is None: entries_to_keep = [next(iter(cluster))]
+            if entries_to_keep is None: entries_to_keep = [cluster[0]]
 
             # remove the entries that should not be deduplicated
             for entry in entries_to_keep:
-                cluster.remove(entry)
+                del cluster[entry]
 
-            self.entries_to_remove[(setid, tablename)] = self.entries_to_remove[(setid, tablename)].union(cluster)
+            self.entries_to_remove[(setid, tablename)] = self.entries_to_remove[(setid, tablename)].union(set(cluster))
 
             # if the current cluster is the last one, submit the changes
             if cluster_id == len(self.clusters[(setid, tablename)]) - 1:
