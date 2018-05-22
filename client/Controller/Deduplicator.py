@@ -1,3 +1,4 @@
+import json
 import recordlinkage as rl
 import pandas as pd
 import numpy as np
@@ -79,7 +80,7 @@ class Deduplicator:
                 for row_id in cluster:
                     rows.append(dataframe.ix[row_id])
                 paired_table = pd.DataFrame(rows)
-                certain_paired_rows.append(paired_table.to_json(orient='values', date_format='iso'))
+                certain_paired_rows.append(json.loads(paired_table.to_json(orient='values', date_format='iso')))
 
             self.entries_to_remove[(setid, tablename)] = set()
 
