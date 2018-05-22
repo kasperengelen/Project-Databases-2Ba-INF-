@@ -65,8 +65,8 @@ def transform_predicate(dataset_id, tablename):
         tt.delete_rows_using_predicate_logic(tablename=tablename, arg_list=predicate_list, new_name = form.new_table_name.data)
         flash(message="Rows deleted according to predicate.", category="success")
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=form.get_table_name(tablename)))
-    except (TableTransformer.ValueError) as e:
-        flash(message="An error occured. Details: " + str(e), category="error")
+    except (TableTransformer.TTError) as e:
+        flash(message=str(e), category="error")
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
 # ENDFUNCTION
 
@@ -105,8 +105,8 @@ def transform_extractdatetime(dataset_id, tablename):
         flash(message="Part of date extracted.", category="success")
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=form.get_table_name(tablename)))
 
-    except:
-        flash(message="An error occurred.", category="error")
+    except (TableTransformer.TTError) as e:
+        flash(message=str(e), category="error")
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
 # ENDFUNCTION
 
@@ -135,11 +135,13 @@ def transform_deleteattr(dataset_id, tablename):
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
 
     tt = dataset.getTableTransformer(tablename)
-
-    tt.delete_attribute(tablename, attrname)
-    flash(message="Attribute deleted.", category="success")
-
-    return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
+    try:
+        tt.delete_attribute(tablename, attrname)
+        flash(message="Attribute deleted.", category="success")
+        return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
+    except (TableTransformer.TTError) as e:
+        flash(message=str(e), category="error")
+        return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
 # ENDFUNCTION
 
 @transf_callbacks.route('/dataset/<int:dataset_id>/table/<string:tablename>/transform/findreplace', methods=['POST'])
@@ -177,8 +179,8 @@ def transform_findreplace(dataset_id, tablename):
                             new_name    = form.new_table_name.data)
         flash(message="Find and replace completed.", category="success")
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=form.get_table_name(tablename)))
-    except (TableTransformer.AttrTypeError, TableTransformer.ValueError) as e:
-        flash(message="No matches found. Details: " + str(e), category="error")
+    except (TableTransformer.TTError) as e:
+        flash(message=str(e), category="error")
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
 # ENDFUNCTION
 
@@ -216,8 +218,8 @@ def transform_findreplaceregex(dataset_id, tablename):
                                   new_name    = form.new_table_name.data)
         flash(message="Find and replace complete.", category="success")
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=form.get_table_name(tablename)))
-    except Exception as e:
-        flash(message="An error occurred. Details: " + str(e), category="error")
+    except (TableTransformer.TTError) as e:
+        flash(message=str(e), category="error")
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
 # ENDFUNCTION
 
@@ -284,8 +286,8 @@ def transform_typeconversion(dataset_id, tablename):
                                     new_name    = form.new_table_name.data)
             flash(message="Attribute type changed.", category="success")
             redir_name = form.get_table_name(tablename)
-        except Exception as e:
-            flash(message="An error occurred. Details: " + str(e), category="error")
+        except (TableTransformer.TTError) as e:
+            flash(message=str(e), category="error")
             redir_name = tablename
     else:
         try:
@@ -297,8 +299,8 @@ def transform_typeconversion(dataset_id, tablename):
                                      new_name    = form.new_table_name.data)
             flash(message="Attribute type changed.", category="success")
             redir_name = form.get_table_name(tablename)
-        except Exception as e:
-            flash(message="An error occurred. Details: " + str(e), category="error")
+        except (TableTransformer.TTError) as e:
+            flash(message=str(e), category="error")
             redir_name = tablename
 
     return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=redir_name))
@@ -336,8 +338,8 @@ def transform_onehotencoding(dataset_id, tablename):
                           new_name  = form.new_table_name.data)
         flash(message="One hot encoding complete.", category="success")
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=form.get_table_name(tablename)))
-    except Exception as e:
-        flash(message="An error occurred. Details: " + str(e), category="error")
+    except (TableTransformer.TTError) as e:
+        flash(message=str(e), category="error")
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
 # ENDFUNCTION
 
@@ -372,8 +374,8 @@ def transform_zscorenormalisation(dataset_id, tablename):
                                   new_name  = form.new_table_name.data)
         flash(message="Normalization complete.", category="success")
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=form.get_table_name(tablename)))
-    except Exception as e:
-        flash(message="An error occurred. Details: " + str(e), category="error")
+    except (TableTransformer.TTError) as e:
+        flash(message=str(e), category="error")
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
 # ENDFUNCTION
 
@@ -409,8 +411,8 @@ def transform_discretizeEqualWidth(dataset_id, tablename):
                                         new_name  = form.new_table_name.data)
         flash(message="Discretization complete.", category="success")
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=form.get_table_name(tablename)))
-    except Exception as e:
-        flash(message="An error occurred. Details: " + str(e), category="error")
+    except (TableTransformer.TTError) as e:
+        flash(message=str(e), category="error")
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
 # ENDFUNCTION
 
@@ -445,8 +447,8 @@ def transform_discretizeEqualFreq(dataset_id, tablename):
                                             new_name = form.new_table_name.data)
         flash(message="Discretization complete.", category="success")
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=form.get_table_name(tablename)))
-    except Exception as e:
-        flash(message="An error occurred. Details: " + str(e), category="error")
+    except (TableTransformer.TTError) as e:
+        flash(message=str(e), category="error")
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
 # ENDFUNCTION
 
@@ -506,8 +508,8 @@ def transform_discretizeCustomRange(dataset_id, tablename):
                                           new_name = form.new_table_name.data)
         flash(message="Discretization complete.", category="success")
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=form.get_table_name(tablename)))
-    except Exception as e:
-        flash(message="An error occurred. Details: " + str(e), category="error")
+    except (TableTransformer.TTError) as e:
+        flash(message=str(e), category="error")
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
 # ENDFUNCTION
 
@@ -545,8 +547,8 @@ def transform_deleteOutlier(dataset_id, tablename):
                             new_name = form.new_table_name.data)
         flash(message="Outliers deleted.", category="success")
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=form.get_table_name(tablename)))
-    except Exception as e:
-        flash(message="An error occurred. Details: " + str(e), category="error")
+    except (TableTransformer.TTError) as e:
+        flash(message=str(e), category="error")
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
 # ENDFUNCTION
 
@@ -581,8 +583,8 @@ def transform_fillNullsMean(dataset_id, tablename):
                                 new_name = form.new_table_name.data)
         flash(message="NULL values replaced with mean.", category="success")
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=form.get_table_name(tablename)))
-    except Exception as e:
-        flash(message="An error occurred. Details: " + str(e), category="error")
+    except (TableTransformer.TTError) as e:
+        flash(message=str(e), category="error")
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
 # ENDFUNCTION
 
@@ -617,8 +619,8 @@ def transform_fillNullsMedian(dataset_id, tablename):
                                   new_name = form.new_table_name.data)
         flash(message="NULL values replaced with median.", category="success")
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=form.get_table_name(tablename)))
-    except Exception as e:
-        flash(message="An error occurred. Details: " + str(e), category="error")
+    except (TableTransformer.TTError) as e:
+        flash(message=str(e), category="error")
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
 # ENDFUNCTION
 
@@ -654,7 +656,7 @@ def transform_fillNullsCustomValue(dataset_id, tablename):
                                         new_name=form.new_table_name.data)
         flash(message="NULL values filled with custom value.", category="success")
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=form.get_table_name(tablename)))
-    except Exception as e:
-        flash(message="An error occurred. Details: " + str(e), category="error")
+    except (TableTransformer.TTError) as e:
+        flash(message=str(e), category="error")
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
 # ENDFUNCTION
