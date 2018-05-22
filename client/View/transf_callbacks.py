@@ -1,7 +1,7 @@
 from flask import Blueprint, url_for, redirect, flash, abort, request
 from View.transf_forms import DataTypeTransform, NormalizeZScore, OneHotEncoding, RegexFindReplace, DiscretizeEqualWidth, ExtractDateTimeForm
 from View.transf_forms import DiscretizeEqualFreq, DiscretizeCustomRange, DeleteOutlier, FillNullsMean, FillNullsMedian, FillNullsCustomValue
-from View.transf_forms import PredicateFormOne, PredicateFormTwo, PredicateFormThree, FindReplaceForm
+from View.transf_forms import PredicateFormOne, PredicateFormTwo, PredicateFormThree, FindReplaceForm, DedupForm
 from Controller.TableTransformer import TableTransformer
 from Controller.AccessController import require_login, require_admin
 from Controller.AccessController import require_adminperm, require_writeperm, require_readperm
@@ -659,4 +659,34 @@ def transform_fillNullsCustomValue(dataset_id, tablename):
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
 # ENDFUNCTION
 
-# DEDUP CALLBACK
+@transf_callbacks.route('/dataset/<int:dataset_id>/table/<string:tablename>/transform/dedup/find_matches', methods = ['POST'])
+@require_login
+@require_writeperm
+def transform_dedup_find_matches(dataset_id, tablename):
+    """Callback to get a list of html tables. Each table represents a set of matches"""
+    if not DatasetManager.existsID(dataset_id):
+        abort(404)
+
+    dataset = DatasetManager.getDataset(dataset_id)
+
+    if tablename not in dataset.getTableNames():
+        abort(404)
+
+    tv = dataset.getTableViewer(tablename)
+
+    form = DedupForm(request.form)
+
+    form.fillForm(tv.get_attributes())
+
+    if not form.validate():
+        flash(message="Invalid form", category="error")
+        return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
+    # ENDIF
+
+    dd = dataset.getDeduplicator()
+
+    ignore_list = form.ignore_list.data
+    exactmatch_list = form.exactmatch_list.data
+
+    return dd.find_matches(dataset_id, tablename, exactmatch_list, ignore_list)
+# ENDFUNCTION
