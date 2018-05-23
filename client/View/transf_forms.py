@@ -175,7 +175,7 @@ class FillNullsMedian(TransformationFormBase):
 class FillNullsCustomValue(TransformationFormBase):
     """Form to fill all NULL values with custom value."""
     select_attr = SelectField('Attribute', choices=[])
-    replacement = StringField('Replacement', [InputRequired(message="Replacement value is required.")])
+    replacement = FloatField('Replacement', [InputRequired(message="Replacement value is required.")])
 
     def fillForm(self, attrs):
         self.select_attr.choices = [(attrname, attrname) for attrname in attrs]
