@@ -987,6 +987,9 @@ def _get_attr2_options(dataset_id):
 def _get_table(dataset_id, tablename, original):
     """Callback to retrieve the dataset in JSON format."""
 
+    with open('testfile.txt', 'w') as open_file:
+        open_file.write('Test')
+
     start_nr   = request.args.get('start',            type=int)
     row_count  = request.args.get('length',           type=int)
     col_nr     = request.args.get('order[0][column]', type=int)
@@ -1018,9 +1021,6 @@ def _get_table(dataset_id, tablename, original):
         'recordsFiltered': int(tv.get_rowcount()),
         'data':            json.loads(data)
     }
-
-    with open('testfile.txt', 'w') as open_file:
-        open_file.write('Test')
 
     return jsonify(retval)
 # ENDFUNCTION
