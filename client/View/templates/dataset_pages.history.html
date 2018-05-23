@@ -10,7 +10,7 @@
 					<span class="glyphicon glyphicon-share-alt" style="-webkit-transform: scaleX(-1); transform: scaleX(-1);"></span>
 				</a>
 				<div style="padding-top: 3em;">
-					{% if undo_check != True %}
+					{% if enable_undo != True %}
 						<div id="undo_false">
 							<button href="#" class="btn btn-primary" data-hover="tooltip" title="Undo" disabled>
 								<span class="glyphicon glyphicon-repeat" style="-webkit-transform: scaleX(-1); transform: scaleX(-1);"></span>
@@ -44,7 +44,7 @@
 	</div>
 
 	<script>
-		$('#history_options').change(function() {
+		$('#hist_table').change(function() {
 			$('#history').submit();
 		});
 	</script>
@@ -99,6 +99,7 @@
 				scrollY: true,
 				processing: true,
 				serverSide: true,
+				autoWidth: false,
 				pageLength: {{ row_count }},
 				order: [[0, 'desc']],
 				columnDefs: [

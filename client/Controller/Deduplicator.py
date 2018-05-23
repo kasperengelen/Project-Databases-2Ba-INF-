@@ -6,9 +6,10 @@ import psycopg2
 from psycopg2 import sql
 from Model.DatabaseConfiguration import DatabaseConfiguration
 from Model.QueryManager import QueryManager
-from recordlinkage.datasets import load_krebsregister
 
 class Deduplicator:
+    """Singleton class that servers to maintain data in between callbacks.
+    For each table data is stored by using a dict with key (setid, tablename)"""
 
     __instance = None
 
@@ -27,90 +28,113 @@ class Deduplicator:
             self.clusters = dict()
             self.entries_to_remove = dict()
 
-        def find_matches(self, setid, tablename, exact_match, ignore):
+        def find_matches(self, setid, tablename, exact_match=list(), ignore=list()):
             """Function that finds entries that look alike
             :param exact_match: list of columns that need to have the exact same value
             :param ignore: list of columns that need to be ignored in the comparison
-            :return a list of DataFrameWrappers that each represent a set of similar entries"""
+            :return a list of json objects that each represent a set of similar entries"""
 
-            schema = str(setid)
-            query = "SELECT * FROM \"{}\".\"{}\";".format(schema, tablename)
-            dataframe = pd.read_sql(query, self.engine)
-            self.dataframes[(setid, tablename)] = dataframe
+            try:
+                # load table into dataframe
+                schema = str(setid)
+                query = "SELECT * FROM \"{}\".\"{}\";".format(schema, tablename)
+                dataframe = pd.read_sql(query, self.engine)
+                self.dataframes[(setid, tablename)] = dataframe
 
-            col_names = list(dataframe)
-            types_dict = QueryManager(self.db_connection, None).get_col_types(schema, tablename)
+                col_names = list(dataframe)
+                types_dict = QueryManager(self.db_connection, None).get_col_types(schema, tablename)
 
-            indexer = rl.SortedNeighbourhoodIndex(on=exact_match, window=3)
-            pairs = indexer.index(dataframe)
+                # pair similar rows together
+                index_pairs = self.__index_table(dataframe, exact_match)
 
-            num_cols = list()
+                num_cols = list()
+                compare = rl.Compare()
+                for i in range(len(col_names)):
+                    column = col_names[i]
+                    if column in ignore:
+                        continue
 
-            compare = rl.Compare()
-            for i in range(len(col_names)):
-                column = col_names[i]
-                if column in ignore:
-                    continue
+                    if types_dict[column] == "date":
+                        dataframe[column] = dataframe[column].astype(str)
+                        continue
 
-                if types_dict[column] == "date":
-                    dataframe[column] = pd.to_datetime(dataframe[column])
-                    compare.date(column, column, label=column)
-                    continue
+                    if np.issubdtype(dataframe[column].dtype, np.number):
+                        # convert numeric attributes to text so we can compare them
+                        dataframe[column] = dataframe[column].astype(str)
+                        num_cols.append(column)
 
-                if np.issubdtype(dataframe[column].dtype, np.number):
-                    # convert numeric attributes to text so we can compare them
-                    dataframe[column] = dataframe[column].astype(str)
-                    num_cols.append(column)
+                    compare.string(column, column, label=column, method="damerau_levenshtein")
 
-                compare.string(column, column, label=column, method="damerau_levenshtein")
+                # compute similarity between pairs
+                potential_pairs = compare.compute(index_pairs, dataframe)
 
-            potential_pairs = compare.compute(pairs, dataframe)
-            # now that the comparison has happened, we can convert the numeric types back to their original
-            for col in num_cols:
-                dataframe[col] = pd.to_numeric(dataframe[col])
+                # now that the comparison has happened, we can convert the numeric types back to their original types
+                for col in num_cols:
+                    dataframe[col] = pd.to_numeric(dataframe[col])
 
-            kmeans = rl.KMeansClassifier()
-            kmeans.learn(potential_pairs)
-            results = kmeans.predict(potential_pairs)
+                # if only one pair was found to match, predict can't be called because it requires at least 2 pairs
+                if len(potential_pairs) < 2:
+                    results = potential_pairs.index.values
+                else:
+                    # predict what matches are true matches
+                    kmeans = rl.KMeansClassifier()
+                    kmeans.learn(potential_pairs)
+                    results = kmeans.predict(potential_pairs)
 
-            self.clusters[(setid, tablename)] = self.__cluster_pairs(results)
-            certain_paired_rows = list()
-            for cluster in self.clusters[(setid, tablename)]:
-                rows = list()
-                for row_id in cluster:
-                    rows.append(dataframe.ix[row_id])
-                paired_table = pd.DataFrame(rows)
-                certain_paired_rows.append(json.loads(paired_table.to_json(orient='values', date_format='iso')))
+                # cluster together similar pairs
+                self.clusters[(setid, tablename)] = self.__cluster_pairs(results)
 
-            self.entries_to_remove[(setid, tablename)] = set()
+                # create list of json objects
+                certain_paired_rows = list()
+                for cluster in self.clusters[(setid, tablename)]:
+                    rows = list()
+                    for row_id in cluster:
+                        rows.append(dataframe.ix[row_id])
+                    paired_table = pd.DataFrame(rows)
+                    certain_paired_rows.append(json.loads(paired_table.to_json(orient='values', date_format='iso')))
 
-            return certain_paired_rows
+                self.entries_to_remove[(setid, tablename)] = set()
+
+                return certain_paired_rows
+
+            except Exception:
+                self.clean_data(setid, tablename)
+                raise
 
         def deduplicate_cluster(self, setid, tablename, cluster_id, entries_to_keep=None):
             """Removes duplicates in a cluster according to user_feedback
             :param cluster_id: index in self.clusters
-            :param entries_to_keep: entries that should not be deduplicated"""
+            :param entries_to_keep: entries that should not be deduplicated (deleted)"""
 
-            cluster = self.clusters[(setid, tablename)][cluster_id]
+            try:
+                cluster = list(self.clusters[(setid, tablename)][cluster_id])
 
-            # if no entries are specified to keep, only keep the first entry
-            if entries_to_keep is None: entries_to_keep = [next(iter(cluster))]
+                # if no entries are specified to keep, only keep the first entry
+                if entries_to_keep is None: entries_to_keep = [0]
 
-            # remove the entries that should not be deduplicated
-            for entry in entries_to_keep:
-                cluster.remove(entry)
+                # remove the entries that should not be deduplicated
+                for entry in reversed(sorted(entries_to_keep)):
+                    del cluster[entry]
 
-            self.entries_to_remove[(setid, tablename)] = self.entries_to_remove[(setid, tablename)].union(cluster)
+                self.entries_to_remove[(setid, tablename)] = self.entries_to_remove[(setid, tablename)].union(set(cluster))
 
-            # if the current cluster is the last one, submit the changes
-            if cluster_id == len(self.clusters[(setid, tablename)]) - 1:
-                self.__submit(setid, tablename)
+                # if the current cluster is the last one, submit the changes
+                if cluster_id == len(self.clusters[(setid, tablename)]) - 1:
+                    self.__submit(setid, tablename)
+
+            except Exception:
+                self.clean_data(setid, tablename)
+                raise
 
         def yes_to_all(self, setid, tablename, cluster_id):
             """Deduplicate_cluster automatically starting from cluster_id to the last cluster"""
 
-            for i in range(cluster_id, len(self.clusters[(setid, tablename)])):
-                self.deduplicate_cluster(setid, tablename, i)
+            try:
+                for i in range(cluster_id, len(self.clusters[(setid, tablename)])):
+                    self.deduplicate_cluster(setid, tablename, i)
+            except Exception:
+                self.clean_data(setid, tablename)
+                raise
 
         def clean_data(self, setid, tablename):
             """Clean all data in Deduplicator associated with the table"""
@@ -126,10 +150,19 @@ class Deduplicator:
             self.dataframes[(setid, tablename)] = self.dataframes[(setid, tablename)].drop(self.entries_to_remove[(setid, tablename)])
 
             dataframe = self.dataframes[(setid, tablename)]
-            print(dataframe.head(50))
             dataframe.to_sql(tablename, self.engine, schema=schema, if_exists="replace", index=False)
 
             self.clean_data(setid, tablename)
+
+        def __index_table(self, dataframe, columns):
+            if len(columns) == 0:
+                indexer = rl.FullIndex()
+            elif len(columns) == 1:
+                indexer = rl.SortedNeighbourhoodIndex(on=columns, window=3)
+            else:
+                indexer = rl.BlockIndex(on=columns)
+
+            return indexer.index(dataframe)
 
         def __cluster_pairs(self, pairs):
             """Group pairs together, for example:

@@ -41,14 +41,14 @@
 						<span class="glyphicon glyphicon-download-alt"></span></a>
 					{% include "includes/modals/_download_modal.html" %}
 					<div style="padding-top: 1em;"></div>
-
-					<a id="file" href="#" class="btn btn-primary" data-toggle="modal" data-hover="tooltip" title="Copy" data-target="#copyForm_{{ table }}">
+					{% if original != True %}
+					<a id="copy" href="#" class="btn btn-primary" data-toggle="modal" data-hover="tooltip" title="Copy" data-target="#copyForm">
 						<span class="glyphicon glyphicon-copy"></span></a>
+					{% include "includes/modals/_copy_modal.html" %}
 
 					<div style="padding-top: 1em;"></div>
-
-					{% if original != True %}
-					<a id="file" class="btn btn-primary" data-toggle="collapse" data-hover="tooltip" title="Statistics" data-parent="#accordion" href="#view">
+					
+					<a id="stats" class="btn btn-primary" data-toggle="collapse" data-hover="tooltip" title="Statistics" data-parent="#accordion" href="#view">
 						<span class="glyphicon glyphicon-stats"></span></a>
 					{% endif %}
 				</div>
@@ -75,87 +75,22 @@
 			       	    <div class="col-sm-4 col-sm-offset-4">
 			       	    	<canvas id="PieChart"></canvas>
 						</div>
-						<script>
-							$(function() {
-								getPieChart($('#view_attr option:selected').text());
-
-								var input = {
-									view_attr: $('#view_attr option:selected').text()
-								}
-
-								$.get("{{ url_for('dataset_pages._get_colstats', dataset_id=dataset_info.setid, tablename=table_name, attr_name=input) }}", input, function(data) {
-										if(data != "") {	
-											$('#col_stats').append(data);
-										}
-									})
-							});
-
-    						function getRandomColor() {
-							    var r = Math.floor(Math.random() * 255);
-							    var g = Math.floor(Math.random() * 255);
-							    var b = Math.floor(Math.random() * 255);
-							    return "rgb(" + r + "," + g + "," + b + ")";
-							}
-
-							function getRandomColors(labels) {
-							    var colors = [];
-							    for (var i in labels) {
-							  		colors.push(getRandomColor())
-							    }
-							    return colors;
-							}
-
-							function getPieChart(attr_name) {
-
-							    var formdata = attr_name;
-
-							    $.ajax({
-							        url: "{{ url_for('dataset_pages._get_chart_freq', dataset_id=dataset_info.setid, tablename=table_name, attr_name='temp_attr') }}".replace('temp_attr', formdata),
-							        success: function(response) {
-							            var ctx = document.getElementById('PieChart');
-							            var myChart = new Chart(ctx, {
-							              type: 'pie',
-							              data: {
-							                labels: response.labels,
-							                datasets: [
-							                  { 
-							                    data: response.sizes,
-							                    backgroundColor: getRandomColors(response.labels)
-							                  }
-							                ]
-							              }
-							            });
-							        }
-							    });
-							}
-
-							$('#view_attr').change(function() {
-							    getPieChart($('#view_attr option:selected').text());
-
-							    $('#col_stats').empty();
-
-							    var input = {
-									view_attr: $('#view_attr option:selected').text()
-								}
-
-							    $.get("{{ url_for('dataset_pages._get_colstats', dataset_id=dataset_info.setid, tablename=table_name, attr_name=input) }}", input, function(data) {
-										if(data != "") {	
-											$('#col_stats').append(data);
-										}
-									})
-							});
-							</script>
-
 				    </div>
 	        	</div>
 	      	</div>
 	    </div>
-	{% endif %}
-		
-		  			  		
+	{% endif %}		  		
 
 
 	  <div class="row">
+	  	<div class="col-sm-12" id="loading_transform" style="height: 150px;">
+	  		<div class="col-sm-5"></div>
+	  		<div class="col-sm-2 text-center">
+			    <h3>Rendering</h3>
+			    <img width="120" height="auto" src="https://upload.wikimedia.org/wikipedia/commons/b/b1/Loading_icon.gif">
+			</div>
+			<div class="col-sm-5"></div>
+		</div>
 	  		{% if original != True %}
 			<div class="col-sm-3" style="position: sticky; top: 65px;">
 				<nav class="navbar-default sidebar" style="border-radius: 5px; background-color: #e5e5e5;">
@@ -172,7 +107,7 @@
 
 				            <li><a id="query_button" href="#" data-toggle="modal" data-target="#querymodal">Custom Query/Queries</a></li>
 
-				            <li><a href="#" data-toggle="modal" data-target="#datadedupmodal_1">Data Deduplication</a></li>
+				            <li><a href="#" data-toggle="modal" data-target="#datadedupmodal">Data Deduplication</a></li>
 
 				            <li><a href="#" data-toggle="modal" data-target="#predicatemodal" onclick="$('#predicate_newtable').hide()">
 				            	Delete Rows using Predicate</a></li>
@@ -265,8 +200,11 @@
 
 			{% endif %}
 		
-		
-			<div id="tablediv" class="col-sm-9">
+			{% if original != True %}
+				<div id="tablediv" class="col-sm-9">
+			{% else %}
+				<div id="originaltablediv" class="col-sm-12">
+			{% endif %}
 				<style>
 					table {
 		       			border-collapse: collapse;
@@ -296,7 +234,6 @@
 				</style>
 
 				<!-- TABLE -->
-
 				<table id="mytable">
 					<thead>
 						<tr>

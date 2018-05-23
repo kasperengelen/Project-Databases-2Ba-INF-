@@ -13,7 +13,7 @@
                     {% from "includes/_formhelpers.html" import render_field %}
                     <form method="post"
                         action="{{ url_for('transf_callbacks.transform_discretizeEqualFreq', dataset_id=dataset_info.setid, tablename=table_name) }}"
-                        name="discretizefreq">
+                        id="discretizefreq_form">
                     {{ discretizeFreq_form.csrf_token }}
                     <div class="form-group" style="width: 35%; display: inline-block;">
                         {{render_field(discretizeFreq_form.select_attr, class_="form-control")}}

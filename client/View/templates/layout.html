@@ -17,6 +17,7 @@
     <style>
         body .modal {
             overflow-y: none;
+
         }
 
         body .modal-open {
@@ -33,15 +34,36 @@
             text-align: left;
             padding: 8px;
         }
+
+        div#loading {
+            background-color: white;
+        }
     </style>
   </head>
   <body>    
     {% include "includes/_navbar.html" %}
-
     <div class="container-fluid" style="padding: 65px;">
         {% include "includes/_messages.html" %}
         {% block body %}{% endblock %}
     </div>
+    <script>
+        $(function() {
+            $('#loading_transform').hide();
+            $('#loading_upload').hide();
+        });
 
+        $('#normalize_form, #discretizewidth_form, #discretizefreq_form, #discretizecustom_form, #onehotencode_form, #dedupform').submit(function() {
+            $('.modal').modal('hide');
+            $("html, body").animate({ scrollTop: 0 }, 4000);
+            $('#loading_transform').show();
+        });
+
+        $('#upload_form').submit(function() {
+            $("html, body").animate({ scrollTop: 0 }, 4000);
+            $('#loading_upload').show();
+        });
+
+
+    </script>
 </body>
 </html>

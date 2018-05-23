@@ -557,7 +557,7 @@ def copy_table(dataset_id, tablename):
 
     tt = dataset.getTableTransformer(tablename)
 
-    newname = form.new_table_name.data
+    newname = form.table_name.data
 
     if newname in dataset.getTableNames():
         flash(message="Specified tablename is already in use.", category="error")
@@ -566,7 +566,7 @@ def copy_table(dataset_id, tablename):
 
     # do copy
     tt.copy_table(old=tablename, new=newname)
-
+    flash(message="Table copy has been made.", category="success")
     return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=newname))
 # ENDFUNCTION
 
@@ -1073,7 +1073,7 @@ def _custom_query(dataset_id):
 @dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>/dedup/find_matches', methods = ['POST'])
 @require_login
 @require_writeperm
-def transform_dedup_find_matches(dataset_id, tablename):
+def dedup_find_matches(dataset_id, tablename):
     """Callback to get a list of html tables. Each table represents a set of matches"""
     if not DatasetManager.existsID(dataset_id):
         abort(404)
@@ -1101,6 +1101,85 @@ def transform_dedup_find_matches(dataset_id, tablename):
 
     table_list = dd.find_matches(dataset_id, tablename, exactmatch_list, ignore_list)
 
-    return render_template('dataset_pages.deduplication.html', table_list = table_list,
-                                                        attributes = tv.get_attributes())
+    if table_list == []:
+        flash(message="No duplicates found", category="error")
+        return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
+
+    return render_template('dataset_pages.deduplication.html', table_list=table_list,
+                                                                attributes=tv.get_attributes(),
+                                                                datasetid=dataset_id,
+                                                                table_name=tablename)
+# ENDFUNCTION
+
+@dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>/dedup/deduplicate_cluster', methods=['POST'])
+@require_login
+@require_writeperm
+def dedup_deduplicate_cluster(dataset_id, tablename):
+    """Callback to specifiy what entries need to be kept from a cluster"""
+
+    if not DatasetManager.existsID(dataset_id):
+        abort(404)
+
+    dataset = DatasetManager.getDataset(dataset_id)
+
+    if tablename not in dataset.getTableNames():
+        abort(404)
+
+    clusterid = 0
+    keep_entries = []
+
+    if request.method == "POST":
+        clusterid = request.form.get('id', type=int)
+        keep_entries = request.form.getlist('entries[]', type=int)
+
+    dd = dataset.getDeduplicator()
+    dd.deduplicate_cluster(dataset_id, tablename, clusterid, keep_entries)
+
+    return 'True'
+# ENDFUNCTION
+
+@dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>/dedup/yes_to_all', methods=['POST'])
+@require_login
+@require_writeperm
+def dedup_yes_to_all(dataset_id, tablename):
+    """Callback to automatically deduplicate starting from clusterid"""
+    if not DatasetManager.existsID(dataset_id):
+        abort(404)
+
+    dataset = DatasetManager.getDataset(dataset_id)
+
+    if tablename not in dataset.getTableNames():
+        abort(404)
+
+    clusterid = 0
+
+    if request.method == "POST":
+        clusterid = request.form.get('id', type=int)
+
+    print(clusterid)
+
+    dd = dataset.getDeduplicator()
+    dd.yes_to_all(dataset_id, tablename, clusterid)
+
+
+    return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
+# ENDFUNCTION
+
+@dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>/dedup/cancel', methods=['POST'])
+@require_login
+@require_writeperm
+def dedup_cancel(dataset_id, tablename):
+    """Callback to cancel the current deduplication"""
+    if not DatasetManager.existsID(dataset_id):
+        abort(404)
+
+    dataset = DatasetManager.getDataset(dataset_id)
+
+    if tablename not in dataset.getTableNames():
+        abort(404)
+
+    dd = dataset.getDeduplicator()
+    dd.clean_data(dataset_id, tablename)
+
+    return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
 # ENDFUNCTION

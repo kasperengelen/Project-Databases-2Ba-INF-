@@ -3,6 +3,7 @@ import re
 import os
 import csv
 
+import json
 import pandas as pd
 import numpy as np
 import psycopg2
@@ -45,18 +46,27 @@ class TableViewer:
         
     def get_attributes(self):
         """Method that returns a list of all attributes of the table."""
-        SQL_query = "SELECT * FROM \"%s\".\"%s\" LIMIT 1" % (self.schema, self.tablename)
-        data_frame = pd.read_sql(SQL_query, self.engine)
-        return data_frame.columns.values.tolist()
+        cur = self.db_connection.cursor()
+        query_args = [sql.Identifier(self.schema), sql.Identifier(self.tablename)]
+        cur.execute(sql.SQL('SELECT * from {}.{} LIMIT 1').format(*query_args))
+        attributes =  [desc[0] for desc in cur.description]
+        return attributes
 
     def get_rowcount(self):
         """Simple method to get the number of rows the table viewed by TableViewer has."""
         return self.maxrows
 
     def render_json(self, offset, limit, order=False, ascending=True, on_column=""):
-        SQL_query =  'SELECT * FROM "%s"."%s" LIMIT %s OFFSET %s' % (self.schema, self.tablename, limit, offset)
-        data_frame = pd.read_sql(SQL_query, self.engine)
-        json_string = data_frame.to_json(orient='values', date_format='iso')
+        cur = self.db_connection.cursor()
+        read_query = 'SELECT * FROM {}.{}'
+        identifiers = [sql.Identifier(self.schema), sql.Identifier(self.tablename)]
+        if order is True:
+            ordering = 'ASC' if ascending else 'DESC'
+            identifiers.append(sql.Identifier(on_column))
+            read_query += (' ORDER BY {} ' + ordering)
+        read_query += ' LIMIT %s OFFSET %s' % (limit, offset)
+        cur.execute(sql.SQL(read_query).format(*identifiers))
+        json_string = json.dumps(cur.fetchall(), default=str)
         return json_string
         
     def get_columntype_dict(self):
@@ -131,7 +141,7 @@ class TableViewer:
 
         if other > 0:
             sizes.append(other)
-            labels.append("< 5%")
+            labels.append("other")
 
         return (labels, sizes)
 

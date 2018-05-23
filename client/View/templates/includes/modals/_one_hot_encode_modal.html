@@ -12,7 +12,7 @@
                 <!-- One Hot Encoding -->
                 <div style="overflow-x: auto;">
                     <form method="post" action="{{ url_for('transf_callbacks.transform_onehotencoding', dataset_id=dataset_info.setid,
-                    tablename=table_name) }}" name="onehotencode">
+                    tablename=table_name) }}" id="onehotencode_form">
                     {{ onehotencodingform.csrf_token }}
                     <div class="form-group" style="width: 35%; display: inline-block;">
                         {{render_field(onehotencodingform.select_attr, class_="form-control")}}

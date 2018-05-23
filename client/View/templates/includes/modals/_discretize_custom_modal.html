@@ -11,7 +11,7 @@
                 <!-- Discretize Equal Width -->
                 <div style="overflow-x: auto;">
                     {% from "includes/_formhelpers.html" import render_field %}
-                    <form method="post" action="{{ url_for('transf_callbacks.transform_discretizeCustomRange', dataset_id=dataset_info.setid, tablename=table_name) }}"     name="discretizecustom">
+                    <form method="post" action="{{ url_for('transf_callbacks.transform_discretizeCustomRange', dataset_id=dataset_info.setid, tablename=table_name) }}"     id="discretizecustom_form">
                     {{ discretizeCustom_form.csrf_token }}
                     <div class="form-group" style="width: 35%; display: inline-block;">
                         {{render_field(discretizeCustom_form.select_attr, class_="form-control")}}

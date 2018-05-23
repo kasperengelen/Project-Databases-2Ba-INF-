@@ -1,4 +1,4 @@
-<div id="#copyForm_{{ table }}" class="modal fade text-left" role="dialog">
+<div id="copyForm" class="modal fade text-left" role="dialog">
     <div class="modal-dialog">
         <!-- Modal content-->
         <div class="modal-content">
@@ -8,10 +8,10 @@
             </div>
             <div class="modal-body">
             	{% from "includes/_formhelpers.html" import render_field %}
-                <form method="post" action="{{ url_for('dataset_pages.copy_table') }}">
-                    {{ copy_form.hidden_tag() }}
+                <form method="post" action="{{ url_for('dataset_pages.copy_table', dataset_id=dataset_info.setid, tablename=table_name) }}">
+                    {{ copyform.hidden_tag() }}
                     <div class="form-group">
-                        {{render_field(copyform.tablename, class_="form-control")}}
+                        {{render_field(copyform.table_name, class_="form-control")}}
                     </div>
                     <div class="text-right">
                         <button type="submit" class="btn btn-primary">Copy Table</button>

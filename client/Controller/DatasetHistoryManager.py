@@ -1,5 +1,6 @@
 import re
 import math
+import json
 
 import psycopg2
 import psycopg2.extras
@@ -84,8 +85,8 @@ class DatasetHistoryManager:
             dict_cur.execute(sql.SQL(query), [self.setid, limit, offset])
 
         all_rows = dict_cur.fetchall()
-        df = self.__rows_to_dataframe(all_rows)
-        json_string = df.to_json(orient='values', date_format='iso')
+        data = self.__rows_to_list(all_rows)
+        json_string = json.dumps(data, default=str)
         return json_string
         
     def __python_list_to_postgres_array(self, py_list, transformation_type):
@@ -188,27 +189,20 @@ class DatasetHistoryManager:
         
         self.choice_dict =  choice_dict
 
-    def __rows_to_dataframe(self, row_list):
-        """Method that translates row results of a query to a pandas dataframe."""
-        list_a = []
-        list_b = []
+    def __rows_to_list(self, row_list):
+        """Method that translates row results of a query to a list of lists."""
         self.__generate_choice_dict()
-
+        result = []
+        
         for elem in row_list:
             tr_type = int(elem['transformation_type'])
             field1 = self.choice_dict[tr_type](elem)
             if self.__is_new_table(elem):
                 field1 += self.__get_new_table_string(elem)
             field2 = elem['transformation_date']
-            list_a.append(field1)
-            list_b.append(field2)
+            result.append((field2, field1))
 
-        val_dict = { 'Transformation description' : list_a,
-                     'Operation date'             : list_b}
-        
-        pd.set_option('display.max_colwidth', -1)
-        df = pd.DataFrame(data=val_dict)
-        return df
+        return result
 
     def __unquote_string(self, string):
         """Assuming a string is quoted, this method will return the same string without the quotes"""

@@ -1,0 +1,163 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+	
+	<div class="jumbotron text-center" style="padding: 1%">
+        <div class="pull-left">
+            <a data-hover="tooltip" title="Previous" href="/" class="btn btn-primary">
+				<span class="glyphicon glyphicon-share-alt" style="-webkit-transform: scaleX(-1); transform: scaleX(-1);"></span></a>
+        </div>
+        <div class="text-center">
+            <h2>Data Deduplication</h2>
+        </div>
+    </div>
+
+    <div class="jumbotron">
+    	{% for deduptable in table_list %}
+    		<div id="{{ loop.index }}" style="display: none;">
+    			<style>
+					table {
+		       			border-collapse: collapse;
+		        		float:left;
+						padding:3px;
+						border-radius: 3px;
+					}
+
+			        td, th {
+			         	font-size: 15px;
+			            text-align: left;
+			            padding: 8px;
+			        }
+
+			        table thead {
+			        	background-color: lightgrey;
+			        }
+
+			        table tbody tr:nth-child(even) {
+			        	background-color: #eaeaea;
+			        }
+
+			        .dataTables_filter {
+			        	display: none;
+			        }
+
+				</style>
+    			<table id="table_{{ loop.index }}">
+    				<thead>
+    					<tr>
+    						<th></th>
+    						{% for col in attributes %}
+    							<th>{{col}}</th>
+    						{% endfor %}
+    					</tr>
+    				</thead>
+    				<tbody>
+    					{% for row in deduptable %}
+	    					<tr>
+	    						<td></td>
+	    						{% for item in row %}
+	    							<td>{{item}}</td>
+	    						{% endfor %}
+	    					</tr>
+	    				{% endfor %}
+    				</tbody>
+    			</table>
+
+    			<div style="padding-top: 2em;"></div>
+    			
+    			<div class="pull-right">
+    				<a style="display: inline-block;" id="yestoall_{{ loop.index }}" href="#" class="btn btn-primary">Yes to All</a>
+    				<a style="display: inline-block;" id="nextbtn_{{ loop.index }}" href="#" class="btn btn-primary">Next</a>
+    			</div>
+    		</div>
+    		<script>
+    			var table_elements = [];
+
+    			var row_index = -1;
+
+    			if($.fn.dataTable.isDataTable('#table_{{ loop.index }}')){
+                    dtable = $('#table_{{ loop.index }}').DataTable();
+                 }
+                 else {
+	    			var dtable = $('#table_{{ loop.index }}').DataTable({
+	    				sorting: false,
+	    				paging: false,
+	    				search: false,
+	    				info: false,
+	    				autoWidth: false,
+	    				columnDefs: [
+	    					{
+	    						targets: 0,
+	    						width: '1%',
+	    						render: function(data) {
+	    							row_index += 1;
+	    							return '<input type="checkbox" name="' + row_index + '">';
+	    						}
+
+	    					}
+	    				]
+	    			}); 
+
+	    			$('#table_{{ loop.index }} tbody').on('click', 'input', function() {
+	    				if($(this).is(':checked')){
+	    					var el = parseInt($(this).attr('name'));
+	    					table_elements.push(el);
+	    				}
+	    				else {
+	    					var idx = table_elements.indexOf($(this).attr('name'));
+	    					if(idx > -1){
+	    						table_elements.splice(idx, 1);
+	    					}
+	    				}
+	    			});
+	    		}
+
+	    		$(document).ready(function() {
+	    			$('#1').show();
+	    		});
+
+	    		$('#nextbtn_{{ loop.index }}').on('click', function() {
+	    			var cur_id = parseInt($(this).parent().parent().attr('id'));
+
+	    			var clusterid = cur_id -1;
+
+	    			$.ajax({
+	    				url: "{{ url_for('dataset_pages.dedup_deduplicate_cluster', dataset_id=datasetid, tablename=table_name) }}",
+	    				type: "POST",
+	    				data: {"entries":table_elements, "id":clusterid},
+	    				success: function() {}
+	    			});
+
+	    			var next_id = cur_id + 1;
+
+	    			if(next_id <= {{ table_list|length }} ){
+	    				alert(next_id + " - " + {{ table_list|length }})
+	    				$('#' + next_id).show();
+	    				$(this).parent().parent().hide();
+	    				table_elements = [];
+	    			}
+	    			else {
+	    				table_elements = [];
+	    				window.location.href = "{{ url_for('dataset_pages.table', dataset_id=datasetid, tablename=table_name) }}"
+	    			}
+	    		});
+
+	    		$('#yestoall_{{ loop.index }}').on('click', function() {
+	    			var curid = parseInt($(this).parent().parent().attr('id'));
+	    			var cluster = curid -1;
+
+	    			$.ajax({
+	    				url: "{{ url_for('dataset_pages.dedup_yes_to_all', dataset_id=datasetid, tablename=table_name) }}",
+	    				type: "POST",
+	    				data: {"id":cluster},
+	    				success: function(response) {
+	    					alert('YES')
+	    					document.write(response);
+	    				}
+	    			});
+	    		});
+    		</script>
+    	{% endfor %}
+    </div>
+
+{% endblock %}
