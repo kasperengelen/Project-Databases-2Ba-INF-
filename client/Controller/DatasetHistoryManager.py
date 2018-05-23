@@ -8,7 +8,7 @@ from psycopg2 import sql
 import pandas as pd
 
 class DatasetHistoryManager:
-    """Class that manages the transformation history ofimport reimport re a dataset.
+    """Class that manages the transformation history of a dataset.
 
     Attributes:
         setid: The id of the dataset that the manager has to access.
@@ -88,6 +88,12 @@ class DatasetHistoryManager:
         data = self.__rows_to_list(all_rows)
         json_string = json.dumps(data, default=str)
         return json_string
+
+    def is_undo_enabled(self, tablename):
+        """Method that returns whether it's possible to undo the most recent transformation
+        of a table in the dataset.
+        """
+        return False
         
     def __python_list_to_postgres_array(self, py_list, transformation_type):
         """Method that represents a python list as a postgres array for inserting into a PostreSQL database."""
