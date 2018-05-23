@@ -67,6 +67,26 @@ class QueryManager:
         return [dict(result) for result in results]
     # ENDFUNCTION
 
+    def getPermission(self, *args, **kwargs):
+        """Method to retrieve permission entries from the SYSTEM.set_permissions table.
+        Fields:
+            userid          (int),
+            setid           (int),
+            permission_type (str)
+        
+        Returns a list of tuples that conform to the specified requirements.
+        The format will be a list of dicts that map field names to the tuple's values."""
+        
+        self.__check_specified_params('system.set_permissions', kwargs)
+
+        query, values = self.__form_select_statement('system.set_permissions', kwargs)
+
+        self.dict_cur.execute(query, values)
+        results = self.dict_cur.fetchall()
+
+        return [dict(result) for result in results]
+    # ENDFUNCTION
+
     def insertUser(self, *args, **kwargs):
         # fetch return value
         """Method to insert entries into the SYSTEM.user_accounts table.
@@ -122,6 +142,29 @@ class QueryManager:
             return result[kwargs['returning']]
     # ENDFUNCTION
 
+    def insertPermission(self, *args, **kwargs):
+        """Method to insert entries into the SYSTEM.set_permissions table.
+        Fields:
+            userid          (int),
+            setid           (int),
+            permission_type (str)
+
+        Inserts a tuple with the specified fields and the associated values.
+
+        insertDataset(userid=20,setid=20,permission_type='admin')"""
+        
+        self.__check_specified_params('system.set_permissions', kwargs)
+
+        query, values = self.__form_insert_statement('system.set_permissions', kwargs)
+
+        self.dict_cur.execute(query, values)
+        self.db_conn.commit()
+
+        if 'returning' in kwargs and kwargs['returning'] is not None:
+            result = self.dict_cur.fetchone()
+            return result[kwargs['returning']]
+    # ENDFUNCTION.
+
     def deleteUser(self, *args, **kwargs):
         """Method to delete entries from the SYSTEM.user_accounts table.
         Fields:
@@ -157,6 +200,23 @@ class QueryManager:
         self.__check_specified_params('system.datasets', kwargs)
 
         query, values = self.__form_delete_statement('system.datasets', kwargs)
+
+        self.dict_cur.execute(query, values)
+        self.db_conn.commit()
+    # ENDFUNCTION
+
+    def deletePermission(self, *args, **kwargs):
+        """Method to delete entries from SYSTEM.datasets table.
+        Fields:
+            userid          (int),
+            setid           (int),
+            permission_type (str)
+
+        Deletes tuples that conform to the specified requirements."""
+
+        self.__check_specified_params('system.set_permissions', kwargs)
+
+        query, values = self.__form_delete_statement('system.set_permissions', kwargs)
 
         self.dict_cur.execute(query, values)
         self.db_conn.commit()
@@ -222,6 +282,65 @@ class QueryManager:
         self.db_conn.commit()
     # ENDFUNCTION
 
+    def getDatasetsForUserID(self, userid):
+        """Retrieve all dataset associated with the specified user."""
+
+        self.dict_cur.execute("SELECT * FROM system.datasets WHERE setid IN (SELECT setid FROM system.set_permissions WHERE userid=%s);", [userid])
+        results = self.dict_cur.fetchall()
+
+        return [dict(result) for result in results]
+    # ENDFUNCTION
+
+    def createSchema(self, schemaname):
+        """Create a schema with the specified name."""
+        
+        self.dict_cur.execute("CREATE SCHEMA \"{}\";".format(schemaname))
+    # ENDFUNCTION
+
+    def destroySchema(self, schemaname, if_exists=False, cascade=False):
+        """Drop the schema with the specified name from the database.
+        If 'if_exists' is set to True, the schema will only be dropped if it exists.
+        If 'cascade' is set to True, the CASCADE keyword will be added to the query."""
+        
+        query = "DROP SCHEMA "
+
+        if if_exists:
+            query += "IF EXISTS "
+
+        query += "\"{}\" ".format(schemaname)
+
+        if cascade:
+            query += "CASCADE"
+
+        query += ";"
+
+        self.dict_cur.execute(query)
+        self.db_conn.commit()
+    # ENDFUNCTION
+
+    def destroyTable(self, tablename, if_exist=False, cascade=False):
+        """Drop the specified table from the database.
+        If 'if_exists' is set to True, the table will only be dropped if it exists.
+        If 'cascade' is set to True, the CASCADE keyword will be added to the query.
+
+        Note if the table belongs to a schema, the schema name must be included in the tablename."""
+
+        query = "DROP TABLE "
+
+        if if_exists:
+            query += "IF EXISTS "
+
+        query += tablename + " "
+
+        if cascade:
+            query += "CASCADE"
+
+        query += ";"
+
+        self.dict_cur.execute(query)
+        self.db_conn.commit()
+    # ENDFUNCTION
+
     def get_table_names(self, schema):
         self.dict_cur.execute("SELECT table_name FROM information_schema.tables WHERE table_schema = %s;",
                          [schema])
@@ -283,14 +402,14 @@ class QueryManager:
                 if isinstance(field_value, datetime.datetime):
                     field_value = field_value.isoformat()
 
-                query += "" + field_name + "= %s, "
+                query += "" + field_name + "= %s AND "
                 values.append(field_value)
         # ENDFOR
 
         if not specified_fields:
             query += "TRUE;"
         else:
-            query = query[:-2] + ";"
+            query = query[:-4] + ";"
 
         return query, values
     # ENDFUNCTION
@@ -352,14 +471,14 @@ class QueryManager:
                 if isinstance(field_value, datetime.datetime):
                     field_value = field_value.isoformat()
 
-                query += "" + field_name + "= %s, "
+                query += "" + field_name + "= %s AND "
                 values.append(field_value)
         # ENDFOR
 
         if not specified_fields:
             query += "TRUE;"
         else:
-            query = query[:-2] + ";"
+            query = query[:-4] + ";"
 
         return query, values
     # ENDFUNCTION
@@ -394,10 +513,10 @@ class QueryManager:
                 if isinstance(field_value, datetime.datetime):
                     field_value = field_value.isoformat()
 
-                query += field_name + " = %s,"
+                query += field_name + " = %s AND "
                 values.append(field_value)
         # ENDFOR
-        query = query[:-1] + ";"
+        query = query[:-4] + ";"
 
         return query, values
     # ENDFUNCTION
