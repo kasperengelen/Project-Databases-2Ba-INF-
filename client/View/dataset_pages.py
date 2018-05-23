@@ -992,6 +992,9 @@ def _get_table(dataset_id, tablename, original):
     col_nr     = request.args.get('order[0][column]', type=int)
     sort_order = request.args.get('order[0][dir]',    type=str)
 
+    for key in request.args:
+        print(key.request)
+
     # set current session row_count to the specified count
     session['rowcount'] = row_count
 
