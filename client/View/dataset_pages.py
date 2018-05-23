@@ -1138,10 +1138,10 @@ def dedup_deduplicate_cluster(dataset_id, tablename):
     return 'True'
 # ENDFUNCTION
 
-@dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>/dedup/yes_to_all', methods=['POST'])
+@dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>/clusterid/<int:clusterid>/dedup/yes_to_all')
 @require_login
 @require_writeperm
-def dedup_yes_to_all(dataset_id, tablename):
+def dedup_yes_to_all(dataset_id, tablename, clusterid):
     """Callback to automatically deduplicate starting from clusterid"""
     if not DatasetManager.existsID(dataset_id):
         abort(404)
@@ -1151,24 +1151,14 @@ def dedup_yes_to_all(dataset_id, tablename):
     if tablename not in dataset.getTableNames():
         abort(404)
 
-    clusterid = -1
-
-    if request.method == "POST":
-        clusterid = request.form.get('id', type=int)
-
-    print(clusterid)
-
-    if clusterid == -1:
-        flash(message="Something went wrong.", category="error")
-        redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))       
-
     dd = dataset.getDeduplicator()
     dd.yes_to_all(dataset_id, tablename, clusterid)
 
+    flash(message="Data-deduplication completed.", category="success")
     return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
 # ENDFUNCTION
 
-@dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>/dedup/cancel', methods=['POST'])
+@dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>/dedup/cancel')
 @require_login
 @require_writeperm
 def dedup_cancel(dataset_id, tablename):
@@ -1184,5 +1174,6 @@ def dedup_cancel(dataset_id, tablename):
     dd = dataset.getDeduplicator()
     dd.clean_data(dataset_id, tablename)
 
+    flash(message="Data-deduplication canceled.", category="success")
     return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
 # ENDFUNCTION
