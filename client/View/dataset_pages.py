@@ -988,7 +988,7 @@ def _get_table(dataset_id, tablename, original):
     """Callback to retrieve the dataset in JSON format."""
 
     for key in request.args:
-        print(key, request)
+        print(key, request.args[key])
 
     start_nr   = request.args.get('start',            type=int)
     row_count  = request.args.get('length',           type=int)
