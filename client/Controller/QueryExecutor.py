@@ -1,4 +1,5 @@
 import re
+import json
 
 import psqlparse
 import psycopg2
@@ -27,6 +28,11 @@ class QueryExecutor:
         self.write_perm = write_perm
         self.history_manager = DatasetHistoryManager(setid, db_conn, True)
         self.altered_data = {}
+
+    class QueryError(Exception):
+        """
+        Base exception for QueryExecutor to reference all it's exceptions.
+        """
 
     class SyntaxError(Exception):
         """
@@ -124,14 +130,14 @@ class QueryExecutor:
         case for SELECT statements that obviously need to be visualized.
         """
         try:
-            pd.set_option('display.max_colwidth', -1)
-            data_frame = pd.read_sql(query, self.engine)
+            cur = self.db_connection.cursor()
+            cur.execute(query)
             
         except sqlalchemy.exc.ProgrammingError as e:
             raise self.SyntaxError(e.__context__) from e
 
-        json_string = data_frame.to_json(orient='values')
-        cols = data_frame.columns.values.tolist()
+        cols =  [desc[0] for desc in cur.description]
+        json_string = json.dumps(cur.fetchall(), default=str)
         return (cols, json_string)
 
 
