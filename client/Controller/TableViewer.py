@@ -98,9 +98,10 @@ class TableViewer:
         if not SQLTypeHandler().is_numerical(type):
             return [], [], False
 
-        self.cur.execute(sql.SQL("SELECT {} FROM {} ORDER BY {} ASC").format(sql.Identifier(columnname),
-                                                                             sql.Identifier(self.tablename),
-                                                                             sql.Identifier(columnname)))
+        self.cur.execute(sql.SQL("SELECT {} FROM {}.{} ORDER BY {} ASC").format(sql.Identifier(columnname),
+                                                                                sql.Identifier(self.schema),
+                                                                                sql.Identifier(self.tablename),
+                                                                                sql.Identifier(columnname)))
         values = self.cur.fetchall()
         min_val = min(values)
         max_val = max(values)
