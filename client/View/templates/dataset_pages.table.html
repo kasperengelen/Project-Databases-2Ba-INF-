@@ -248,7 +248,7 @@
     				scrollY: true,
     				processing: true,
     				serverSide: true,
-    				autoWidth: true, 
+    				autoWidth: false, 
     				ajax: '{{ url_for("dataset_pages._get_table", dataset_id=dataset_info.setid, tablename=table_name, original = original) }}'
     			} );
 
