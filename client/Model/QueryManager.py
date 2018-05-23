@@ -92,7 +92,7 @@ class QueryManager:
         self.dict_cur.execute(query, values)
         self.db_conn.commit()
 
-        if 
+        
         result = self.dict_cur.fetchone()
 
         return dict(result)

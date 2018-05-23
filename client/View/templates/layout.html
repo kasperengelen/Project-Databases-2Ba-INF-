@@ -52,6 +52,11 @@
             $('#loading_upload').hide();
         });
 
+        window.load(function(){
+            $('#loading_transform').hide();
+            $('#loading_upload').hide();
+        });
+
         $('#normalize_form, #discretizewidth_form, #discretizefreq_form, #discretizecustom_form, #onehotencode_form, #dedupform').submit(function() {
             $('.modal').modal('hide');
             $("html, body").animate({ scrollTop: 0 }, 4000);
