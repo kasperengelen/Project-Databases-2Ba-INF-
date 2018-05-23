@@ -14,7 +14,7 @@ class UserInfo:
         fname = str(tupl[1])
         lname = str(tupl[2])
         email = str(tupl[3])
-        register_date = ""
+        register_date = datetime.datetime.now()
         admin = bool(tupl[6])
         active = bool(tupl[7])
 
