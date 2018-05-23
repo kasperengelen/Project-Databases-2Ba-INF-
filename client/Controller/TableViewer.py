@@ -103,8 +103,8 @@ class TableViewer:
                                                                                 sql.Identifier(self.tablename),
                                                                                 sql.Identifier(columnname)))
         values = self.cur.fetchall()
-        min_val = min(values)
-        max_val = max(values)
+        min_val = int(min(values))
+        max_val = int(max(values))
         interval_size = (max_val - min_val) / bins
         distributed_values = list()
         current_bin = list()

@@ -1,6 +1,7 @@
 <script>
     $(function() {
         getPieChart($('#view_attr option:selected').text());
+        getHistogram($('#view_attr option:selected').text());
 
         var input = {
             view_attr: $('#view_attr option:selected').text()
@@ -38,8 +39,7 @@
                 $('#piechartdiv').html('');
                 $('#piechartdiv').html('<canvas id="PieChart"></canvas>');
                 var ctx = document.getElementById('PieChart');
-                delete myChart;
-                var myChart = new Chart(ctx, {
+                var pieChart = new Chart(ctx, {
                   type: 'pie',
                   data: {
                     labels: response.labels,
@@ -60,28 +60,37 @@
         var formdata = attr_name;
 
         $.ajax({
-            url: "{{ url_for('dataset_pages._get_chart_freq', dataset_id=dataset_info.setid, tablename=table_name, attr_name='temp_attr') }}".replace('temp_attr', formdata),
+            url: "{{ url_for('dataset_pages._get_hist_num', dataset_id=dataset_info.setid, tablename=table_name, attr_name='temp_attr') }}".replace('temp_attr', formdata),
             success: function(response) {
-                var ctx = document.getElementById('Histogram');
-                var myChart = new Chart(ctx, {
-                  type: 'bar',
-                  data: {
-                    labels: response.labels,
-                    datasets: [
-                      {
-                          data: response.sizes,
-                          barPercentage: 1,
-                          backgroundColor: getRandomColor()
+                $('#numhistdiv').html('');
+                $('#numhistdiv').html('<canvas id="NumHist"></canvas>');
+
+                if(response.bool == true){
+                    var ctx = document.getElementById('NumHist');
+                    var histChart = new Chart(ctx, {
+                      type: 'bar',
+                      data: {
+                        labels: response.labels,
+                        datasets: [
+                          {
+                              data: response.sizes,
+                              barPercentage: 1,
+                              backgroundColor: getRandomColor()
+                          }
+                        ]
                       }
-                    ]
-                  }
-                });
+                    });
+                }
+                else {
+                    alert('N/A')
+                }
             }
         });
     }
 
     $('#view_attr').change(function() {
         getPieChart($('#view_attr option:selected').text());
+        getHistogram($('#view_attr option:selected').text());
 
         $('#col_stats').empty();
 

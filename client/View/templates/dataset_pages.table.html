@@ -30,7 +30,7 @@
 			<div class="col-sm-6 text-center">
 				<h2>{{ dataset_info.name }}</h2>
 				{% if original != True %}
-					<p>{{ dataset_info.desc }}</p>
+					<p>{{ table_name }}</p>
 				{% else %}
 					<p>Original Table</p>
 				{% endif %}
@@ -48,7 +48,7 @@
 
 					<div style="padding-top: 1em;"></div>
 					
-					<a id="stats" class="btn btn-primary" data-toggle="collapse" data-hover="tooltip" title="Statistics" data-parent="#accordion" href="#view">
+					<a id="stats" class="btn btn-primary" data-toggle="modal" data-target="#stat_modal" data-hover="tooltip" title="Statistics">
 						<span class="glyphicon glyphicon-stats"></span></a>
 					{% endif %}
 				</div>
@@ -57,28 +57,7 @@
 	</div>  
 
 	{% if original !=  True %}
-		<div class="panel-group" id="accordion">
-	      	<div id="view" class="panel-collapse collapse">
-	        	<div class="panel-body">
-	        		<div>
-		        		<div>
-		        			{% from "includes/_formhelpers.html" import render_field %}
-		        			<form name="select_attr">
-		        				{{ attr_form.hidden_tag() }}
-				        		<div class="form-group" style="width: 20%;">
-				        			{{render_field(attr_form.view_attr, class_="form-control", id="view_attr")}}
-				        		</div>
-				        	</form>
-			        	</div>
-			       	    <div style="float: right;" id="col_stats"></div>
-
-			       	    <div id="piechartdiv" class="col-sm-4 col-sm-offset-4">
-			       	    	<canvas id="PieChart"></canvas>
-						</div>
-				    </div>
-	        	</div>
-	      	</div>
-	    </div>
+		{% include "includes/modals/_stat_modal.html" %}
 	{% endif %}		  		
 
 
@@ -241,12 +220,22 @@
 								<th data-hover="tooltip" title="{{ attr.type }}">
 									{{ attr.name }}
 									{% if original != True %}
-				                        <form method="post" id="deleteform_{{ attr.name }}" action="{{ url_for('transf_callbacks.transform_deleteattr', dataset_id=dataset_info.setid, tablename=table_name) }}">
-				                        	<input type="hidden" id="attribute_name_{{ attr.name }}" name="attribute_name" value="{{ attr.name }}">
-					                        <button style="border: none; background-color: transparent;" type="submit">
-					                       		<span class="glyphicon glyphicon-trash"></span>
-					                       	</button>
-				                        </form>
+										<div style="display: inline-block;">
+					                        <form method="post" id="deleteform_{{ attr.name }}" action="{{ url_for('transf_callbacks.transform_deleteattr', dataset_id=dataset_info.setid, tablename=table_name) }}">
+					                        	<input type="hidden" id="attribute_name_{{ attr.name }}" name="attribute_name" value="{{ attr.name }}">
+						                        <button style="border: none; background-color: transparent;" type="submit">
+						                       		<span class="glyphicon glyphicon-trash"></span>
+						                       	</button>
+					                        </form>
+					                    </div>
+					                    <div style="display: inline-block;">
+					                        <form method="post" id="editattrform_{{ attr.name }}" action="">
+					                        	<input type="hidden" id="new_attr_name_{{ attr.name }}" name="attribute_name" value="{{ attr.name }}">
+						                        <button style="border: none; background-color: transparent;" type="submit">
+						                       		<span class="glyphicon glyphicon-pencil"></span>
+						                       	</button>
+					                        </form>
+					                    </div>
 			                       {% endif %}
 								</th>
 							{% endfor %}
