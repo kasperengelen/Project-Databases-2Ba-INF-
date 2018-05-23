@@ -71,12 +71,12 @@ class DatasetHistoryManager:
             ordering = 'ASC'
         
         if show_all is False:
-            query = ("SELECT * FROM system.dataset_history WHERE setid = %s AND (table_name = %s OR origin_table = %s)"
+            query = ("SELECT * FROM system.dataset_history WHERE setid = %s AND table_name = %s"
                      " ORDER BY transformation_date {} LIMIT %s OFFSET %s").format(ordering)
             dict_cur.execute(sql.SQL(query), [self.setid, table_name, table_name, limit, offset])
         else:
-            query = ("SELECT * FROM system.dataset_history WHERE setid = %s ORDER BY transformation_date "
-                     "{} LIMIT %s OFFSET %s").format(ordering)
+            query = ("SELECT * FROM system.dataset_history WHERE setid = %s AND transformation_type >= 0"
+                     " ORDER BY transformation_date {} LIMIT %s OFFSET %s").format(ordering)
             dict_cur.execute(sql.SQL(query), [self.setid, limit, offset])
 
         all_rows = dict_cur.fetchall()
@@ -91,9 +91,11 @@ class DatasetHistoryManager:
         return False
 
     def get_last_transformation(self, tablename):
-        """cur = self.db_connection.cursor()
-        cur.execute(sql.SQL('SELECT max(transformation_id) FROM system.dataset_history'
-                            ' WHERE table_name = %s))')"""
+        """
+        cur = self.db_connection.cursor()
+        cur.execute(sql.SQL('SELECT tablename FROM system.dataset_history'
+                            ' WHERE table_name = %s))')3
+        """
         
         
     def __python_list_to_postgres_array(self, py_list, transformation_type):
