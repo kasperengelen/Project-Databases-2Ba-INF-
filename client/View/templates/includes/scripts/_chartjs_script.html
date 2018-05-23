@@ -66,9 +66,17 @@
                 $('#numhistdiv').html('<canvas id="NumHist"></canvas>');
 
                 if(response.bool == true){
+                    $('#numhisterrordiv').empty();
+                    $('#numhistdiv').show();
+
                     var ctx = document.getElementById('NumHist');
                     var histChart = new Chart(ctx, {
                       type: 'bar',
+                      options: {
+                            legend: {
+                                display: false
+                            }
+                      },
                       data: {
                         labels: response.labels,
                         datasets: [
@@ -82,7 +90,8 @@
                     });
                 }
                 else {
-                    alert('N/A')
+                    $('#numhistdiv').hide();
+                    $('#numhisterrordiv').html('<div style="padding-top: 1em;"><h5>No Numerical Histogram available for this attribute</h5></div>');
                 }
             }
         });
