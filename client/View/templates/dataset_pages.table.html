@@ -220,15 +220,6 @@
 							{% for attr in attribute_list %}
 								<th data-hover="tooltip" title="{{ attr.type }}">
 									{{ attr.name }}
-									<div style="padding-top: 1em;"></div>
-									{% if original != True %}
-										<div class="text-left" style="padding-bottom: 0em;">
-											<a style="border: none; background-color: transparent; color: black"
-												data-toggle="modal" data-target="#editAttrModal_{{ loop.index }}">
-					                       		<span class="glyphicon glyphicon-cog"></span>
-					                       	</a>
-					                    </div>
-			                       {% endif %}
 								</th>
 								{% if original != True %}
 									{% include "includes/modals/_attr_settings_modal.html" %}
