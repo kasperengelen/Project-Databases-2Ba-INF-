@@ -93,8 +93,8 @@ class DatasetHistoryManager:
     def get_latest_backup(self, tablename):
         cur = self.db_connection.cursor()
         values = [self.setid, tablename]
-        cur.execute(sql.SQL('SELECT table_name FROM system.dataset_history WHERE transformation_id =
-                            '(SELECT MAX(transformation_id) FROM system.dataset_history WHERE setid = %s
+        cur.execute(sql.SQL('SELECT table_name FROM system.dataset_history WHERE transformation_id ='
+                            '(SELECT MAX(transformation_id) FROM system.dataset_history WHERE setid = %s'
                             ' AND origin_table = %s AND transformation_type = -1)'), values)
         return cur.fetchone()[0]
         
