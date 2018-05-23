@@ -50,6 +50,7 @@ class DatasetHistoryManager:
             transformation_type: Integer representing the transformation used.
         """
         param_array = self.__python_list_to_postgres_array(parameters, transformation_type)
+        print(param_array)
         cur = self.db_connection.cursor()
         query = 'INSERT INTO SYSTEM.DATASET_HISTORY VALUES (%s, %s, %s, %s, %s, %s)'
         cur.execute(sql.SQL(query), [self.setid, table_name, attribute, transformation_type, param_array, origin_table])
