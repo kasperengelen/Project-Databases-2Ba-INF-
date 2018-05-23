@@ -102,9 +102,9 @@ class TableViewer:
                                                                                 sql.Identifier(self.schema),
                                                                                 sql.Identifier(self.tablename),
                                                                                 sql.Identifier(columnname)))
-        values = self.cur.fetchall()
-        min_val = int(min(values))
-        max_val = int(max(values))
+        values = [x[0] for x in self.cur.fetchall()]
+        min_val = min(values)
+        max_val = max(values)
         interval_size = (max_val - min_val) / bins
         distributed_values = list()
         current_bin = list()
@@ -117,7 +117,7 @@ class TableViewer:
                 distributed_values.append(current_bin)
                 current_bin = list()
             else:
-                distributed_values.append(value)
+                current_bin.append(value)
 
         sizes = [len(x) for x in distributed_values]
         # stringify the tuples representing the intervals
