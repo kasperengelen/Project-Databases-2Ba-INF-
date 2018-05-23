@@ -987,8 +987,12 @@ def _get_attr2_options(dataset_id):
 def _get_table(dataset_id, tablename, original):
     """Callback to retrieve the dataset in JSON format."""
 
+    string = ""
+
     for key in request.args:
-        print(key, request.args[key])
+        string += "{} -- {}; ".format(key, request.args[key])
+
+    raise RuntimeError(string)
 
     start_nr   = request.args.get('start',            type=int)
     row_count  = request.args.get('length',           type=int)
