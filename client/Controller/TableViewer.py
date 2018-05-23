@@ -121,7 +121,7 @@ class TableViewer:
 
         sizes = [len(x) for x in distributed_values]
         # stringify the tuples representing the intervals
-        intervals = [str(x) for x in intervals]
+        intervals = [str((int(x[0]), int(x[1]))) for x in intervals]
 
         return intervals, sizes, True
 
