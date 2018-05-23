@@ -48,13 +48,19 @@
     </div>
     <script>
         $(function() {
-            $('#loading').hide();
+            $('#loading_transform').hide();
+            $('#loading_upload').hide();
         });
 
-        $('form #normalize_form, #discretizewidth_form, #discretizefreq_form, #discretizecustom_form, #onehotencode_form, #dedupform').submit(function() {
+        $('#normalize_form, #discretizewidth_form, #discretizefreq_form, #discretizecustom_form, #onehotencode_form, #dedupform').submit(function() {
             $('.modal').modal('hide');
             $("html, body").animate({ scrollTop: 0 }, 4000);
-            $('#loading').show();
+            $('#loading_transform').show();
+        });
+
+        $('#upload_form').submit(function() {
+            $("html, body").animate({ scrollTop: 0 }, 4000);
+            $('#loading_upload').show();
         });
 
 

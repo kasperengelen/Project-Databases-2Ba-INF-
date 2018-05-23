@@ -3,13 +3,28 @@
       {% if messages %}
         {% for category, message in messages %}
             {% if category == 'error' %}
-              <div class="alert alert-danger" role="alert">{{ message }}</div>
+              <div id="error_message" class="alert alert-danger" role="alert">
+                {{ message }}
+                <div class="pull-right">
+                  <a style="color: grey;" href="#" onclick="$('#error_message').hide();"><span class="glyphicon glyphicon-remove"></span></a>
+                </div>
+              </div>
             {% endif %}
             {% if category == 'success' %}
-              <div class="alert alert-success" role="alert">{{ message }}</div>
+              <div id="succes_message" class="alert alert-success" role="alert">
+                {{ message }}
+                <div class="pull-right">
+                  <a style="color: grey;" href="#" onclick="$('#succes_message').hide();"><span class="glyphicon glyphicon-remove"></span></a>
+                </div>
+              </div>
             {% endif %}
             {% if category == 'warning' %}
-              <div class="alert alert-warning" role="alert">{{ message }}</div>
+              <div id="warning_message" class="alert alert-warning" role="alert">
+                {{ message }}
+                <div class="pull-right">
+                  <a style="color: grey;" href="#" onclick="$('#warning_message').hide();"><span class="glyphicon glyphicon-remove"></span></a>
+                </div>
+              </div>
             {% endif %}
         {% endfor %}
       {% endif %}
