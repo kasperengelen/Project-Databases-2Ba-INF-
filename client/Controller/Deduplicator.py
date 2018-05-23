@@ -147,13 +147,15 @@ class Deduplicator:
             """Deletes all duplicates and alters the table in the database"""
             schema = str(setid)
 
+            # create json of data to delete before the data is deleted
+            row_json = self.__history_json(setid, tablename)
+
             # delete all duplicates
             self.dataframes[(setid, tablename)] = self.dataframes[(setid, tablename)].drop(self.entries_to_remove[(setid, tablename)])
 
             dataframe = self.dataframes[(setid, tablename)]
             dataframe.to_sql(tablename, self.engine, schema=schema, if_exists="replace", index=False)
 
-            row_json = self.__history_json(setid, tablename)
             dataset_history_manager = DatasetHistoryManager(setid, self.db_connection)
             dataset_history_manager.write_to_history(tablename, tablename, "", [row_json], 18)
 
@@ -231,7 +233,8 @@ class Deduplicator:
             dataframe = self.dataframes[(setid, tablename)]
             rows = list()
             for row in self.entries_to_remove[(setid, tablename)]:
-                row.append(dataframe[row])
+                row_list = [str(x) for x in dataframe.iloc[row].tolist()]
+                rows.append(row_list)
 
             return json.dumps(rows)
 
