@@ -19,16 +19,15 @@ class TableTransformer:
                  True overwrites data, False creates a new table (every transformation method has a new_name parameter that is the name of the new table)
         db_connection: psycopg2 database connection to execute SQL queries
         engine: SQLalchemy engine to use pandas functionality
-        track_history: A boolean indicating whether the transformations performed should be tracked in the history table.
     """
 
-    def __init__(self, setid, db_conn, engine, replace=True, track_history=True):
+    def __init__(self, setid, db_conn, engine, replace=True):
         self.setid = setid
         self.schema = str(setid)
         self.replace = replace
         self.db_connection = db_conn
         self.engine = engine
-        self.history_manager = DatasetHistoryManager(setid, db_conn, track_history)
+        self.history_manager = DatasetHistoryManager(setid, db_conn)
 
     class TTError(Exception):
         """
@@ -140,6 +139,7 @@ class TableTransformer:
         new_name = self.__get_unique_name(new, new, False)
         query_args = [self.schema, old, self.schema, new_name]
         self.create_copy_of_table(*query_args)
+        self.history_manager.write_to_history(resulting_table, old, attribute, [], 0)
         return new_name
 
     def delete_attribute(self, tablename, attribute, new_name=""):
@@ -544,9 +544,13 @@ class TableTransformer:
         zscore = (value - mean) / standard_dev
         return zscore
     
-    def normalize_using_zscore(self, tablename, attribute, new_name = ""):
+    def normalize_using_zscore(self, tablename, attribute, overwrite=True, new_name = ""):
         """Method that normalizes the values of an attribute using the z-score.
         This will normalize everything in a 1-point range, thus [0-1].
+
+        Parameter:
+            overwrite: Boolean indicating whether the normalization should overwrite the column
+                       True overwrites the column with normalized data, False creates a new column
         """
         #Let's check if the attribute is a numeric type, this should not be performed on non-numeric types
         attr_type = self.get_attribute_type(tablename, attribute)
@@ -554,6 +558,13 @@ class TableTransformer:
             raise self.AttrTypeError("Normalization failed due attribute not being of numeric type (neither integer or float)")
         
         df = self.load_table_in_dataframe(tablename)
+        if overwrite is False:
+            new_col = attribute + '_normalized'
+            new_col = self.__get_unique_name(tablename, new_col)
+            df[new_col] = df[attribute]
+            # Now reference new_col as the attribute used in this method
+            attribute = new_col
+            
         mean = df[attribute].mean()
         #Calculate the standard deviation, for this method we consider the data as the population
         #and not a sample so we don't use Bessel's correction

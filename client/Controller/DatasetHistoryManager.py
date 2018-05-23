@@ -17,7 +17,7 @@ class DatasetHistoryManager:
         track: Boolean indicating if the history has to be tracked and written to the history table.
     """
 
-    def __init__(self, setid, db_connection, track=True):
+    def __init__(self, setid, db_connection):
         self.setid = setid
         self.db_connection = db_connection
         self.track = track
@@ -25,10 +25,10 @@ class DatasetHistoryManager:
         self.choice_dict = None
         
     def __initialize_entrycount(self):
-            cur = self.db_connection.cursor()
-            query = "SELECT COUNT(*) FROM system.dataset_history WHERE setid = %s"
-            cur.execute(sql.SQL(query), [self.setid])
-            return int(cur.fetchone()[0])
+        cur = self.db_connection.cursor()
+        query = "SELECT COUNT(*) FROM system.dataset_history WHERE setid = %s"
+        cur.execute(sql.SQL(query), [self.setid])
+        return int(cur.fetchone()[0])
         
     def get_rowcount(self, tablename=None):
         """Quick method to get the number of rows in the dataset history table."""
@@ -51,9 +51,6 @@ class DatasetHistoryManager:
             parameters: List of parameters used with the transformation
             transformation_type: Integer representing the transformation used.
         """
-        if self.track is False:
-            return None
-        
         param_array = self.__python_list_to_postgres_array(parameters, transformation_type)
         cur = self.db_connection.cursor()
         query = 'INSERT INTO SYSTEM.DATASET_HISTORY VALUES (%s, %s, %s, %s, %s, %s)'
@@ -227,7 +224,8 @@ class DatasetHistoryManager:
         return string
 
     def __rowstring_generator0(self, dict_obj):
-        rowstring = 'Renamed ...'
+        rowstring = 'Created table "{}" which is a copy of table "{}".'.format(dict_obj['table_name'],
+                                                                               dict_obj['origin_name'])
         return rowstring
 
 
