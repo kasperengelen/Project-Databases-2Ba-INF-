@@ -6,6 +6,7 @@ from Model.DatabaseConfiguration import TestConnection
 from unit_tests.test_UserManager import TestUserManager
 from unit_tests.test_DatasetManager import TestDatasetManager
 from unit_tests.test_DatasetPermissionsManager import TestDatasetPermissionsManager
+from unit_tests.test_QueryManager import TestQueryManager
 
 from unit_tests.test_TableTransformer import TestTableTransformer
 from unit_tests.test_TableTransformerCopy import TestTransformerCopy
@@ -17,14 +18,14 @@ if __name__ == "__main__":
     tests = []
 
     # comment uit wat je niet gebruikt
-	#push geen tests die niet slagen
-    """tests.append(TestUserManager)
-    tests.append(TestDatasetManager)
-    tests.append(TestDatasetPermissionsManager)"""
-    tests.append(TestTableTransformer)
-    tests.append(TestTransformerCopy)
-    tests.append(TestTableViewer)
-    tests.append(TestTableUploader)
+    #tests.append(TestUserManager)
+    #tests.append(TestDatasetManager)
+    #tests.append(TestDatasetPermissionsManager)
+    tests.append(TestQueryManager)
+    #tests.append(TestTableTransformer)
+    #tests.append(TestTransformerCopy)
+    #tests.append(TestTableViewer)
+    #tests.append(TestTableUploader)
 
     tester = ProjectTester(tests)
     
