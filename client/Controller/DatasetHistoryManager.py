@@ -303,7 +303,7 @@ class DatasetHistoryManager:
     def __rowstring_generator13(self, dict_obj):
         rowstring = 'Normalized attribute "{}" of table "{}" in range [0-1] using the Z-score.'
         param = dict_obj['parameters']
-        if param[0] = 'False':
+        if param[0] == 'False':
             rowstring += ' The normalized values have been written to a new column "{}".'.format(param[1])
         rowstring = rowstring.format(dict_obj['attribute'], dict_obj['origin_table'])
         return rowstring
