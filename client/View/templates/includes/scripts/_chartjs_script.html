@@ -55,6 +55,31 @@
         });
     }
 
+    function getHistogram(attr_name) {
+
+        var formdata = attr_name;
+
+        $.ajax({
+            url: "{{ url_for('dataset_pages._get_chart_freq', dataset_id=dataset_info.setid, tablename=table_name, attr_name='temp_attr') }}".replace('temp_attr', formdata),
+            success: function(response) {
+                var ctx = document.getElementById('Histogram');
+                var myChart = new Chart(ctx, {
+                  type: 'bar',
+                  data: {
+                    labels: response.labels,
+                    datasets: [
+                      {
+                          data: response.sizes,
+                          barPercentage: 1,
+                          backgroundColor: getRandomColor()
+                      }
+                    ]
+                  }
+                });
+            }
+        });
+    }
+
     $('#view_attr').change(function() {
         getPieChart($('#view_attr option:selected').text());
 
