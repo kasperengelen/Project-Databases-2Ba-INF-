@@ -989,7 +989,7 @@ def _get_table(dataset_id, tablename, original):
 
     start_nr   = request.args.get('start',            type=int)
     row_count  = request.args.get('length',           type=int)
-    col_nr     = request.args.get('order[0][column]', type=int)
+    col_nr     = 0
     sort_order = request.args.get('order[0][dir]',    type=str)
 
     # set current session row_count to the specified count
