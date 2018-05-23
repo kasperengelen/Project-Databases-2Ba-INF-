@@ -1,7 +1,6 @@
 import sys
 import os
 import math
-import copy
 
 import psycopg2
 from psycopg2 import sql
@@ -33,7 +32,7 @@ class TableTransformer:
 
     class TTError(Exception):
         """
-        Base exception for all TableTransformer exceptions used to reference to these exceptions.
+        Base exception for all TableTransformer exceptions used to reference to the class exceptions.
         """
         
     class AttrTypeError(TTError):
@@ -53,8 +52,6 @@ class TableTransformer:
         This exception is raised whenever an operation is provided with an inappropiate value causing
         the operation to fail.
         """
-        
-        
     def get_attribute_type(self, table, attribute):
         """Execute query that returns the type of the attribute of an SQL table in the dataset schema."""
         cur = self.db_connection.cursor()
@@ -149,7 +146,7 @@ class TableTransformer:
         """Transformation that deletes an attribute of a table."""
         resulting_table = self.get_resulting_table(tablename, new_name)
         self.drop_attribute(self.schema, resulting_table, attribute)
-        self.history_manager.write_to_history(resulting_table, tablename, attribute, [], 2)
+        self.history_manager.write_to_history(resulting_table, resulting_table, attribute, [], 2)
 
     def __create_predicate_piece(self, plist):
         predicate = ''
@@ -160,7 +157,6 @@ class TableTransformer:
                 plist[1] = 'is not'
             plist[2] = 'NULL'
 
-        
         return [sql.Identifier(plist[0]), plist[1], plist[2]]
     
     def delete_rows_using_predicate_logic(self, tablename, arg_list, new_name=""):
@@ -201,7 +197,7 @@ class TableTransformer:
         
         self.db_connection.commit()
         #clean_predicate = predicate.replace('"', '\\"') #Escape double quotes to pass it in postgres array
-        self.history_manager.write_to_history(resulting_table, tablename, 'None', ['temp'], 15)
+        self.history_manager.write_to_history(resulting_table, resulting_table, 'None', ['temp'], 15)
 
     def get_conversion_options(self, tablename, attribute):
         """Returns a list of supported types that the given attribute can be converted to."""
@@ -345,9 +341,8 @@ class TableTransformer:
                 self.drop_table(resulting_table)
             #Reraise the exception for the higher level caller
             raise
-            
-            
-        self.history_manager.write_to_history(resulting_table, tablename, attribute, [to_type, data_format, length], 1)
+        
+        self.history_manager.write_to_history(resulting_table, resulting_table, attribute, [to_type, data_format, length], 1)
 
     def force_attribute_type(self, tablename, attribute, to_type, data_format="", length=None, force_mode=True, new_name=""):
         """In case that change_attribute_type fails due to elements that can't be converted
@@ -399,7 +394,6 @@ class TableTransformer:
             self.set_to_overwrite
         self.change_attribute_type(resulting_table, attribute, to_type,  data_format, length, new_name)
 
-
     def find_and_replace(self, tablename, attribute, value, replacement, exact=True, replace_all=True, new_name=""):
         """Method that finds values and replaces them with the provided argument. This wraps around an internal
         method that does the heavy work.
@@ -413,7 +407,7 @@ class TableTransformer:
         """
         resulting_table = self.get_resulting_table(tablename, new_name)
         args = locals()
-        params = {k:v for k,v in args.items() if k != 'self'}
+        params = {k:v for k,v in args.items() if k not in ['self', 'tablename', 'new_name']}
         try:
             self.__execute_normal_find_and_replace(**params)
 
@@ -423,9 +417,9 @@ class TableTransformer:
                 self.drop_table(resulting_table)
             raise
             
-    def __execute_normal_find_and_replace(self, resulting_table, tablename, attribute, value, replacement, exact, replace_all, new_name):
+    def __execute_normal_find_and_replace(self, resulting_table, attribute, value, replacement, exact, replace_all):
         """Internal method that executes the wanted behavior specified in find_and_replace."""
-        cur_type = self.get_attribute_type(tablename, attribute)
+        cur_type = self.get_attribute_type(resulting_table, attribute)
         
         original_value = value            
         if exact is True:
@@ -456,9 +450,8 @@ class TableTransformer:
             except psycopg2.DataError:
                 raise self.ValueError("Could not perform find-and-replace due to an invalid input value for this attribute.")
             self.db_connection.commit()
-        self.history_manager.write_to_history(resulting_table, tablename, attribute, [original_value, replacement, exact, replace_all], 8)
+        self.history_manager.write_to_history(resulting_table, resulting_table, attribute, [original_value, replacement, exact, replace_all], 8)
         
-
     def regex_find_and_replace(self, tablename, attribute, regex, replacement, case_sens=False, new_name=""):
         """Method that finds values with a provided regex and replaces them with a provided replacement.
 
@@ -470,7 +463,7 @@ class TableTransformer:
         """
         resulting_table = self.get_resulting_table(tablename, new_name)
         args = locals()
-        params = {k:v for k,v in args.items() if k != 'self'}
+        params = {k:v for k,v in args.items() if k not in ['self', 'tablename', 'new_name']}
         try:
             self.__execute_regex_find_and_replace(**params)
 
@@ -480,9 +473,9 @@ class TableTransformer:
                 self.drop_table(resulting_table)
             raise
 
-    def __execute_regex_find_and_replace(self, resulting_table, tablename, attribute, regex, replacement, case_sens, new_name):
+    def __execute_regex_find_and_replace(self, resulting_table, attribute, regex, replacement, case_sens):
         """Internal method that executes the wanted behavior specified in regex_find_and_replace."""
-        cur_type = self.get_attribute_type(tablename, attribute)
+        cur_type = self.get_attribute_type(resulting_table, attribute)
         if SQLTypeHandler().is_string(cur_type) is False:
             raise self.AttrTypeError("Find-and-replace using regular epxressions is only possible with character type attributes. "
                                      "Please convert the needed attribute to VARCHAR or CHAR.")
@@ -500,7 +493,7 @@ class TableTransformer:
             raise self.ValueError(error_msg)
 
         self.db_connection.commit()
-        self.history_manager.write_to_history(resulting_table, tablename, attribute, [regex, replacement, case_sens], 9)
+        self.history_manager.write_to_history(resulting_table, resulting_table, attribute, [regex, replacement, case_sens], 9)
         
     def __get_simplified_types(self, tablename, data_frame):
         """Method that makes sure pandas dataframe uses correct datatypes when writing to SQL."""
@@ -544,7 +537,7 @@ class TableTransformer:
             df.to_sql(new_name, self.engine, self.schema, if_exists='fail', index = False, dtype = new_dtypes)
             eventual_table = new_name
             
-        self.history_manager.write_to_history(eventual_table, tablename, attribute, [], 14)
+        self.history_manager.write_to_history(eventual_table, eventual_table, attribute, [], 14)
         
     def __calculate_zscore(self, mean, standard_dev, value):
         """Method to quickly calculate z-scores"""
@@ -595,7 +588,7 @@ class TableTransformer:
             df.to_sql(new_name, self.engine, self.schema, 'fail', index = False, dtype = new_dtypes)
             eventual_table = new_name
 
-        self.history_manager.write_to_history(eventual_table, tablename, attribute, [mean], 10)
+        self.history_manager.write_to_history(eventual_table, eventual_table, attribute, [mean], 10)
         
     def __get_unique_name(self, tablename, name, is_attribute=True):
         """Method that makes sure an attribute name or table name given the name
@@ -691,7 +684,7 @@ class TableTransformer:
             df.to_sql(new_name, self.engine, self.schema, 'fail', index = False, dtype = new_dtypes)
             eventual_table = new_name
         
-        self.history_manager.write_to_history(eventual_table, tablename, attribute, [], 6)
+        self.history_manager.write_to_history(eventual_table, eventual_table, attribute, [], 6)
 
     def __calculate_equifrequent_indices(self, width, remainder, nr_bins):
         """Calculates the indices of the list that represent bin edges for discretize_using_equal_frequency."""
@@ -766,7 +759,7 @@ class TableTransformer:
             df.to_sql(new_name, self.engine, self.schema, 'fail', index = False, dtype = new_dtypes)
             eventual_table = new_name
             
-        self.history_manager.write_to_history(eventual_table, tablename, attribute, [], 5)
+        self.history_manager.write_to_history(eventual_table, eventual_table, attribute, [], 5)
         
     def discretize_using_custom_ranges(self, tablename, attribute, ranges, exclude_right=True, new_name=""):
         """Method that discretizes given a a list representing the bins.
@@ -817,7 +810,7 @@ class TableTransformer:
             df.to_sql(new_name, self.engine, self.schema, 'fail', index = False, dtype = new_dtypes)
             eventual_table = new_name
 
-        self.history_manager.write_to_history(eventual_table, tablename, attribute, [ranges, exclude_right], 4)
+        self.history_manager.write_to_history(eventual_table, eventual_table, attribute, [ranges, exclude_right], 4)
         
     def delete_outliers(self, tablename, attribute, larger, value, replacement, new_name=""):
         """Method that gets rid of outliers of an attribute by setting them to null.
@@ -844,10 +837,7 @@ class TableTransformer:
         cur.execute(sql.SQL(sql_query).format(sql.Identifier(self.schema), sql.Identifier(resulting_table),
                                               sql.Identifier(attribute)), (replacement, value))
         self.db_connection.commit()
-        print('########################################')
-        print(cur.query)
-        print('########################################')
-        self.history_manager.write_to_history(resulting_table, tablename, attribute, [larger, value, replacement], 3)
+        self.history_manager.write_to_history(resulting_table, resulting_table, attribute, [larger, value, replacement], 3)
         
     def __fill_nulls_with_x(self, attribute, table,  x):
         """Method that fills null values of an attribute with a provided value.
@@ -871,7 +861,7 @@ class TableTransformer:
         mean = df[attribute].mean()
 
         self.__fill_nulls_with_x(attribute, resulting_table, mean)
-        self.history_manager.write_to_history(resulting_table, tablename, attribute, [mean], 10)
+        self.history_manager.write_to_history(resulting_table, resulting_table, attribute, [mean], 10)
 
 
     def fill_nulls_with_median(self, tablename, attribute, new_name=""):
@@ -886,7 +876,7 @@ class TableTransformer:
         median = df[attribute].median()
 
         self.__fill_nulls_with_x(attribute, resulting_table, median)
-        self.history_manager.write_to_history(resulting_table, tablename, attribute, [median], 11)
+        self.history_manager.write_to_history(resulting_table, resulting_table, attribute, [median], 11)
 
 
     def fill_nulls_with_custom_value(self, tablename, attribute, value, new_name=""):
@@ -899,7 +889,7 @@ class TableTransformer:
 
         #Perhaps do a sanity check here? I'll see later on.
         self.__fill_nulls_with_x(attribute, resulting_table, value)
-        self.history_manager.write_to_history(resulting_table, tablename, attribute, [value], 12)
+        self.history_manager.write_to_history(resulting_table, resulting_table, attribute, [value], 12)
 
     
     def extract_part_of_date(self, tablename, attribute, extraction_arg, new_name=""):
@@ -972,4 +962,4 @@ class TableTransformer:
         cur.execute(sql.SQL(query).format(sql.Identifier(self.schema), sql.Identifier(resulting_table),
                                           sql.Identifier(attr_name), sql.Identifier(attribute)))
         self.db_connection.commit()
-        self.history_manager.write_to_history(resulting_table, tablename, attribute, [extraction_arg], 7)
+        self.history_manager.write_to_history(resulting_table, resulting_table, attribute, [extraction_arg], 7)
