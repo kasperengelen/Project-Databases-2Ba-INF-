@@ -14,13 +14,11 @@ class DatasetHistoryManager:
         setid: The id of the dataset that the manager has to access.
         db_connection: psycopg2 database connection to execute SQL queries.
         engine: SQLalchemy engine to use pandas functionality.
-        track: Boolean indicating if the history has to be tracked and written to the history table.
     """
 
     def __init__(self, setid, db_connection):
         self.setid = setid
         self.db_connection = db_connection
-        self.track = track
         self.entry_count = self.__initialize_entrycount()
         self.choice_dict = None
         
@@ -200,8 +198,6 @@ class DatasetHistoryManager:
         for elem in row_list:
             tr_type = int(elem['transformation_type'])
             field1 = self.choice_dict[tr_type](elem)
-            if self.__is_new_table(elem):
-                field1 += self.__get_new_table_string(elem)
             field2 = elem['transformation_date']
             result.append((field2, field1))
 
@@ -211,24 +207,11 @@ class DatasetHistoryManager:
         """Assuming a string is quoted, this method will return the same string without the quotes"""
         return string[1:-1]
     
-    def __is_new_table(self, dict_obj):
-        """Method that checks whether a table is a new table created from a transformation."""
-        if dict_obj['table_name'] != dict_obj['origin_table'] :
-            return False
-        else:
-            return False
-
-    def __get_new_table_string(self, dict_obj):
-        """Get a string that explains what new table the transformation resulted in."""
-        string = 'This transformation resulted in a new table "{}".'.format(dict_obj['table_name'])
-        return string
-
     def __rowstring_generator0(self, dict_obj):
         rowstring = 'Created table "{}" which is a copy of table "{}".'.format(dict_obj['table_name'],
                                                                                dict_obj['origin_name'])
         return rowstring
-
-
+    
     def __rowstring_generator1(self, dict_obj):
         param = dict_obj['parameters']
         rowstring = 'Converted attribute "{}" of table "{}" to type {}.'
@@ -319,6 +302,9 @@ class DatasetHistoryManager:
 
     def __rowstring_generator13(self, dict_obj):
         rowstring = 'Normalized attribute "{}" of table "{}" in range [0-1] using the Z-score.'
+        param = dict_obj['parameters']
+        if param[0] == 'False':
+            rowstring += ' The normalized values have been written to a new column "{}".'.format(param[1])
         rowstring = rowstring.format(dict_obj['attribute'], dict_obj['origin_table'])
         return rowstring
 
