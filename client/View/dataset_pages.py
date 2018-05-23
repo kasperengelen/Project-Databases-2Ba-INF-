@@ -12,7 +12,7 @@ from Model.TableUploader import FileException as DLFileExcept
 from Controller.TableJoiner import JoinException
 
 from View.dataset_forms import DatasetForm, AddUserForm, RemoveUserForm, LeaveForm, TableUploadForm, TableJoinForm, AttributeForm, HistoryForm, AddUserForm, RemoveUserForm
-from View.dataset_forms import DownloadDatasetCSVForm, DownloadDatasetSQLForm, DownloadTableCSVForm, DownloadTableSQLForm, CustomQueryForm, CopyTableForm
+from View.dataset_forms import DownloadDatasetCSVForm, DownloadDatasetSQLForm, DownloadTableCSVForm, DownloadTableSQLForm, CustomQueryForm, CopyTableForm, ChangeAttributeForm
 from View.transf_forms import FindReplaceForm, DataTypeTransform, NormalizeZScore, OneHotEncoding, RegexFindReplace, DiscretizeEqualWidth, ExtractDateTimeForm
 from View.transf_forms import DiscretizeEqualFreq, DiscretizeCustomRange, DeleteOutlier, FillNullsMean, FillNullsMedian, FillNullsCustomValue, DedupForm
 from View.transf_forms import PredicateFormOne, PredicateFormTwo, PredicateFormThree
@@ -110,6 +110,7 @@ def table(dataset_id, tablename):
     predicatethree_form   = PredicateFormThree()
     extract_form          = ExtractDateTimeForm()
     dedup_form            = DedupForm()
+    change_attr_form      = ChangeAttributeForm()
 
     # fill forms with data
     findrepl_form.fillForm(attrs)
@@ -179,7 +180,8 @@ def table(dataset_id, tablename):
                                                 attribute_list        = attribute_list,
                                                 queryform             = CustomQueryForm(),
                                                 copyform              = CopyTableForm(),
-                                                dedup_form            = dedup_form)
+                                                dedup_form            = dedup_form,
+                                                change_attr_form      = change_attr_form)
 # ENDFUNCTION
 
 @dataset_pages.route('/dataset/<int:dataset_id>/original_table/<string:tablename>')
@@ -404,6 +406,41 @@ def edit_info(dataset_id):
     return redirect(url_for('dataset_pages.home', dataset_id = dataset_id))
 # ENDFUNCTION
 
+@dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>/change_attribute_name', methods=['POST'])
+@require_login
+@require_writeperm
+def change_attribute_name(dataset_id, tablename):
+    """Callback to edit the metadata of a dataset."""
+
+    if not DatasetManager.existsID(dataset_id):
+        abort(404)
+
+    form = ChangeAttributeForm(request.form)
+
+    dataset = DatasetManager.getDataset(dataset_id)
+
+    if tablename not in dataset.getTableNames():
+        abort(404)
+
+    attr = request.form.get('attr_name', type=str)
+
+    tv = dataset.getTableViewer(tablename)
+
+    if not attr in tv.get_attributes():
+        flash(message="Invalid attribute.", category="error")
+        return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
+
+    tt = dataset.getTableTransformer(tablename)
+
+    if form.validate():
+        tt.change_attribute_name(table = tablename, attribute = attr, new_name = form.new_attr_name.data)
+        flash(message="Information updated.", category="success")
+    else:
+        flash_errors(form)
+
+    return redirect(url_for('dataset_pages.table', dataset_id = dataset_id, tablename = tablename))
+# ENDFUNCTION
+
 @dataset_pages.route('/dataset/<int:dataset_id>/permissions')
 @require_login
 @require_adminperm
@@ -546,6 +583,10 @@ def copy_table(dataset_id, tablename):
     """Callback to copy a table."""
 
     form = CopyTableForm(request.form)
+
+    if not form.validate():
+        flash_errors(form)
+        return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
 
     if not DatasetManager.existsID(dataset_id):
         abort(404)

@@ -52,6 +52,11 @@ class TableUploadForm(FlaskForm):
     automatic_types = BooleanField('Automatic type detection', default=False)
 # ENDCLASS
 
+class ChangeAttributeForm(FlaskForm):
+    """Form for changing attribute names."""    
+    new_attr_name = StringField('New Attribute Name', [InputRequired('New name is required.')])
+# ENDCLASS
+
 class DownloadDatasetCSVForm(FlaskForm):
     """Form to download dataset as CSV."""
     
