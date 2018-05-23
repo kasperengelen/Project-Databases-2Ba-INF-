@@ -91,8 +91,8 @@ class QueryManager:
         self.dict_cur.execute(query, values)
         self.db_conn.commit()
 
-        # check if retval is not empty
 
+        # check if retval is not empty
         if 'returning' in kwargs and kwargs['returning'] is not None:
             result = self.dict_cur.fetchone()
             return result[kwargs['returning']]

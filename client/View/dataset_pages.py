@@ -12,7 +12,7 @@ from Model.TableUploader import FileException as DLFileExcept
 from Controller.TableJoiner import JoinException
 
 from View.dataset_forms import DatasetForm, AddUserForm, RemoveUserForm, LeaveForm, TableUploadForm, TableJoinForm, AttributeForm, HistoryForm, AddUserForm, RemoveUserForm
-from View.dataset_forms import DownloadDatasetCSVForm, DownloadDatasetSQLForm, DownloadTableCSVForm, DownloadTableSQLForm, CustomQueryForm, CopyTableForm
+from View.dataset_forms import DownloadDatasetCSVForm, DownloadDatasetSQLForm, DownloadTableCSVForm, DownloadTableSQLForm, CustomQueryForm, CopyTableForm, ChangeAttributeForm
 from View.transf_forms import FindReplaceForm, DataTypeTransform, NormalizeZScore, OneHotEncoding, RegexFindReplace, DiscretizeEqualWidth, ExtractDateTimeForm
 from View.transf_forms import DiscretizeEqualFreq, DiscretizeCustomRange, DeleteOutlier, FillNullsMean, FillNullsMedian, FillNullsCustomValue, DedupForm
 from View.transf_forms import PredicateFormOne, PredicateFormTwo, PredicateFormThree
@@ -110,6 +110,7 @@ def table(dataset_id, tablename):
     predicatethree_form   = PredicateFormThree()
     extract_form          = ExtractDateTimeForm()
     dedup_form            = DedupForm()
+    change_attr_form      = ChangeAttributeForm()
 
     # fill forms with data
     findrepl_form.fillForm(attrs)
@@ -179,7 +180,8 @@ def table(dataset_id, tablename):
                                                 attribute_list        = attribute_list,
                                                 queryform             = CustomQueryForm(),
                                                 copyform              = CopyTableForm(),
-                                                dedup_form            = dedup_form)
+                                                dedup_form            = dedup_form,
+                                                change_attr_form      = change_attr_form)
 # ENDFUNCTION
 
 @dataset_pages.route('/dataset/<int:dataset_id>/original_table/<string:tablename>')
@@ -402,6 +404,41 @@ def edit_info(dataset_id):
         flash_errors(form)
 
     return redirect(url_for('dataset_pages.home', dataset_id = dataset_id))
+# ENDFUNCTION
+
+@dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>/change_attribute_name', methods=['POST'])
+@require_login
+@require_writeperm
+def change_attribute_name(dataset_id, tablename):
+    """Callback to edit the metadata of a dataset."""
+
+    if not DatasetManager.existsID(dataset_id):
+        abort(404)
+
+    form = ChangeAttributeForm(request.form)
+
+    dataset = DatasetManager.getDataset(dataset_id)
+
+    if tablename not in dataset.getTableNames():
+        abort(404)
+
+    attr = request.form.get('attr_name', type=str)
+
+    tv = dataset.getTableViewer(tablename)
+
+    if not attr in tv.get_attributes():
+        flash(message="Invalid attribute.", category="error")
+        return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
+
+    tt = dataset.getTableTransformer(tablename)
+
+    if form.validate():
+        tt.change_attribute_name(table = tablename, attribute = attr, new_name = form.new_attr_name.data)
+        flash(message="Information updated.", category="success")
+    else:
+        flash_errors(form)
+
+    return redirect(url_for('dataset_pages.table', dataset_id = dataset_id, tablename = tablename))
 # ENDFUNCTION
 
 @dataset_pages.route('/dataset/<int:dataset_id>/permissions')
@@ -796,12 +833,13 @@ def _get_datetype(dataset_id, tablename):
 
 # ENDFUNCTION
 
-@dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>/_get_hist_num')
+@dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>/<string:attr_name>/_get_hist_num')
 @require_login
 @require_readperm
-def _get_hist_num(dataset_id, tablename):
+def _get_hist_num(dataset_id, tablename, attr_name):
     """Callback for dynamic forms."""
-    attr_name = request.args.get('view_attr', '01', type=str)
+
+    print('test')
 
     if not DatasetManager.existsID(dataset_id):
         abort(404)
@@ -817,8 +855,16 @@ def _get_hist_num(dataset_id, tablename):
     if not attr_name in tv.get_attributes():
         abort(404)
 
-    hist_num = tv.get_numerical_histogram(attr_name)
-    return hist_num
+    bins = 10
+
+    hist_num = tv.get_numerical_histogram(attr_name, bins)
+
+    retval = {
+        "labels": hist_num[0],
+        "sizes": hist_num[1],
+        "bool": hist_num[2]
+    }
+    return jsonify(retval)
 # ENDFUNCTION
 
 @dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>/<string:attr_name>/_get_chart_freq')
@@ -1138,10 +1184,10 @@ def dedup_deduplicate_cluster(dataset_id, tablename):
     return 'True'
 # ENDFUNCTION
 
-@dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>/dedup/yes_to_all', methods=['POST'])
+@dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>/clusterid/<int:clusterid>/dedup/yes_to_all')
 @require_login
 @require_writeperm
-def dedup_yes_to_all(dataset_id, tablename):
+def dedup_yes_to_all(dataset_id, tablename, clusterid):
     """Callback to automatically deduplicate starting from clusterid"""
     if not DatasetManager.existsID(dataset_id):
         abort(404)
@@ -1151,21 +1197,14 @@ def dedup_yes_to_all(dataset_id, tablename):
     if tablename not in dataset.getTableNames():
         abort(404)
 
-    clusterid = 0
-
-    if request.method == "POST":
-        clusterid = request.form.get('id', type=int)
-
-    print(clusterid)
-
     dd = dataset.getDeduplicator()
     dd.yes_to_all(dataset_id, tablename, clusterid)
 
-
+    flash(message="Data-deduplication completed.", category="success")
     return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
 # ENDFUNCTION
 
-@dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>/dedup/cancel', methods=['POST'])
+@dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>/dedup/cancel')
 @require_login
 @require_writeperm
 def dedup_cancel(dataset_id, tablename):
@@ -1181,5 +1220,6 @@ def dedup_cancel(dataset_id, tablename):
     dd = dataset.getDeduplicator()
     dd.clean_data(dataset_id, tablename)
 
+    flash(message="Data-deduplication canceled.", category="success")
     return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
 # ENDFUNCTION

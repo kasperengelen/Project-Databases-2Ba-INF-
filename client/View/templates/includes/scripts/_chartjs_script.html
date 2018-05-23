@@ -1,16 +1,17 @@
 <script>
     $(function() {
         getPieChart($('#view_attr option:selected').text());
+        getHistogram($('#view_attr option:selected').text());
 
         var input = {
             view_attr: $('#view_attr option:selected').text()
         }
 
         $.get("{{ url_for('dataset_pages._get_colstats', dataset_id=dataset_info.setid, tablename=table_name, attr_name=input) }}", input, function(data) {
-                if(data != "") {
-                    $('#col_stats').append(data);
-                }
-            })
+            if(data != "") {
+                $('#col_stats').append(data);
+            }
+        })
     });
 
     function getRandomColor() {
@@ -35,8 +36,10 @@
         $.ajax({
             url: "{{ url_for('dataset_pages._get_chart_freq', dataset_id=dataset_info.setid, tablename=table_name, attr_name='temp_attr') }}".replace('temp_attr', formdata),
             success: function(response) {
+                $('#piechartdiv').html('');
+                $('#piechartdiv').html('<canvas id="PieChart"></canvas>');
                 var ctx = document.getElementById('PieChart');
-                var myChart = new Chart(ctx, {
+                var pieChart = new Chart(ctx, {
                   type: 'pie',
                   data: {
                     labels: response.labels,
@@ -52,8 +55,56 @@
         });
     }
 
+    function getHistogram(attr_name) {
+
+        var formdata = attr_name;
+
+        $.ajax({
+            url: "{{ url_for('dataset_pages._get_hist_num', dataset_id=dataset_info.setid, tablename=table_name, attr_name='temp_attr') }}".replace('temp_attr', formdata),
+            success: function(response) {
+                $('#numhistdiv').html('');
+                $('#numhistdiv').html('<canvas id="NumHist"></canvas>');
+
+                if(response.bool == true){
+                    $('#numhisterrordiv').empty();
+                    $('#numhistdiv').show();
+
+                    var ctx = document.getElementById('NumHist');
+                    var histChart = new Chart(ctx, {
+                      type: 'bar',
+                      options: {
+                            legend: {
+                                display: false
+                            },
+                            scales: {
+                                xAxes: [{
+                                    barPercentage: 1.1
+                                }]
+                            }
+                      },
+                      data: {
+                        labels: response.labels,
+                        datasets: [
+                          {
+                              data: response.sizes,
+                              barPercentage: 1,
+                              backgroundColor: getRandomColor()
+                          }
+                        ]
+                      }
+                    });
+                }
+                else {
+                    $('#numhistdiv').hide();
+                    $('#numhisterrordiv').html('<div style="padding-top: 1em;"><h5>No Numerical Histogram available for this attribute</h5></div>');
+                }
+            }
+        });
+    }
+
     $('#view_attr').change(function() {
         getPieChart($('#view_attr option:selected').text());
+        getHistogram($('#view_attr option:selected').text());
 
         $('#col_stats').empty();
 

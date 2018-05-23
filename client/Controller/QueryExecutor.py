@@ -26,7 +26,7 @@ class QueryExecutor:
         self.db_conn = db_conn
         self.engine = engine
         self.write_perm = write_perm
-        self.history_manager = DatasetHistoryManager(setid, db_conn, True)
+        self.history_manager = DatasetHistoryManager(setid, db_conn)
         self.altered_data = {}
 
     class QueryError(Exception):

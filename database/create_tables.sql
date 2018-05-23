@@ -75,7 +75,7 @@ $BODY$ LANGUAGE PLPGSQL;
 --Trigger to delete a dataset if the last admin leaves the dataset.
 CREATE OR REPLACE FUNCTION leave_clean() RETURNS TRIGGER AS $BODY$
 BEGIN
-	IF EXISTS(SELECT * FROM system.set_permissions WHERE setid = OLD.setid AND permission_type = 'admin') THEN
+	IF NOT EXISTS(SELECT * FROM system.set_permissions WHERE setid = OLD.setid AND permission_type = 'admin') THEN
 		EXECUTE 'DELETE FROM system.datasets WHERE setid = ' || OLD.setid::varchar;
 		EXECUTE 'DROP SCHEMA IF EXISTS ' || quote_ident(OLD.setid::varchar) || ' CASCADE';
 		EXECUTE 'DROP SCHEMA IF EXISTS ' || quote_ident('original_' || OLD.setid::varchar) || ' CASCADE';

@@ -8,27 +8,25 @@ from psycopg2 import sql
 import pandas as pd
 
 class DatasetHistoryManager:
-    """Class that manages the transformation history ofimport reimport re a dataset.
+    """Class that manages the transformation history of a dataset.
 
     Attributes:
         setid: The id of the dataset that the manager has to access.
         db_connection: psycopg2 database connection to execute SQL queries.
         engine: SQLalchemy engine to use pandas functionality.
-        track: Boolean indicating if the history has to be tracked and written to the history table.
     """
 
-    def __init__(self, setid, db_connection, track=True):
+    def __init__(self, setid, db_connection):
         self.setid = setid
         self.db_connection = db_connection
-        self.track = track
         self.entry_count = self.__initialize_entrycount()
         self.choice_dict = None
         
     def __initialize_entrycount(self):
-            cur = self.db_connection.cursor()
-            query = "SELECT COUNT(*) FROM system.dataset_history WHERE setid = %s"
-            cur.execute(sql.SQL(query), [self.setid])
-            return int(cur.fetchone()[0])
+        cur = self.db_connection.cursor()
+        query = "SELECT COUNT(*) FROM system.dataset_history WHERE setid = %s"
+        cur.execute(sql.SQL(query), [self.setid])
+        return int(cur.fetchone()[0])
         
     def get_rowcount(self, tablename=None):
         """Quick method to get the number of rows in the dataset history table."""
@@ -51,9 +49,6 @@ class DatasetHistoryManager:
             parameters: List of parameters used with the transformation
             transformation_type: Integer representing the transformation used.
         """
-        if self.track is False:
-            return None
-        
         param_array = self.__python_list_to_postgres_array(parameters, transformation_type)
         cur = self.db_connection.cursor()
         query = 'INSERT INTO SYSTEM.DATASET_HISTORY VALUES (%s, %s, %s, %s, %s, %s)'
@@ -88,6 +83,12 @@ class DatasetHistoryManager:
         data = self.__rows_to_list(all_rows)
         json_string = json.dumps(data, default=str)
         return json_string
+
+    def is_undo_enabled(self, tablename):
+        """Method that returns whether it's possible to undo the most recent transformation
+        of a table in the dataset.
+        """
+        return False
         
     def __python_list_to_postgres_array(self, py_list, transformation_type):
         """Method that represents a python list as a postgres array for inserting into a PostreSQL database."""
@@ -184,7 +185,10 @@ class DatasetHistoryManager:
             13 : self.__rowstring_generator13,
             14 : self.__rowstring_generator14,
             15 : self.__rowstring_generator15,
-            16 : self.__rowstring_generator16
+            16 : self.__rowstring_generator16,
+            17 : self.__rowstring_generator17,
+            18 : self.__rowstring_generator18,
+            19 : self.__rowstring_generator18,
             }
         
         self.choice_dict =  choice_dict
@@ -197,8 +201,6 @@ class DatasetHistoryManager:
         for elem in row_list:
             tr_type = int(elem['transformation_type'])
             field1 = self.choice_dict[tr_type](elem)
-            if self.__is_new_table(elem):
-                field1 += self.__get_new_table_string(elem)
             field2 = elem['transformation_date']
             result.append((field2, field1))
 
@@ -208,23 +210,11 @@ class DatasetHistoryManager:
         """Assuming a string is quoted, this method will return the same string without the quotes"""
         return string[1:-1]
     
-    def __is_new_table(self, dict_obj):
-        """Method that checks whether a table is a new table created from a transformation."""
-        if dict_obj['table_name'] != dict_obj['origin_table'] :
-            return False
-        else:
-            return False
-
-    def __get_new_table_string(self, dict_obj):
-        """Get a string that explains what new table the transformation resulted in."""
-        string = 'This transformation resulted in a new table "{}".'.format(dict_obj['table_name'])
-        return string
-
     def __rowstring_generator0(self, dict_obj):
-        rowstring = 'Renamed ...'
+        rowstring = 'Created table "{}" which is a copy of table "{}".'.format(dict_obj['table_name'],
+                                                                               dict_obj['origin_name'])
         return rowstring
-
-
+    
     def __rowstring_generator1(self, dict_obj):
         param = dict_obj['parameters']
         rowstring = 'Converted attribute "{}" of table "{}" to type {}.'
@@ -315,6 +305,9 @@ class DatasetHistoryManager:
 
     def __rowstring_generator13(self, dict_obj):
         rowstring = 'Normalized attribute "{}" of table "{}" in range [0-1] using the Z-score.'
+        param = dict_obj['parameters']
+        if param[0] == 'False':
+            rowstring += ' The normalized values have been written to a new column "{}".'.format(param[1])
         rowstring = rowstring.format(dict_obj['attribute'], dict_obj['origin_table'])
         return rowstring
 
@@ -334,3 +327,18 @@ class DatasetHistoryManager:
         rowstring = 'Executed user-generated query on table "{}". Used query: {}'
         rowstring = rowstring.format(dict_obj['origin_table'], param[0])
         return rowstring
+
+    def __rowstring_generator17(self, dict_obj):
+        param = dict_obj['parameters']
+        values = [dict_obj['attribute'], dict_obj['table_name'], param[0]]
+        rowstring = 'Renamed column "{}" of table "{}" to "{}".'.format(*values)
+        return rowstring
+
+    def __rowstring_generator18(self, dict_obj):
+        table = dict_obj['table_name']
+        rowstring = 'Deleted duplicate rows of table "{}" by performing Data Deduplication.'.format(table)
+        return rowstring
+
+    def __rowstring_generator19(self, dict_obj):
+        pass
+        
