@@ -1,0 +1,37 @@
+<div id="editAttrModal_{{ loop.index }}" class="modal fade text-left" role="dialog">
+    <div class="modal-dialog">
+    
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">{{ attr.name }}</h4>
+            </div>
+            <div class="modal-body">                
+                <ul class="nav nav-tabs" role="tablist">
+                    <li class="active"><a href="#EditAttr_{{ loop.index }}" role="tab" data-toggle="tab">Edit Attribute</a></li>
+                    <li><a href="#DeleteAttr_{{ loop.index }}" role="tab" data-toggle="tab">Delete Attribute</a></li>
+                </ul>
+                <!-- TAB PANES -->
+                <div class="tab-content">
+                <div style="padding-top: 1em;"></div>
+                    <div class="tab-pane active" id="EditAttr_{{ loop.index }}">
+                        
+                    </div>
+                    <div class="tab-pane" id="DeleteAttr_{{ loop.index }}">
+                        <form method="post" action="{{ url_for('transf_callbacks.transform_deleteattr', dataset_id=dataset_info.setid, tablename=table_name) }}">
+                            <input type="hidden" id="attribute_name_{{ loop.index }}" name="attribute_name" value="{{ attr.name }}">
+                            <div class="text-right">
+                                <button class="btn btn-primary" type="submit">Delete</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+        <!-- Modal content -->
+    </div>
+</div>
