@@ -980,8 +980,8 @@ def _get_attr2_options(dataset_id):
     return jsonify(options)
 # ENDFUNCTION
 
-@dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>/_get_table', defaults = {'original': False})
-@dataset_pages.route('/dataset/<int:dataset_id>/original_table/<string:tablename>/_get_table', defaults = {'original': True})
+@dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>/_get_table', defaults = {'original': False}, methods=['GET'])
+@dataset_pages.route('/dataset/<int:dataset_id>/original_table/<string:tablename>/_get_table', defaults = {'original': True}, methods=['GET'])
 @require_login
 @require_readperm
 def _get_table(dataset_id, tablename, original):
@@ -989,7 +989,7 @@ def _get_table(dataset_id, tablename, original):
 
     start_nr   = request.args.get('start',            type=int)
     row_count  = request.args.get('length',           type=int)
-    col_nr     = 0
+    col_nr     = request.args.get('order[0][column]', type=int)
     sort_order = request.args.get('order[0][dir]',    type=str)
 
     # set current session row_count to the specified count
