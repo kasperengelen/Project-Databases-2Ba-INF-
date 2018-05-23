@@ -221,9 +221,6 @@
 								<th data-hover="tooltip" title="{{ attr.type }}">
 									{{ attr.name }}
 								</th>
-								{% if original != True %}
-									{% include "includes/modals/_attr_settings_modal.html" %}
-								{% endif %}
 							{% endfor %}
 						</tr>
 					</thead>
