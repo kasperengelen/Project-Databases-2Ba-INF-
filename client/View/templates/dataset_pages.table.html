@@ -242,21 +242,26 @@
 
 		<!-- TABLE -->
 		<script>
-			$(document).ready( function () {
-    			var table = $('#mytable').DataTable( {
-    				scrollX: true,
-    				scrollY: true,
-    				processing: true,
-    				serverSide: true,
-    				autoWidth: false, 
-    				ajax: '{{ url_for("dataset_pages._get_table", dataset_id=dataset_info.setid, tablename=table_name, original = original) }}'
-    			} );
-
-    			$('#transbutton').click(function(){
-    				table.ajax.reload();
-    			});    	
-    		} );
-		</script>
+            $(document).ready( function () {
+                var table = $('#mytable').DataTable( {
+                    scrollX: true,
+                    scrollY: true,
+                    processing: true,
+                    serverSide: true,
+                    autoWidth: false,
+                    fixedColumns: false,
+                    order: [[0, 'asc']],
+                    ajax: '{{ url_for("dataset_pages._get_table", dataset_id=dataset_info.setid, tablename=table_name, original = original) }}'
+                } );
+ 
+                $('#transbutton').click(function(){
+                    table.ajax.reload();
+                });
+ 
+                $.fn.dataTable.ext.errMode = 'none';
+       
+            } );
+        </script>
 	</div>
 
 
