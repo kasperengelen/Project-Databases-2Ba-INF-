@@ -89,6 +89,12 @@ class DatasetHistoryManager:
         of a table in the dataset.
         """
         return False
+
+    def get_last_transformation(self, tablename):
+        cur = self.db_connection.cursor()
+        cur.execute(sql.SQL('SELECT max(transformation_id) FROM system.dataset_history'
+                            ' WHERE table_name = %s))')
+        
         
     def __python_list_to_postgres_array(self, py_list, transformation_type):
         """Method that represents a python list as a postgres array for inserting into a PostreSQL database."""
@@ -98,7 +104,7 @@ class DatasetHistoryManager:
         if nr_elements == 0: #Return an empty postgres array string
             return "{}"
 
-        if transformation_type > 14: #Arguments for transformation 15 and 16 are already quoted
+        if 14 < transformation_type < 17: #Arguments for transformation 15 and 16 are already quoted
             param_array = "{" + py_list[0] + "}"
             return param_array
             
