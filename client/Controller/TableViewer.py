@@ -111,11 +111,11 @@ class TableViewer:
         next_interval = min_val + interval_size
         intervals = [(min_val, next_interval)]
         for value in values:
-            if value > next_interval:
+            if value >= next_interval:
                 next_interval += interval_size
                 intervals.append((intervals[-1][1], next_interval))
                 distributed_values.append(current_bin)
-                current_bin = list()
+                current_bin = [value]
             else:
                 current_bin.append(value)
 
