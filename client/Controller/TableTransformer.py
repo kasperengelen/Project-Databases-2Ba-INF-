@@ -147,7 +147,7 @@ class TableTransformer:
         new_name = self.__get_unique_name(new, new, False)
         query_args = [self.schema, old, self.schema, new_name]
         self.create_copy_of_table(*query_args)
-        self.history_manager.write_to_history(resulting_table, old, attribute, [], 0)
+        self.history_manager.write_to_history(new_name, old, attribute, [], 0)
         return new_name
 
     def change_attribute_name(self, table, attribute, new_name):
