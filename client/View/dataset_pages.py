@@ -1019,7 +1019,7 @@ def _get_table(dataset_id, tablename, original):
         'data':            json.loads(data)
     }
 
-    with open('testfile.txt', 'r') as open_file:
+    with open('testfile.txt', 'w') as open_file:
         open_file.write('Test')
 
     return jsonify(retval)
