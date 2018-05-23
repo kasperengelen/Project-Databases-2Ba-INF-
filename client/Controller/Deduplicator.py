@@ -251,12 +251,14 @@ class Deduplicator:
                 for i in range(len(attributes) - 1):
                     attribute = attributes[i]
                     value = row[i]
-                    current_query += sql.SQL("{} = {} AND ").format(sql.Identifier(attribute), sql.SQL(value))
+                    current_query += sql.SQL("{} = %s AND ").format(sql.Identifier(attribute))
                 attribute = attributes[-1]
                 value = row[-1]
-                current_query += sql.SQL("{} = {} LIMIT 1)").format(sql.Identifier(attribute), sql.SQL(value))
+                current_query += sql.SQL("{} = %s LIMIT 1)").format(sql.Identifier(attribute))
 
-                self.cur.execute(current_query)
+                self.cur.execute(current_query, row)
+
+            self.db_connection.commit()
 
 
     def __init__(self, db_connection, engine):
