@@ -8,10 +8,6 @@ import pandas as pd
 import numpy as np
 import psycopg2
 from psycopg2 import sql
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
-import mpld3
 
 from Model.SQLTypeHandler import SQLTypeHandler
 
@@ -93,25 +89,40 @@ class TableViewer:
 
         return type_dict
 
-    def get_numerical_histogram(self, columnname, bar_nr=10):
+    def get_numerical_histogram(self, columnname, bins=10):
         # first check if the attribute type is numerical
         self.cur.execute(sql.SQL("SELECT pg_typeof({}) FROM {}.{}").format(sql.Identifier(columnname),
                                                                                                      sql.Identifier(self.schema),
                                                                                                      sql.Identifier(self.tablename)))
         type = self.cur.fetchone()[0]
         if not SQLTypeHandler().is_numerical(type):
-            return "N/A"
+            return [], [], False
 
-        sql_query = "SELECT \"{}\" FROM \"{}\".\"{}\"".format(columnname, self.schema, self.tablename)
-        df = pd.read_sql(sql_query, self.engine)
-        fig = plt.figure(figsize=(5.12, 3.84))
-        plt.hist(df[columnname], bins=bar_nr, align='left', alpha=0.8, color='grey')
-        html = mpld3.fig_to_html(fig)
+        self.cur.execute(sql.SQL("SELECT {} FROM {} ORDER BY {} ASC").format(sql.Identifier(columnname),
+                                                                             sql.Identifier(self.tablename),
+                                                                             sql.Identifier(columnname)))
+        values = self.cur.fetchall()
+        min_val = min(values)
+        max_val = max(values)
+        interval_size = (max_val - min_val) / bins
+        distributed_values = list()
+        current_bin = list()
+        next_interval = min_val + interval_size
+        intervals = [(min_val, next_interval)]
+        for value in values:
+            if value > next_interval:
+                next_interval += interval_size
+                intervals.append((intervals[-1][1], next_interval))
+                distributed_values.append(current_bin)
+                current_bin = list()
+            else:
+                distributed_values.append(value)
 
-        # close the figure to free memory
-        plt.close(fig)
+        sizes = [len(x) for x in distributed_values]
+        # stringify the tuples representing the intervals
+        intervals = [str(x) for x in intervals]
 
-        return html
+        return intervals, sizes, True
 
     def get_frequency_pie_chart(self, columnname):
         # get the frequency of every value
@@ -143,7 +154,7 @@ class TableViewer:
             sizes.append(other)
             labels.append("other")
 
-        return (labels, sizes)
+        return labels, sizes
 
     def get_most_frequent_value(self, columnname):
         """Return the value that appears most often in the column"""
