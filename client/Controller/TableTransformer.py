@@ -76,6 +76,14 @@ class TableTransformer:
         cur.execute(sql.SQL("ALTER TABLE {}.{} DROP COLUMN IF EXISTS {}").format(*query_args))
         self.db_connection.commit()
 
+    def rename_attribute(self, table, old, new):
+        """Execute auery that renames the column of an SQL table."""
+        cur = self.db_connection.cursor()
+        query_args = [sql.Identifier(self.schema), sql.Identifier(table),
+                      sql.Identifier(old), sql.Identifier(new)]
+        cur.execute(sql.SQL('ALTER TABLE {}.{} RENAME {} TO {}').format(*query_args))
+        self.db_connection.commit()
+
     def drop_table(self, table):
         """Execute query that drops an SQL table of the dataset."""
         cur = self.db_connection.cursor()
@@ -141,6 +149,12 @@ class TableTransformer:
         self.create_copy_of_table(*query_args)
         self.history_manager.write_to_history(resulting_table, old, attribute, [], 0)
         return new_name
+
+    def change_attribute_name(self, table, attribute, new_name):
+        """Transformation that changes the name of a table attribute."""
+        new_name = self.__get_unique_name(table, new_name)
+        self.rename_attribute(self, table, attribute, new_name)
+        self.history_manager.write_to_history(table, table, attribute, [new_name], 17)
 
     def delete_attribute(self, tablename, attribute, new_name=""):
         """Transformation that deletes an attribute of a table."""

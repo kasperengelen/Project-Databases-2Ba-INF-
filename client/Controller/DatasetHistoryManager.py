@@ -185,7 +185,10 @@ class DatasetHistoryManager:
             13 : self.__rowstring_generator13,
             14 : self.__rowstring_generator14,
             15 : self.__rowstring_generator15,
-            16 : self.__rowstring_generator16
+            16 : self.__rowstring_generator16,
+            17 : self.__rowstring_generator17,
+            18 : self.__rowstring_generator18,
+            19 : self.__rowstring_generator18,
             }
         
         self.choice_dict =  choice_dict
@@ -324,3 +327,18 @@ class DatasetHistoryManager:
         rowstring = 'Executed user-generated query on table "{}". Used query: {}'
         rowstring = rowstring.format(dict_obj['origin_table'], param[0])
         return rowstring
+
+    def __rowstring_generator17(self, dict_obj):
+        param = dict_obj['parameters']
+        values = [dict_obj['attribute'], dict_obj['table_name'], param[0]]
+        rowstring = 'Renamed column "{}" of table "{}" to "{}".'.format(*values)
+        return rowstring
+
+    def __rowstring_generator18(self, dict_obj):
+        table = dict_obj['table_name']
+        rowstring = 'Deleted duplicate rows of table "{}" by performing Data Deduplication.'.format(table)
+        return rowstring
+
+    def __rowstring_generator19(self, dict_obj):
+        pass
+        
