@@ -94,12 +94,6 @@ def transform_extractdatetime(dataset_id, tablename):
         flash_errors(form)
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
 
-    attr_type = tt.get_attribute_type(tablename, form.select_attr.data)[0]
-
-    if tt.get_extraction_options(attr_type) == []:
-        flash(message="Selected attribute not of type 'DATE' or 'TIMESTAMP'.", category="error")
-        return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
-
     try:
         tt.extract_part_of_date(tablename, form.select_attr.data, form.select_extracttype.data, new_name=form.new_table_name.data)
         flash(message="Part of date extracted.", category="success")

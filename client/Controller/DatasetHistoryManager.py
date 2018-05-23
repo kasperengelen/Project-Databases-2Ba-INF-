@@ -8,7 +8,7 @@ from psycopg2 import sql
 import pandas as pd
 
 class DatasetHistoryManager:
-    """Class that manages the transformation history ofimport reimport re a dataset.
+    """Class that manages the transformation history of a dataset.
 
     Attributes:
         setid: The id of the dataset that the manager has to access.
@@ -17,7 +17,7 @@ class DatasetHistoryManager:
         track: Boolean indicating if the history has to be tracked and written to the history table.
     """
 
-    def __init__(self, setid, db_connection, track=True):
+    def __init__(self, setid, db_connection):
         self.setid = setid
         self.db_connection = db_connection
         self.track = track
@@ -25,10 +25,10 @@ class DatasetHistoryManager:
         self.choice_dict = None
         
     def __initialize_entrycount(self):
-            cur = self.db_connection.cursor()
-            query = "SELECT COUNT(*) FROM system.dataset_history WHERE setid = %s"
-            cur.execute(sql.SQL(query), [self.setid])
-            return int(cur.fetchone()[0])
+        cur = self.db_connection.cursor()
+        query = "SELECT COUNT(*) FROM system.dataset_history WHERE setid = %s"
+        cur.execute(sql.SQL(query), [self.setid])
+        return int(cur.fetchone()[0])
         
     def get_rowcount(self, tablename=None):
         """Quick method to get the number of rows in the dataset history table."""
@@ -51,9 +51,6 @@ class DatasetHistoryManager:
             parameters: List of parameters used with the transformation
             transformation_type: Integer representing the transformation used.
         """
-        if self.track is False:
-            return None
-        
         param_array = self.__python_list_to_postgres_array(parameters, transformation_type)
         cur = self.db_connection.cursor()
         query = 'INSERT INTO SYSTEM.DATASET_HISTORY VALUES (%s, %s, %s, %s, %s, %s)'
@@ -88,6 +85,12 @@ class DatasetHistoryManager:
         data = self.__rows_to_list(all_rows)
         json_string = json.dumps(data, default=str)
         return json_string
+
+    def is_undo_enabled(self, tablename):
+        """Method that returns whether it's possible to undo the most recent transformation
+        of a table in the dataset.
+        """
+        return False
         
     def __python_list_to_postgres_array(self, py_list, transformation_type):
         """Method that represents a python list as a postgres array for inserting into a PostreSQL database."""
@@ -221,7 +224,8 @@ class DatasetHistoryManager:
         return string
 
     def __rowstring_generator0(self, dict_obj):
-        rowstring = 'Renamed ...'
+        rowstring = 'Created table "{}" which is a copy of table "{}".'.format(dict_obj['table_name'],
+                                                                               dict_obj['origin_name'])
         return rowstring
 
 

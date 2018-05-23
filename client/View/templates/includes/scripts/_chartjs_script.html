@@ -7,10 +7,10 @@
         }
 
         $.get("{{ url_for('dataset_pages._get_colstats', dataset_id=dataset_info.setid, tablename=table_name, attr_name=input) }}", input, function(data) {
-                if(data != "") {
-                    $('#col_stats').append(data);
-                }
-            })
+            if(data != "") {
+                $('#col_stats').append(data);
+            }
+        })
     });
 
     function getRandomColor() {
@@ -35,7 +35,10 @@
         $.ajax({
             url: "{{ url_for('dataset_pages._get_chart_freq', dataset_id=dataset_info.setid, tablename=table_name, attr_name='temp_attr') }}".replace('temp_attr', formdata),
             success: function(response) {
+                $('#piechartdiv').html('');
+                $('#piechartdiv').html('<canvas id="PieChart"></canvas>');
                 var ctx = document.getElementById('PieChart');
+                delete myChart;
                 var myChart = new Chart(ctx, {
                   type: 'pie',
                   data: {
