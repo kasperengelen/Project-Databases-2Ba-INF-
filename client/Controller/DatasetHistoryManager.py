@@ -185,7 +185,10 @@ class DatasetHistoryManager:
             13 : self.__rowstring_generator13,
             14 : self.__rowstring_generator14,
             15 : self.__rowstring_generator15,
-            16 : self.__rowstring_generator16
+            16 : self.__rowstring_generator16,
+            17 : self.__rowstring_generator17,
+            18 : self.__rowstring_generator18,
+            19 : self.__rowstring_generator18,
             }
         
         self.choice_dict =  choice_dict
@@ -334,4 +337,8 @@ class DatasetHistoryManager:
     def __rowstring_generator18(self, dict_obj):
         table = dict_obj['table_name']
         rowstring = 'Deleted duplicate rows of table "{}" by performing Data Deduplication.'.format(table)
+        return rowstring
+
+    def __rowstring_generator19(self, dict_obj):
+        pass
         
