@@ -170,6 +170,8 @@ class TableUploader:
                     tablename = command.split()[2]
                     # remove bracket in tablename if there is no whitespace in between
                     tablename = tablename.split("(", 1)[0]
+                    # remove quotes
+                    tablename = tablename.replace('"', '')
 
                     # raise error if the table name is not alphanumeric, this is to not cause problems with url's
                     if not self.__check_alnum(tablename):
