@@ -98,6 +98,7 @@ class DataTypeTransform(TransformationFormBase):
 class NormalizeZScore(TransformationFormBase):
     """Form to normalize an attribute by it's z-score."""
     select_attr = SelectField('Attribute', choices=[])
+    overwrite = BooleanField('Overwrite column?', default=True)
 
     def fillForm(self, attrs):
         self.select_attr.choices = [(attrname, attrname) for attrname in attrs]

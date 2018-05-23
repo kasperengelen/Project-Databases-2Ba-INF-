@@ -369,7 +369,8 @@ def transform_zscorenormalisation(dataset_id, tablename):
 
     try:
         tt.normalize_using_zscore(tablename = tablename, 
-                                  attribute = form.select_attr.data, 
+                                  attribute = form.select_attr.data,
+                                  overwrite = form.overwrite.data,
                                   new_name  = form.new_table_name.data)
         flash(message="Normalization complete.", category="success")
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=form.get_table_name(tablename)))
