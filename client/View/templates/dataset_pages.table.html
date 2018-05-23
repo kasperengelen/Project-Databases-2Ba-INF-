@@ -253,7 +253,7 @@
     				order: [[0, 'asc']], 
     				ajax: {
     					url: '{{ url_for("dataset_pages._get_table", dataset_id=dataset_info.setid, tablename=table_name, original = original) }}',
-    					type: 'POST',
+    					type: 'GET',
     					success: function() {
     						alert('yes')
     					},
