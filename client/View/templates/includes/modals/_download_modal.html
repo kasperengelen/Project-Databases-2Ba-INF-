@@ -42,8 +42,8 @@
                     <div class="tab-pane" id="DUMP">
                         <!-- Download form dump -->
                         <form action="{{ url_for('dataset_pages.download_table', dataset_id=dataset_info.setid, tablename=table_name, original=original,
-                        fileformat='SQL')}}"
-                        method="get">
+                        fileformat='SQL')}}" method="get">
+                            {{ download_sql_form.hidden_tag() }}
                             <div class="text-right">
                                 <input class="btn btn-primary" type="submit" value="Download">
                             </div>
