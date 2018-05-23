@@ -558,6 +558,7 @@ class TableTransformer:
             raise self.AttrTypeError("Normalization failed due attribute not being of numeric type (neither integer or float)")
         
         df = self.load_table_in_dataframe(tablename)
+        og_attribute = attribute
         if overwrite is False:
             new_col = attribute + '_normalized'
             new_col = self.__get_unique_name(tablename, new_col)
@@ -599,7 +600,7 @@ class TableTransformer:
             df.to_sql(new_name, self.engine, self.schema, 'fail', index = False, dtype = new_dtypes)
             eventual_table = new_name
 
-        self.history_manager.write_to_history(eventual_table, eventual_table, attribute, [mean], 10)
+        self.history_manager.write_to_history(eventual_table, eventual_table, attribute, [overwrite, og_attribute], 13)
         
     def __get_unique_name(self, tablename, name, is_attribute=True):
         """Method that makes sure an attribute name or table name given the name
