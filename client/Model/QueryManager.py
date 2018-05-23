@@ -1,6 +1,7 @@
 
 import psycopg2
 import psycopg2.extras
+import datetime
 
 class QueryManager:
 
@@ -12,13 +13,14 @@ class QueryManager:
     def getUser(self, *args, **kwargs):
         """Method to retrieve user entries from the SYSTEM.user_accounts table.
         Fields:
-            userid (int),
-            fname  (str),
-            lname  (str),
-            email  (str),
-            passwd (str),
-            admin  (bool),
-            active (bool)
+            userid        (int),
+            fname         (str),
+            lname         (str),
+            email         (str),
+            passwd        (str),
+            admin         (bool),
+            active        (bool),
+            register_date (datetime.datetime)
 
         Returns a list of all tuples that conform to the specified requirements.
         The format will be a list of dicts that map field names to the tuple's values.
@@ -44,9 +46,10 @@ class QueryManager:
     def getDataset(self, *args, **kwargs):
         """Method to retrieve dataset entries from the SYSTEM.datasets table.
         Fields:
-            setid       (int),
-            setname     (str),
-            description (str)
+            setid         (int),
+            setname       (str),
+            description   (str),
+            creation_date (datetime.datetime)
 
         Returns a list of all tuples that conform to the specified requirements.
         The format will be a list of dicts that map field names to the tuple's values.
@@ -65,21 +68,17 @@ class QueryManager:
     # ENDFUNCTION
 
     def insertUser(self, *args, **kwargs):
-        self.__check_specified_params('system.user_accounts', kwargs)
-
-        query, values = self.__form_insert_statement('system.user_accounts', kwargs)
-
-        self.dict_cur.execute(query, values)
         # fetch return value
         """Method to insert entries into the SYSTEM.user_accounts table.
         Fields:
-            userid (int),
-            fname  (str),
-            lname  (str),
-            email  (str),
-            passwd (str),
-            admin  (bool),
-            active (bool)
+            userid        (int),
+            fname         (str),
+            lname         (str),
+            email         (str),
+            passwd        (str),
+            admin         (bool),
+            active        (bool),
+            register_date (datetime.datetime)
 
         Inserts a tuple with the specified files and the associated values.
 
@@ -92,18 +91,20 @@ class QueryManager:
         self.dict_cur.execute(query, values)
         self.db_conn.commit()
 
-        
-        result = self.dict_cur.fetchone()
 
-        return dict(result)
+        # check if retval is not empty
+        if 'returning' in kwargs and kwargs['returning'] is not None:
+            result = self.dict_cur.fetchone()
+            return result[kwargs['returning']]
     # ENDFUNCTION
 
     def insertDataset(self, *args, **kwargs):
         """Method to insert entries into the SYSTEM.datasets table.
         Fields:
-            setid      (int),
-            setname    (str),
-            desciption (str)
+            setid         (int),
+            setname       (str),
+            desciption    (str),
+            creation_date (datetime.datetime)
 
         Inserts a tuple with the specified fields and the associated values.
 
@@ -116,21 +117,22 @@ class QueryManager:
         self.dict_cur.execute(query, values)
         self.db_conn.commit()
 
-        result = self.dict_cur.fetchone()
-
-        return dict(result)
+        if 'returning' in kwargs and kwargs['returning'] is not None:
+            result = self.dict_cur.fetchone()
+            return result[kwargs['returning']]
     # ENDFUNCTION
 
     def deleteUser(self, *args, **kwargs):
         """Method to delete entries from the SYSTEM.user_accounts table.
         Fields:
-            userid (int),
-            fname  (str),
-            lname  (str),
-            email  (str),
-            passwd (str),
-            admin  (bool),
-            active (bool)
+            userid        (int),
+            fname         (str),
+            lname         (str),
+            email         (str),
+            passwd        (str),
+            admin         (bool),
+            active        (bool),
+            register_date (datetime.datetime)
 
         Deletes tuples that conform to the specified requirements."""
 
@@ -145,9 +147,10 @@ class QueryManager:
     def deleteDataset(self, *args, **kwargs):
         """Method to delete entries from SYSTEM.datasets table.
         Fields:
-            setid       (int),
-            setname     (str),
-            description (str)
+            setid         (int),
+            setname       (str),
+            description   (str),
+            creation_date (datetime.datetime)
 
         Deletes tuples that conform to the specified requirements."""
 
@@ -159,16 +162,17 @@ class QueryManager:
         self.db_conn.commit()
     # ENDFUNCTION
 
-    def updateUser(self, req, sets):
+    def updateUser(self, reqs, sets):
         """Method to alter entries from the  SYSTEM.user_accounts table.
         Fields:
-            userid (int),
-            fname  (str),
-            lname  (str),
-            email  (str),
-            passwd (str),
-            admin  (bool),
-            active (bool)
+            userid        (int),
+            fname         (str),
+            lname         (str),
+            email         (str),
+            passwd        (str),
+            admin         (bool),
+            active        (bool),
+            register_date (datetime.datetime)
 
         Modifies the specified fields of the tuples that conform to the specified requirements.
         The requirements can be specified as a dict in 'reqs'. These will be used in the WHERE clause.
@@ -194,9 +198,10 @@ class QueryManager:
     def updateDataset(self, reqs, sets):
         """Method to alter entries from the  SYSTEM.datasets table.
         Fields:
-            setid       (int),
-            setname     (str),
-            description (str)
+            setid         (int),
+            setname       (str),
+            description   (str),
+            creation_date (datetime.datetime)
 
         Modifies the specified fields of the tuples that conform to the specified requirements.
         The requirements can be specified as a dict in 'reqs'. These will be used in the WHERE clause.
@@ -275,12 +280,15 @@ class QueryManager:
             if field_name in specified_fields:
                 field_value = specified_fields[field_name]
 
+                if isinstance(field_value, datetime.datetime):
+                    field_value = field_value.isoformat()
+
                 query += "" + field_name + "= %s, "
                 values.append(field_value)
         # ENDFOR
 
         if not specified_fields:
-            quert += "TRUE;"
+            query += "TRUE;"
         else:
             query = query[:-2] + ";"
 
@@ -297,6 +305,10 @@ class QueryManager:
         for field_name, field_type in tablefields.items():
             if field_name in specified_fields:
                 field_value = specified_fields[field_name]
+
+                if isinstance(field_value, datetime.datetime):
+                    field_value = field_value.isoformat()
+
                 value_pairs.append((field_name, field_value))
         # ENDFOR
 
@@ -320,7 +332,7 @@ class QueryManager:
             query += " RETURNING " + specified_fields['returning']
 
         query += ";"
-        values = [pair[0] for pair in value_pairs]
+        values = [pair[1] for pair in value_pairs]
 
         return query, values
     # ENDFUNCTION
@@ -337,12 +349,15 @@ class QueryManager:
             if field_name in specified_fields:
                 field_value = specified_fields[field_name]
 
+                if isinstance(field_value, datetime.datetime):
+                    field_value = field_value.isoformat()
+
                 query += "" + field_name + "= %s, "
                 values.append(field_value)
         # ENDFOR
 
         if not specified_fields:
-            quert += "TRUE;"
+            query += "TRUE;"
         else:
             query = query[:-2] + ";"
 
@@ -360,7 +375,10 @@ class QueryManager:
         query += "SET "
         for field_name, field_type in tablefields.items():
             if field_name in sets:
-                field_value = reqs[field_name]
+                field_value = sets[field_name]
+
+                if isinstance(field_value, datetime.datetime):
+                    field_value = field_value.isoformat()
 
                 query += field_name + " = %s,"
                 values.append(field_value)
@@ -373,11 +391,13 @@ class QueryManager:
             if field_name in reqs:
                 field_value = reqs[field_name]
 
+                if isinstance(field_value, datetime.datetime):
+                    field_value = field_value.isoformat()
+
                 query += field_name + " = %s,"
                 values.append(field_value)
         # ENDFOR
         query = query[:-1] + ";"
-
 
         return query, values
     # ENDFUNCTION

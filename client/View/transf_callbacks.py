@@ -128,6 +128,11 @@ def transform_deleteattr(dataset_id, tablename):
         flash(message="Invalid attribute.", category="error")
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
 
+    if len(tv.get_attributes()) == 1:
+        dataset.deleteTable(tablename)
+        flash(message="Deleted empty table.", category="success")
+        return redirect(url_for('dataset_pages.home', dataset_id=dataset_id))
+
     tt = dataset.getTableTransformer(tablename)
     try:
         tt.delete_attribute(tablename, attrname)
@@ -364,7 +369,8 @@ def transform_zscorenormalisation(dataset_id, tablename):
 
     try:
         tt.normalize_using_zscore(tablename = tablename, 
-                                  attribute = form.select_attr.data, 
+                                  attribute = form.select_attr.data,
+                                  overwrite = form.overwrite.data,
                                   new_name  = form.new_table_name.data)
         flash(message="Normalization complete.", category="success")
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=form.get_table_name(tablename)))

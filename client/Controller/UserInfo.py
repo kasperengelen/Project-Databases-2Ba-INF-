@@ -1,5 +1,6 @@
 from Model.db_access import get_db
 from Model.SQLTypeHandler import SQLTypeHandler
+import datetime
 
 class UserInfo:
     """Class that represents a user."""
@@ -13,7 +14,7 @@ class UserInfo:
         fname = str(tupl[1])
         lname = str(tupl[2])
         email = str(tupl[3])
-        register_date = SQLTypeHandler().sql_time_to_dict(tupl[5])
+        register_date = datetime.datetime.now()
         admin = bool(tupl[6])
         active = bool(tupl[7])
 
@@ -24,14 +25,7 @@ class UserInfo:
         """Construct an object that represents a user with the
         specified parameters.
 
-        The register_date parameter is a dict with the following entries:
-            'Y': year
-            'M': month
-            'D': day
-            'hr': hour
-            'min': minutes
-            'sec': An integer representing the seconds.
-            'sec_full': The floating point number representing the seconds.
+        The register_date parameter is a datetime.datetime object.
         """
         
         self.userid = userid
@@ -45,14 +39,19 @@ class UserInfo:
 
     def toDict(self):
         """Retrieve a JSON-compatible dict
-        that contains information about the user."""
+        that contains information about the user.
+        
+        Note: The register date is specified as a dd-mm-yy string. The register
+        time is specified as an hr:min:sec string.
+        """
         
         return {
             "userid": self.userid,
             "email": self.email,
             "firstname": self.fname,
             "lastname": self.lname,
-            "register_date": self.register_date,
+            "register_date": self.register_date.strftime("%d-%m-%Y"),
+            "register_time": self.register_date.strftime("%H:%M:%S"),
             "admin": self.admin,
             "active" : self.active
         }
