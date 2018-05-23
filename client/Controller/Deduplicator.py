@@ -111,7 +111,7 @@ class Deduplicator:
                 cluster = list(self.clusters[(setid, tablename)][cluster_id])
 
                 # if no entries are specified to keep, only keep the first entry
-                if entries_to_keep is None: entries_to_keep = [cluster[0]]
+                if entries_to_keep is None: entries_to_keep = [0]
 
                 # remove the entries that should not be deduplicated
                 for entry in reversed(sorted(entries_to_keep)):
