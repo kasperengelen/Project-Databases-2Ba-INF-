@@ -1138,7 +1138,7 @@ def dedup_deduplicate_cluster(dataset_id, tablename):
     return 'True'
 # ENDFUNCTION
 
-@dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>/clusterid/<string:clusterid>/dedup/yes_to_all')
+@dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>/clusterid/<int:clusterid>/dedup/yes_to_all')
 @require_login
 @require_writeperm
 def dedup_yes_to_all(dataset_id, tablename, clusterid):
@@ -1151,10 +1151,8 @@ def dedup_yes_to_all(dataset_id, tablename, clusterid):
     if tablename not in dataset.getTableNames():
         abort(404)
 
-    cluster_id = int(clusterid)
-
     dd = dataset.getDeduplicator()
-    dd.yes_to_all(dataset_id, tablename, cluster_id)
+    dd.yes_to_all(dataset_id, tablename, clusterid)
 
     flash(message="Data-deduplication completed.", category="success")
     return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
