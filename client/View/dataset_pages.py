@@ -995,8 +995,6 @@ def _get_table(dataset_id, tablename, original):
     # set current session row_count to the specified count
     session['rowcount'] = row_count
 
-
-
     if not DatasetManager.existsID(dataset_id):
         abort(404)
 
