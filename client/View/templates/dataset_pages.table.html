@@ -251,18 +251,7 @@
     				autoWidth: false,
     				fixedColumns: false,
     				order: [[0, 'asc']], 
-    				ajax: {
-    					url: '{{ url_for("dataset_pages._get_table", dataset_id=dataset_info.setid, tablename=table_name, original = original) }}',
-    					type: 'GET',
-    					success: function() {
-    						alert('yes')
-    					},
-    					error: function(xhr, status, error) {
-    						var err = eval("(" + xhr.responseText + ")");
-    						alert(err.Message);
-    					}
-
-    				}
+    				ajax: '{{ url_for("dataset_pages._get_table", dataset_id=dataset_info.setid, tablename=table_name, original = original) }}'
     			} );
 
     			$('#transbutton').click(function(){
