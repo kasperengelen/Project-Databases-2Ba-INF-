@@ -6,6 +6,7 @@ import psycopg2
 from psycopg2 import sql
 from Model.DatabaseConfiguration import DatabaseConfiguration
 from Model.QueryManager import QueryManager
+from Controller.DatasetHistoryManager import DatasetHistoryManager
 
 class Deduplicator:
     """Singleton class that servers to maintain data in between callbacks.
@@ -151,6 +152,9 @@ class Deduplicator:
 
             dataframe = self.dataframes[(setid, tablename)]
             dataframe.to_sql(tablename, self.engine, schema=schema, if_exists="replace", index=False)
+
+            dataset_history_manager = DatasetHistoryManager(setid, self.db_connection)
+            dataset_history_manager.write_to_history(tablename, tablename, None, [], 18)
 
             self.clean_data(setid, tablename)
 
