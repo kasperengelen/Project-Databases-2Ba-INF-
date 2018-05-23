@@ -1,0 +1,65 @@
+<div id="stat_modal" class="modal fade text-left" role="dialog">
+    <div class="modal-dialog modal-lg">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <div class="row">
+                    <div class="col-sm-9">
+                        <h4 class="modal-title">Graphs and Statistics</h4>
+                    </div>
+                    <div class="col-sm-3">
+                        {% from "includes/_formhelpers.html" import render_field %}
+                        <form name="select_attr">
+                            {{ attr_form.hidden_tag() }}
+                            <div class="form-group">
+                                {{render_field(attr_form.view_attr, class_="form-control", id="view_attr")}}
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-body">
+                <ul class="nav nav-tabs" role="tablist">
+                    <li class="active"><a href="#PIE" role="tab" data-toggle="tab">Pie Chart</a></li>
+                    <li><a href="#HIST" role="tab" data-toggle="tab">Numerical Histogram</a></li>
+                    <li><a href="#STAT" role="tab" data-toggle="tab">Statistics</a></li>
+                </ul> 
+                <div class="tab-content">
+                    <div style="padding-top: 1em;"></div>
+                    <div class="tab-pane active" id="PIE">
+                       <div class="row">
+                            <div id="piechartdiv" class="col-sm-6 col-sm-offset-3">
+                                <canvas id="PieChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane" id="HIST">
+                        <div class="row">
+                            <div class="col-sm-12 text-center" id="numhisterrordiv"></div>
+                            <div id="numhistdiv" class="col-sm-10 col-sm-offset-1">
+                                <canvas id="NumHist"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane" id="STAT">
+                        <div class="row">
+                            <div class="col-sm-12">
+                                <div id="col_stats"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="padding-top: 1em;"></div>
+                </div>            
+            </div>  
+
+            <div class="modal-footer">
+                <div class="pull-left">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+        <!-- Modal content -->
+    </div>
+</div>

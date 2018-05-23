@@ -98,10 +98,11 @@ class TableViewer:
         if not SQLTypeHandler().is_numerical(type):
             return [], [], False
 
-        self.cur.execute(sql.SQL("SELECT {} FROM {} ORDER BY {} ASC").format(sql.Identifier(columnname),
-                                                                             sql.Identifier(self.tablename),
-                                                                             sql.Identifier(columnname)))
-        values = self.cur.fetchall()
+        self.cur.execute(sql.SQL("SELECT {} FROM {}.{} ORDER BY {} ASC").format(sql.Identifier(columnname),
+                                                                                sql.Identifier(self.schema),
+                                                                                sql.Identifier(self.tablename),
+                                                                                sql.Identifier(columnname)))
+        values = [x[0] for x in self.cur.fetchall()]
         min_val = min(values)
         max_val = max(values)
         interval_size = (max_val - min_val) / bins
@@ -116,11 +117,11 @@ class TableViewer:
                 distributed_values.append(current_bin)
                 current_bin = list()
             else:
-                distributed_values.append(value)
+                current_bin.append(value)
 
         sizes = [len(x) for x in distributed_values]
         # stringify the tuples representing the intervals
-        intervals = [str(x) for x in intervals]
+        intervals = [str((math.ceil(x[0]), math.floor(x[1]))) for x in intervals]
 
         return intervals, sizes, True
 

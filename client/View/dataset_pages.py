@@ -796,12 +796,13 @@ def _get_datetype(dataset_id, tablename):
 
 # ENDFUNCTION
 
-@dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>/bins/<int:bins>/_get_hist_num')
+@dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>/<string:attr_name>/_get_hist_num')
 @require_login
 @require_readperm
-def _get_hist_num(dataset_id, tablename, bins):
+def _get_hist_num(dataset_id, tablename, attr_name):
     """Callback for dynamic forms."""
-    attr_name = request.args.get('view_attr', '01', type=str)
+
+    print('test')
 
     if not DatasetManager.existsID(dataset_id):
         abort(404)
@@ -817,8 +818,16 @@ def _get_hist_num(dataset_id, tablename, bins):
     if not attr_name in tv.get_attributes():
         abort(404)
 
+    bins = 10
+
     hist_num = tv.get_numerical_histogram(attr_name, bins)
-    return hist_num
+
+    retval = {
+        "labels": hist_num[0],
+        "sizes": hist_num[1],
+        "bool": hist_num[2]
+    }
+    return jsonify(retval)
 # ENDFUNCTION
 
 @dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>/<string:attr_name>/_get_chart_freq')
