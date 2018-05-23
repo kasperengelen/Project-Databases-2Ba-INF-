@@ -1151,16 +1151,19 @@ def dedup_yes_to_all(dataset_id, tablename):
     if tablename not in dataset.getTableNames():
         abort(404)
 
-    clusterid = 0
+    clusterid = -1
 
     if request.method == "POST":
         clusterid = request.form.get('id', type=int)
 
     print(clusterid)
 
+    if clusterid == -1:
+        flash(message="Something went wrong.", category="error")
+        redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))       
+
     dd = dataset.getDeduplicator()
     dd.yes_to_all(dataset_id, tablename, clusterid)
-
 
     return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
 # ENDFUNCTION
