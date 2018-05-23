@@ -987,13 +987,6 @@ def _get_attr2_options(dataset_id):
 def _get_table(dataset_id, tablename, original):
     """Callback to retrieve the dataset in JSON format."""
 
-    string = ""
-
-    for key in request.args:
-        string += "{} -- {}; ".format(key, request.args[key])
-
-    raise RuntimeError(string)
-
     start_nr   = request.args.get('start',            type=int)
     row_count  = request.args.get('length',           type=int)
     col_nr     = request.args.get('order[0][column]', type=int)
@@ -1001,6 +994,8 @@ def _get_table(dataset_id, tablename, original):
 
     # set current session row_count to the specified count
     session['rowcount'] = row_count
+
+
 
     if not DatasetManager.existsID(dataset_id):
         abort(404)
