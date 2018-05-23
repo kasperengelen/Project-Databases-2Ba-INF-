@@ -75,7 +75,6 @@ class Deduplicator:
                 # if only one pair was found to match, predict can't be called because it requires at least 2 pairs
                 if len(potential_pairs) < 2:
                     results = potential_pairs.index.values
-                    print(results)
                 else:
                     # predict what matches are true matches
                     kmeans = rl.KMeansClassifier()
@@ -151,7 +150,6 @@ class Deduplicator:
             self.dataframes[(setid, tablename)] = self.dataframes[(setid, tablename)].drop(self.entries_to_remove[(setid, tablename)])
 
             dataframe = self.dataframes[(setid, tablename)]
-            print(dataframe.head(50))
             dataframe.to_sql(tablename, self.engine, schema=schema, if_exists="replace", index=False)
 
             self.clean_data(setid, tablename)
