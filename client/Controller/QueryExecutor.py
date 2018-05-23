@@ -130,7 +130,7 @@ class QueryExecutor:
         case for SELECT statements that obviously need to be visualized.
         """
         try:
-            cur = self.db_connection.cursor()
+            cur = self.db_conn.cursor()
             cur.execute(query)
             
         except sqlalchemy.exc.ProgrammingError as e:
