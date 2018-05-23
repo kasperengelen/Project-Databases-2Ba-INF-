@@ -153,7 +153,7 @@ class TableTransformer:
     def change_attribute_name(self, table, attribute, new_name):
         """Transformation that changes the name of a table attribute."""
         new_name = self.__get_unique_name(table, new_name)
-        self.rename_attribute(self, table, attribute, new_name)
+        self.rename_attribute(table, attribute, new_name)
         self.history_manager.write_to_history(table, table, attribute, [new_name], 17)
 
     def delete_attribute(self, tablename, attribute, new_name=""):

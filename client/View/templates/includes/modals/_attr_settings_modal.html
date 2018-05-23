@@ -12,11 +12,21 @@
                     <li class="active"><a href="#EditAttr_{{ loop.index }}" role="tab" data-toggle="tab">Edit Attribute</a></li>
                     <li><a href="#DeleteAttr_{{ loop.index }}" role="tab" data-toggle="tab">Delete Attribute</a></li>
                 </ul>
+                {% from "includes/_formhelpers.html" import render_field %}
                 <!-- TAB PANES -->
                 <div class="tab-content">
                 <div style="padding-top: 1em;"></div>
                     <div class="tab-pane active" id="EditAttr_{{ loop.index }}">
-                        
+                        <form method="post" action="{{ url_for('dataset_pages.change_attribute_name', dataset_id=dataset_info.setid, tablename=table_name) }}">
+                            {{ change_attr_form.hidden_tag() }}
+                            <input type="hidden" id="attr_name_{{ loop.index }}" name="attr_name" value="{{ attr.name }}">
+                            <div class="form-group" style="width: 50%;">
+                                {{render_field(change_attr_form.new_attr_name, class_="form-control", placeholder="New Attribute Name")}}
+                            </div>
+                            <div class="text-right">
+                                <button class="btn btn-primary" type="submit">Edit</button>
+                            </div>
+                        </form>
                     </div>
                     <div class="tab-pane" id="DeleteAttr_{{ loop.index }}">
                         <form method="post" action="{{ url_for('transf_callbacks.transform_deleteattr', dataset_id=dataset_info.setid, tablename=table_name) }}">
