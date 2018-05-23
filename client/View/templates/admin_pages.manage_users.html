@@ -79,18 +79,23 @@
                             </form>
                         </td>
                     {% else %}
-                        <td></td>
+                        <td><button href="#" style="border: none; background-color: transparent; cursor: not-allowed;" disabled>
+                            <span class="glyphicon glyphicon-stop"></span>
+                            </button>
+                        </td>
                     {% endif %}
                     <td>
                         {% include "includes/modals/_admin_edit_user_modal.html" %}
                     </td>
                     {% if user.userinfo.userid != session.userdata.userid %}
-                        <td><a href="#" style="color: black;" data-toggle="modal" data-target="#deleteUserModal{{ user.userinfo.userid  }}">
-                                <span class="glyphicon glyphicon-remove"></span></a>
+                        <td><button href="#" style="border: none; background-color: transparent;" data-toggle="modal" data-target="#deleteUserModal{{ user.userinfo.userid  }}">
+                                <span class="glyphicon glyphicon-remove"></span></button>
                             {% include "includes/modals/_admin_delete_user_modal.html" %}
                         </td>
                     {% else %}
-                        <td></td>
+                        <td><button style="border: none; background-color: transparent; cursor: not-allowed;">
+                            <span class="glyphicon glyphicon-remove"></span>
+                        </button></td>
                     {% endif %}
                 </tr>
             {% endfor %}
