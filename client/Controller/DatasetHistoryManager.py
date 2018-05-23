@@ -324,3 +324,14 @@ class DatasetHistoryManager:
         rowstring = 'Executed user-generated query on table "{}". Used query: {}'
         rowstring = rowstring.format(dict_obj['origin_table'], param[0])
         return rowstring
+
+    def __rowstring_generator17(self, dict_obj):
+        param = dict_obj['parameters']
+        values = [dict_obj['attribute'], dict_obj['table_name'], param[0]]
+        rowstring = 'Renamed column "{}" of table "{}" to "{}".'.format(*values)
+        return rowstring
+
+    def __rowstring_generator18(self, dict_obj):
+        table = dict_obj['table_name']
+        rowstring = 'Deleted duplicate rows of table "{}" by performing Data Deduplication.'.format(table)
+        
