@@ -249,11 +249,7 @@
     				processing: true,
     				serverSide: true,
     				autoWidth: true, 
-    				ajax: {
-    					url: '{{ url_for("dataset_pages._get_table", dataset_id=dataset_info.setid, tablename=table_name, original = original) }}',
-    					type: 'GET',
-					dataType: "json"
-    				}
+    				ajax: '{{ url_for("dataset_pages._get_table", dataset_id=dataset_info.setid, tablename=table_name, original = original) }}'
     			} );
 
     			$('#transbutton').click(function(){
