@@ -50,6 +50,7 @@ class DatasetHistoryManager:
             transformation_type: Integer representing the transformation used.
         """
         param_array = self.__python_list_to_postgres_array(parameters, transformation_type)
+        print(param_array)
         cur = self.db_connection.cursor()
         query = 'INSERT INTO SYSTEM.DATASET_HISTORY VALUES (%s, %s, %s, %s, %s, %s)'
         cur.execute(sql.SQL(query), [self.setid, table_name, attribute, transformation_type, param_array, origin_table])
@@ -90,13 +91,13 @@ class DatasetHistoryManager:
         """
         return False
 
-    def get_last_transformation(self, tablename):
-        """
+    def get_latest_backup(self, tablename):
         cur = self.db_connection.cursor()
-        cur.execute(sql.SQL('SELECT tablename FROM system.dataset_history'
-                            ' WHERE table_name = %s))')3
-        """
-        
+        values = [self.setid, tablename]
+        cur.execute(sql.SQL('SELECT table_name FROM system.dataset_history WHERE transformation_id ='
+                            '(SELECT MAX(transformation_id) FROM system.dataset_history WHERE setid = %s'
+                            ' AND origin_table = %s AND transformation_type = -1)'), values)
+        return cur.fetchone()[0]
         
     def __python_list_to_postgres_array(self, py_list, transformation_type):
         """Method that represents a python list as a postgres array for inserting into a PostreSQL database."""
