@@ -91,9 +91,9 @@ class DatasetHistoryManager:
         return False
 
     def get_last_transformation(self, tablename):
-        cur = self.db_connection.cursor()
+        """cur = self.db_connection.cursor()
         cur.execute(sql.SQL('SELECT max(transformation_id) FROM system.dataset_history'
-                            ' WHERE table_name = %s))')
+                            ' WHERE table_name = %s))')"""
         
         
     def __python_list_to_postgres_array(self, py_list, transformation_type):
