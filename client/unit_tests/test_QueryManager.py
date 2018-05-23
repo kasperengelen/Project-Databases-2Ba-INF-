@@ -23,14 +23,6 @@ class TestQueryManager(unittest.TestCase):
         cls.db_conn.commit()
 
         cls.query_man = QueryManager(db_conn=cls.db_conn, engine=None)
-
-        # insert two users to delete
-
-        # insert two datasets to delete
-
-        # insert two users to update
-
-        # insert two datasets to update
     # ENDMETHOD
 
     @classmethod
@@ -81,6 +73,9 @@ class TestQueryManager(unittest.TestCase):
         #### TEST
 
         #### CLEAN
+        self.cur.execute("DELETE FROM SYSTEM.set_permissions WHERE TRUE;")
+        self.db_conn.commit()
+
         self.cur.execute("DELETE FROM SYSTEM.datasets WHERE TRUE;")
         self.db_conn.commit()
 
@@ -130,6 +125,46 @@ class TestQueryManager(unittest.TestCase):
         #### TEST
 
         #### CLEAN
+        self.cur.execute("DELETE FROM SYSTEM.set_permissions WHERE TRUE;")
+        self.db_conn.commit()
+
+        self.cur.execute("DELETE FROM SYSTEM.datasets WHERE TRUE;")
+        self.db_conn.commit()
+
+        self.cur.execute("DELETE FROM SYSTEM.user_accounts WHERE TRUE;");
+        self.db_conn.commit()
+        #### CLEAN
+    # ENDTEST
+
+    def test_getPermission(self):
+        """Test select statements on system.set_permissions."""
+
+        #### SETUP
+        # insert user
+        self.dict_cur.execute("INSERT INTO system.user_accounts(fname,lname,email,passwd) VALUES (%s,%s,%s,%s) RETURNING userid;", ['Jan', 'Met de pet', 'email@adres.com', 'password123'])
+        self.db_conn.commit()
+        userid = self.dict_cur.fetchone()['userid']
+
+        # insert dataset
+        self.dict_cur.execute("INSERT INTO system.datasets(setname, description) VALUES (%s, %s) RETURNING setid;", ['Set A', 'Some dataset.'])
+        self.db_conn.commit()
+        setid = self.dict_cur.fetchone()['setid']
+
+        # insert permission
+        self.dict_cur.execute("INSERT INTO system.set_permissions(userid, setid, permission_type) VALUES (%s,%s,%s);", [userid, setid, 'admin'])
+        self.db_conn.commit()
+        #### SETUP
+
+        #### TEST
+        results = self.query_man.getPermission(userid=userid)
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0]['setid'], setid)
+        #### TEST
+
+        #### CLEAN
+        self.cur.execute("DELETE FROM SYSTEM.set_permissions WHERE TRUE;")
+        self.db_conn.commit()
+
         self.cur.execute("DELETE FROM SYSTEM.datasets WHERE TRUE;")
         self.db_conn.commit()
 
@@ -161,6 +196,9 @@ class TestQueryManager(unittest.TestCase):
         self.assertFalse(user2_admin)
 
         #### CLEAN
+        self.cur.execute("DELETE FROM SYSTEM.set_permissions WHERE TRUE;")
+        self.db_conn.commit()
+
         self.cur.execute("DELETE FROM SYSTEM.datasets WHERE TRUE;")
         self.db_conn.commit()
 
@@ -181,12 +219,53 @@ class TestQueryManager(unittest.TestCase):
         self.assertEqual(len(result), 2)
 
         #### CLEAN
+        self.cur.execute("DELETE FROM SYSTEM.set_permissions WHERE TRUE;")
+        self.db_conn.commit()
+
         self.cur.execute("DELETE FROM SYSTEM.datasets WHERE TRUE;")
         self.db_conn.commit()
 
         self.cur.execute("DELETE FROM SYSTEM.user_accounts WHERE TRUE;");
         self.db_conn.commit()
         #### CLEAN
+    # ENDTEST
+
+    def test_insertPermission(self):
+        """Test insert statements on system.set_permissions."""
+        #### SETUP
+        # insert user
+        self.dict_cur.execute("INSERT INTO system.user_accounts(fname,lname,email,passwd) VALUES (%s,%s,%s,%s) RETURNING userid;", ['Jan', 'Met de pet', 'email@adres.com', 'password123'])
+        self.db_conn.commit()
+        userid = self.dict_cur.fetchone()['userid']
+
+        # insert dataset
+        self.dict_cur.execute("INSERT INTO system.datasets(setname, description) VALUES (%s, %s) RETURNING setid;", ['Set A', 'Some dataset.'])
+        self.db_conn.commit()
+        setid = self.dict_cur.fetchone()['setid']
+        #### SETUP
+
+        #### TEST
+        self.query_man.insertPermission(userid=userid, setid=setid, permission_type='write')
+
+        self.dict_cur.execute("SELECT * FROM system.set_permissions WHERE setid=%s AND userid=%s;", [setid, userid])
+        result = self.dict_cur.fetchone()
+
+        self.assertTrue(result is not None)
+        self.assertTrue(result['permission_type'], 'write')
+        #### TEST
+
+        #### CLEAN
+        self.cur.execute("DELETE FROM SYSTEM.set_permissions WHERE TRUE;")
+        self.db_conn.commit()
+
+        self.cur.execute("DELETE FROM SYSTEM.datasets WHERE TRUE;")
+        self.db_conn.commit()
+
+        self.cur.execute("DELETE FROM SYSTEM.user_accounts WHERE TRUE;");
+        self.db_conn.commit()
+        #### CLEAN
+
+
     # ENDTEST
 
     def test_deleteUser(self):
@@ -226,6 +305,9 @@ class TestQueryManager(unittest.TestCase):
         #### TEST
 
         #### CLEAN
+        self.cur.execute("DELETE FROM SYSTEM.set_permissions WHERE TRUE;")
+        self.db_conn.commit()
+
         self.cur.execute("DELETE FROM SYSTEM.datasets WHERE TRUE;")
         self.db_conn.commit()
 
@@ -274,6 +356,59 @@ class TestQueryManager(unittest.TestCase):
         #### TEST
 
         #### CLEAN
+        self.cur.execute("DELETE FROM SYSTEM.set_permissions WHERE TRUE;")
+        self.db_conn.commit()
+
+        self.cur.execute("DELETE FROM SYSTEM.datasets WHERE TRUE;")
+        self.db_conn.commit()
+
+        self.cur.execute("DELETE FROM SYSTEM.user_accounts WHERE TRUE;");
+        self.db_conn.commit()
+        #### CLEAN
+    # ENDTEST
+
+    def test_deletePermission(self):
+        """Test delete statements on system.set_permissions."""
+        #### SETUP
+        # insert user
+        self.dict_cur.execute("INSERT INTO system.user_accounts(fname,lname,email,passwd) VALUES (%s,%s,%s,%s) RETURNING userid;", ['Jan', 'Met de pet', 'email@adres.com', 'password123'])
+        self.db_conn.commit()
+        userid_1 = self.dict_cur.fetchone()['userid']
+
+        # insert user
+        self.dict_cur.execute("INSERT INTO system.user_accounts(fname,lname,email,passwd) VALUES (%s,%s,%s,%s) RETURNING userid;", ['Peter', 'Selie', 'some_email@adres.com', 'abcdef123'])
+        self.db_conn.commit()
+        userid_2 = self.dict_cur.fetchone()['userid']
+
+        # insert dataset
+        self.dict_cur.execute("INSERT INTO system.datasets(setname, description) VALUES (%s, %s) RETURNING setid;", ['Set A', 'Some dataset.'])
+        self.db_conn.commit()
+        setid = self.dict_cur.fetchone()['setid']
+
+        # insert permission
+        self.dict_cur.execute("INSERT INTO system.set_permissions(userid, setid, permission_type) VALUES (%s,%s,%s);", [userid_1, setid, 'admin'])
+        self.db_conn.commit()
+
+        # insert permission
+        self.dict_cur.execute("INSERT INTO system.set_permissions(userid, setid, permission_type) VALUES (%s,%s,%s);", [userid_2, setid, 'write'])
+        self.db_conn.commit()
+        #### SETUP
+
+        #### TEST
+
+        self.query_man.deletePermission(userid=userid_2, setid=setid)
+
+        self.dict_cur.execute("SELECT * FROM system.set_permissions WHERE setid=%s AND userid=%s;", [setid, userid_2])
+        results = self.dict_cur.fetchall()
+
+        self.assertEqual(len(results), 0)
+
+        #### TEST
+
+        #### CLEAN
+        self.cur.execute("DELETE FROM SYSTEM.set_permissions WHERE TRUE;")
+        self.db_conn.commit()
+
         self.cur.execute("DELETE FROM SYSTEM.datasets WHERE TRUE;")
         self.db_conn.commit()
 
@@ -322,6 +457,9 @@ class TestQueryManager(unittest.TestCase):
         #### TEST
 
         #### CLEAN
+        self.cur.execute("DELETE FROM SYSTEM.set_permissions WHERE TRUE;")
+        self.db_conn.commit()
+
         self.cur.execute("DELETE FROM SYSTEM.datasets WHERE TRUE;")
         self.db_conn.commit()
 
@@ -352,6 +490,9 @@ class TestQueryManager(unittest.TestCase):
         self.assertEqual(res['setname'], "ABC")
 
         #### CLEAN
+        self.cur.execute("DELETE FROM SYSTEM.set_permissions WHERE TRUE;")
+        self.db_conn.commit()
+
         self.cur.execute("DELETE FROM SYSTEM.datasets WHERE TRUE;")
         self.db_conn.commit()
 
