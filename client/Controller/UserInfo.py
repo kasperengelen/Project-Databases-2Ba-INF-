@@ -5,22 +5,6 @@ import datetime
 class UserInfo:
     """Class that represents a user."""
     
-    @staticmethod
-    def fromSqlTuple(tupl):
-        """Convert a SQL-tuple containing information about a user
-        to a UserInfo object."""
-
-        userid = int(tupl[0])
-        fname = str(tupl[1])
-        lname = str(tupl[2])
-        email = str(tupl[3])
-        register_date = datetime.datetime.now()
-        admin = bool(tupl[6])
-        active = bool(tupl[7])
-
-        return UserInfo(userid, fname, lname, email, register_date, admin, active)
-    # ENDMETHOD
-
     def __init__(self, userid, fname, lname, email, register_date, admin, active):
         """Construct an object that represents a user with the
         specified parameters.

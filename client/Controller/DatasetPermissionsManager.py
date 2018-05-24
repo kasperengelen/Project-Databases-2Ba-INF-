@@ -1,4 +1,5 @@
 from Model.db_access import get_db
+from Model.QueryManager import QueryManager
 
 class DatasetPermissionsManager:
     """Class that provides facilities to manage dataset permissions."""
@@ -73,11 +74,10 @@ class DatasetPermissionsManager:
         if not perm_type in ['admin', 'write', 'read']:
             raise RuntimeError("The specified permission type is not valid.")
 
-        cur = db_conn.cursor()
-        cur.execute("SELECT userid FROM SYSTEM.set_permissions WHERE setid = %s and permission_type = %s;", [int(setid), perm_type])
-        results = cur.fetchall()
+        qm = QueryManager(db_conn = db_conn, engine = None)
+        results = qm.getPermission(setid=setid, permission_type = perm_type)
 
-        return [t[0] for t in results]
+        return [result['userid'] for result in results]
     # ENDFUNCTION
 
     @staticmethod
@@ -96,9 +96,9 @@ class DatasetPermissionsManager:
         if DatasetPermissionsManager.getPermForUserID(setid, userid, db_conn = db_conn) is not None:
             raise RuntimeError("The specified user already has access to the dataset.")
 
-        db_conn.cursor().execute("INSERT INTO SYSTEM.set_permissions(userid, setid, permission_type) VALUES (%s, %s, %s);",
-                                                                                [int(userid), int(setid), str(perm_type)])
-        db_conn.commit()
+        qm = QueryManager(db_conn = db_conn, engine = None)
+        qm.insertPermission(userid=userid, setid=setid, permission_type=perm_type)
+
     # ENDFUNCTION
 
     @staticmethod
@@ -112,8 +112,8 @@ class DatasetPermissionsManager:
         if DatasetPermissionsManager.getPermForUserID(setid, userid, db_conn = db_conn) is None:
             raise RuntimeError("The specified user does not have access to the specified dataset.")
 
-        db_conn.cursor().execute("DELETE FROM SYSTEM.set_permissions WHERE setid = %s AND userid = %s;", [int(setid), int(userid)])
-        db_conn.commit()
+        qm = QueryManager(db_conn = db_conn, engine = None)
+        qm.deletePermission(setid=setid, userid=userid)
     # ENDFUNCTION
 
     @staticmethod
@@ -123,13 +123,12 @@ class DatasetPermissionsManager:
         if db_conn is None:
             db_conn = get_db()
 
-        cur = db_conn.cursor()
-        cur.execute("SELECT permission_type FROM SYSTEM.set_permissions WHERE setid = %s AND userid = %s;", [int(setid), int(userid)])
-        result = cur.fetchone()
+        qm = QueryManager(db_conn = db_conn, engine = None)
+        results = qm.getPermission(setid=setid, userid=userid)
 
-        if result is None:
+        if len(results) < 1:
             return None
 
-        return result[0]
+        return results[0]['permission_type']
     # ENDFUNCTION
 # ENDCLASS
