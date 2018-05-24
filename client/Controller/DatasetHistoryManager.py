@@ -63,6 +63,10 @@ class DatasetHistoryManager:
             backup_id = max(backups)
         if self.auto_backup_check(backup_id, table_name) is True:
             self.__backup_table(table_name, t_id)
+            if len(backups) == 2: #We need to drop the oldest backup after creating a new one
+                backup_name = self.__get_backup_name_from_id(min(backups))
+                self.__delete_backup(backup_name)
+                
 
     def render_history_json(self, offset, limit, reverse_order=False, show_all=True, table_name=""):
         """Method that returns a json string containing the asked data of the dataset_history table.
@@ -82,7 +86,7 @@ class DatasetHistoryManager:
         if show_all is False:
             query = ("SELECT * FROM system.dataset_history WHERE setid = %s AND table_name = %s"
                      " ORDER BY transformation_date {} LIMIT %s OFFSET %s").format(ordering)
-            dict_cur.execute(sql.SQL(query), [self.setid, table_name, table_name, limit, offset])
+            dict_cur.execute(sql.SQL(query), [self.setid, table_name, limit, offset])
         else:
             query = ("SELECT * FROM system.dataset_history WHERE setid = %s AND transformation_type >= 0"
                      " ORDER BY transformation_date {} LIMIT %s OFFSET %s").format(ordering)
@@ -247,6 +251,19 @@ class DatasetHistoryManager:
         cur.execute(query, [self.setid, str(t_id), '', -1, '{}', tablename])
         self.db_connection.commit()
 
+    def __delete_backup(self, backup_name):
+        cur = self.db_connection.cursor()
+        backup = 'backup."{}"'.format(str(backup_name))
+        cur.execute('DROP TABLE {}'.format(backup))
+        self.db_connection.commit()
+
+    def __get_backup_name_from_id(self, t_id):
+        cur = self.db_connection.cursor()
+        query = 'SELECT table_name FROM system.dataset_history WHERE transformation_id = %s'
+        cur.execute(query, [t_id])
+        self.db_connection.commit()
+        return cur.fetchone()[0]
+        
     def __get_recent_transformations(self, tablename):
         """Method that returns the recent operations performed on a table."""
         dict_cur = self.db_connection.cursor(cursor_factory=psycopg2.extras.DictCursor)
