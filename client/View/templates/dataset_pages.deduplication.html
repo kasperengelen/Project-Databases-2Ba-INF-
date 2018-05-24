@@ -4,7 +4,7 @@
 	
 	<div class="jumbotron text-center" style="padding: 1%">
         <div class="pull-left">
-            <a data-hover="tooltip" title="Previous" href="{{ url_for('dataset_pages.table', dataset_id=datasetid, tablename=table_name) }}"
+            <a data-hover="tooltip" title="Previous" id="previous" href="{{ url_for('dataset_pages.table', dataset_id=datasetid, tablename=table_name) }}"
             	class="btn btn-primary">
 				<span class="glyphicon glyphicon-share-alt" style="-webkit-transform: scaleX(-1); transform: scaleX(-1);"></span></a>
         </div>
@@ -160,6 +160,9 @@
 	    		});
 
 	    		$('#cancel_{{ loop.index }}').on('click', function() {
+	    			$('#cancel_dedup_modal').modal('show');
+	    		});
+	    		$('#previous').on('click', function() {
 	    			$('#cancel_dedup_modal').modal('show');
 	    		});
     		</script>
