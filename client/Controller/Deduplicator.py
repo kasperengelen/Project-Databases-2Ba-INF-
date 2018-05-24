@@ -263,10 +263,16 @@ class Deduplicator:
                 row_list = [str(x) for x in dataframe.iloc[row].tolist()]
                 rows.append(row_list)
 
-            return json.dumps(rows)
+            json_string = json.dumps(rows)
+            # escape quotes to allow insertion into postgres
+            escaped_json = json_string.replace('"', '\\"')
+
+            return escaped_json
 
         def redo_dedup(self, setid, tablename, row_json):
             """Delete all rows specified in the json"""
+            # unescape quotes in the json string
+            row_json = row_json.replace('\\"', '"')
             rows = json.loads(row_json)
             query = sql.SQL("DELETE FROM {}.{} WHERE ctid IN (SELECT ctid FROM {}.{} WHERE ").format(sql.Identifier(str(setid)),
                                                                                                      sql.Identifier(tablename),
