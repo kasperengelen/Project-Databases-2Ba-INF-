@@ -6,7 +6,11 @@
 			<div class="col-sm-3 text-left">
 				<a data-hover="tooltip" title="Previous" href="{{ url_for('dataset_pages.list') }}" class="btn btn-primary">
 					<span class="glyphicon glyphicon-share-alt" style="-webkit-transform: scaleX(-1); transform: scaleX(-1);"></span></a>
-				<div style="padding-top: 4.5em;"></div>
+				<div style="padding-top: 1em;"></div>
+				<a href="#" data-toggle="modal" data-target="#querymodal" data-hover="tooltip" title="Query"
+					class="btn btn-primary"><i class="fa fa-terminal"></i></a>
+				{% include "includes/modals/_custom_query_modal.html" %}
+				<div style="padding-top: 1em;"></div>
 				<a href="{{ url_for('dataset_pages.history', dataset_id=dataset_info.setid) }}" data-hover="tooltip" title="History"
 					class="btn btn-primary"><span class="glyphicon glyphicon-time"></span></a>
 			</div>
