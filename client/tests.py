@@ -18,9 +18,9 @@ if __name__ == "__main__":
     tests = []
 
     # comment uit wat je niet gebruikt
-    #tests.append(TestUserManager)
-    #tests.append(TestDatasetManager)
-    #tests.append(TestDatasetPermissionsManager)
+    tests.append(TestUserManager)
+    tests.append(TestDatasetManager)
+    tests.append(TestDatasetPermissionsManager)
     tests.append(TestQueryManager)
     #tests.append(TestTableTransformer)
     #tests.append(TestTransformerCopy)

@@ -1,10 +1,12 @@
 from psycopg2 import sql
 from psycopg2 import extensions
+import datetime
 
 from Model.db_access import get_db
 from Model.db_access import get_sqla_eng
 from Model.TableUploader import TableUploader
 from Model.DatasetDownloader import DatasetDownloader
+from Model.QueryManager import QueryManager
 
 from Controller.TableViewer import TableViewer
 from Controller.TableTransformer import TableTransformer
@@ -16,22 +18,11 @@ from Controller.Deduplicator import Deduplicator
 class DatasetInfo:
     """Class that represents a dataset."""
 
-    @staticmethod
-    def fromSqlTuple(tupl, db_conn = None):
-        """Convert a SQL-tuple containing information about a user
-        to a DatasetInfo object."""
-
-        setid       = int(tupl[0])
-        setname     = str(tupl[1])
-        description = str(tupl[2])
-
-        return DatasetInfo(setid, setname, description, db_conn = db_conn)
-    # ENDMETHOD
-
-    def __init__(self, setid, name, description, db_conn = None):
+    def __init__(self, setid, name, description, creation_date, db_conn = None):
         self.setid = setid
         self.name = name
         self.desc = description
+        self.creation_date = creation_date
 
         if db_conn is None:
             self.db_conn = get_db()
@@ -45,18 +36,18 @@ class DatasetInfo:
         return {
             'setid': self.setid,
             'name': self.name,
-            'desc': self.desc
+            'desc': self.desc,
+            "creation_date": self.creation_date.strftime("%d-%m-%Y"),
+            "creation_time": self.creation_date.strftime("%H:%M:%S"),
         }
     # ENDMETHOD
 
+    # TODO user querymanager
     def getTableNames(self):
         """Retrieve the names of the tables that are part of the dataset."""
 
-        cur = self.db_conn.cursor()
-        cur.execute("SELECT table_name FROM information_schema.tables WHERE table_schema = %s;", [str(self.setid)])
-        result = cur.fetchall()
-
-        tablenames = [t[0] for t in result]
+        qm = QueryManager(db_conn = self.db_conn, engine = None)
+        tablenames = qm.get_table_names(str(self.setid))
 
         return tablenames
     # ENDMETHOD
@@ -64,11 +55,8 @@ class DatasetInfo:
     def getOriginalTableNames(self):
         """Retrieve the names of the original tables that are part of the dataset."""
 
-        cur = self.db_conn.cursor()
-        cur.execute("SELECT table_name FROM information_schema.tables WHERE table_schema = %s;", ["original_" + str(self.setid)])
-        result = cur.fetchall()
-
-        tablenames = [t[0] for t in result]
+        qm = QueryManager(db_conn = self.db_conn, engine = None)
+        tablenames = qm.get_table_names("original_" + str(self.setid))
 
         return tablenames
     # ENDMETHOD
@@ -122,14 +110,18 @@ class DatasetInfo:
         return Deduplicator(self.db_conn, get_sqla_eng())
     # ENDMETHOD
 
+    def getTransformationReverser(self, tablename):
+        """Retrieve the TransformationReverser for this dataset and the specified table."""
+
+        return TransformationReverser(setid=self.setid, table_name=tablename, db_connection=self.db_conn, engine=get_sqla_eng())
+
+    # add to querymanager
     def deleteTable(self, tablename):
         """Deletes the specified table from the dataset."""
         if not tablename in self.getTableNames():
             raise RuntimeError("Invalid tablename.")
 
-        # TODO update this for original tables
-        cur = self.db_conn.cursor()
-        cur.execute("DROP TABLE \"{}\".{};".format(int(self.setid), extensions.quote_ident(tablename, get_db().cursor())))
-        cur.execute("DROP TABLE IF EXISTS original_{}.{}".format(int(self.setid), extensions.quote_ident(tablename, get_db().cursor())))
-        self.db_conn.commit()
+        qm = QueryManager(db_conn = self.db_conn, engine = None)
+        qm.destroyTable("\"{}\".{}".format(self.setid, tablename), cascade = True)
+        qm.destroyTable("\"original_{}\".{}".format(self.setid, tablename), if_exists = True, cascade = True) # this one may not always exist!
     # ENDMETHOD

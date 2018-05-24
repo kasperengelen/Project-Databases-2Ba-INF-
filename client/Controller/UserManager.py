@@ -2,6 +2,7 @@
 from Model.db_access import get_db
 from passlib.hash import sha256_crypt
 from Controller.UserInfo import UserInfo
+from Model.QueryManager import QueryManager
 
 class UserManager:
     """Class that provides facilities to manage the userbase."""
@@ -14,14 +15,13 @@ class UserManager:
         if db_conn is None:
             db_conn = get_db()
 
-        cur = db_conn.cursor()
-        cur.execute("SELECT * FROM SYSTEM.user_accounts WHERE email=%s;", [email])
-        result = cur.fetchone()
+        qm = QueryManager(db_conn = db_conn, engine = None)
+        result = qm.getUser(email=email)
 
-        if result is None:
+        if not result:
             return False # email does not exist
 
-        correct_password = result[4]
+        correct_password = result[0]['passwd']
 
         if not sha256_crypt.verify(password_candidate, correct_password):
             return False # password does not match
@@ -36,12 +36,11 @@ class UserManager:
 
         if db_conn is None:
             db_conn = get_db()
-        
-        cur = db_conn.cursor()
-        cur.execute("SELECT * FROM SYSTEM.user_accounts WHERE userid=%s;", [userid])
-        result = cur.fetchone()
 
-        return result is not None # an entry must exist
+        qm = QueryManager(db_conn = db_conn, engine=None)
+        result = qm.getUser(userid=userid)
+
+        return len(result) > 0
     # ENDMETHOD
 
     @staticmethod
@@ -52,11 +51,10 @@ class UserManager:
         if db_conn is None:
             db_conn = get_db()
 
-        cur = db_conn.cursor()
-        cur.execute("SELECT * FROM SYSTEM.user_accounts WHERE email=%s;", [email])
-        result = cur.fetchone()
+        qm = QueryManager(db_conn = db_conn, engine=None)
+        result = qm.getUser(email=email)
 
-        return result is not None # an entry must exist
+        return len(result) > 0
     # ENDMETHOD
 
     @staticmethod
@@ -68,14 +66,19 @@ class UserManager:
         if db_conn is None:
             db_conn = get_db()
 
-        cur = db_conn.cursor()
-        cur.execute("SELECT * FROM SYSTEM.user_accounts WHERE userid=%s;", [userid])
-        result = cur.fetchone()
+        qm = QueryManager(db_conn = db_conn, engine=None)
+        result = qm.getUser(userid=userid)
 
-        if result is None:
+        if not result:
             return None
 
-        return UserInfo.fromSqlTuple(result)
+        return UserInfo(userid        = result[0]['userid'],
+                        fname         = result[0]['fname'],
+                        lname         = result[0]['lname'],
+                        email         = result[0]['email'],
+                        register_date = result[0]['register_date'],
+                        admin         = result[0]['admin'],
+                        active        = result[0]['active'])
     # ENDMETHOD
 
     @staticmethod
@@ -87,14 +90,19 @@ class UserManager:
         if db_conn is None:
             db_conn = get_db()
 
-        cur = db_conn.cursor()
-        cur.execute("SELECT * FROM SYSTEM.user_accounts WHERE email=%s;", [email])
-        result = cur.fetchone()
+        qm = QueryManager(db_conn = db_conn, engine=None)
+        result = qm.getUser(email=email)
 
-        if result is None:
+        if not result:
             return None
 
-        return UserInfo.fromSqlTuple(result)
+        return UserInfo(userid        = result[0]['userid'],
+                        fname         = result[0]['fname'],
+                        lname         = result[0]['lname'],
+                        email         = result[0]['email'],
+                        register_date = result[0]['register_date'],
+                        admin         = result[0]['admin'],
+                        active        = result[0]['active'])
     # ENDMETHOD
 
     @staticmethod
@@ -109,11 +117,9 @@ class UserManager:
 
         password_hash = sha256_crypt.hash(password)
 
-        cur = db_conn.cursor()
-        cur.execute("INSERT INTO SYSTEM.user_accounts(fname, lname, email, passwd) VALUES (%s, %s, %s, %s) RETURNING userid;", [fname, lname, email, password_hash])
-        db_conn.commit()
+        qm = QueryManager(db_conn = db_conn, engine = None)
+        userid = qm.insertUser(email = email, passwd = password_hash, fname = fname, lname = lname, admin = admin, returning = 'userid')
 
-        userid = cur.fetchone()
         return userid
     # ENDMETHOD
 
@@ -124,8 +130,9 @@ class UserManager:
         if db_conn is None:
             db_conn = get_db()
 
-        db_conn.cursor().execute("DELETE FROM SYSTEM.user_accounts WHERE userid=%s;", [userid])
-        db_conn.commit()
+        qm = QueryManager(db_conn = db_conn, engine = None)
+        qm.deleteUser(userid=userid)
+
     # ENDMETHOD
 
     @staticmethod
@@ -134,16 +141,20 @@ class UserManager:
 
         if db_conn is None:
             db_conn = get_db()
-
-        cur = db_conn.cursor()
-        cur.execute("SELECT * FROM SYSTEM.user_accounts;")
-        results = cur.fetchall()
+            
+        qm = QueryManager(db_conn = db_conn, engine = None)
+        results = qm.getUser() 
 
         retval = []
 
         for result in results:
-            retval.append(UserInfo.fromSqlTuple(result))
-
+            retval.append(UserInfo(userid        = result['userid'],
+                                   fname         = result['fname'],
+                                   lname         = result['lname'],
+                                   email         = result['email'],
+                                   register_date = result['register_date'],
+                                   admin         = result['admin'],
+                                   active        = result['active']))
         return retval
     # ENDMETHOD
 
@@ -154,8 +165,8 @@ class UserManager:
         if db_conn is None:
             db_conn = get_db()
 
-        db_conn.cursor().execute("UPDATE SYSTEM.user_accounts SET active=%s WHERE userid=%s", [bool(active), int(userid)])
-        db_conn.commit()
+        qm = QueryManager(db_conn = db_conn, engine = None)
+        qm.updateUser(reqs={'userid': userid}, sets={'active': active})
     # ENDMETHOD
 
     @staticmethod
@@ -165,9 +176,9 @@ class UserManager:
 
         if db_conn is None:
             db_conn = get_db()
-        
-        db_conn.cursor().execute("UPDATE SYSTEM.user_accounts SET fname = %s, lname = %s, email=%s WHERE userid=%s;", [new_fname, new_lname, new_email, int(userid)])
-        db_conn.commit()
+
+        qm = QueryManager(db_conn = db_conn, engine = None)
+        qm.updateUser(reqs={'userid': userid}, sets={'fname': new_fname, 'lname': new_lname, 'email': new_email})
     # ENDMETHOD
 
     @staticmethod
@@ -180,8 +191,8 @@ class UserManager:
 
         passwd_hash = sha256_crypt.hash(new_pass)
 
-        db_conn.cursor().execute("UPDATE SYSTEM.user_accounts SET passwd = %s WHERE userid=%s;", [passwd_hash, int(userid)])
-        db_conn.commit()
+        qm = QueryManager(db_conn = db_conn, engine = None)
+        qm.updateUser(reqs={'userid': userid}, sets={'passwd': passwd_hash})
     # ENDMETHOD
 
     @staticmethod
@@ -191,7 +202,7 @@ class UserManager:
         if db_conn is None:
             db_conn = get_db()
 
-        db_conn.cursor().execute("UPDATE SYSTEM.user_accounts SET admin = %s WHERE userid = %s", [admin_status, int(userid)])
-        db_conn.commit()
+        qm = QueryManager(db_conn = db_conn, engine = None)
+        qm.updateUser(reqs={'userid': userid}, sets={'admin': admin_status})
     # ENDMETHOD
 # ENDCLASS

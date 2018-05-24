@@ -1,5 +1,6 @@
 from Model.db_access import get_db
 from Controller.DatasetInfo import DatasetInfo
+from Model.QueryManager import QueryManager
 
 class DatasetManager:
     """Class that provides facilities for managing datasets."""
@@ -10,16 +11,16 @@ class DatasetManager:
         if db_conn is None:
             db_conn = get_db()
 
-        cur = db_conn.cursor()
-        cur.execute("SELECT * FROM SYSTEM.datasets WHERE setid=%s;", [setid])
-        result = cur.fetchone()
+        qm = QueryManager(db_conn = db_conn, engine = None)
+        result = qm.getDataset(setid=setid)
 
-        return result is not None
+        return len(result) > 0
     # ENDMETHOD
 
     @staticmethod
     def getDataset(setid, db_conn = None):
-        """Retrieve the dataset with the specified setid."""
+        """Retrieve the dataset with the specified setid. If no dataset
+        with the specified setid exists, None will be returned."""
 
         if db_conn is None:
             db_conn = get_db()
@@ -27,11 +28,17 @@ class DatasetManager:
         if not DatasetManager.existsID(setid, db_conn = db_conn):
             raise RuntimeError("There exists no dataset with the specified set id.")
 
-        cur = db_conn.cursor()
-        cur.execute("SELECT * FROM SYSTEM.datasets WHERE setid=%s;", [setid])
-        result = cur.fetchone()
+        qm = QueryManager(db_conn = db_conn, engine = None)
+        results = qm.getDataset(setid=setid)
 
-        return DatasetInfo.fromSqlTuple(result, db_conn = db_conn)
+        if not results:
+            return None
+
+        return DatasetInfo(setid         = results[0]['setid'],
+                           name          = results[0]['setname'],
+                           description   = results[0]['description'],
+                           creation_date = results[0]['creation_date'],
+                           db_conn       = db_conn)
     # ENDMETHOD
 
     @staticmethod
@@ -41,14 +48,18 @@ class DatasetManager:
         if db_conn is None:
             db_conn = get_db()
 
-        cur = db_conn.cursor()
-        cur.execute("SELECT * FROM SYSTEM.datasets WHERE setid IN (SELECT setid FROM SYSTEM.set_permissions WHERE userid = %s);", [userid])
-        results = cur.fetchall()
+        qm = QueryManager(db_conn=db_conn, engine=None)
+        results = qm.getDatasetsForUserID(userid=userid)
 
         retval = []
 
         for result in results:
-            retval.append(DatasetInfo.fromSqlTuple(result, db_conn = db_conn))
+            retval.append(DatasetInfo(setid         = result['setid'],
+                                      name          = result['setname'],
+                                      description   = result['description'],
+                                      creation_date = result['creation_date'],
+                                      db_conn       = db_conn))
+        # ENDFOR
 
         return retval
     # ENDMETHOD
@@ -61,18 +72,13 @@ class DatasetManager:
         if db_conn is None:
             db_conn = get_db()
 
-        cur = db_conn.cursor()
-        cur.execute("INSERT INTO SYSTEM.datasets(setname, description) VALUES (%s, %s) RETURNING setid;", [name, desc])
-        db_conn.commit()
-        setid = int(cur.fetchone()[0])
+        qm = QueryManager(db_conn = db_conn, engine = None)
+        setid = qm.insertDataset(setname = name, description = desc, returning = 'setid')
 
-        # CREATE SCHEMA
-        db_conn.cursor().execute("CREATE SCHEMA \"{}\";".format(int(setid)))
-        db_conn.commit()
-
-        # CREATE BACKUP SCHEMA
-        db_conn.cursor().execute("CREATE SCHEMA \"original_{}\";".format(int(setid)))
-        db_conn.commit()
+        # schema
+        qm.createSchema(str(setid)) 
+        # backup schema
+        qm.createSchema("original_" + str(setid))
 
         return setid
     # ENDMETHOD
@@ -88,17 +94,13 @@ class DatasetManager:
         if not DatasetManager.existsID(setid, db_conn = db_conn):
             raise RuntimeError("There exists no dataset with the specified set id.")
 
-        # DROP SCHEMA
-        db_conn.cursor().execute("DROP SCHEMA \"{}\" CASCADE;".format(int(setid)))
-        db_conn.commit()
-
-        # DROP BACKUP SCHEMA
-        db_conn.cursor().execute("DROP SCHEMA \"original_{}\" CASCADE;".format(int(setid)))
-        db_conn.commit()
-
-        # DELETE DATASET
-        db_conn.cursor().execute("DELETE FROM SYSTEM.datasets WHERE setid=%s;", [setid])
-        db_conn.commit()
+        qm = QueryManager(db_conn = db_conn, engine = None)
+        # drop schema
+        qm.destroySchema(str(setid), cascade=True)
+        # drop backup schema
+        qm.destroySchema("original_" + str(setid), cascade=True)
+        # delete dataset
+        qm.deleteDataset(setid=setid)
     # ENDMETHOD
 
     @staticmethod
@@ -108,14 +110,17 @@ class DatasetManager:
         if db_conn is None:
             db_conn = get_db()
 
-        cur = db_conn.cursor()
-        cur.execute("SELECT * FROM SYSTEM.datasets;")
-        results = cur.fetchall()
+        qm = QueryManager(db_conn = db_conn, engine = None)
+        results = qm.getDataset()
 
         retval = []
 
         for result in results:
-            retval.append(DatasetInfo.fromSqlTuple(result, db_conn = db_conn))
+            retval.append(DatasetInfo(setid         = result['setid'],
+                                      name          = result['setname'],
+                                      description   = result['description'],
+                                      creation_date = result['creation_date'],
+                                      db_conn       = db_conn))
 
         return retval
     # ENDMETHOD
@@ -131,7 +136,7 @@ class DatasetManager:
         if not DatasetManager.existsID(setid, db_conn = db_conn):
             raise RuntimeError("There exists no dataset with the specified set id.")
 
-        db_conn.cursor().execute("UPDATE SYSTEM.datasets SET setname = %s, description = %s WHERE setid = %s;", [new_name, new_desc, int(setid)])
-        db_conn.commit()
+        qm = QueryManager(db_conn = db_conn, engine=None)
+        qm.updateDataset(reqs={'setid': setid}, sets={'setname': new_name, 'description': new_desc})
     # ENDMETHOD
 # ENDCLASS

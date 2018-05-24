@@ -261,12 +261,21 @@ def history(dataset_id, tablename):
     if tablename is not None and tablename not in dataset.getTableNames():
         abort(404)
 
+    dhm = dataset.getHistoryManager()
+
+    # check if undo is possible
+    if tablename is None:
+        can_undo = False
+    else:
+        can_undo = dhm.is_undo_enabled(tablename)
+
     ## render the template with the needed variables
     return render_template('dataset_pages.history.html',
                                             table_name   = tablename,
                                             dataset_info = dataset_info,
                                             row_count    = rowcount,
-                                            history_form = form)
+                                            history_form = form,
+                                            can_undo     = can_undo)
 # ENDFUNCTION
 
 @dataset_pages.route('/dataset/<int:dataset_id>/jointables', methods=['POST'])
@@ -1070,6 +1079,32 @@ def _get_history_table(dataset_id, tablename):
     return jsonify(retval)
 # ENDFUNCTION
 
+@dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>/undo', methods=['POST'])
+def _table_undo(dataset_id, tablename):
+    """Callback for UNDO on table."""
+
+    if not DatasetManager.existsID(dataset_id):
+        abort(404)
+
+    dataset = DatasetManager.getDataset(tablename)
+
+    if not tablename in dataset.getTableNames():
+        abort(404)
+
+    dhm = dataset.getHistoryManager()
+
+    if not dhm.is_undo_enabled(tablename):
+        # undo cannot be done
+        abort(500)
+
+    # perform undo
+    tr = dataset.getTransformationReverser(tablename)
+
+    tr.undo_last_transformation()
+
+    return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
+# ENDFUNCTION
+
 @dataset_pages.route('/dataset/<int:dataset_id>/_custom_query', methods=['POST'])
 @require_login
 @require_readperm
@@ -1149,7 +1184,11 @@ def dedup_find_matches(dataset_id, tablename):
     ignore_list = form.ignore_list.data
     exactmatch_list = form.exactmatch_list.data
 
-    table_list = dd.find_matches(dataset_id, tablename, exactmatch_list, ignore_list)
+    try:
+        table_list = dd.find_matches(dataset_id, tablename, exactmatch_list, ignore_list)
+    except MemoryError:
+        flash(message="Table too large for deduplication. Please select more exact matches.")
+        return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
 
     if table_list == []:
         flash(message="No duplicates found", category="error")

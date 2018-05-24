@@ -920,7 +920,6 @@ class TableTransformer:
     
     def extract_part_of_date(self, tablename, attribute, extraction_arg, new_name=""):
         """Method that extracts part of a date, time, or datetime"""
-        raise self.AttrTypeError(attr_type)
         resulting_table = self.get_resulting_table(tablename, new_name)
         attr_type = self.get_attribute_type(tablename, attribute)
         if SQLTypeHandler().is_date_type(attr_type) is False:
