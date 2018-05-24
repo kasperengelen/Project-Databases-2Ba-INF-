@@ -16,7 +16,7 @@ class TransformationReverser:
         is_original: Boolean indicating whether we're viewing the original data uploaded by the users.
     """
 
-    def __init__(self, setid, table_name, db_conneciton, engine):
+    def __init__(self, setid, table_name, db_connection, engine):
         self.setid = setid
         self.table_name = table_name
         self.db_connection = db_connection
