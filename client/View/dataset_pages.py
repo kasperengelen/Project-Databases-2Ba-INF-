@@ -557,6 +557,7 @@ def add_user(dataset_id):
 
     DatasetPermissionsManager.addPerm(dataset_id, userid, form.permission_type.data)
     
+    flash(message="User permissions have been granted.", category="success")
     return redirect(url_for('dataset_pages.permissions', dataset_id=dataset_id))
 # ENDFUNCTION
 
@@ -581,6 +582,7 @@ def remove_user(dataset_id):
         return redirect(url_for('dataset_pages.permissions', dataset_id=dataset_id))
     try:
         DatasetPermissionsManager.removePerm(dataset_id, int(form.userid.data))
+        flash(message="User permissions have been revoked.", category="success")
     except RuntimeError as e:
         flash(message="Cannot remove user from dataset.", category="error")
 

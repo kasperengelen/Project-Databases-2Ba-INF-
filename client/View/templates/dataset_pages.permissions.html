@@ -76,13 +76,18 @@
 							<td>{{ member.userinfo.email }}</td>
 							<td>{{ member.perm_type }}</td>
                             {% if member.removeform %}
-							<td>{% from "includes/_formhelpers.html" import render_field %}
-								<form method="post" action="{{ url_for('dataset_pages.remove_user', dataset_id=dataset_id) }}" name="remove">
-								    {{ member.removeform.hidden_tag() }}
-								    <label for="remove{{ member.userinfo.userid }}" class="glyphicon glyphicon-remove"></label>
-								    <input id="remove{{ member.userinfo.userid }}" style="visibility: hidden;" type="submit">
-                                </form>
-                            </td>
+								<td>{% from "includes/_formhelpers.html" import render_field %}
+									<form method="post" action="{{ url_for('dataset_pages.remove_user', dataset_id=dataset_id) }}" name="remove">
+									    {{ member.removeform.hidden_tag() }}
+									    <button type="submit" style="border: none; background-color: transparent;">
+				                            <span class="glyphicon glyphicon-remove"></span>
+				                        </button>
+	                                </form>
+	                            </td>
+                            {% else %}
+	                            <td><button style="border: none; background-color: transparent; cursor: not-allowed; color: grey;">
+		                            <span class="glyphicon glyphicon-remove"></span>
+		                        </button></td>
                             {% endif %}
 						</tr>
 					{% endfor %}
