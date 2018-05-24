@@ -26,7 +26,7 @@ class TransformationReverser:
         self.Dd = Deduplicator()
 
 
-    def undo_last_transformation(self, setid, tablename):
+    def undo_last_transformation(self):
         """Method that undoes the latest table transformation if possible."""
         pass
 
