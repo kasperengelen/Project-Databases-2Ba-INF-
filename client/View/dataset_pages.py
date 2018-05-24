@@ -1189,6 +1189,8 @@ def dedup_find_matches(dataset_id, tablename):
     except MemoryError:
         flash(message="Table too large for deduplication. Please select more exact matches.")
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
+    except TimeoutError as e:
+        flash(message=str(e), category="error")
 
     if table_list == []:
         flash(message="No duplicates found", category="error")
@@ -1222,7 +1224,10 @@ def dedup_deduplicate_cluster(dataset_id, tablename):
         keep_entries = request.form.getlist('entries[]', type=int)
 
     dd = dataset.getDeduplicator()
-    dd.deduplicate_cluster(dataset_id, tablename, clusterid, keep_entries)
+    try:
+        dd.deduplicate_cluster(dataset_id, tablename, clusterid, keep_entries)
+    except TimeoutError as e:
+        flash(message=str(e), category="error")
 
     return 'True'
 # ENDFUNCTION
@@ -1241,7 +1246,10 @@ def dedup_yes_to_all(dataset_id, tablename, clusterid):
         abort(404)
 
     dd = dataset.getDeduplicator()
-    dd.yes_to_all(dataset_id, tablename, clusterid)
+    try:
+        dd.yes_to_all(dataset_id, tablename, clusterid)
+    except TimeoutError as e:
+        flash(message=str(e), category="error")
 
     flash(message="Data-deduplication completed.", category="success")
     return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
