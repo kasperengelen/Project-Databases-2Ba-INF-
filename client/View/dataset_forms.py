@@ -98,7 +98,7 @@ class TableJoinForm(FlaskForm):
     attribute2 = SelectField('Second Table Attribute', choices=[], id='attribute2')
 
     newname    = StringField('New Table Name', [InputRequired(message="New table name is required."), 
-                                                Regexp('^[A-Za-z0-9][A-Za-z0-9]+$'), 
+                                                Regexp('^[A-Za-z0-9][A-Za-z0-9_]+$', message="Table name can only contain alphanumeric characters and underscore."),
                                                 Length(min=1, max=63, message="Table name needs to be between 1 and 63 characters long.")])
 
     def fillForm(self, tables):
