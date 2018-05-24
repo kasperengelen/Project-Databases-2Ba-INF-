@@ -285,15 +285,15 @@ def history(dataset_id, tablename):
                                             can_undo     = can_undo)
 # ENDFUNCTION
 
-@dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>/undo', defaults={'redir_type': "HISTORY"}, methods=['POST'])
-@dataset_pages.route('/dataset/<int:dataset_id>/history/table/<string:tablename>/undo', defaults={'redir_type': "TABLE"}, methods=['POST'])
+@dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>/undo', defaults={'redir_type': "TABLE"}, methods=['POST'])
+@dataset_pages.route('/dataset/<int:dataset_id>/history/table/<string:tablename>/undo', defaults={'redir_type': "HISTORY"}, methods=['POST'])
 def _table_undo(dataset_id, tablename, redir_type):
     """Callback for UNDO on table."""
 
     if not DatasetManager.existsID(dataset_id):
         abort(404)
 
-    dataset = DatasetManager.getDataset(tablename)
+    dataset = DatasetManager.getDataset(dataset_id)
 
     if not tablename in dataset.getTableNames():
         abort(404)

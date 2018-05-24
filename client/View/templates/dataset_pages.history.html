@@ -18,9 +18,11 @@
 						</div>
 					{% else %}
 						<div id="undo_true">
-							<a href="{{ url_for('dataset_pages._table_undo', dataset_id=dataset_info.setid, tablename=table_name, redir_type='HISTORY') }}" class="btn btn-primary" data-hover="tooltip" title="Undo">
-								<span class="glyphicon glyphicon-repeat" style="-webkit-transform: scaleX(-1); transform: scaleX(-1);"></span>
-							</a>
+							<form method="post" action="{{ url_for('dataset_pages._table_undo', dataset_id=dataset_info.setid, tablename=table_name, redir_type='HISTORY') }}" name="undo">
+								<button type="submit" class="btn btn-primary" data-hover="tooltip" title="Undo">
+									<span class="glyphicon glyphicon-repeat" style="-webkit-transform: scaleX(-1); transform: scaleX(-1);"></span>
+								</button>
+							</form>
 						</div>
 					{% endif %}
 				</div>
