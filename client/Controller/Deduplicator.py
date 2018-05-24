@@ -1,4 +1,5 @@
 import json
+import time
 import recordlinkage as rl
 import pandas as pd
 import numpy as np
@@ -8,9 +9,12 @@ from Model.DatabaseConfiguration import DatabaseConfiguration
 from Model.QueryManager import QueryManager
 from Controller.DatasetHistoryManager import DatasetHistoryManager
 
+
 class Deduplicator:
     """Singleton class that servers to maintain data in between callbacks.
-    For each table data is stored by using a dict with key (setid, tablename)"""
+    For each table data is stored by using a dict with key (setid, tablename)
+
+    Data that is not used can only exist for 1 hour, afterwards, it is deleted to clean up memory"""
 
     __instance = None
 
@@ -28,6 +32,7 @@ class Deduplicator:
             self.dataframes = dict()
             self.clusters = dict()
             self.entries_to_remove = dict()
+            self.age = dict()
 
         def find_matches(self, setid, tablename, exact_match=list(), ignore=list()):
             """Function that finds entries that look alike
@@ -36,6 +41,10 @@ class Deduplicator:
             :return a list of json objects that each represent a set of similar entries"""
 
             try:
+                self.__lifetime_management(setid, tablename)
+                # update time
+                self.age[(setid, tablename)] = time.time()
+
                 # load table into dataframe
                 schema = str(setid)
                 query = "SELECT * FROM \"{}\".\"{}\";".format(schema, tablename)
@@ -48,6 +57,7 @@ class Deduplicator:
                 # pair similar rows together
                 index_pairs = self.__index_table(dataframe, exact_match)
 
+                # compare columns
                 num_cols = list()
                 compare = rl.Compare()
                 for i in range(len(col_names)):
@@ -82,6 +92,9 @@ class Deduplicator:
                     kmeans.learn(potential_pairs)
                     results = kmeans.predict(potential_pairs)
 
+                # update time
+                self.__check_own_lifetime(setid, tablename)
+
                 # cluster together similar pairs
                 self.clusters[(setid, tablename)] = self.__cluster_pairs(results)
 
@@ -96,6 +109,9 @@ class Deduplicator:
 
                 self.entries_to_remove[(setid, tablename)] = set()
 
+                # update time
+                self.__check_own_lifetime(setid, tablename)
+
                 return certain_paired_rows
 
             except Exception:
@@ -108,6 +124,12 @@ class Deduplicator:
             :param entries_to_keep: entries that should not be deduplicated (deleted)"""
 
             try:
+                # update time
+                self.__check_own_lifetime(setid, tablename)
+
+                if (setid, tablename) not in self.clusters:
+                    raise TimeoutError("Session expired")
+
                 cluster = list(self.clusters[(setid, tablename)][cluster_id])
 
                 # if no entries are specified to keep, only keep the first entry
@@ -131,8 +153,12 @@ class Deduplicator:
             """Deduplicate_cluster automatically starting from cluster_id to the last cluster"""
 
             try:
+                # update time
+                self.__check_own_lifetime(setid, tablename)
+
                 for i in range(cluster_id, len(self.clusters[(setid, tablename)])):
                     self.deduplicate_cluster(setid, tablename, i)
+
             except Exception:
                 self.clean_data(setid, tablename)
                 raise
@@ -142,6 +168,7 @@ class Deduplicator:
             self.dataframes.pop((setid, tablename), None)
             self.clusters.pop((setid, tablename), None)
             self.entries_to_remove.pop((setid, tablename), None)
+            self.age.pop((setid, tablename), None)
 
         def __submit(self, setid, tablename):
             """Deletes all duplicates and alters the table in the database"""
@@ -236,10 +263,16 @@ class Deduplicator:
                 row_list = [str(x) for x in dataframe.iloc[row].tolist()]
                 rows.append(row_list)
 
-            return json.dumps(rows)
+            json_string = json.dumps(rows)
+            # escape quotes to allow insertion into postgres
+            escaped_json = json_string.replace('"', '\\"')
+
+            return escaped_json
 
         def redo_dedup(self, setid, tablename, row_json):
             """Delete all rows specified in the json"""
+            # unescape quotes in the json string
+            row_json = row_json.replace('\\"', '"')
             rows = json.loads(row_json)
             query = sql.SQL("DELETE FROM {}.{} WHERE ctid IN (SELECT ctid FROM {}.{} WHERE ").format(sql.Identifier(str(setid)),
                                                                                                      sql.Identifier(tablename),
@@ -259,6 +292,21 @@ class Deduplicator:
                 self.cur.execute(current_query, row)
 
             self.db_connection.commit()
+
+        def __lifetime_management(self, setid, tablename):
+            """delete data that is older than 1 hour"""
+            current_time = time.time()
+            for key in self.age:
+                if (current_time - self.age[key]) > 3600:
+                    self.clean_data(key[0], key[1])
+
+        def __check_own_lifetime(self, setid, tablename):
+            """Check if the lifetime of (tablename) has expired, if not, update table age"""
+            if (setid, tablename) not in self.age:
+                raise TimeoutError("Session expired")
+
+            # update time
+            self.age[(setid, tablename)] = time.time()
 
 
     def __init__(self, db_connection, engine):
