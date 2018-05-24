@@ -11,7 +11,7 @@
 				<a href="#" data-toggle="modal" data-target="#querymodal" data-hover="tooltip" title="Query"
 					class="btn btn-primary"><i class="fa fa-terminal"></i></a>
 				<div style="padding-top: 1em;"></div>
-				<div>
+				<div style="display: inline-block;">
 					<button id="transbutton" type="button" class="btn btn-primary" data-hover="tooltip" title="Transformations" data-toggle="collapse"
 						onclick="return divClick();" data-target="#sidenav">
 		                <span class="glyphicon glyphicon-menu-hamburger"></span>
@@ -28,6 +28,19 @@
 				    </script>
 		            
 				</div>
+				{% if can_undo != True %}
+						<div id="undo_false" style="display: inline-block;">
+							<button href="#" class="btn btn-primary" data-hover="tooltip" title="Undo" disabled>
+								<span class="glyphicon glyphicon-repeat" style="-webkit-transform: scaleX(-1); transform: scaleX(-1);"></span>
+							</button>
+						</div>
+					{% else %}
+						<div id="undo_true" style="display: inline-block;">
+							<a href="{{ url_for('dataset_pages._table_undo', dataset_id=dataset_info.setid, tablename=table_name, redir_type='TABLE') }}" class="btn btn-primary" data-hover="tooltip" title="Undo">
+								<span class="glyphicon glyphicon-repeat" style="-webkit-transform: scaleX(-1); transform: scaleX(-1);"></span>
+							</a>
+						</div>
+					{% endif %}
 				{% endif %}
 			</div>
 			<div class="col-sm-6 text-center">
