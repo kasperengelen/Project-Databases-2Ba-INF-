@@ -33,13 +33,13 @@
                             url: "{{ url_for('dataset_pages.dedup_find_matches', dataset_id=dataset_info.setid, tablename=table_name) }}",
                             type: 'POST',
                             data: formdata,
-                            success: function(response) {
-                                document.write(response);
-                            }
                             statusCode: {
+                                200: function(response) {
+                                    document.write(response);
+                                },
                                 502: function() {
                                     alert('Table too large for deduplication. Please select more exact matches');
-                                    window.location.href = "{{ url_for('dataset_pages.table', dataset_id=dataset_info.setid, tablename=table_name) }}"
+                                    window.location.href = "{{ url_for('dataset_pages.table', dataset_id=dataset_info.setid, tablename=table_name) }}";
                                 }
                             }
                         });
