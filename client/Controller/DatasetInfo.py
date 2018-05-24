@@ -110,6 +110,11 @@ class DatasetInfo:
         return Deduplicator(self.db_conn, get_sqla_eng())
     # ENDMETHOD
 
+    def getTransformationReverser(self, tablename):
+        """Retrieve the TransformationReverser for this dataset and the specified table."""
+
+        return TransformationReverser(setid=self.setid, table_name=tablename, db_connection=self.db_conn, engine=get_sqla_eng())
+
     # add to querymanager
     def deleteTable(self, tablename):
         """Deletes the specified table from the dataset."""
