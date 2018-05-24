@@ -1187,7 +1187,7 @@ def dedup_find_matches(dataset_id, tablename):
     try:
         table_list = dd.find_matches(dataset_id, tablename, exactmatch_list, ignore_list)
     except MemoryError:
-        flash(message="Table too large for deduplication. Please select more exact matches.")
+        flash(message="Table too large for deduplication. Please select more exact matches.", category="error")
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
     except TimeoutError as e:
         flash(message=str(e), category="error")
