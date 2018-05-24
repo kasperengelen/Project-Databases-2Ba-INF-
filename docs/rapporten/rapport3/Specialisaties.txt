@@ -1,0 +1,18 @@
+Kasper:
+    - Flask
+    - User systeem
+    - Dataset systeem
+    - Permissions systeem
+    - transformaties linken aan frontend
+
+Atisha:
+    - upload klasse
+    - download klasse
+    - statistieken en grafieken
+    - data deduplication
+
+Chris:
+    - Transformaties
+
+Luuk:
+    - Clientside code

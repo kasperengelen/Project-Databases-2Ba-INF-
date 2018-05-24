@@ -1,0 +1,25 @@
+Development
+    - git
+    - bitbucket
+
+Server-side
+    - Python 3
+    - Flask
+    - postgres
+    - psycopg2
+    - wtforms
+    - Flask-WTF
+    - pandas
+    - passlib
+    - SQL Alchemy
+    - configparser
+    - psqlparse
+    - recordlinkage: dedup
+    
+
+Client-side:
+    - Javascript
+    - JQuery
+    - Ajax
+    - ChartJS
+    - Datatables
