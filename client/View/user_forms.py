@@ -21,9 +21,9 @@ class UserRegisterForm(FlaskForm):
     Password and Confirm password fields, these need to contain identical values, need to be between
     6 and 50 characters long, and are required.
     """
-    firstname = StringField('Firstname', [InputRequired(message="Firstname is required."),
+    firstname = StringField('First name', [InputRequired(message="Firstname is required."),
                                           Length(min=1, max=50, message="Firstname should contain between 1 and 50 characters.")])
-    lastname = StringField('Lastname', [InputRequired(message="Lastname is required."),
+    lastname = StringField('Last name', [InputRequired(message="Lastname is required."),
                                         Length(min=1, max=50, message="Lastname should contain between 1 and 50 characters.")])
     email = StringField('Email', [InputRequired(message="Email address is required."),
                                   Email(message="The supplied email address is not of a valid format."),
@@ -36,9 +36,9 @@ class UserRegisterForm(FlaskForm):
 
 class UserEditInfoForm(FlaskForm):
     """Form for users to edit their information."""
-    firstname = StringField('Firstname', [InputRequired(message="Firstname is required."),
+    firstname = StringField('First name', [InputRequired(message="Firstname is required."),
                                           Length(min=1, max=50, message="Firstname should contain between 1 and 50 characters.")])
-    lastname = StringField('Lastname', [InputRequired(message="Lastname is required."),
+    lastname = StringField('Last name', [InputRequired(message="Lastname is required."),
                                         Length(min=1, max=50, message="Lastname should contain between 1 and 50 characters.")])
     email = StringField('Email', [InputRequired(message="Email address is required."),
                                   Email(message="The supplied email address is not of a valid format."),
