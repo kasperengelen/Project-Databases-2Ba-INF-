@@ -97,7 +97,9 @@ class TestUserManager(unittest.TestCase):
 
     def test_createUser(self):
         ## create user
-        userid = UserManager.createUser('abcdef123@xyz.com', 'password123', 'abc', 'def', False, db_conn = self.db_conn)
+
+
+        userid = UserManager.createUser(email='abcdef123@xyz.com', password='password123', fname='abc', lname='def', admin=False, db_conn = self.db_conn)
 
         ## check if user exists
         self.cur.execute("SELECT EXISTS (SELECT * FROM SYSTEM.user_accounts WHERE userid = %s AND fname = %s AND lname = %s AND email = %s);", [userid, 'abc', 'def', 'abcdef123@xyz.com'])
