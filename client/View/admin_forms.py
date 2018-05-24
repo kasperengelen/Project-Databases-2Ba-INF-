@@ -1,7 +1,7 @@
 from flask_wtf import FlaskForm
 from wtforms import HiddenField, StringField, IntegerField, TextAreaField, SelectField, PasswordField
 from wtforms.widgets import HiddenInput
-from wtforms.validators import Email, InputRequired, Length
+from wtforms.validators import Email, InputRequired, Length, Regexp
 
 class DeleteUserForm(FlaskForm):
     """Form for admins to delete a user."""
