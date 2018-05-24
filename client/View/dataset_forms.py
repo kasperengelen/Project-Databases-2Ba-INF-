@@ -7,7 +7,7 @@ from View.form_utils import EnumCheck, FilenameCheck
 
 class DatasetForm(FlaskForm):
     """Form that queries the user for the metadata of a dataset."""
-    name = StringField("Dataset name", [InputRequired(message="Name is required."), Length(min=2, max=64, message="Name must be between 6 and 64 characters long.")])
+    name = StringField("Dataset name", [InputRequired(message="Name is required."), Length(min=2, max=64, message="Name must be between 6 and 64 characters long."), Regexp('^[A-Za-z0-9][A-Za-z0-9_]+$', message="Dataset name can only contain alphanumeric characters and underscore.")])
     description = TextAreaField("Description", [Length(min=0, max=256, message="Description can contain max 256 characters.")])
 
     def fillForm(self, dataset_info):
