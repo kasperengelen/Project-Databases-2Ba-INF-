@@ -286,7 +286,7 @@ def history(dataset_id, tablename):
 # ENDFUNCTION
 
 @dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>/undo', defaults={'redir_type': "HISTORY"}, methods=['POST'])
-@dataset_pages.route('/dataset/<int:dataset_id>/history/table/<string:tablename>/undo', defaults={'redir_type': "TABLE"})
+@dataset_pages.route('/dataset/<int:dataset_id>/history/table/<string:tablename>/undo', defaults={'redir_type': "TABLE"}, methods=['POST'])
 def _table_undo(dataset_id, tablename, redir_type):
     """Callback for UNDO on table."""
 
