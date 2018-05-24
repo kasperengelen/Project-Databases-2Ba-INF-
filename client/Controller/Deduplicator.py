@@ -147,6 +147,9 @@ class Deduplicator:
             """Deletes all duplicates and alters the table in the database"""
             schema = str(setid)
 
+            # create json of data to delete before the data is deleted
+            row_json = self.__history_json(setid, tablename)
+
             # delete all duplicates
             self.dataframes[(setid, tablename)] = self.dataframes[(setid, tablename)].drop(self.entries_to_remove[(setid, tablename)])
 
@@ -154,7 +157,7 @@ class Deduplicator:
             dataframe.to_sql(tablename, self.engine, schema=schema, if_exists="replace", index=False)
 
             dataset_history_manager = DatasetHistoryManager(setid, self.db_connection)
-            dataset_history_manager.write_to_history(tablename, tablename, None, [], 18)
+            dataset_history_manager.write_to_history(tablename, tablename, "", [row_json], 18)
 
             self.clean_data(setid, tablename)
 
@@ -223,6 +226,40 @@ class Deduplicator:
                 del clusters[cluster_id]
 
             return clusters
+
+        def __history_json(self, setid, tablename):
+            """Creates a json of all the rows that have to be deleted.
+            The json can be used to reproduce the deduplication (datasetHistory)"""
+            dataframe = self.dataframes[(setid, tablename)]
+            rows = list()
+            for row in self.entries_to_remove[(setid, tablename)]:
+                row_list = [str(x) for x in dataframe.iloc[row].tolist()]
+                rows.append(row_list)
+
+            return json.dumps(rows)
+
+        def redo_dedup(self, setid, tablename, row_json):
+            """Delete all rows specified in the json"""
+            rows = json.loads(row_json)
+            query = sql.SQL("DELETE FROM {}.{} WHERE ctid IN (SELECT ctid FROM {}.{} WHERE ").format(sql.Identifier(str(setid)),
+                                                                                                     sql.Identifier(tablename),
+                                                                                                     sql.Identifier(str(setid)),
+                                                                                                     sql.Identifier(tablename))
+            attributes = QueryManager(self.db_connection, None).get_col_names(str(setid), tablename)
+            for row in rows:
+                current_query = query
+                for i in range(len(attributes) - 1):
+                    attribute = attributes[i]
+                    value = row[i]
+                    current_query += sql.SQL("{} = %s AND ").format(sql.Identifier(attribute))
+                attribute = attributes[-1]
+                value = row[-1]
+                current_query += sql.SQL("{} = %s LIMIT 1)").format(sql.Identifier(attribute))
+
+                self.cur.execute(current_query, row)
+
+            self.db_connection.commit()
+
 
     def __init__(self, db_connection, engine):
         if Deduplicator.__instance is None:

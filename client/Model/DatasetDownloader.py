@@ -1,12 +1,11 @@
 from psycopg2 import sql
 import csv
 import os
-import zipfile
 import shutil
-from Model.DatabaseConfiguration import DatabaseConfiguration
 from Model.QueryManager import QueryManager
 
-class DatasetDownloader():
+
+class DatasetDownloader:
     """Class that reads tables from a schema and puts them into a file"""
 
     def __init__(self, setid, db_connection):
@@ -150,10 +149,3 @@ class DatasetDownloader():
 
     def __get_schema(self, original):
         return original * "original_" + self.schema
-
-
-
-if __name__ == "__main__":
-    DC = DatabaseConfiguration()
-    DL = DatasetDownloader(37, DC.get_db())
-    DL.get_dataset_dump("/home/atisha/mainrepo/client/test", original=True)

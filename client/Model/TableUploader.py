@@ -5,8 +5,6 @@ import psycopg2
 import re
 import pandas as pd
 from psycopg2 import sql
-from Model.DatabaseConfiguration import DatabaseConfiguration
-from flask import abort
 
 
 class FileException(Exception):
@@ -45,6 +43,7 @@ class EODException(FileException):
 
 
 class TableUploader:
+    """Class that is responsible for reading files and loading the tables into the postgresql database"""
 
     def __init__(self, setid, db_connection=None, engine=None):
         self.db_conn = db_connection
@@ -93,6 +92,7 @@ class TableUploader:
         self.db_conn.commit()
 
     def __csv_pandas(self, filename):
+        """Read a csv file using Pandas to take advantage of the automatic type conversion (slow)"""
         dataframe = pd.read_csv(filename)
         # convert column to datetime type
         for column in dataframe.columns:
@@ -108,6 +108,7 @@ class TableUploader:
         dataframe.to_sql(self.__get_valid_name(tablename), self.engine, index=False, schema=str(self.setid))
 
     def __csv_psycopg2(self, filename):
+        """Read a csv file using psycopg2 if no automatic type conversion is needed (really fast)"""
         # list of sql.Identifiers for the column names
         column_names = []
 
@@ -160,16 +161,20 @@ class TableUploader:
         self.__make_backup(tablename)
 
     def __dump(self, filename):
+        """Read a dump file and execute all create tables and insert values"""
         # keep track of tables created for backups
         table_names = []
 
         with open(filename, 'r', encoding="utf-8") as dump:
             for command in dump.read().strip().split(';'):
+                # execute create table statement
                 if re.search("CREATE TABLE.*\(.*\)", command, re.DOTALL | re.IGNORECASE):
                     # extract tablename
                     tablename = command.split()[2]
                     # remove bracket in tablename if there is no whitespace in between
                     tablename = tablename.split("(", 1)[0]
+                    # remove quotes
+                    tablename = tablename.replace('"', '')
 
                     # raise error if the table name is not alphanumeric, this is to not cause problems with url's
                     if not self.__check_alnum(tablename):
@@ -183,6 +188,7 @@ class TableUploader:
 
                     table_names.append(tablename)
 
+                # execute insert
                 elif re.search("INSERT INTO.*", command, re.DOTALL | re.IGNORECASE):
                     tablename = command.split()[2]
 
@@ -200,6 +206,7 @@ class TableUploader:
                 self.__make_backup(tablename)
 
     def __unzip(self, filename):
+        """Unzip a zip with csv's and load them into the database"""
         # unzip the file
         zip = zipfile.ZipFile(filename, 'r')
         # each dataset gets an unzip folder, so that no data can overlap
@@ -223,6 +230,7 @@ class TableUploader:
         shutil.rmtree(unzip_folder_complete)
 
     def __make_backup(self, tablename):
+        """Make a backup copy for the table"""
         self.cur.execute("CREATE SCHEMA IF NOT EXISTS original_{}".format(self.setid))
         self.cur.execute("SET search_path TO original_{};".format(self.setid))
 
@@ -232,11 +240,13 @@ class TableUploader:
                                                                                     sql.Identifier(tablename)))
 
     def __check_alnum(self, tablename):
+        """Check if the table name is alphanumeric (underscores are also allowed)"""
         # isalnum() that also allows underscores
         temp_name = tablename.replace('_', 'a')
         return temp_name.isalnum()
 
     def __get_valid_name(self, tablename):
+        """Generate a valid tablename if the tablename is already in use"""
         # create a new tablename if the current one is already in use
 
         self.cur.execute("SELECT table_name FROM information_schema.tables WHERE table_schema = %s;",
@@ -265,12 +275,4 @@ class TableUploader:
 
         return new_name
 
-
-if __name__ == "__main__":
-    DC = DatabaseConfiguration()
-    test = TableUploader(37, DC.get_db(), DC.get_engine())
-    test.read_file("../type_test.csv", True, automatic_type_conversion=True)
-    # test.read_file("load_departments.dump", True)
-    # test.delete_dataset()
-    pass
 

@@ -147,7 +147,7 @@ class TableTransformer:
         new_name = self.__get_unique_name(new, new, False)
         query_args = [self.schema, old, self.schema, new_name]
         self.create_copy_of_table(*query_args)
-        self.history_manager.write_to_history(resulting_table, old, attribute, [], 0)
+        self.history_manager.write_to_history(new_name, old, '', [], 0)
         return new_name
 
     def change_attribute_name(self, table, attribute, new_name):
@@ -920,7 +920,6 @@ class TableTransformer:
     
     def extract_part_of_date(self, tablename, attribute, extraction_arg, new_name=""):
         """Method that extracts part of a date, time, or datetime"""
-        raise self.AttrTypeError(attr_type)
         resulting_table = self.get_resulting_table(tablename, new_name)
         attr_type = self.get_attribute_type(tablename, attribute)
         if SQLTypeHandler().is_date_type(attr_type) is False:

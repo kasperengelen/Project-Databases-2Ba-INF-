@@ -50,6 +50,7 @@ class DatasetHistoryManager:
             transformation_type: Integer representing the transformation used.
         """
         param_array = self.__python_list_to_postgres_array(parameters, transformation_type)
+        print(param_array)
         cur = self.db_connection.cursor()
         query = 'INSERT INTO SYSTEM.DATASET_HISTORY VALUES (%s, %s, %s, %s, %s, %s)'
         cur.execute(sql.SQL(query), [self.setid, table_name, attribute, transformation_type, param_array, origin_table])
@@ -71,12 +72,12 @@ class DatasetHistoryManager:
             ordering = 'ASC'
         
         if show_all is False:
-            query = ("SELECT * FROM system.dataset_history WHERE setid = %s AND (table_name = %s OR origin_table = %s)"
+            query = ("SELECT * FROM system.dataset_history WHERE setid = %s AND table_name = %s"
                      " ORDER BY transformation_date {} LIMIT %s OFFSET %s").format(ordering)
             dict_cur.execute(sql.SQL(query), [self.setid, table_name, table_name, limit, offset])
         else:
-            query = ("SELECT * FROM system.dataset_history WHERE setid = %s ORDER BY transformation_date "
-                     "{} LIMIT %s OFFSET %s").format(ordering)
+            query = ("SELECT * FROM system.dataset_history WHERE setid = %s AND transformation_type >= 0"
+                     " ORDER BY transformation_date {} LIMIT %s OFFSET %s").format(ordering)
             dict_cur.execute(sql.SQL(query), [self.setid, limit, offset])
 
         all_rows = dict_cur.fetchall()
@@ -89,6 +90,14 @@ class DatasetHistoryManager:
         of a table in the dataset.
         """
         return False
+
+    def get_latest_backup(self, tablename):
+        cur = self.db_connection.cursor()
+        values = [self.setid, tablename]
+        cur.execute(sql.SQL('SELECT table_name FROM system.dataset_history WHERE transformation_id ='
+                            '(SELECT MAX(transformation_id) FROM system.dataset_history WHERE setid = %s'
+                            ' AND origin_table = %s AND transformation_type = -1)'), values)
+        return cur.fetchone()[0]
         
     def __python_list_to_postgres_array(self, py_list, transformation_type):
         """Method that represents a python list as a postgres array for inserting into a PostreSQL database."""
@@ -98,7 +107,7 @@ class DatasetHistoryManager:
         if nr_elements == 0: #Return an empty postgres array string
             return "{}"
 
-        if transformation_type > 14: #Arguments for transformation 15 and 16 are already quoted
+        if 14 < transformation_type < 17: #Arguments for transformation 15 and 16 are already quoted
             param_array = "{" + py_list[0] + "}"
             return param_array
             

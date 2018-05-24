@@ -584,6 +584,10 @@ def copy_table(dataset_id, tablename):
 
     form = CopyTableForm(request.form)
 
+    if not form.validate():
+        flash_errors(form)
+        return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
+
     if not DatasetManager.existsID(dataset_id):
         abort(404)
 
