@@ -21,9 +21,9 @@ class TransformationReverser:
         self.table_name = table_name
         self.db_connection = db_connection
         self.engine = engine
-        self.Tt = TableTransformer()
-        self.Qe = QueryExecutor()
-        self.Dd = Deduplicator()
+        self.Tt = TableTransformer(self.setid, self.db_connection, self.engine, True)
+        self.Qe = QueryExecutor(self.setid, self.db_connection, self.engine, True)
+        self.Dd = Deduplicator(self.db_connection, self.engine)
 
 
     def undo_last_transformation(self):
