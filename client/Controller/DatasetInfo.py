@@ -14,6 +14,7 @@ from Controller.DatasetHistoryManager import DatasetHistoryManager
 from Controller.TableJoiner import TableJoiner
 from Controller.QueryExecutor import QueryExecutor
 from Controller.Deduplicator import Deduplicator
+from Controller.TransformationReverser import TransformationReverser
 
 class DatasetInfo:
     """Class that represents a dataset."""
