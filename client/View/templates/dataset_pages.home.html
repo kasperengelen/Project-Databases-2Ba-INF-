@@ -98,7 +98,7 @@
 			        	<div class="panel-body">	
 			        		<!-- JOIN FORM -->
 			        		{% from "includes/_formhelpers.html" import render_field %}
-		                    <form action="{{ url_for('dataset_pages.join_tables', dataset_id=dataset_info.setid, tablename=table)}}" method="post" 
+		                    <form action="{{ url_for('dataset_pages.join_tables', dataset_id=dataset_info.setid)}}" method="post"
 		                    	id="join">
 		                        {{ join_form.hidden_tag() }}
 		                        <div class="form-group" style="width: 19%; display: inline-block;">
