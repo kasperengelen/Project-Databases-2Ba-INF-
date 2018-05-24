@@ -66,6 +66,9 @@ class DatasetHistoryManager:
             if len(backups) == 2: #We need to drop the oldest backup after creating a new one
                 backup_name = self.__get_backup_name_from_id(min(backups))
                 self.__delete_backup(backup_name)
+        elif transformation_type == 0:
+            self.__backup_table(table_name, t_id)
+            
                 
 
     def render_history_json(self, offset, limit, reverse_order=False, show_all=True, table_name=""):
