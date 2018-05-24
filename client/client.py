@@ -75,5 +75,9 @@ def handle_404(e):
 def handle_500(e):
     return render_template('error.html', message="500, internal error.", error=str(e)), 500
 
+@app.errorhandler(502)
+def handle_502(e):
+    return render_template('error.html', message="502, bad gateway.", error=str(e)), 502
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', debug=True)
