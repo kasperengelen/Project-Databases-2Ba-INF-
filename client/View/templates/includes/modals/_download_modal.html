@@ -34,7 +34,7 @@
                                 {{ render_field(download_csv_form.nullrep, class_="form-control") }}
                             </div>
                             <div class="text-right">
-                                <input class="btn btn-primary" type="submit" value="Download">
+                                <input class="btn btn-primary" type="submit" onclick="$('#downloadFormModal_{{ table }}').modal('hide');" value="Download">
                             </div>
                         </form>
                         <!-- Download form csv -->
@@ -45,7 +45,7 @@
                         fileformat='SQL')}}" method="get">
                             {{ download_sql_form.hidden_tag() }}
                             <div class="text-right">
-                                <input class="btn btn-primary" type="submit" value="Download">
+                                <input class="btn btn-primary" type="submit" onclick="$('#downloadFormModal_{{ table }}').modal('hide');" value="Download">
                             </div>
                         </form>
                         <!-- Download form dump -->
