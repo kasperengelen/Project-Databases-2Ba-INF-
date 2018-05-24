@@ -152,6 +152,13 @@ def table(dataset_id, tablename):
         })
     # ENDFOR
 
+    dhm = dataset.getHistoryManager()
+    # check if undo is possible
+    if tablename is None:
+        can_undo = False
+    else:
+        can_undo = dhm.is_undo_enabled(tablename)
+
     return render_template('dataset_pages.table.html', 
                                                 table_name            = tablename,
                                                 dataset_info          = dataset_info,
@@ -181,7 +188,8 @@ def table(dataset_id, tablename):
                                                 queryform             = CustomQueryForm(),
                                                 copyform              = CopyTableForm(),
                                                 dedup_form            = dedup_form,
-                                                change_attr_form      = change_attr_form)
+                                                change_attr_form      = change_attr_form,
+                                                can_undo              = can_undo)
 # ENDFUNCTION
 
 @dataset_pages.route('/dataset/<int:dataset_id>/original_table/<string:tablename>')
@@ -261,12 +269,50 @@ def history(dataset_id, tablename):
     if tablename is not None and tablename not in dataset.getTableNames():
         abort(404)
 
+    dhm = dataset.getHistoryManager()
+    # check if undo is possible
+    if tablename is None:
+        can_undo = False
+    else:
+        can_undo = dhm.is_undo_enabled(tablename)
+
     ## render the template with the needed variables
     return render_template('dataset_pages.history.html',
                                             table_name   = tablename,
                                             dataset_info = dataset_info,
                                             row_count    = rowcount,
-                                            history_form = form)
+                                            history_form = form,
+                                            can_undo     = can_undo)
+# ENDFUNCTION
+
+@dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>/undo', defaults={'redir_type': "HISTORY"}, methods=['POST'])
+@dataset_pages.route('/dataset/<int:dataset_id>/history/table/<string:tablename>/undo', defaults={'redir_type': "TABLE"})
+def _table_undo(dataset_id, tablename, redir_type):
+    """Callback for UNDO on table."""
+
+    if not DatasetManager.existsID(dataset_id):
+        abort(404)
+
+    dataset = DatasetManager.getDataset(tablename)
+
+    if not tablename in dataset.getTableNames():
+        abort(404)
+
+    dhm = dataset.getHistoryManager()
+
+    if not dhm.is_undo_enabled(tablename):
+        # undo cannot be done
+        abort(500)
+
+    # perform undo
+    tr = dataset.getTransformationReverser(tablename)
+
+    tr.undo_last_transformation()
+
+    if redir_type == "TABLE":
+        return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
+    elif redir_type == "HISTORY":
+        return redirect(url_for('dataset.history', dataset_id=dataset_id, tablename=tablename))
 # ENDFUNCTION
 
 @dataset_pages.route('/dataset/<int:dataset_id>/jointables', methods=['POST'])
@@ -1149,7 +1195,13 @@ def dedup_find_matches(dataset_id, tablename):
     ignore_list = form.ignore_list.data
     exactmatch_list = form.exactmatch_list.data
 
-    table_list = dd.find_matches(dataset_id, tablename, exactmatch_list, ignore_list)
+    try:
+        table_list = dd.find_matches(dataset_id, tablename, exactmatch_list, ignore_list)
+    except MemoryError:
+        flash(message="Table too large for deduplication. Please select more exact matches.", category="error")
+        return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
+    except TimeoutError as e:
+        flash(message=str(e), category="error")
 
     if table_list == []:
         flash(message="No duplicates found", category="error")
@@ -1183,7 +1235,10 @@ def dedup_deduplicate_cluster(dataset_id, tablename):
         keep_entries = request.form.getlist('entries[]', type=int)
 
     dd = dataset.getDeduplicator()
-    dd.deduplicate_cluster(dataset_id, tablename, clusterid, keep_entries)
+    try:
+        dd.deduplicate_cluster(dataset_id, tablename, clusterid, keep_entries)
+    except TimeoutError as e:
+        flash(message=str(e), category="error")
 
     return 'True'
 # ENDFUNCTION
@@ -1202,7 +1257,10 @@ def dedup_yes_to_all(dataset_id, tablename, clusterid):
         abort(404)
 
     dd = dataset.getDeduplicator()
-    dd.yes_to_all(dataset_id, tablename, clusterid)
+    try:
+        dd.yes_to_all(dataset_id, tablename, clusterid)
+    except TimeoutError as e:
+        flash(message=str(e), category="error")
 
     flash(message="Data-deduplication completed.", category="success")
     return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))

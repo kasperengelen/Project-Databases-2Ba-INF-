@@ -110,6 +110,11 @@ class DatasetInfo:
         return Deduplicator(self.db_conn, get_sqla_eng())
     # ENDMETHOD
 
+    def getTransformationReverser(self, tablename):
+        """Retrieve the TransformationReverser for this dataset and the specified table."""
+
+        return TransformationReverser(setid=self.setid, table_name=tablename, db_connection=self.db_conn, engine=get_sqla_eng())
+
     # add to querymanager
     def deleteTable(self, tablename):
         """Deletes the specified table from the dataset."""
@@ -117,6 +122,6 @@ class DatasetInfo:
             raise RuntimeError("Invalid tablename.")
 
         qm = QueryManager(db_conn = self.db_conn, engine = None)
-        qm.destroyTable("\"{}\".{}".format(self.setid, tablename), cascade = True)
-        qm.destroyTable("\"original_{}\".{}".format(self.setid, tablename), if_exists = True, cascade = True) # this one may not always exist!
+        qm.destroyTable("\"{}\".\"{}\"".format(self.setid, tablename), cascade = True)
+        qm.destroyTable("\"original_{}\".\"{}\"".format(self.setid, tablename), if_exists = True, cascade = True) # this one may not always exist!
     # ENDMETHOD

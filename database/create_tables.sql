@@ -89,3 +89,9 @@ FOR EACH ROW EXECUTE PROCEDURE delete_clean();
 
 CREATE TRIGGER left_dataset AFTER DELETE ON SYSTEM.set_permissions
 FOR EACH ROW WHEN (OLD.permission_type = 'admin') EXECUTE PROCEDURE leave_clean();
+
+
+
+
+
+

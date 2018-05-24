@@ -6,9 +6,12 @@
 			<div class="col-sm-3 text-left">
 				<a data-hover="tooltip" title="Previous" href="{{ url_for('dataset_pages.home', dataset_id=dataset_info.setid) }}" class="btn btn-primary">
 					<span class="glyphicon glyphicon-share-alt" style="-webkit-transform: scaleX(-1); transform: scaleX(-1);"></span></a>
-				<div style="padding-top: 4.5em;"></div>
+				<div style="padding-top: 1em;"></div>
 				{% if original != True %}
-				<div>
+				<a href="#" data-toggle="modal" data-target="#querymodal" data-hover="tooltip" title="Query"
+					class="btn btn-primary"><i class="fa fa-terminal"></i></a>
+				<div style="padding-top: 1em;"></div>
+				<div style="display: inline-block;">
 					<button id="transbutton" type="button" class="btn btn-primary" data-hover="tooltip" title="Transformations" data-toggle="collapse"
 						onclick="return divClick();" data-target="#sidenav">
 		                <span class="glyphicon glyphicon-menu-hamburger"></span>
@@ -25,6 +28,19 @@
 				    </script>
 		            
 				</div>
+				{% if can_undo != True %}
+						<div id="undo_false" style="display: inline-block;">
+							<button href="#" class="btn btn-primary" data-hover="tooltip" title="Undo" disabled>
+								<span class="glyphicon glyphicon-repeat" style="-webkit-transform: scaleX(-1); transform: scaleX(-1);"></span>
+							</button>
+						</div>
+					{% else %}
+						<div id="undo_true" style="display: inline-block;">
+							<a href="{{ url_for('dataset_pages._table_undo', dataset_id=dataset_info.setid, tablename=table_name, redir_type='TABLE') }}" class="btn btn-primary" data-hover="tooltip" title="Undo">
+								<span class="glyphicon glyphicon-repeat" style="-webkit-transform: scaleX(-1); transform: scaleX(-1);"></span>
+							</a>
+						</div>
+					{% endif %}
 				{% endif %}
 			</div>
 			<div class="col-sm-6 text-center">
@@ -66,7 +82,7 @@
 	  	<div class="col-sm-12" id="loading_transform" style="height: 150px;">
 	  		<div class="col-sm-5"></div>
 	  		<div class="col-sm-2 text-center">
-			    <h3>Rendering</h3>
+			    <h3>Transforming</h3>
 			    <img width="120" height="auto" src="https://upload.wikimedia.org/wikipedia/commons/b/b1/Loading_icon.gif">
 			</div>
 			<div class="col-sm-5"></div>
@@ -84,8 +100,6 @@
 						<ul class="nav navbar-nav sidebar collapse in" id="sidenav">
 				            <li><a href="#" data-toggle="modal" data-target="#tcmodal" onclick="$('#typeconversion_newtable').hide()">
 				            	Attribute Type Conversion</a></li></br>
-
-				            <li><a id="query_button" href="#" data-toggle="modal" data-target="#querymodal">Custom Query/Queries</a></li>
 
 				            <li><a href="#" data-toggle="modal" data-target="#datadedupmodal">Data Deduplication</a></li>
 
