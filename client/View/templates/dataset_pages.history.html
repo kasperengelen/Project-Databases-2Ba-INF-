@@ -10,7 +10,7 @@
 					<span class="glyphicon glyphicon-share-alt" style="-webkit-transform: scaleX(-1); transform: scaleX(-1);"></span>
 				</a>
 				<div style="padding-top: 3em;">
-					{% if enable_undo != True %}
+					{% if can_undo != True %}
 						<div id="undo_false">
 							<button href="#" class="btn btn-primary" data-hover="tooltip" title="Undo" disabled>
 								<span class="glyphicon glyphicon-repeat" style="-webkit-transform: scaleX(-1); transform: scaleX(-1);"></span>
@@ -18,11 +18,11 @@
 						</div>
 					{% else %}
 						<div id="undo_true">
-							<a href="#" class="btn btn-primary" data-hover="tooltip" title="Undo">
+							<a href="{{ url_for('dataset_pages._table_undo', dataset_id=dataset_info.setid, tablename=table_name) }}" class="btn btn-primary" data-hover="tooltip" title="Undo">
 								<span class="glyphicon glyphicon-repeat" style="-webkit-transform: scaleX(-1); transform: scaleX(-1);"></span>
 							</a>
 						</div>
-				{% endif %}
+					{% endif %}
 				</div>
 			</div>
 			<div class="col-sm-6 text-center">
