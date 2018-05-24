@@ -1149,7 +1149,11 @@ def dedup_find_matches(dataset_id, tablename):
     ignore_list = form.ignore_list.data
     exactmatch_list = form.exactmatch_list.data
 
-    table_list = dd.find_matches(dataset_id, tablename, exactmatch_list, ignore_list)
+    try:
+        table_list = dd.find_matches(dataset_id, tablename, exactmatch_list, ignore_list)
+    except MemoryError:
+        flash(message="Table too large for deduplication. Please select more exact matches.")
+        return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
 
     if table_list == []:
         flash(message="No duplicates found", category="error")
