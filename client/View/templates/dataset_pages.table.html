@@ -6,8 +6,11 @@
 			<div class="col-sm-3 text-left">
 				<a data-hover="tooltip" title="Previous" href="{{ url_for('dataset_pages.home', dataset_id=dataset_info.setid) }}" class="btn btn-primary">
 					<span class="glyphicon glyphicon-share-alt" style="-webkit-transform: scaleX(-1); transform: scaleX(-1);"></span></a>
-				<div style="padding-top: 4.5em;"></div>
+				<div style="padding-top: 1em;"></div>
 				{% if original != True %}
+				<a href="#" data-toggle="modal" data-target="#querymodal" data-hover="tooltip" title="Query"
+					class="btn btn-primary"><i class="fa fa-terminal"></i></a>
+				<div style="padding-top: 1em;"></div>
 				<div>
 					<button id="transbutton" type="button" class="btn btn-primary" data-hover="tooltip" title="Transformations" data-toggle="collapse"
 						onclick="return divClick();" data-target="#sidenav">
@@ -84,8 +87,6 @@
 						<ul class="nav navbar-nav sidebar collapse in" id="sidenav">
 				            <li><a href="#" data-toggle="modal" data-target="#tcmodal" onclick="$('#typeconversion_newtable').hide()">
 				            	Attribute Type Conversion</a></li></br>
-
-				            <li><a id="query_button" href="#" data-toggle="modal" data-target="#querymodal">Custom Query/Queries</a></li>
 
 				            <li><a href="#" data-toggle="modal" data-target="#datadedupmodal">Data Deduplication</a></li>
 
