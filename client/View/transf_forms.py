@@ -16,7 +16,7 @@ class TransformationFormBase(FlaskForm):
 
             requiredcheck = InputRequired(message="Table name is required.")
             lengthcheck   = Length(min=1, max=63, message="Tablename needs to be between 1 and 63 characters long.")
-            regexcheck    = Regexp('^[A-Za-z0-9][A-Za-z0-9]+$')
+            regexcheck    = Regexp('^[A-Za-z0-9][A-Za-z0-9_]+$', message="Table name can only contain alphanumeric characters and underscore.")
 
             requiredcheck(form, field)
             lengthcheck(form, field)
