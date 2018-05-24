@@ -122,6 +122,6 @@ class DatasetInfo:
             raise RuntimeError("Invalid tablename.")
 
         qm = QueryManager(db_conn = self.db_conn, engine = None)
-        qm.destroyTable("\"{}\".{}".format(self.setid, tablename), cascade = True)
-        qm.destroyTable("\"original_{}\".{}".format(self.setid, tablename), if_exists = True, cascade = True) # this one may not always exist!
+        qm.destroyTable("\"{}\".\"{}\"".format(self.setid, tablename), cascade = True)
+        qm.destroyTable("\"original_{}\".\"{}\"".format(self.setid, tablename), if_exists = True, cascade = True) # this one may not always exist!
     # ENDMETHOD
