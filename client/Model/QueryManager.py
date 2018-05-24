@@ -318,7 +318,7 @@ class QueryManager:
         self.db_conn.commit()
     # ENDFUNCTION
 
-    def destroyTable(self, tablename, if_exist=False, cascade=False):
+    def destroyTable(self, tablename, if_exists=False, cascade=False):
         """Drop the specified table from the database.
         If 'if_exists' is set to True, the table will only be dropped if it exists.
         If 'cascade' is set to True, the CASCADE keyword will be added to the query.
