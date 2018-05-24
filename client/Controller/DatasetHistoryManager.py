@@ -221,7 +221,7 @@ class DatasetHistoryManager:
     
     def __rowstring_generator0(self, dict_obj):
         rowstring = 'Created table "{}" which is a copy of table "{}".'.format(dict_obj['table_name'],
-                                                                               dict_obj['origin_name'])
+                                                                               dict_obj['origin_table'])
         return rowstring
     
     def __rowstring_generator1(self, dict_obj):

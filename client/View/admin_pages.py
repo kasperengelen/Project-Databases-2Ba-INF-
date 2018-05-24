@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for, request, flash
+from flask import Blueprint, render_template, redirect, url_for, request, flash, session
 from flask import current_app as app
 
 from Controller.AccessController import require_admin
@@ -30,12 +30,17 @@ def manage_users():
         activationform.fillForm(user)
         editform.fillForm(user)
 
+        if user.userid == session['userdata']['userid']:
+            deleteform = None
+            activationform = None
+
         users.append({
             'userinfo': user,
             'editform': editform,
             'deleteform': deleteform,
             'activationform': activationform
         })
+        # ENDIF
     # ENDFOR
 
     return render_template('admin_pages.manage_users.html', users = users)
