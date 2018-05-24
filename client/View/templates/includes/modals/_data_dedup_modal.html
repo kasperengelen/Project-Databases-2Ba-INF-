@@ -9,7 +9,7 @@
             </div>   
 
             <div class="modal-body">
-                <form method="post" action="{{ url_for('dataset_pages.dedup_find_matches', dataset_id=dataset_info.setid, tablename=table_name) }}"
+                <form method="post" action=""
                     id="dedupform"> 
                     {% from "includes/_formhelpers.html" import render_field %}
                     {{ dedup_form.hidden_tag() }}
@@ -21,9 +21,31 @@
                     </div>
                     <p>Hold 'Ctrl' to select multiple attributes</p>
                     <div class="text-right">
-                        <button class="btn btn-primary" type="submit">Find Duplicates</button>
+                        <button class="btn btn-primary">Find Duplicates</button>
                     </div>
-                </form>              
+                </form>      
+                <script>
+
+                    $('#dedupsubmit').on('click', function() {
+                        var formdata = $('#dedupform').serialize();
+                        
+                        $.ajax({
+                            url: "{{ url_for('dataset_pages.dedup_find_matches', dataset_id=dataset_info.setid, tablename=table_name) }}",
+                            type: 'POST',
+                            data: formdata,
+                            success: function(response) {
+                                document.write(response);
+                            }
+                            statusCode: {
+                                502: function() {
+                                    alert('Table too large for deduplication. Please select more exact matches');
+                                    window.location.href = "{{ url_for('dataset_pages.table', dataset_id=dataset_info.setid, tablename=table_name) }}"
+                                }
+                            }
+                        });
+                    });
+
+                </script>                
             </div>            
 
             <div class="modal-footer">
