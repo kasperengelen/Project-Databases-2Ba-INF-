@@ -52,9 +52,21 @@ class DatasetHistoryManager:
         param_array = self.__python_list_to_postgres_array(parameters, transformation_type)
         print(param_array)
         cur = self.db_connection.cursor()
-        query = 'INSERT INTO SYSTEM.DATASET_HISTORY VALUES (%s, %s, %s, %s, %s, %s)'
+        query = 'INSERT INTO SYSTEM.DATASET_HISTORY VALUES (%s, %s, %s, %s, %s, %s) RETURNING transformation_id'
         cur.execute(sql.SQL(query), [self.setid, table_name, attribute, transformation_type, param_array, origin_table])
+        t_id = cur.fetchone()[0]
         self.db_connection.commit()
+        backups = self.get_latest_backups(table_name)
+        backup_id = 0
+        if len(backups) > 0:
+            backups = [i[0] for i in backups]
+            backup_id = max(backups)
+        if self.auto_backup_check(backup_id, table_name) is True:
+            self.__backup_table(table_name, t_id)
+            if len(backups) == 2: #We need to drop the oldest backup after creating a new one
+                backup_name = self.__get_backup_name_from_id(min(backups))
+                self.__delete_backup(backup_name)
+                
 
     def render_history_json(self, offset, limit, reverse_order=False, show_all=True, table_name=""):
         """Method that returns a json string containing the asked data of the dataset_history table.
@@ -74,7 +86,7 @@ class DatasetHistoryManager:
         if show_all is False:
             query = ("SELECT * FROM system.dataset_history WHERE setid = %s AND table_name = %s"
                      " ORDER BY transformation_date {} LIMIT %s OFFSET %s").format(ordering)
-            dict_cur.execute(sql.SQL(query), [self.setid, table_name, table_name, limit, offset])
+            dict_cur.execute(sql.SQL(query), [self.setid, table_name, limit, offset])
         else:
             query = ("SELECT * FROM system.dataset_history WHERE setid = %s AND transformation_type >= 0"
                      " ORDER BY transformation_date {} LIMIT %s OFFSET %s").format(ordering)
@@ -89,15 +101,124 @@ class DatasetHistoryManager:
         """Method that returns whether it's possible to undo the most recent transformation
         of a table in the dataset.
         """
-        return False
+        last_tid = self.get_edge_transformation(tablename, True)
+        if last_tid is None: #There is no recent transformation for this table.
+            return False
+        oldest_tid = self.get_edge_transformation(tablename, False)
+        backups = self.get_latest_backups(tablename)
+        if backups is not None: #There are backup(s) available
+            if len(backups) == 2:
+                return True
+            if len(backups) == 1:
+                # There seems to be only 1 backup
+                if backups[0][0] < last_tid:
+                    return True
+                
+                if self.original_exists(tablename):
+                    if self.is_in_recover_range(tablename, oldest_tid, backups[0][0]) is True:
+                        return True
+                    else:
+                        False
 
-    def get_latest_backup(self, tablename):
+                else:
+                    return False
+        #There are no backups
+        if self.original_exists(tablename):
+            return True
+            
+    def get_latest_backups(self, tablename):
+        """Returns the the id of the latest backups, could be one or could be two results depending
+        on how many transformations were performed."""
         cur = self.db_connection.cursor()
         values = [self.setid, tablename]
-        cur.execute(sql.SQL('SELECT table_name FROM system.dataset_history WHERE transformation_id ='
-                            '(SELECT MAX(transformation_id) FROM system.dataset_history WHERE setid = %s'
-                            ' AND origin_table = %s AND transformation_type = -1)'), values)
-        return cur.fetchone()[0]
+        cur.execute(sql.SQL('SELECT transformation_id FROM system.dataset_history WHERE setid = %s'
+                            ' AND origin_table = %s AND transformation_type = -1'), values)
+        return cur.fetchall()
+
+    def get_edge_transformation(self, tablename, edge=True):
+        """Returns the most recent or oldest transformation_id of a table in the dataset.
+        Depending on the boolean edge, True is the oldest, False is the youngest transformation.
+        """
+        cur = self.db_connection.cursor()
+        values = [self.setid, tablename]
+        agg = 'MAX'
+        if edge is False:
+            agg = 'MIN'
+            
+        query = ('SELECT {}(transformation_id) FROM system.dataset_history WHERE '
+                'setid = %s AND table_name = %s AND transformation_type > -1').format(agg)
+        cur.execute(query, values)
+        result = cur.fetchone()
+        if result is not None:
+            return result[0]
+        else:
+            return None
+
+    def get_all_transformations_in_interval(self, tablename, id1, id2):
+        """Returns a list of the transformation types that happened
+        after transformation id1 to (and including) transformation id2.
+        """
+        cur = self.db_connection.cursor()
+        query = ('SELECT transformation_type FROM system.dataset_history WHERE '
+                 'setid = %s AND table_name = %s AND transformation_type > -1'
+                 ' AND transformation_id >= %s AND transformation_id < %s '
+                 'ORDER BY transformation_id')
+        cur.execute(query, [self.setid, tablename, id1, id2])
+        return cur.fetchall()
+
+    def get_transformations_after_id(self, tablename, id1):
+        """Method that returns all transformation types performed after a certain id."""
+        cur = self.db_connection.cursor()
+        values = [self.setid, tablename, id1]
+        cur.execute(('SELECT transformation_type FROM system.dataset_history WHERE '
+                     'setid = %s AND table_name = %s AND transformation_type > -1'
+                     ' AND transformation_id > %s'), values)
+        return cur.fetchall()
+
+    def get_edit_distance(self, tx_list):
+        """Method that calculates the edit distance."""
+        distance = 0
+        for tx in tx_list:
+            distance += self.__transformation_distance(tx[0])
+
+        return distance
+        
+    def is_in_recover_range(self, tablename, id1, id2):
+        """Method that returns whether a table is edited too much from id1 to still be
+        recovered using the original table. id1 is the first transformation to alter the original
+        and id2 is the the transformation that caused the backup.
+        """
+        tx_list = self.get_all_transformations_in_interval(tablename, id1, id2)
+        distance = self.get_edit_distance(tx_list)
+        #The distance between the originals and their first backup is max 3.9
+        if distance > 3.9:
+            return False
+        else:
+            return True
+
+    def original_exists(self, tablename):
+        """Method that returns whether the table is a table originally added to the dataset which means that the table
+        has a backup of that original data.
+        """
+        cur = self.db_connection.cursor()
+        original_schema = 'original_' + str(self.setid)
+        values = [original_schema, tablename]
+        query  = 'SELECT table_name FROM information_schema.columns WHERE table_schema = %s AND table_name = %s' 
+        cur.execute(query, values)
+        result = cur.fetchone()
+        if result is None:
+            return False
+        else:
+            return True
+
+    def auto_backup_check(self, start_id, tablename):
+        """Check whether it's time to make a backup of the transformation."""
+        tx_list = self.get_transformations_after_id(tablename, start_id)
+        distance = self.get_edit_distance(tx_list)
+        if distance >= 3.0:
+            return True
+        else:
+            return False
         
     def __python_list_to_postgres_array(self, py_list, transformation_type):
         """Method that represents a python list as a postgres array for inserting into a PostreSQL database."""
@@ -121,15 +242,28 @@ class DatasetHistoryManager:
 
         return param_array
 
-    def __backup_table(self, t_id):
+    def __backup_table(self, tablename, t_id):
         cur = self.db_connection.cursor()
-        cur.execute("SELECT table_name FROM system.dataset_history WHERE transformation_id = %s", (t_id,))
-        tablename = cur.fetchone()[0]
-
         backup = 'backup."{}"'.format(str(t_id))
         backup_query = 'CREATE TABLE {} AS SELECT * FROM "{}"."{}"'.format(backup, str(self.setid), tablename)
+        query = 'INSERT INTO SYSTEM.DATASET_HISTORY VALUES (%s, %s, %s, %s, %s, %s)'
         cur.execute(backup_query)
+        cur.execute(query, [self.setid, str(t_id), '', -1, '{}', tablename])
+        self.db_connection.commit()
 
+    def __delete_backup(self, backup_name):
+        cur = self.db_connection.cursor()
+        backup = 'backup."{}"'.format(str(backup_name))
+        cur.execute('DROP TABLE {}'.format(backup))
+        self.db_connection.commit()
+
+    def __get_backup_name_from_id(self, t_id):
+        cur = self.db_connection.cursor()
+        query = 'SELECT table_name FROM system.dataset_history WHERE transformation_id = %s'
+        cur.execute(query, [t_id])
+        self.db_connection.commit()
+        return cur.fetchone()[0]
+        
     def __get_recent_transformations(self, tablename):
         """Method that returns the recent operations performed on a table."""
         dict_cur = self.db_connection.cursor(cursor_factory=psycopg2.extras.DictCursor)
@@ -137,6 +271,8 @@ class DatasetHistoryManager:
         dict_cur.execute(query, (self.setid, tablename))
         return dict_cur.fetchall()
 
+    
+    #DEPR
     def __get_latest_backup(self, tablename):
         recent_tx = self.__get_recent_transformations(tablename)
         distance = 0
@@ -160,7 +296,7 @@ class DatasetHistoryManager:
         all_tx = cur.fetchall()
         return all_tx
         
-    def __get_edit_distance(self, t_id):
+    def __transformation_distance(self, t_id):
         """Method that calculates the edit distance defined by us to determine how dissimilar two tables are.
         This is done by looking at various transformations and rating how hard a transformation changed the
         data and how expensive that transformation was.
@@ -197,7 +333,7 @@ class DatasetHistoryManager:
             16 : self.__rowstring_generator16,
             17 : self.__rowstring_generator17,
             18 : self.__rowstring_generator18,
-            19 : self.__rowstring_generator18,
+            19 : self.__rowstring_generator19,
             }
         
         self.choice_dict =  choice_dict

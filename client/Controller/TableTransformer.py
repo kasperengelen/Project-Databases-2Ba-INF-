@@ -543,12 +543,12 @@ class TableTransformer:
         eventual_table = "" #This will be the name of table containing the changes.
         if self.replace is True:
             #If the table should be replaced, drop it and recreate it.
-            df.to_sql(tablename, self.engine, self.schema, if_exists='replace', index = False, dtype = new_dtypes)
+            df.to_sql(name=tablename, con=self.engine, schema=self.schema, if_exists='replace', index = False, dtype = new_dtypes)
             eventual_table = tablename
         elif self.replace is False:
             #We need to create a new table and leave the original untouched
             new_name = self.__get_unique_name("", new_name, False)
-            df.to_sql(new_name, self.engine, self.schema, if_exists='fail', index = False, dtype = new_dtypes)
+            df.to_sql(name=new_name, con=self.engine, schema=self.schema, if_exists='fail', index = False, dtype = new_dtypes)
             eventual_table = new_name
             
         self.history_manager.write_to_history(eventual_table, eventual_table, attribute, [], 14)
@@ -606,12 +606,12 @@ class TableTransformer:
 
         if self.replace is True:
             #If the table should be replaced, drop it and recreate it.
-            df.to_sql(tablename, self.engine, self.schema, 'replace', index = False, dtype = new_dtypes)
+            df.to_sql(name=tablename, con=self.engine, schema=self.schema, if_exists='replace', index = False, dtype = new_dtypes)
             eventual_table = tablename
         elif self.replace is False:
             #We need to create a new table and leave the original untouched
             new_name = self.__get_unique_name("", new_name, False)
-            df.to_sql(new_name, self.engine, self.schema, 'fail', index = False, dtype = new_dtypes)
+            df.to_sql(name=new_name, con=self.engine, schema=self.schema, if_exists='fail', index = False, dtype = new_dtypes)
             eventual_table = new_name
 
         self.history_manager.write_to_history(eventual_table, eventual_table, attribute, [overwrite, og_attribute], 13)
@@ -702,12 +702,12 @@ class TableTransformer:
 
         if self.replace is True:
             #If the table should be replaced, drop it and recreate it.
-            df.to_sql(tablename, self.engine, self.schema, 'replace', index = False, dtype = new_dtypes)
+            df.to_sql(name=tablename, con=self.engine, schema=self.schema, if_exists='replace', index = False, dtype = new_dtypes)
             eventual_table = tablename
         elif self.replace is False:
             #We need to create a new table and leave the original untouched
             new_name = self.__get_unique_name("", new_name, False)
-            df.to_sql(new_name, self.engine, self.schema, 'fail', index = False, dtype = new_dtypes)
+            df.to_sql(name=new_name, con=self.engine, schema=self.schema, if_exists='fail', index = False, dtype = new_dtypes)
             eventual_table = new_name
         
         self.history_manager.write_to_history(eventual_table, eventual_table, attribute, [], 6)
@@ -777,12 +777,12 @@ class TableTransformer:
         
         if self.replace is True:
             #If the table should be replaced, drop it and recreate it.
-            df.to_sql(tablename, self.engine, self.schema, 'replace', index = False, dtype = new_dtypes)
+            df.to_sql(name=tablename, con=self.engine, schema=self.schema, if_exists='replace', index = False, dtype = new_dtypes)
             eventual_table = tablename
         elif self.replace is False:
             #We need to create a new table and leave the original untouched
             new_name = self.__get_unique_name("", new_name, False)
-            df.to_sql(new_name, self.engine, self.schema, 'fail', index = False, dtype = new_dtypes)
+            df.to_sql(name=new_name, con=self.engine, schema=self.schema, if_exists='fail', index = False, dtype = new_dtypes)
             eventual_table = new_name
             
         self.history_manager.write_to_history(eventual_table, eventual_table, attribute, [], 5)
@@ -828,12 +828,12 @@ class TableTransformer:
 
         if self.replace is True:
             #If the table should be replaced, drop it and recreate it.
-            df.to_sql(tablename, self.engine, self.schema, 'replace', index = False, dtype = new_dtypes)
+            df.to_sql(name=tablename, con=self.engine, schema=self.schema, if_exists='replace', index = False, dtype = new_dtypes)
             eventual_table = tablename
         elif self.replace is False:
             #We need to create a new table and leave the original untouched
             new_name = self.__get_unique_name("", new_name, False)
-            df.to_sql(new_name, self.engine, self.schema, 'fail', index = False, dtype = new_dtypes)
+            df.to_sql(name=new_name, con=self.engine, schema=self.schema, if_exists='fail', index = False, dtype = new_dtypes)
             eventual_table = new_name
 
         self.history_manager.write_to_history(eventual_table, eventual_table, attribute, [ranges, exclude_right], 4)
