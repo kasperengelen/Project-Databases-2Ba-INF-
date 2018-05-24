@@ -152,6 +152,13 @@ def table(dataset_id, tablename):
         })
     # ENDFOR
 
+    dhm = dataset.getHistoryManager()
+    # check if undo is possible
+    if tablename is None:
+        can_undo = False
+    else:
+        can_undo = dhm.is_undo_enabled(tablename)
+
     return render_template('dataset_pages.table.html', 
                                                 table_name            = tablename,
                                                 dataset_info          = dataset_info,
@@ -181,7 +188,8 @@ def table(dataset_id, tablename):
                                                 queryform             = CustomQueryForm(),
                                                 copyform              = CopyTableForm(),
                                                 dedup_form            = dedup_form,
-                                                change_attr_form      = change_attr_form)
+                                                change_attr_form      = change_attr_form,
+                                                can_undo              = can_undo)
 # ENDFUNCTION
 
 @dataset_pages.route('/dataset/<int:dataset_id>/original_table/<string:tablename>')
@@ -262,7 +270,6 @@ def history(dataset_id, tablename):
         abort(404)
 
     dhm = dataset.getHistoryManager()
-
     # check if undo is possible
     if tablename is None:
         can_undo = False
@@ -276,6 +283,36 @@ def history(dataset_id, tablename):
                                             row_count    = rowcount,
                                             history_form = form,
                                             can_undo     = can_undo)
+# ENDFUNCTION
+
+@dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>/undo', defaults={'redir_type': "HISTORY"}, methods=['POST'])
+@dataset_pages.route('/dataset/<int:dataset_id>/history/table/<string:tablename>/undo', defaults={'redir_type': "TABLE"})
+def _table_undo(dataset_id, tablename, redir_type):
+    """Callback for UNDO on table."""
+
+    if not DatasetManager.existsID(dataset_id):
+        abort(404)
+
+    dataset = DatasetManager.getDataset(tablename)
+
+    if not tablename in dataset.getTableNames():
+        abort(404)
+
+    dhm = dataset.getHistoryManager()
+
+    if not dhm.is_undo_enabled(tablename):
+        # undo cannot be done
+        abort(500)
+
+    # perform undo
+    tr = dataset.getTransformationReverser(tablename)
+
+    tr.undo_last_transformation()
+
+    if redir_type == "TABLE":
+        return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
+    elif redir_type == "HISTORY":
+        return redirect(url_for('dataset.history', dataset_id=dataset_id, tablename=tablename))
 # ENDFUNCTION
 
 @dataset_pages.route('/dataset/<int:dataset_id>/jointables', methods=['POST'])
@@ -1077,32 +1114,6 @@ def _get_history_table(dataset_id, tablename):
     }
 
     return jsonify(retval)
-# ENDFUNCTION
-
-@dataset_pages.route('/dataset/<int:dataset_id>/table/<string:tablename>/undo', methods=['POST'])
-def _table_undo(dataset_id, tablename):
-    """Callback for UNDO on table."""
-
-    if not DatasetManager.existsID(dataset_id):
-        abort(404)
-
-    dataset = DatasetManager.getDataset(tablename)
-
-    if not tablename in dataset.getTableNames():
-        abort(404)
-
-    dhm = dataset.getHistoryManager()
-
-    if not dhm.is_undo_enabled(tablename):
-        # undo cannot be done
-        abort(500)
-
-    # perform undo
-    tr = dataset.getTransformationReverser(tablename)
-
-    tr.undo_last_transformation()
-
-    return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
 # ENDFUNCTION
 
 @dataset_pages.route('/dataset/<int:dataset_id>/_custom_query', methods=['POST'])
