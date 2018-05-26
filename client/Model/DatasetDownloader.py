@@ -79,8 +79,7 @@ class DatasetDownloader:
 
         filename = os.path.join(foldername, tablename + ".dump")
         with open(filename, 'w') as dumpfile:
-            # create table statement
-            dumpfile.write("CREATE TABLE {};\n".format(tablename))
+            self.__create_table(dumpfile, schema, tablename)
             self.__insert_values(dumpfile, schema, tablename)
 
         return tablename + ".dump"
@@ -101,9 +100,8 @@ class DatasetDownloader:
             os.mkdir(dumpfolder)
 
         with open(os.path.join(dumpfolder, self.schema + ".dump"), 'w') as dumpfile:
-            # create table statements
             for table in table_names:
-                dumpfile.write("CREATE TABLE {};\n".format(table))
+                self.__create_table(dumpfile, self.schema, table)
 
             for table in table_names:
                 self.__insert_values(dumpfile, self.schema, table)
@@ -112,14 +110,13 @@ class DatasetDownloader:
             return self.schema + ".dump"
         else:
             with open(os.path.join(dumpfolder, og_schema + ".dump"), 'w') as dumpfile:
-                # create table statements
                 for table in og_table_names:
-                    dumpfile.write("CREATE TABLE {};\n".format(table))
+                    self.__create_table(dumpfile, og_schema, table)
 
                 for table in og_table_names:
                     self.__insert_values(dumpfile, og_schema, table)
 
-            # make a zip of all csv's
+            # make a zip of the two dump files
             shutil.make_archive(os.path.join(foldername + "/" + self.schema), 'zip', dumpfolder)
 
             shutil.rmtree(dumpfolder)
@@ -139,13 +136,31 @@ class DatasetDownloader:
         for table in table_names:
             self.get_csv(table, foldername, delimiter, quotechar, null)
 
+    def __create_table(self, dumpfile, schema, tablename):
+        create_table_str = "CREATE TABLE \"{}\" (\n".format(tablename)
+        type_dict = self.query_man.get_col_types(schema, tablename)
+        for col in type_dict:
+            create_table_str += "\"{}\" {},\n".format(col, type_dict[col])
+        create_table_str = create_table_str[:-2] + "\n);\n\n"
+        dumpfile.write(create_table_str)
+
     def __insert_values(self, dumpfile, schema, tablename):
         """write all insert statements for a table"""
         # fetch data
         self.cur.execute(sql.SQL("SELECT * FROM {}.{}").format(sql.Identifier(schema), sql.Identifier(tablename)))
         # insert row statements
+        dumpfile.write("INSERT INTO \"{}\" VALUES\n".format(tablename))
+        rows = str()
         for row in self.cur:
-            dumpfile.write("INSERT INTO {} VALUES {};\n".format(tablename, str(row)))
+            # turn every attribute into a string and escape single quotes the postgres way
+            row_str = tuple([str(x).replace("'", "''") for x in row])
+            # replace double quotes to single quotes for postgres compatibility
+            row_str = str(row_str).replace('"', "'")
+            rows += str(row_str) + ",\n"
+        # replace last comma with a semicolon
+        rows = rows[:-2] + ";\n"
+        dumpfile.write(rows)
+
 
     def __get_schema(self, original):
         return original * "original_" + self.schema

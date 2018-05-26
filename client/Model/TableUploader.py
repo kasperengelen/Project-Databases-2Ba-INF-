@@ -196,6 +196,7 @@ class TableUploader:
                     try:
                         self.cur.execute(command.replace("\n", ""))
                     except psycopg2.ProgrammingError:
+                        raise
                         raise DumpInconsistencyException
 
         # if no tables were created, raise error
@@ -241,7 +242,6 @@ class TableUploader:
 
     def __check_alnum(self, tablename):
         """Check if the table name is alphanumeric (underscores are also allowed)"""
-        # isalnum() that also allows underscores
         temp_name = tablename.replace('_', 'a')
         return temp_name.isalnum()
 

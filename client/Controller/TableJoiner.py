@@ -1,7 +1,5 @@
 import psycopg2
 from psycopg2 import sql
-from Controller.DatasetHistoryManager import DatasetHistoryManager
-from Model.DatabaseConfiguration import DatabaseConfiguration
 from Model.QueryManager import QueryManager
 
 
@@ -113,8 +111,3 @@ class TableJoiner:
             if table1_types[col] != table2_types[col]:
                 raise TypeMismatch
 
-
-if __name__ == "__main__":
-    DC = DatabaseConfiguration()
-    TJ = TableJoiner(37, "join1", "join2", "joined", DC.get_db())
-    TJ.natural_join(type="left")
