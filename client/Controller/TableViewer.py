@@ -119,6 +119,10 @@ class TableViewer:
             else:
                 current_bin.append(value)
 
+        # if the last bin was not added
+        if len(intervals) != len(distributed_values):
+            distributed_values.append(current_bin)
+
         sizes = [len(x) for x in distributed_values]
         # stringify the tuples representing the intervals
         intervals = [str((math.ceil(x[0]), math.floor(x[1]))) for x in intervals]
