@@ -300,7 +300,7 @@ class Deduplicator:
         def __check_own_lifetime(self, setid, tablename):
             """Check if the lifetime of (tablename) has expired, if not, update table age"""
             if (setid, tablename) not in self.age:
-                raise TimeoutError("Data-deduplication session expired, please try again" + self.age)
+                raise TimeoutError("Data-deduplication session expired, please try again" + str(self.age))
 
             # update time
             self.age[(setid, tablename)] = time.time()
