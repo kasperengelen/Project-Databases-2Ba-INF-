@@ -1261,8 +1261,6 @@ def dedup_yes_to_all(dataset_id, tablename, clusterid):
     dd = dataset.getDeduplicator()
     try:
         dd.yes_to_all(dataset_id, tablename, clusterid)
-    except TimeoutError as e:
-        flash(message=str(e), category="error")
     except:
         dd.yes_to_all(dataset_id, tablename, clusterid)
 
