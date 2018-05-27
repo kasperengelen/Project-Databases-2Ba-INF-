@@ -33,6 +33,7 @@ class Deduplicator:
             self.clusters = dict()
             self.entries_to_remove = dict()
             self.age = dict()
+            self.log = list()
 
         def find_matches(self, setid, tablename, exact_match=list(), ignore=list()):
             """Function that finds entries that look alike
@@ -41,6 +42,7 @@ class Deduplicator:
             :return a list of json objects that each represent a set of similar entries"""
 
             try:
+                self.log.append("find_matches :: ENTER")
                 self.__lifetime_management(setid, tablename)
                 # update time
                 self.age[(setid, tablename)] = time.time()
@@ -124,6 +126,7 @@ class Deduplicator:
             :param entries_to_keep: entries that should not be deduplicated (deleted)"""
 
             try:
+                self.log.append("deduplicate_cluster :: ENTER")
                 # update time
                 self.__check_own_lifetime(setid, tablename)
 
@@ -148,6 +151,7 @@ class Deduplicator:
 
         def yes_to_all(self, setid, tablename, cluster_id):
             """Deduplicate_cluster automatically starting from cluster_id to the last cluster"""
+            self.log.append("yes_to_all :: ENTER")
 
             try:
                 # update time
@@ -292,18 +296,22 @@ class Deduplicator:
 
         def __lifetime_management(self, setid, tablename):
             """delete data that is older than 1 hour"""
+            self.log.append("lifetime_management :: ENTER")
             current_time = time.time()
             for key in self.age:
                 if (current_time - self.age[key]) > 3600:
+                    self.log.append("lifetime_management :: DELETE " + str(key) + " age = " + str(self.age[key]))
                     self.clean_data(key[0], key[1])
 
         def __check_own_lifetime(self, setid, tablename):
             """Check if the lifetime of (tablename) has expired, if not, update table age"""
+            self.log.append("check_own_lifetime :: ENTER")
             if (setid, tablename) not in self.age:
-                raise TimeoutError("Data-deduplication session expired, please try again" + str(self.age))
+                raise TimeoutError("Data-deduplication session expired, please try again" + str(self.log))
 
             # update time
             self.age[(setid, tablename)] = time.time()
+            self.log.append("check_own_lifetime :: UPDATED AGE")
 
 
     def __init__(self, db_connection, engine):
