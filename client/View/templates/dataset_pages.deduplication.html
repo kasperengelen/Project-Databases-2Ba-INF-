@@ -167,6 +167,7 @@
 			    			var cluster = curid - 1;
 			    			var new_url = '/dataset/' + '{{ datasetid }}' + '/table/' + '{{ table_name }}' + '/clusterid/' + cluster + '/dedup/yes_to_all';
 
+			    			alert(new_url)
 			    			$('#yes_to_all_confirm_modal').modal('show');
 			    			$('#confirm_yta').attr('href', new_url);
 			    		});
