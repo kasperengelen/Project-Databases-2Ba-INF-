@@ -4,6 +4,7 @@ import recordlinkage as rl
 import pandas as pd
 import numpy as np
 import psycopg2
+from collections import deque
 from psycopg2 import sql
 from Model.DatabaseConfiguration import DatabaseConfiguration
 from Model.QueryManager import QueryManager
@@ -32,7 +33,8 @@ class Deduplicator:
             self.dataframes = dict()
             self.clusters = dict()
             self.entries_to_remove = dict()
-            self.age = dict()
+            # self.age = dict()
+            self.log = list()
 
         def find_matches(self, setid, tablename, exact_match=list(), ignore=list()):
             """Function that finds entries that look alike
@@ -41,9 +43,10 @@ class Deduplicator:
             :return a list of json objects that each represent a set of similar entries"""
 
             try:
-                self.__lifetime_management(setid, tablename)
-                # update time
-                self.age[(setid, tablename)] = time.time()
+                self.log.append("find_matches :: ENTER")
+                # self.__lifetime_management(setid, tablename)
+                # # update time
+                # self.age[(setid, tablename)] = time.time()
 
                 # load table into dataframe
                 schema = str(setid)
@@ -93,7 +96,7 @@ class Deduplicator:
                     results = kmeans.predict(potential_pairs)
 
                 # update time
-                self.__check_own_lifetime(setid, tablename)
+                # self.__check_own_lifetime(setid, tablename)
 
                 # cluster together similar pairs
                 self.clusters[(setid, tablename)] = self.__cluster_pairs(results)
@@ -110,7 +113,7 @@ class Deduplicator:
                 self.entries_to_remove[(setid, tablename)] = set()
 
                 # update time
-                self.__check_own_lifetime(setid, tablename)
+                # self.__check_own_lifetime(setid, tablename)
 
                 return certain_paired_rows
 
@@ -124,11 +127,9 @@ class Deduplicator:
             :param entries_to_keep: entries that should not be deduplicated (deleted)"""
 
             try:
+                self.log.append("deduplicate_cluster :: ENTER")
                 # update time
-                self.__check_own_lifetime(setid, tablename)
-
-                if (setid, tablename) not in self.clusters:
-                    raise TimeoutError("Session expired")
+                # self.__check_own_lifetime(setid, tablename)
 
                 cluster = list(self.clusters[(setid, tablename)][cluster_id])
 
@@ -151,10 +152,11 @@ class Deduplicator:
 
         def yes_to_all(self, setid, tablename, cluster_id):
             """Deduplicate_cluster automatically starting from cluster_id to the last cluster"""
+            self.log.append("yes_to_all :: ENTER")
 
             try:
                 # update time
-                self.__check_own_lifetime(setid, tablename)
+                # self.__check_own_lifetime(setid, tablename)
 
                 for i in range(cluster_id, len(self.clusters[(setid, tablename)])):
                     self.deduplicate_cluster(setid, tablename, i)
@@ -168,7 +170,7 @@ class Deduplicator:
             self.dataframes.pop((setid, tablename), None)
             self.clusters.pop((setid, tablename), None)
             self.entries_to_remove.pop((setid, tablename), None)
-            self.age.pop((setid, tablename), None)
+            # self.age.pop((setid, tablename), None)
 
         def __submit(self, setid, tablename):
             """Deletes all duplicates and alters the table in the database"""
@@ -295,18 +297,22 @@ class Deduplicator:
 
         def __lifetime_management(self, setid, tablename):
             """delete data that is older than 1 hour"""
+            self.log.append("lifetime_management :: ENTER")
             current_time = time.time()
             for key in self.age:
                 if (current_time - self.age[key]) > 3600:
+                    self.log.append("lifetime_management :: DELETE " + str(key) + " age = " + str(self.age[key]))
                     self.clean_data(key[0], key[1])
 
         def __check_own_lifetime(self, setid, tablename):
             """Check if the lifetime of (tablename) has expired, if not, update table age"""
+            self.log.append("check_own_lifetime :: ENTER")
             if (setid, tablename) not in self.age:
-                raise TimeoutError("Session expired")
+                raise TimeoutError("Data-deduplication session expired, please try again" + str(self.log))
 
             # update time
             self.age[(setid, tablename)] = time.time()
+            self.log.append("check_own_lifetime :: UPDATED AGE")
 
 
     def __init__(self, db_connection, engine):
