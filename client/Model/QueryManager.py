@@ -341,6 +341,28 @@ class QueryManager:
         self.db_conn.commit()
     # ENDFUNCTION
 
+    def createSQLRole(self, rolename):
+        """Method to create an SQL role."""
+        self.dict_cur.execute("CREATE ROLE {};".format(rolename))
+        self.db_conn.commit()
+    # ENDFUNCTION
+
+    def grantSQLRolePermsForSchema(self, rolename, schemaname):
+        """Method to grant all permissions for the specified schema to the specified role."""
+
+        self.dict_cur.execute("REVOKE ALL PRIVILEGES ON DATABASE projectdb18 FROM {};".format(rolename))
+        self.db_conn.commit()
+        self.dict_cur.execute("GRANT ALL PRIVILEGES ON SCHEMA \"{}\" TO {};".format(schemaname, rolename))
+        self.db_conn.commit()
+    # ENDFUNCTION
+
+    def destroySQLRole(self, rolename):
+        """Method to drop an SQL role."""
+
+        self.dict_cur.execute("DROP ROLE {};".format(rolename))
+        self.db_conn.commit()
+    # ENDFUNCTION
+
     def get_table_names(self, schema):
         self.dict_cur.execute("SELECT table_name FROM information_schema.tables WHERE table_schema = %s;",
                          [schema])

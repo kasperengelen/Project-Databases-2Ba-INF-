@@ -1263,6 +1263,8 @@ def dedup_yes_to_all(dataset_id, tablename, clusterid):
         dd.yes_to_all(dataset_id, tablename, clusterid)
     except TimeoutError as e:
         flash(message=str(e), category="error")
+    except:
+        dd.yes_to_all(dataset_id, tablename, clusterid)
 
     flash(message="Data-deduplication completed.", category="success")
     return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
