@@ -80,6 +80,10 @@ class DatasetManager:
         # backup schema
         qm.createSchema("original_" + str(setid))
 
+        qm.createSQLRole(rolename="user_" + str(setid))
+        qm.grantSQLRolePermsForSchema(rolename="user_" + str(setid), schemaname=str(setid))
+        qm.grantSQLRolePermsForSchema(rolename="user_" + str(setid), schemaname="original_" + str(setid))
+
         return setid
     # ENDMETHOD
 
@@ -101,6 +105,9 @@ class DatasetManager:
         qm.destroySchema("original_" + str(setid), cascade=True)
         # delete dataset
         qm.deleteDataset(setid=setid)
+
+        # destroy role
+        qm.destroySQLRole(rolename="user_" + str(setid))
     # ENDMETHOD
 
     @staticmethod

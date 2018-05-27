@@ -1,8 +1,8 @@
 import psycopg2
 
 def clear_db():
-    #conn = psycopg2.connect(user="dbadmin", password="AdminPass123", host="localhost", dbname="projectdb18")
-    conn = psycopg2.connect(user="dbadmin", password="AdminPass123", host="localhost", dbname="testdb")
+    conn = psycopg2.connect(user="dbadmin", password="AdminPass123", host="localhost", dbname="projectdb18")
+    #conn = psycopg2.connect(user="dbadmin", password="AdminPass123", host="localhost", dbname="testdb")
 
     # delete schemas
     for i in range(0, 500):
