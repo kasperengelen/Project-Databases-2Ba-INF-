@@ -367,17 +367,22 @@ class TableTransformer:
             return None
         self.history_manager.write_to_history(resulting_table, resulting_table, attribute, [to_type, data_format, length, to_type2], 1)
 
-    def force_attribute_type(self, tablename, attribute, to_type, data_format="", length=None, force_mode=True, new_name=""):
+    def force_attribute_type(self, tablename, attribute, to_type, data_format="", length=None, force_mode='SET_NULL', new_name=""):
         """In case that change_attribute_type fails due to elements that can't be converted
         this method will force the conversion by deleting the row containing the bad element.
         The parameters are identical to change_attribute_type().
+
+        Parameters:
+            force_mode: String representing how to force the conversion either SET_NULL or DELETE_ROW
         """
         attr_type = self.get_attribute_type(tablename, attribute)
+        print(force_mode)
         resulting_table = self.get_resulting_table(tablename, new_name)
         if resulting_table != tablename:
             self.set_to_overwrite() #The next call should overwrite the newly created table.
         #If the attribute is not of string type then forcing will have no effect, so we can proceed as normal.
         if SQLTypeHandler().is_string(attr_type) is False:
+            print('dude_wtf')
             self.change_attribute_type(resulting_table, attribute, to_type, data_format, length, new_name)
             return
         
@@ -395,13 +400,17 @@ class TableTransformer:
         cur = self.db_connection.cursor()
         query_args = [sql.Identifier(self.schema), sql.Identifier(resulting_table), sql.Identifier(attribute)]
 
-        if force_mode is True:
+        if force_mode == 'DELETE_ROW':
             query1 = "DELETE FROM {}.{} WHERE ({} !~ %s )"
-            query2 = "DELETE FROM {}.{} WHERE char_length({}) < %s"
+            query2 = "DELETE FROM {}.{} WHERE char_length({}) > %s"
+
+        elif force_mode == 'SET_NULL':
+            print('jooo')
+            query1 = "UPDATE {0}.{1} SET {2} = NULL WHERE ({2} !~ %s )"
+            query2 = "UPDATE {0}.{1} SET {2} = NULL WHERE char_length({2}) > %s"
 
         else:
-            query1 = "UPDATE {0}.{1} SET {2} = NULL WHERE ({2} !~ %s )"
-            query2 = "UPDATE {0}.{1} SET {2} = NULL WHERE char_length({}) < %s"
+            raise self.ValueError('Force mode was neither SET_NULL or DELETE_ROW.')
             
 
         if pattern != "":
