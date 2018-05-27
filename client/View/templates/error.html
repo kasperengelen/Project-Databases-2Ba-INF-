@@ -3,16 +3,16 @@
 {% block body %}
 	
 	<div class="text-center"  style="padding: 1%">
-		<h2>{{ message }}</h2>
-		<h2>{{ error }}</h2>
+		<h2 id="msg">{{ message }}</h2>
 	</div>
 
 	<script>
-		$(function() {
-			if(window.location.href.indexOf("dedup/yes_to_all") > -1) {
-				location.reload();
-			}
-		});
+		if({{ message }} == "500, internal error." && window.location.href.indexOf('dedup/yes_to_all') > -1){
+			$('#msg').hide();
+		}
+		else {
+			$('#msg').show();
+		}
 	</script>
 
 {% endblock %}
