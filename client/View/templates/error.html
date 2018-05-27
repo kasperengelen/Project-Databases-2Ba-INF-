@@ -7,4 +7,12 @@
 		<h2>{{ error }}</h2>
 	</div>
 
+	<script>
+		$(function() {
+			if(window.location.href.indexOf("dedup/yes_to_all") > -1) {
+				location.reload();
+			}
+		});
+	</script>
+
 {% endblock %}
