@@ -127,9 +127,6 @@ class Deduplicator:
                 # update time
                 self.__check_own_lifetime(setid, tablename)
 
-                if (setid, tablename) not in self.clusters:
-                    raise TimeoutError("Session expired")
-
                 cluster = list(self.clusters[(setid, tablename)][cluster_id])
 
                 # if no entries are specified to keep, only keep the first entry
@@ -303,7 +300,7 @@ class Deduplicator:
         def __check_own_lifetime(self, setid, tablename):
             """Check if the lifetime of (tablename) has expired, if not, update table age"""
             if (setid, tablename) not in self.age:
-                raise TimeoutError("Session expired")
+                raise TimeoutError("Data-deduplication session expired, please try again" + self.age)
 
             # update time
             self.age[(setid, tablename)] = time.time()
