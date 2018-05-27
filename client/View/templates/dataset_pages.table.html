@@ -36,7 +36,7 @@
 						</div>
 					{% else %}
 						<div id="undo_true" style="display: inline-block;">
-							<form method="post" action="{{ url_for('dataset_pages._table_undo', dataset_id=dataset_info.setid, tablename=table_name, redir_type='TABLE') }}" name="undo">
+							<form method="post" action="{{ url_for('dataset_pages._table_undo', dataset_id=dataset_info.setid, tablename=table_name, redir_type='TABLE') }}" id="undoform">
 								<button type="submit" class="btn btn-primary" data-hover="tooltip" title="Undo">
 									<span class="glyphicon glyphicon-repeat" style="-webkit-transform: scaleX(-1); transform: scaleX(-1);"></span>
 								</button>
@@ -85,6 +85,14 @@
 	  		<div class="col-sm-5"></div>
 	  		<div class="col-sm-2 text-center">
 			    <h3>Transforming</h3>
+			    <img width="120" height="auto" src="https://upload.wikimedia.org/wikipedia/commons/b/b1/Loading_icon.gif">
+			</div>
+			<div class="col-sm-5"></div>
+		</div>
+		<div class="col-sm-12" id="loading_undo" style="height: 150px;">
+	  		<div class="col-sm-5"></div>
+	  		<div class="col-sm-2 text-center">
+			    <h3>Loading Undo</h3>
 			    <img width="120" height="auto" src="https://upload.wikimedia.org/wikipedia/commons/b/b1/Loading_icon.gif">
 			</div>
 			<div class="col-sm-5"></div>

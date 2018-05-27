@@ -52,6 +52,7 @@
             $('#loading_transform').hide();
             $('#loading_upload').hide();
             $('#loading_dedup').hide();
+            $('#loading_undo').hide();
             $('#deduptablediv').show();
         });
 
@@ -66,6 +67,10 @@
             $('#loading_upload').show();
         });
 
+        $('#undoform').submit(function() {
+            $("html, body").animate({ scrollTop: 0 }, 2000);
+            $('#loading_undo').show();
+        });
 
     </script>
 </body>
