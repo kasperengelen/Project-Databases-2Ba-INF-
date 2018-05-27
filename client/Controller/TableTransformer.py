@@ -19,15 +19,17 @@ class TableTransformer:
                  True overwrites data, False creates a new table (every transformation method has a new_name parameter that is the name of the new table)
         db_connection: psycopg2 database connection to execute SQL queries
         engine: SQLalchemy engine to use pandas functionality
+        track: Boolean indicating whether TableTransformer needs to write to history.
     """
 
-    def __init__(self, setid, db_conn, engine, replace=True):
+    def __init__(self, setid, db_conn, engine, replace=True, track=True):
         self.setid = setid
         self.schema = str(setid)
         self.replace = replace
         self.db_connection = db_conn
         self.engine = engine
-        self.history_manager = DatasetHistoryManager(setid, db_conn)
+        self.track = track
+        self.history_manager = DatasetHistoryManager(setid, db_conn, track)
 
     class TTError(Exception):
         """
@@ -169,7 +171,7 @@ class TableTransformer:
                 plist[1] = 'is'
             else:
                 plist[1] = 'is not'
-            plist[2] = 'NULL'
+            plist[2] = None
 
         return [sql.Identifier(plist[0]), plist[1], plist[2]]
     
@@ -181,9 +183,9 @@ class TableTransformer:
         """
         resulting_table  = self.get_resulting_table(tablename, new_name)
         list_size = len(arg_list)
-        identifiers = [sql.Identifier(self.schema), sql.Identifier(resulting_table)]
+        identifiers = [sql.Identifier(resulting_table)]
         values = []
-        delete_query = 'DELETE FROM {}.{} WHERE'
+        delete_query = ''
         # We get list of form ['x', '<', 'y'] or  ['x', '<', 'y', 'AND', 'x', '>','z'] et cetera
         if ((list_size - 3) % 4) == 0:
             i = 0
@@ -201,8 +203,12 @@ class TableTransformer:
         else:
             raise self.ValueError('Can not delete rows because an invalid predicate has been provided.')
 
+        history_entry = delete_query
+        delete_query = 'DELETE FROM {} WHERE' + delete_query
+        cur = self.db_connection.cursor()
         try:
-            self.db_connection.cursor().execute(sql.SQL(delete_query).format(*identifiers), values)
+            cur.execute('SET search_path to "{}"'.format(self.schema))
+            cur.execute(sql.SQL(delete_query).format(*identifiers), values)
         except:
             if resulting_table != tablename:
                 self.db_connection.commit()
@@ -210,8 +216,9 @@ class TableTransformer:
             raise self.ValueError('Could not delete rows using this predicate since it contains invalid input value(s) for the attributes.')
         
         self.db_connection.commit()
-        #clean_predicate = predicate.replace('"', '\\"') #Escape double quotes to pass it in postgres array
-        self.history_manager.write_to_history(resulting_table, resulting_table, 'None', ['temp'], 15)
+        clean_predicate = cur.query
+        clean_predicate = clean_predicate.decode('utf-8').replace('"', '\\"')
+        self.history_manager.write_to_history(resulting_table, resulting_table, 'None', [clean_predicate], 15)
 
     def get_conversion_options(self, tablename, attribute):
         """Returns a list of supported types that the given attribute can be converted to."""
@@ -345,9 +352,9 @@ class TableTransformer:
         resulting_table = self.get_resulting_table(tablename, new_name)
         try:
             if SQLTypeHandler().is_string(cur_type):
-                to_type = self.__convert_character(resulting_table, attribute, to_type, data_format, length)
+                to_type2 = self.__convert_character(resulting_table, attribute, to_type, data_format, length)
             else:
-                to_type = self.__convert_numeric(resulting_table, attribute, to_type, length)
+                to_type2 = self.__convert_numeric(resulting_table, attribute, to_type, length)
         except:
             self.db_connection.commit()
             #If anything went wrong in the transformation, the new table has to be dropped.
@@ -355,8 +362,10 @@ class TableTransformer:
                 self.drop_table(resulting_table)
             #Reraise the exception for the higher level caller
             raise
-        
-        self.history_manager.write_to_history(resulting_table, resulting_table, attribute, [to_type, data_format, length], 1)
+
+        if self.track is False:
+            return None
+        self.history_manager.write_to_history(resulting_table, resulting_table, attribute, [to_type, data_format, length, to_type2], 1)
 
     def force_attribute_type(self, tablename, attribute, to_type, data_format="", length=None, force_mode=True, new_name=""):
         """In case that change_attribute_type fails due to elements that can't be converted
@@ -406,8 +415,13 @@ class TableTransformer:
         #If we were to create a new table for this operation, this already happened, so overwrite the newly created table.
         if self.replace is False:
             self.set_to_overwrite
-        self.change_attribute_type(resulting_table, attribute, to_type,  data_format, length, new_name)
 
+        temp = self.track
+        self.track = False
+        self.change_attribute_type(resulting_table, attribute, to_type,  data_format, length, new_name)
+        self.track = temp
+        self.history_manager.write_to_history(resulting_table, resulting_table, attribute, [to_type, data_format, length, force_mode], 19)
+        
     def find_and_replace(self, tablename, attribute, value, replacement, exact=True, replace_all=True, new_name=""):
         """Method that finds values and replaces them with the provided argument. This wraps around an internal
         method that does the heavy work.
@@ -710,7 +724,7 @@ class TableTransformer:
             df.to_sql(name=new_name, con=self.engine, schema=self.schema, if_exists='fail', index = False, dtype = new_dtypes)
             eventual_table = new_name
         
-        self.history_manager.write_to_history(eventual_table, eventual_table, attribute, [], 6)
+        self.history_manager.write_to_history(eventual_table, eventual_table, attribute, [nr_bins], 6)
 
     def __calculate_equifrequent_indices(self, width, remainder, nr_bins):
         """Calculates the indices of the list that represent bin edges for discretize_using_equal_frequency."""
@@ -836,7 +850,9 @@ class TableTransformer:
             df.to_sql(name=new_name, con=self.engine, schema=self.schema, if_exists='fail', index = False, dtype = new_dtypes)
             eventual_table = new_name
 
-        self.history_manager.write_to_history(eventual_table, eventual_table, attribute, [ranges, exclude_right], 4)
+        arg_list = ranges
+        arg_list.append(exclude_right)
+        self.history_manager.write_to_history(eventual_table, eventual_table, attribute, arg_list, 4)
         
     def delete_outliers(self, tablename, attribute, larger, value, replacement, new_name=""):
         """Method that gets rid of outliers of an attribute by setting them to null.

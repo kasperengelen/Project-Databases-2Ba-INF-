@@ -19,14 +19,15 @@ class QueryExecutor:
         db_conn: psycopg2 database connection to execute the PostgreSQL queries
         engine: SQLalchemy engine to use pandas functionality
         write_perm: Boolean specifying whether the user passing the query has atleast write permissions
+        track: Boolean indicating whether TableTransformer needs to write to history.
     """
 
-    def __init__(self, setid, db_conn, engine, write_perm):
+    def __init__(self, setid, db_conn, engine, write_perm, track=True):
         self.schema = str(setid)
         self.db_conn = db_conn
         self.engine = engine
         self.write_perm = write_perm
-        self.history_manager = DatasetHistoryManager(setid, db_conn)
+        self.history_manager = DatasetHistoryManager(setid, db_conn, track)
         self.altered_data = {}
 
     class QueryError(Exception):
@@ -71,6 +72,7 @@ class QueryExecutor:
         #If some table has been altered due one or more queries in this transaction
         if len(self.altered_data) > 0:
             for key, value in self.altered_data.items():
+                value = value.replace('"', '\\"') 
                 self.history_manager.write_to_history(key, key, '', [value], 16)
         return result
         
@@ -78,6 +80,8 @@ class QueryExecutor:
         """Execute user-generated query."""
         try: #Let's try parsing the query purely on syntax.
             statement = psqlparse.parse(query)[0]
+            print(statement.where_clause)
+            return None
 
         except psqlparse.exceptions.PSqlParseError as e:
             raise self.SyntaxError(str(e))
@@ -94,18 +98,10 @@ class QueryExecutor:
                 error_msg = 'Error, table "' + table + '" does not exist in this dataset. Please verify the spelling is correct.'
                 raise self.ProgrammingError(error_msg)
 
-        #Modify the query by mapping the tables to the correct internal tables.
-        internal_query = query
-        regex = '(?<!([^\s,])){}(?!([^\s,]))' #Matches {} only seperated by whitespaces or commas, just like SQL tables in queries.
-        for table in used_tables:
-            internal_table = '"{}".'.format(self.schema) + table
-            cur_regex = regex.format(table)
-            internal_query = re.sub(cur_regex, internal_table, internal_query)
-
         if type(statement) == psqlparse.nodes.SelectStmt:
-            return self.__execute_visual(internal_query, used_tables)
+            return self.__execute_visual(query, used_tables)
         else:
-            return self.__execute_simple(internal_query, used_tables, query)
+            return self.__execute_simple(query, used_tables, query)
 
     def __execute_simple(self, query, tables, original_query):
         """Method used for simple execution of queries. This method is used for queries
@@ -113,33 +109,36 @@ class QueryExecutor:
         """
         cur = self.db_conn.cursor()
         try:
+            cur.execute('SET search_path to "{}"'.format(self.schema))
             cur.execute(query)
-            
+            cur.execute('SET search_path to public')
         except psycopg2.ProgrammingError as e:
-            error_msg = self.__get_clean_exception(str(e), Falses)
-            raise self.SyntaxError(error_msg) from e
+            raise self.SyntaxError(str(e))
 
         modified_table = self.__get_modified_table(original_query, tables)
         parameter = '"{}"'.format(original_query + ';')
-        self.altered_data[modified_table] += parameter
+        if modified_table in self.altered_data:
+            self.altered_data[modified_table] += parameter
+        else:
+           self.altered_data[modified_table] = parameter 
         return None
             
-
     def __execute_visual(self, query, tables):
         """Method that needs to visualize the result of the query. This is the
         case for SELECT statements that obviously need to be visualized.
         """
+        cur = self.db_conn.cursor()
         try:
-            cur = self.db_conn.cursor()
+            cur.execute('SET search_path to "{}"'.format(self.schema))
             cur.execute(query)
-            
-        except sqlalchemy.exc.ProgrammingError as e:
-            raise self.SyntaxError(e.__context__) from e
+             
+        except psycopg2.ProgrammingError as e:
+            raise self.SyntaxError(str(e))
 
         cols =  [desc[0] for desc in cur.description]
         json_string = json.dumps(cur.fetchall(), default=str)
+        cur.execute('SET search_path to public')
         return (cols, json_string)
-
 
     def __assert_permitted_statement(self, statement_obj):
         """We need to assert whether the query contains statements that the user is allowed
@@ -175,14 +174,3 @@ class QueryExecutor:
             if w in tables:
                 return w
         raise ValueError()
-
-    def __get_clean_exception(self, exception_msg, adjust_error_pointer):
-        """Method that returns a clean exception message without including internal system schemas etc."""
-        schema_prefix = '"{}".'.format(self.schema)
-        clean_exception = exception_msg.replace(schema_prefix, '')
-        if adjust_error_pointer is True:
-            error_pointer = ' ' * len(schema_prefix) + '^'
-            clean_exception = clean_exception.replace(error_pointer, '^')
-        return clean_exception
-    
-

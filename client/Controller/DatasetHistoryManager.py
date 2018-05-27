@@ -14,12 +14,14 @@ class DatasetHistoryManager:
         setid: The id of the dataset that the manager has to access.
         db_connection: psycopg2 database connection to execute SQL queries.
         engine: SQLalchemy engine to use pandas functionality.
+        track: Boolean indicating whether the transformation has to be written in history.
     """
 
-    def __init__(self, setid, db_connection):
+    def __init__(self, setid, db_connection, track = True):
         self.setid = setid
         self.db_connection = db_connection
         self.entry_count = self.__initialize_entrycount()
+        self.track = track
         self.choice_dict = None
         
     def __initialize_entrycount(self):
@@ -49,8 +51,9 @@ class DatasetHistoryManager:
             parameters: List of parameters used with the transformation
             transformation_type: Integer representing the transformation used.
         """
+        if self.track is False:
+            return
         param_array = self.__python_list_to_postgres_array(parameters, transformation_type)
-        print(param_array)
         cur = self.db_connection.cursor()
         query = 'INSERT INTO SYSTEM.DATASET_HISTORY VALUES (%s, %s, %s, %s, %s, %s) RETURNING transformation_id'
         cur.execute(sql.SQL(query), [self.setid, table_name, attribute, transformation_type, param_array, origin_table])
@@ -66,6 +69,7 @@ class DatasetHistoryManager:
             if len(backups) == 2: #We need to drop the oldest backup after creating a new one
                 backup_name = self.__get_backup_name_from_id(min(backups))
                 self.__delete_backup(backup_name)
+                self.__delete_history_entry(min(backups))
         elif transformation_type == 0:
             self.__backup_table(table_name, t_id)
             
@@ -109,7 +113,7 @@ class DatasetHistoryManager:
             return False
         oldest_tid = self.get_edge_transformation(tablename, False)
         backups = self.get_latest_backups(tablename)
-        if backups is not None: #There are backup(s) available
+        if len(backups) > 0: #There are backup(s) available
             if len(backups) == 2:
                 return True
             if len(backups) == 1:
@@ -121,7 +125,7 @@ class DatasetHistoryManager:
                     if self.is_in_recover_range(tablename, oldest_tid, backups[0][0]) is True:
                         return True
                     else:
-                        False
+                        return False
 
                 else:
                     return False
@@ -193,8 +197,8 @@ class DatasetHistoryManager:
         """
         tx_list = self.get_all_transformations_in_interval(tablename, id1, id2)
         distance = self.get_edit_distance(tx_list)
-        #The distance between the originals and their first backup is max 3.9
-        if distance > 3.9:
+        #The distance between the originals and their first backup is max 39
+        if distance > 39:
             return False
         else:
             return True
@@ -218,10 +222,16 @@ class DatasetHistoryManager:
         """Check whether it's time to make a backup of the transformation."""
         tx_list = self.get_transformations_after_id(tablename, start_id)
         distance = self.get_edit_distance(tx_list)
-        if distance >= 3.0:
+        if distance >= 30:
             return True
         else:
             return False
+
+    def __delete_history_entry(self, t_id):
+        """Method that deletes a history entry given the t_id."""
+        cur = self.db_connection.cursor()
+        cur.execute(('DELETE FROM system.dataset_history WHERE transformation_id = %s'), [t_id])
+        self.db_connection.commit()
         
     def __python_list_to_postgres_array(self, py_list, transformation_type):
         """Method that represents a python list as a postgres array for inserting into a PostreSQL database."""
@@ -230,10 +240,10 @@ class DatasetHistoryManager:
         
         if nr_elements == 0: #Return an empty postgres array string
             return "{}"
-
-        if 14 < transformation_type < 17: #Arguments for transformation 15 and 16 are already quoted
+        """
+        if 15 < transformation_type < 17: #Arguments for transformation 15 and 16 are already quoted
             param_array = "{" + py_list[0] + "}"
-            return param_array
+            return param_array"""
             
         param_array = "{}"
         if nr_elements > 1:
@@ -274,20 +284,6 @@ class DatasetHistoryManager:
         dict_cur.execute(query, (self.setid, tablename))
         return dict_cur.fetchall()
 
-    
-    #DEPR
-    def __get_latest_backup(self, tablename):
-        recent_tx = self.__get_recent_transformations(tablename)
-        distance = 0
-        for d in recent_tx:
-            distance += self.__get_edit_distance(d['transformation_type'])
-            if distance >= 3.0:
-                return d['transformation_id']
-
-        # If all the transformations haven't reached a distance of 3.0, that means the only backup
-        # is the original table.
-        return None
-
     def __get_transformation_list(self, tablename, start_id):
         """Return a list of transformations and their arguments that need to be performed to go back
         N-1th transformation and basically emulating an undo of the Nth transformation.
@@ -306,10 +302,10 @@ class DatasetHistoryManager:
         """
         #These are the expensive operations, so performing these will warrant creating a backup sooner.
         if t_id in [4, 5, 6, 13, 14, 16]:
-            return 1.0
+            return 10
         #These are light transformations and only should make a backup after several operations.
         else:
-            return 0.3
+            return 3
         
     def __generate_choice_dict(self):
         """Generate the dictionary used to write away history table entries."""
@@ -336,7 +332,7 @@ class DatasetHistoryManager:
             16 : self.__rowstring_generator16,
             17 : self.__rowstring_generator17,
             18 : self.__rowstring_generator18,
-            19 : self.__rowstring_generator19,
+            19 : self.__rowstring_generator19
             }
         
         self.choice_dict =  choice_dict
@@ -366,7 +362,7 @@ class DatasetHistoryManager:
     def __rowstring_generator1(self, dict_obj):
         param = dict_obj['parameters']
         rowstring = 'Converted attribute "{}" of table "{}" to type {}.'
-        rowstring = rowstring.format(dict_obj['attribute'], dict_obj['origin_table'], param[0])
+        rowstring = rowstring.format(dict_obj['attribute'], dict_obj['origin_table'], param[3])
         return rowstring
 
     def __rowstring_generator2(self, dict_obj):
@@ -390,17 +386,18 @@ class DatasetHistoryManager:
     def __rowstring_generator4(self, dict_obj):
         param = dict_obj['parameters']
         rowstring = 'Discretized attribute "{}" of table "{}" using custom ranges ( {} ).'
-        rowstring = rowstring.format(dict_obj['attribute'], dict_obj['attribute'], self.__unquote_string(param[0]))
+        rowstring = rowstring.format(dict_obj['attribute'], dict_obj['table_name'], self.__unquote_string(param[0]))
         return rowstring
 
     def __rowstring_generator5(self, dict_obj):
         rowstring = 'Discretized attribute "{}" of table "{}" in equi-frequent intervals.'
-        rowstring = rowstring.format(dict_obj['attribute'], dict_obj['attribute'])
+        rowstring = rowstring.format(dict_obj['attribute'], dict_obj['table_name'])
         return rowstring
 
     def __rowstring_generator6(self, dict_obj):
-        rowstring = 'Discretized attribute "{}" of table "{}" in equi-distant intervals.'
-        rowstring = rowstring.format(dict_obj['attribute'], dict_obj['attribute'])
+        param = dict_obj['parameters']
+        rowstring = 'Discretized attribute "{}" of table "{}" in {} equi-distant intervals.'
+        rowstring = rowstring.format(dict_obj['attribute'], dict_obj['table_name'], param[0])
         return rowstring
 
     def __rowstring_generator7(self, dict_obj):
@@ -488,5 +485,8 @@ class DatasetHistoryManager:
         return rowstring
 
     def __rowstring_generator19(self, dict_obj):
-        pass
+        param = dict_obj['parameters']
+        rowstring = 'Forcibly converted attribute "{}" of table "{}" to type {} by.'
+        rowstring = rowstring.format(dict_obj['attribute'], dict_obj['origin_table'], param[0])
+        return rowstring
         
