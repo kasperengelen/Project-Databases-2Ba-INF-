@@ -242,7 +242,7 @@ class TransformationReverser:
         to_type     = parameters[0]
         data_format = parameters[1]
         length      = ast.literal_eval(parameters[2])
-        force_mode  = ast.literal_eval(parameters[3])
+        force_mode  = parameters[3]
         self.Tt.force_attribute_type(table_name, attribute, to_type, data_format, length, force_mode)
         
         
