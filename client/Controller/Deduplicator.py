@@ -4,6 +4,7 @@ import recordlinkage as rl
 import pandas as pd
 import numpy as np
 import psycopg2
+from collections import deque
 from psycopg2 import sql
 from Model.DatabaseConfiguration import DatabaseConfiguration
 from Model.QueryManager import QueryManager
@@ -32,7 +33,7 @@ class Deduplicator:
             self.dataframes = dict()
             self.clusters = dict()
             self.entries_to_remove = dict()
-            self.age = dict()
+            # self.age = dict()
             self.log = list()
 
         def find_matches(self, setid, tablename, exact_match=list(), ignore=list()):
@@ -43,9 +44,9 @@ class Deduplicator:
 
             try:
                 self.log.append("find_matches :: ENTER")
-                self.__lifetime_management(setid, tablename)
-                # update time
-                self.age[(setid, tablename)] = time.time()
+                # self.__lifetime_management(setid, tablename)
+                # # update time
+                # self.age[(setid, tablename)] = time.time()
 
                 # load table into dataframe
                 schema = str(setid)
@@ -95,7 +96,7 @@ class Deduplicator:
                     results = kmeans.predict(potential_pairs)
 
                 # update time
-                self.__check_own_lifetime(setid, tablename)
+                # self.__check_own_lifetime(setid, tablename)
 
                 # cluster together similar pairs
                 self.clusters[(setid, tablename)] = self.__cluster_pairs(results)
@@ -112,7 +113,7 @@ class Deduplicator:
                 self.entries_to_remove[(setid, tablename)] = set()
 
                 # update time
-                self.__check_own_lifetime(setid, tablename)
+                # self.__check_own_lifetime(setid, tablename)
 
                 return certain_paired_rows
 
@@ -128,7 +129,7 @@ class Deduplicator:
             try:
                 self.log.append("deduplicate_cluster :: ENTER")
                 # update time
-                self.__check_own_lifetime(setid, tablename)
+                # self.__check_own_lifetime(setid, tablename)
 
                 cluster = list(self.clusters[(setid, tablename)][cluster_id])
 
@@ -155,7 +156,7 @@ class Deduplicator:
 
             try:
                 # update time
-                self.__check_own_lifetime(setid, tablename)
+                # self.__check_own_lifetime(setid, tablename)
 
                 for i in range(cluster_id, len(self.clusters[(setid, tablename)])):
                     self.deduplicate_cluster(setid, tablename, i)
@@ -169,7 +170,7 @@ class Deduplicator:
             self.dataframes.pop((setid, tablename), None)
             self.clusters.pop((setid, tablename), None)
             self.entries_to_remove.pop((setid, tablename), None)
-            self.age.pop((setid, tablename), None)
+            # self.age.pop((setid, tablename), None)
 
         def __submit(self, setid, tablename):
             """Deletes all duplicates and alters the table in the database"""
