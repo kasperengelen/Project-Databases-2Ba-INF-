@@ -312,7 +312,7 @@ def _table_undo(dataset_id, tablename, redir_type):
     if redir_type == "TABLE":
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
     elif redir_type == "HISTORY":
-        return redirect(url_for('dataset.history', dataset_id=dataset_id, tablename=tablename))
+        return redirect(url_for('dataset_pages.history', dataset_id=dataset_id, tablename=tablename))
 # ENDFUNCTION
 
 @dataset_pages.route('/dataset/<int:dataset_id>/jointables', methods=['POST'])

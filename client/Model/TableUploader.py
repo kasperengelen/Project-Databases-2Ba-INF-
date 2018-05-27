@@ -5,6 +5,7 @@ import psycopg2
 import re
 import pandas as pd
 from psycopg2 import sql
+from Model.QueryManager import QueryManager
 
 
 class FileException(Exception):
@@ -54,7 +55,6 @@ class TableUploader:
         # predefine attribute
         self.header = None
 
-
     def read_file(self, filename, header=True, automatic_type_conversion=False):
         """
         :param header: True if the first line in the csv file contains the column names
@@ -101,11 +101,24 @@ class TableUploader:
                 dataframe[column] = pd.to_datetime(dataframe[column], errors="ignore")
 
         tablename = os.path.basename(filename.replace(".csv", ""))
+        tablename = self.__get_valid_name(tablename)
         # raise error if the table name is not alphanumeric, this is to not cause problems with url's
         if not self.__check_alnum(tablename):
             raise ValueError("Table names should be alphanumeric")
 
-        dataframe.to_sql(self.__get_valid_name(tablename), self.engine, index=False, schema=str(self.setid))
+        dataframe.to_sql(tablename, self.engine, index=False, schema=str(self.setid))
+
+        # convert types to the ones used in this application
+        query_man = QueryManager(self.db_conn, None)
+        type_dict = query_man.get_col_types(str(self.setid), tablename)
+        for col in type_dict:
+            if type_dict[col] == "timestamp without time zone":
+                self.__convert_column_type(tablename, col, "date")
+            elif type_dict[col] == "bigint":
+                self.__convert_column_type(tablename, col, "integer")
+            elif type_dict[col] == "text":
+                self.__convert_column_type(tablename, col, "varchar")
+
 
     def __csv_psycopg2(self, filename):
         """Read a csv file using psycopg2 if no automatic type conversion is needed (really fast)"""
@@ -190,12 +203,11 @@ class TableUploader:
 
                 # execute insert
                 elif re.search("INSERT INTO.*", command, re.DOTALL | re.IGNORECASE):
-                    tablename = command.split()[2]
-
                     self.cur.execute("SET search_path TO {};".format(self.setid))
                     try:
                         self.cur.execute(command.replace("\n", ""))
                     except psycopg2.ProgrammingError:
+                        raise
                         raise DumpInconsistencyException
 
         # if no tables were created, raise error
@@ -241,7 +253,6 @@ class TableUploader:
 
     def __check_alnum(self, tablename):
         """Check if the table name is alphanumeric (underscores are also allowed)"""
-        # isalnum() that also allows underscores
         temp_name = tablename.replace('_', 'a')
         return temp_name.isalnum()
 
@@ -275,4 +286,9 @@ class TableUploader:
 
         return new_name
 
-
+    def __convert_column_type(self, tablename, col, type):
+        """Alter the type of the specified column"""
+        self.cur.execute(sql.SQL("ALTER TABLE {}.{} ALTER COLUMN {} TYPE {}").format(sql.Identifier(str(self.setid)),
+                                                                                     sql.Identifier(tablename),
+                                                                                     sql.Identifier(col),
+                                                                                     sql.SQL(type)))
