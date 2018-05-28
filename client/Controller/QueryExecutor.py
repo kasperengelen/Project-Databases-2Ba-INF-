@@ -122,7 +122,7 @@ class QueryExecutor:
 
 
         modified_table = self.__get_modified_table(query)
-        parameter = '"{}"'.format(query + ';')
+        parameter = '{}'.format(query + ';')
         if modified_table in self.altered_data:
             self.altered_data[modified_table] += parameter
         else:

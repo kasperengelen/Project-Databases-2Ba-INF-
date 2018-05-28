@@ -231,9 +231,6 @@ class TransformationReverser:
 
     def redo_query_execution(self, table_name, attribute, parameters):
         query = parameters[0]
-        print(len(parameters))
-        query = query[1:-1]
-        #query = query.replace
         self.Qe.execute_transaction(query)
 
     def redo_attribute_renaming(self, table_name, attribute, parameters):
