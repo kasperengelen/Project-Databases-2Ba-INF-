@@ -29,6 +29,7 @@ class QueryExecutor:
         self.write_perm = write_perm
         self.history_manager = DatasetHistoryManager(setid, db_conn, track)
         self.altered_data = {}
+        self.cur = None
 
     class QueryError(Exception):
         """
@@ -57,8 +58,12 @@ class QueryExecutor:
         Even just one SQL statement counts as a valid transaction for this method.
         This method can be called for one or more statements without problem.
         """
-        statements = filter(None, query.split(';'))
+        split_statements = list(filter(None, query.split(';')))
+        statements = [x for x in split_statements if x.isspace() == False]
+        print(statements)
+        self.cur = self.db_conn.cursor()
         try:
+            self.cur.execute('SET LOCAL ROLE {}'.format(self.__get_dataset_role()))
             for statement in statements:
                 result = self.__execute_statement(statement)
 
@@ -70,9 +75,11 @@ class QueryExecutor:
         #If nothing failed and every statement has been succesfully executed commit
         self.db_conn.commit()
         #If some table has been altered due one or more queries in this transaction
+
         if len(self.altered_data) > 0:
             for key, value in self.altered_data.items():
-                value = value.replace('"', '\\"') 
+                value   = value.replace('"', '\\"')
+                queries = '"{}"'.format(value)
                 self.history_manager.write_to_history(key, key, '', [value], 16)
         return result
         
@@ -80,8 +87,6 @@ class QueryExecutor:
         """Execute user-generated query."""
         try: #Let's try parsing the query purely on syntax.
             statement = psqlparse.parse(query)[0]
-            print(statement.where_clause)
-            return None
 
         except psqlparse.exceptions.PSqlParseError as e:
             raise self.SyntaxError(str(e))
@@ -89,21 +94,21 @@ class QueryExecutor:
         #Check if the statement is permitted
         if self.__assert_permitted_statement(statement) is False:
             raise self.PermissionError('Unable to execute query: permission denied to this user.')
-
+        """
         #Check if the query doesn't contain bogus tables
         valid_tables = self.__get_valid_tables()
         used_tables = statement.tables()
         for table in used_tables:
             if table not in valid_tables:
                 error_msg = 'Error, table "' + table + '" does not exist in this dataset. Please verify the spelling is correct.'
-                raise self.ProgrammingError(error_msg)
+                raise self.ProgrammingError(error_msg)"""
 
         if type(statement) == psqlparse.nodes.SelectStmt:
-            return self.__execute_visual(query, used_tables)
+            return self.__execute_visual(query)
         else:
-            return self.__execute_simple(query, used_tables, query)
+            return self.__execute_simple(query)
 
-    def __execute_simple(self, query, tables, original_query):
+    def __execute_simple(self, query):
         """Method used for simple execution of queries. This method is used for queries
         without result that needs to be visualized (INSERT INTO, UPDATE, DELETE statements).
         """
@@ -115,15 +120,16 @@ class QueryExecutor:
         except psycopg2.ProgrammingError as e:
             raise self.SyntaxError(str(e))
 
-        modified_table = self.__get_modified_table(original_query, tables)
-        parameter = '"{}"'.format(original_query + ';')
+
+        modified_table = self.__get_modified_table(query)
+        parameter = '"{}"'.format(query + ';')
         if modified_table in self.altered_data:
             self.altered_data[modified_table] += parameter
         else:
            self.altered_data[modified_table] = parameter 
         return None
             
-    def __execute_visual(self, query, tables):
+    def __execute_visual(self, query):
         """Method that needs to visualize the result of the query. This is the
         case for SELECT statements that obviously need to be visualized.
         """
@@ -137,7 +143,6 @@ class QueryExecutor:
 
         cols =  [desc[0] for desc in cur.description]
         json_string = json.dumps(cur.fetchall(), default=str)
-        cur.execute('SET search_path to public')
         return (cols, json_string)
 
     def __assert_permitted_statement(self, statement_obj):
@@ -165,12 +170,17 @@ class QueryExecutor:
         tablenames = [t[0] for t in result]
         return tablenames
 
-    def __get_modified_table(self, query, tables):
+    def __get_modified_table(self, query):
         """Method that returns which table has been modified after a INSERT / UPDATE / DELETE statement.
         This is usually the first table occurence in the query.
         """
-        words = query.split()
+        words  = query.split()
+        tables = self.__get_valid_tables()
         for w in words:
             if w in tables:
                 return w
-        raise ValueError()
+        raise self.ValueError('Table used in query does not belong in the dataset.')
+
+    def __get_dataset_role(self):
+        """Method that returns the role with specific permissions over the dataset."""
+        return 'user_{}'.format(self.schema)

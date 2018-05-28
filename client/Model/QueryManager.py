@@ -348,11 +348,12 @@ class QueryManager:
     # ENDFUNCTION
 
     def grantSQLRolePermsForSchema(self, rolename, schemaname):
-        """Method to grant all permissions for the specified schema to the specified role."""
-
-        self.dict_cur.execute("REVOKE ALL PRIVILEGES ON DATABASE projectdb18 FROM {};".format(rolename))
-        self.db_conn.commit()
-        self.dict_cur.execute("GRANT ALL PRIVILEGES ON SCHEMA \"{}\" TO {};".format(schemaname, rolename))
+        """Method to grant limited permissions for the specified schema to the specified role."""
+        self.dict_cur.execute('GRANT USAGE ON SCHEMA "{}" TO {}'.format(schemaname, rolename))
+        self.dict_cur.execute('ALTER DEFAULT PRIVILEGES IN SCHEMA "{}" GRANT SELECT ON TABLES TO {};'.format(schemaname, rolename))
+        self.dict_cur.execute('ALTER DEFAULT PRIVILEGES IN SCHEMA "{}" GRANT INSERT ON TABLES TO {};'.format(schemaname, rolename))
+        self.dict_cur.execute('ALTER DEFAULT PRIVILEGES IN SCHEMA "{}" GRANT UPDATE ON TABLES TO {};'.format(schemaname, rolename))
+        self.dict_cur.execute('ALTER DEFAULT PRIVILEGES IN SCHEMA "{}" GRANT DELETE ON TABLES TO {};'.format(schemaname, rolename))
         self.db_conn.commit()
     # ENDFUNCTION
 

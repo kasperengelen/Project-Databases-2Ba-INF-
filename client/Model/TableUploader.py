@@ -119,6 +119,7 @@ class TableUploader:
             elif type_dict[col] == "text":
                 self.__convert_column_type(tablename, col, "varchar")
 
+        self.__make_backup(tablename)
 
     def __csv_psycopg2(self, filename):
         """Read a csv file using psycopg2 if no automatic type conversion is needed (really fast)"""
