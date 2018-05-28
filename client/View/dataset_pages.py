@@ -1206,7 +1206,7 @@ def dedup_find_matches(dataset_id, tablename):
         flash(message=str(e), category="error")
 
     if table_list == []:
-        flash(message="No duplicates found", category="error")
+        flash(message="No duplicates found", category="success")
         return redirect(url_for('dataset_pages.table', dataset_id=dataset_id, tablename=tablename))
 
     return render_template('dataset_pages.deduplication.html', table_list=table_list,
