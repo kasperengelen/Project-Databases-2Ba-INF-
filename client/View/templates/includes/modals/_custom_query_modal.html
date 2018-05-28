@@ -42,7 +42,7 @@
                             type: 'POST',
                             success: function(data) {
                                 if(data.empty == true){
-                                    $('#querymodal_body').hide();
+                                    location.reload();
                                 }                                
                                 else {
                                     $('#querymodal_body').show();
