@@ -350,9 +350,10 @@ class QueryManager:
     def grantSQLRolePermsForSchema(self, rolename, schemaname):
         """Method to grant all permissions for the specified schema to the specified role."""
 
-        self.dict_cur.execute("REVOKE ALL PRIVILEGES ON DATABASE projectdb18 FROM {};".format(rolename))
-        self.db_conn.commit()
-        self.dict_cur.execute("GRANT ALL PRIVILEGES ON SCHEMA \"{}\" TO {};".format(schemaname, rolename))
+        #self.dict_cur.execute("REVOKE ALL PRIVILEGES ON DATABASE projectdb18 FROM {};".format(rolename))
+        #self.db_conn.commit()
+        #self.dict_cur.execute('GRANT ALL PRIVILEGES ON SCHEMA "{}" TO {};'.format(schemaname, rolename))
+        self.dict_cur.execute('GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA "{}" TO {};'.format(schemaname, rolename))
         self.db_conn.commit()
     # ENDFUNCTION
 
