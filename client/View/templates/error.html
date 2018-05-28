@@ -6,14 +6,6 @@
 		<h2 id="msg">{{ message }}</h2>
 	</div>
 
-	<script>
-		if({{ message }} == "500, internal error." && window.location.href.indexOf('dedup/yes_to_all') > -1){
-			$('#msg').hide();
-			location.reload();
-		}
-		else {
-			$('#msg').show();
-		}
-	</script>
+	
 
 {% endblock %}
