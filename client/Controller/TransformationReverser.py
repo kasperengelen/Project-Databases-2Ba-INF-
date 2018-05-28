@@ -28,7 +28,7 @@ class TransformationReverser:
         self.db_connection = db_connection
         self.engine = engine
         self.Tt = TableTransformer(self.setid, self.db_connection, self.engine, True, False)
-        self.Qe = QueryExecutor(self.setid, self.db_connection, self.engine, True)
+        self.Qe = QueryExecutor(self.setid, self.db_connection, self.engine, True, False)
         self.Dd = Deduplicator(self.db_connection, self.engine)
         self.transformation_dict = self.initialize_transformation_dict()
 
