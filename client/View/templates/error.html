@@ -7,7 +7,7 @@
 	</div>
 
 	<script>
-		if({{ message|string }} == "500, internal error." && window.location.href.indexOf('dedup/yes_to_all') > -1){
+		if(window.location.href.indexOf('dedup/yes_to_all') > -1){
 			$('#msg').hide();
 			location.reload();
 		}
