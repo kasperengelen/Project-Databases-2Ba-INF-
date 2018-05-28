@@ -236,7 +236,8 @@ class TransformationReverser:
         self.Tt.change_attribute_name(table_name, attribute, parameters[0])
 
     def redo_data_deduplication(self, table_name, attribute, parameters):
-        self.Dd.redo_dedup(self.setid, table_name, parameters[0])
+        joined_parameters = ",".join(parameters)
+        self.Dd.redo_dedup(self.setid, table_name, joined_parameters)
 
     def redo_forced_attribute_conversion(self, table_name, attribute, parameters):
         to_type     = parameters[0]

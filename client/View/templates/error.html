@@ -3,8 +3,19 @@
 {% block body %}
 	
 	<div class="text-center"  style="padding: 1%">
-		<h2>{{ message }}</h2>
-		<h2>{{ error }}</h2>
+		<h2 id="msg">{{ message }}</h2>
+		<h2 style="display: none;" id="ld">Loading</h2>
 	</div>
+
+	<script>
+		if(window.location.href.indexOf('dedup/yes_to_all') > -1){
+			$('#msg').hide();
+			$('#ld').show();
+			location.reload();
+		}
+		else {
+			$('#msg').show();
+		}
+	</script>
 
 {% endblock %}
